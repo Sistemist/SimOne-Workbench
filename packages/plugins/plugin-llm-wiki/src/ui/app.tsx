@@ -19,7 +19,7 @@ import {
   type PluginSettingsPageProps,
   type PluginSidebarProps,
 } from "@paperclipai/plugin-sdk/ui";
-import { useCallback, useEffect, useMemo, useRef, useState, type AnchorHTMLAttributes, type CSSProperties, type ReactElement, type ReactNode } from "react";
+import { Children, Fragment, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState, type AnchorHTMLAttributes, type CSSProperties, type ReactElement, type ReactNode } from "react";
 import { readIngestOperationIssueId, uploadIssueAttachmentFile } from "./issue-attachments.js";
 
 // ---------------------------------------------------------------------------
@@ -1115,6 +1115,16 @@ function extractWikiTocHeadings(markdownBody: string): WikiTocHeading[] {
 type LucideIconProps = { size?: number };
 
 function makeLucideIcon(paths: ReactNode) {
+  const keyedPaths = (
+    isValidElement(paths) && paths.type === Fragment
+      ? Children.toArray((paths.props as { children?: ReactNode }).children)
+      : Children.toArray(paths)
+  ).map((path, index) =>
+    isValidElement(path)
+      ? cloneElement(path, { key: path.key ?? `lucide-path-${index}` })
+      : path,
+  );
+
   return function LucideIcon({ size = 16 }: LucideIconProps) {
     return (
       <svg
@@ -1127,7 +1137,7 @@ function makeLucideIcon(paths: ReactNode) {
         strokeLinejoin="round"
         style={{ width: size, height: size, display: "block" }}
       >
-        {paths}
+        {keyedPaths}
       </svg>
     );
   };
@@ -1310,10 +1320,10 @@ export function SidebarLink({ context }: PluginSidebarProps) {
       className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium text-foreground/80 transition-colors hover:bg-accent/50 hover:text-foreground"
       style={{ textDecoration: "none" }}
     >
-      <span aria-hidden="true" className="shrink-0">
+      <span key="icon" aria-hidden="true" className="shrink-0">
         <BookOpenIcon />
       </span>
-      <span className="flex-1 truncate">SIM Wiki</span>
+      <span key="label" className="flex-1 truncate">SIM Wiki</span>
     </a>
   );
 }
