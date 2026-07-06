@@ -205,6 +205,11 @@ describe("Dashboard", () => {
     expect(text).toContain("Open Work");
     expect(text).toContain("AI Spend");
     expect(text).toContain("Human Review");
+    expect(text).toContain("Customer Engine");
+    expect(text).toContain("Live signal pending");
+    expect(text).toContain("Customer discovery can keep running in Tissuu");
+    expect(text).toContain("Approval stays human");
+    expect(text).toContain("Capture decisions in SIM Wiki");
     expect(text).toContain("Execution Activity");
     expect(text).toContain("Work by Priority");
     expect(text).toContain("Work by Status");
