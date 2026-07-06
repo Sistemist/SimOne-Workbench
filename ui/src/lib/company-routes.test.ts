@@ -44,6 +44,13 @@ describe("company routes", () => {
     expect(toCompanyRelativePath("/SYS/sim-coach")).toBe("/sim-coach");
   });
 
+  it("treats /customer-engine as a board route that needs a company prefix", () => {
+    expect(isBoardPathWithoutPrefix("/customer-engine")).toBe(true);
+    expect(extractCompanyPrefixFromPath("/customer-engine")).toBeNull();
+    expect(applyCompanyPrefix("/customer-engine", "SYS")).toBe("/SYS/customer-engine");
+    expect(toCompanyRelativePath("/SYS/customer-engine")).toBe("/customer-engine");
+  });
+
   it("treats /wiki as a board route that needs a company prefix", () => {
     expect(isBoardPathWithoutPrefix("/wiki")).toBe(true);
     expect(isBoardPathWithoutPrefix("/wiki/query")).toBe(true);

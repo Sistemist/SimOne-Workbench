@@ -19,6 +19,7 @@ import {
   Pin,
   MessagesSquare,
   BookOpenCheck,
+  Users,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { NavLink } from "@/lib/router";
@@ -176,6 +177,7 @@ export function Sidebar() {
         </div>
 
         <SidebarSection label="Work">
+          <SidebarNavItem to="/customer-engine" label="Customer Engine" icon={Users} />
           <SidebarNavItem to="/issues" label="Tasks" icon={CircleDot} />
           <SidebarNavItem to="/routines" label="Routines" icon={Repeat} />
           {showPipelines ? (

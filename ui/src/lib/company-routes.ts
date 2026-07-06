@@ -1,6 +1,7 @@
 const BOARD_ROUTE_ROOTS = new Set([
   "dashboard",
   "sim-coach",
+  "customer-engine",
   "companies",
   "company",
   "skills",

@@ -95,8 +95,8 @@ export function CustomerEngineBridgeCard({ state = defaultState }: { state?: Cus
               <Link to="/sim-coach">Open SIM Coach</Link>
             </Button>
             <Button asChild size="sm" className="h-8">
-              <Link to="/issues">
-                Open Work
+              <Link to="/customer-engine">
+                Open Customer Engine
                 <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>
