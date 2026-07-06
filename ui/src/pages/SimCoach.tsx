@@ -146,7 +146,7 @@ export function SimCoach() {
               </Link>
             </Button>
             <Button asChild variant="outline" size="sm" className="h-8">
-              <Link to="/company/settings/instance/plugins">Enable SIM Wiki</Link>
+              <Link to="/company/settings/instance/plugins?focus=paperclipai.plugin-llm-wiki">Enable SIM Wiki</Link>
             </Button>
           </div>
         </div>

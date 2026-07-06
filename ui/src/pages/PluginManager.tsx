@@ -7,11 +7,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { PluginRecord } from "@paperclipai/shared";
-import { Link } from "@/lib/router";
+import { Link, useSearchParams } from "@/lib/router";
 import { AlertTriangle, FlaskConical, Plus, Power, Puzzle, Settings, Trash } from "lucide-react";
 import { useCompany } from "@/context/CompanyContext";
 import { useBreadcrumbs } from "@/context/BreadcrumbContext";
-import { pluginsApi } from "@/api/plugins";
+import { pluginsApi, type AvailableBundledPlugin } from "@/api/plugins";
 import { queryKeys } from "@/lib/queryKeys";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +68,18 @@ function ExperimentalBadge() {
   );
 }
 
+function bundledPluginMatchesFocus(plugin: AvailableBundledPlugin, focus: string | null): boolean {
+  const normalizedFocus = focus?.trim().toLowerCase();
+  if (!normalizedFocus) return false;
+
+  return [
+    plugin.pluginKey,
+    plugin.packageName,
+    plugin.displayName,
+    plugin.localPath,
+  ].some((value) => value.toLowerCase() === normalizedFocus);
+}
+
 /**
  * PluginManager page component.
  *
@@ -90,6 +102,7 @@ export function PluginManager() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const queryClient = useQueryClient();
   const { pushToast } = useToastActions();
+  const [searchParams] = useSearchParams();
 
   const [installPackage, setInstallPackage] = useState("");
   const [installDialogOpen, setInstallDialogOpen] = useState(false);
@@ -173,6 +186,9 @@ export function PluginManager() {
   const bundledPlugins = bundledQuery.data ?? [];
   const installedByPackageName = new Map(installedPlugins.map((plugin) => [plugin.packageName, plugin]));
   const bundledByPackageName = new Map(bundledPlugins.map((plugin) => [plugin.packageName, plugin]));
+  const focusedBundledPlugin = bundledPlugins.find((plugin) =>
+    bundledPluginMatchesFocus(plugin, searchParams.get("focus"))
+  );
   // Scope the in-section banner to bundled (local-path) installs so an npm-dialog
   // install failure does not surface its error in the bundled-plugins section.
   const installErrorMessage = installMutation.variables?.isLocalPath
@@ -246,6 +262,80 @@ export function PluginManager() {
           </div>
         </div>
       </div>
+
+      {focusedBundledPlugin && (
+        <section className="rounded-lg border border-primary/25 bg-primary/[0.04] p-4">
+          {(() => {
+            const installedPlugin = installedByPackageName.get(focusedBundledPlugin.packageName);
+            const installPending =
+              installMutation.isPending &&
+              installMutation.variables?.isLocalPath &&
+              installMutation.variables.packageName === focusedBundledPlugin.localPath;
+
+            return (
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="default">Recommended setup</Badge>
+                    <span className="font-medium">{focusedBundledPlugin.displayName}</span>
+                    {installedPlugin ? (
+                      <Badge
+                        variant={installedPlugin.status === "ready" ? "default" : "secondary"}
+                        className={installedPlugin.status === "ready" ? "bg-green-600 hover:bg-green-700" : ""}
+                      >
+                        {installedPlugin.status}
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary">Not installed</Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    SIM Coach recommends this for durable memory and cited coaching.
+                  </p>
+                  <p className="text-xs text-muted-foreground">{focusedBundledPlugin.packageName}</p>
+                  {installPending && !focusedBundledPlugin.hasBuiltEntrypoints && (
+                    <p className="text-xs text-muted-foreground">Building plugin...</p>
+                  )}
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  {installedPlugin ? (
+                    <>
+                      {installedPlugin.status !== "ready" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={enableMutation.isPending}
+                          onClick={() => enableMutation.mutate(installedPlugin.id)}
+                        >
+                          Enable
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to={`/company/settings/instance/plugins/${installedPlugin.id}`}>
+                          {installedPlugin.status === "ready" ? "Open SIM Wiki" : "Review SIM Wiki"}
+                        </Link>
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      size="sm"
+                      disabled={installPending || installMutation.isPending}
+                      onClick={() =>
+                        installMutation.mutate({
+                          packageName: focusedBundledPlugin.localPath,
+                          isLocalPath: true,
+                        })
+                      }
+                    >
+                      {installPending ? "Installing..." : "Install SIM Wiki"}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+        </section>
+      )}
 
       <section className="space-y-3">
         <div className="flex items-center gap-2">

@@ -51,7 +51,13 @@ describe("SimCoach", () => {
     expect(text).toContain("When enabled, the maintainer compiles durable memory");
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
-    expect(links.some((link) => link.getAttribute("href") === "/company/settings/instance/plugins")).toBe(true);
+    expect(
+      links.some(
+        (link) =>
+          link.getAttribute("href") ===
+          "/company/settings/instance/plugins?focus=paperclipai.plugin-llm-wiki"
+      )
+    ).toBe(true);
     expect(links.some((link) => link.getAttribute("href") === "/wiki/query")).toBe(false);
     expect(mockSetBreadcrumbs).toHaveBeenCalledWith([{ label: "SIM Coach" }]);
 
