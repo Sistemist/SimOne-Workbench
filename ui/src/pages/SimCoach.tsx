@@ -13,12 +13,18 @@ import {
   Workflow,
   Users,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import { Link } from "@/lib/router";
 import { Button } from "@/components/ui/button";
+import { pluginsApi } from "@/api/plugins";
 import { useBreadcrumbs } from "../context/BreadcrumbContext";
 import { useCompany } from "../context/CompanyContext";
+import { queryKeys } from "../lib/queryKeys";
 import { cn } from "../lib/utils";
+
+const SIM_WIKI_PACKAGE = "@paperclipai/plugin-llm-wiki";
+const SIM_WIKI_FOCUS_ROUTE = "/company/settings/instance/plugins?focus=paperclipai.plugin-llm-wiki";
 
 const engines = [
   {
@@ -116,6 +122,26 @@ export function SimCoach() {
   const { selectedCompany } = useCompany();
   const companyName = selectedCompany?.name ?? "this company";
   const driverText = useMemo(() => drivers.join(" / "), []);
+  const { data: plugins } = useQuery({
+    queryKey: queryKeys.plugins.all,
+    queryFn: () => pluginsApi.list(),
+  });
+  const simWikiPlugin = plugins?.find((plugin) => plugin.packageName === SIM_WIKI_PACKAGE);
+  const simWikiReady = simWikiPlugin?.status === "ready";
+  const resolvedCoachFlow = useMemo(
+    () =>
+      coachFlow.map((step) =>
+        step.title === "SIM Wiki"
+          ? {
+              ...step,
+              body: simWikiReady
+                ? "Ready for durable memory, source ingestion, and cited coaching."
+                : step.body,
+            }
+          : step
+      ),
+    [simWikiReady]
+  );
 
   useEffect(() => {
     setBreadcrumbs([{ label: "SIM Coach" }]);
@@ -139,6 +165,16 @@ export function SimCoach() {
             </p>
           </div>
           <div className="flex gap-2">
+            <span
+              className={cn(
+                "inline-flex h-8 items-center rounded-full border px-3 text-xs font-medium",
+                simWikiReady
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200"
+                  : "border-border bg-muted/40 text-muted-foreground"
+              )}
+            >
+              {simWikiReady ? "SIM Wiki ready" : "SIM Wiki not enabled"}
+            </span>
             <Button asChild size="sm" className="h-8">
               <Link to="/teams-catalog/paperclipai%3Abundled%3Asimone%3Asimone-starter">
                 Starter
@@ -146,7 +182,9 @@ export function SimCoach() {
               </Link>
             </Button>
             <Button asChild variant="outline" size="sm" className="h-8">
-              <Link to="/company/settings/instance/plugins?focus=paperclipai.plugin-llm-wiki">Enable SIM Wiki</Link>
+              <Link to={simWikiReady ? "/wiki" : SIM_WIKI_FOCUS_ROUTE}>
+                {simWikiReady ? "Open SIM Wiki" : "Enable SIM Wiki"}
+              </Link>
             </Button>
           </div>
         </div>
@@ -252,7 +290,7 @@ export function SimCoach() {
           <h2 className="text-base font-semibold text-foreground">Coach Loop</h2>
         </div>
         <div className="grid gap-3 md:grid-cols-3">
-          {coachFlow.map((step) => {
+          {resolvedCoachFlow.map((step) => {
             const Icon = step.icon;
             return (
               <div key={step.title} className="border-b border-border pb-4">
