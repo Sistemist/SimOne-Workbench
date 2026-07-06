@@ -300,6 +300,44 @@ describe("TeamCatalog install preview path", () => {
     expect(document.body.textContent).toContain("Team installed");
   });
 
+  it("shows the safe catalog runtime default instead of the raw process adapter", async () => {
+    const preview = makePreview();
+    preview.portabilityPreview.manifest.agents = [
+      {
+        slug: "ceo",
+        name: "CEO",
+        path: "agents/ceo/AGENTS.md",
+        skills: [],
+        role: "ceo",
+        title: "Chief Executive Officer",
+        icon: null,
+        capabilities: null,
+        reportsToSlug: null,
+        reportsToExistingAgentId: null,
+        reportsToExistingAgentSlug: null,
+        adapterType: "process",
+        adapterConfig: {},
+        runtimeConfig: {},
+        permissions: {},
+        budgetMonthlyCents: 0,
+        metadata: null,
+      },
+    ];
+    mockTeamCatalogApi.preview.mockResolvedValue(preview);
+
+    await renderPage();
+
+    const installCta = findButton("Install team");
+    await act(async () => {
+      installCta!.click();
+    });
+    await flushReact();
+
+    expect(document.body.textContent).toContain("How agents run");
+    expect(document.body.textContent).toContain("Claude Code");
+    expect(document.body.textContent).toContain("SimOne applies the recommended runtime");
+  });
+
   it("requires and submits Step 4 secret values", async () => {
     const preview = makePreview();
     preview.portabilityPreview.envInputs = [

@@ -27,6 +27,10 @@ const KNOWN_DEFAULTS: Record<string, AdapterCapabilities> = {
   openclaw_gateway: ALL_FALSE,
 };
 
+interface AdapterCapabilitiesOptions {
+  enabled?: boolean;
+}
+
 /**
  * Returns a lookup function that resolves adapter capabilities by type.
  *
@@ -34,11 +38,13 @@ const KNOWN_DEFAULTS: Record<string, AdapterCapabilities> = {
  * via react-query. Before the data loads, known built-in adapter types
  * return correct synchronous defaults to avoid cold-load regressions.
  */
-export function useAdapterCapabilities(): (type: string) => AdapterCapabilities {
+export function useAdapterCapabilities(options: AdapterCapabilitiesOptions = {}): (type: string) => AdapterCapabilities {
+  const enabled = options.enabled ?? true;
   const { data: adapters } = useQuery({
     queryKey: queryKeys.adapters.all,
     queryFn: () => adaptersApi.list(),
     staleTime: 5 * 60 * 1000,
+    enabled,
   });
 
   const capMap = useMemo(() => {

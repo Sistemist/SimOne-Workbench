@@ -1,0 +1,271 @@
+import {
+  AlertTriangle,
+  ArrowRight,
+  BookOpenCheck,
+  Boxes,
+  CircleDollarSign,
+  Compass,
+  FileSearch,
+  MessageCircleQuestion,
+  PackageCheck,
+  Scale,
+  Sparkles,
+  Workflow,
+  Users,
+} from "lucide-react";
+import { useEffect, useMemo } from "react";
+import { Link } from "@/lib/router";
+import { Button } from "@/components/ui/button";
+import { useBreadcrumbs } from "../context/BreadcrumbContext";
+import { useCompany } from "../context/CompanyContext";
+import { cn } from "../lib/utils";
+
+const engines = [
+  {
+    name: "Product",
+    summary: "Offer, roadmap, delivery",
+    icon: PackageCheck,
+    tone: "text-sky-500 bg-sky-500/10",
+  },
+  {
+    name: "Customer",
+    summary: "Discovery, trust, demand",
+    icon: Users,
+    tone: "text-emerald-500 bg-emerald-500/10",
+  },
+  {
+    name: "Cash",
+    summary: "Pricing, revenue, runway",
+    icon: CircleDollarSign,
+    tone: "text-amber-500 bg-amber-500/10",
+  },
+  {
+    name: "Skills",
+    summary: "Capability, learning, leverage",
+    icon: Boxes,
+    tone: "text-rose-500 bg-rose-500/10",
+  },
+];
+
+const drivers = ["Innovation", "Governance", "Interaction", "Culture"];
+
+const coachNotes = [
+  {
+    title: "Feedback loop weakened",
+    body: "Customer signal, review, or learning disappears from the workflow.",
+  },
+  {
+    title: "Agent making a judgment call",
+    body: "Strategy, spend, reputation, or company structure changes without approval.",
+  },
+  {
+    title: "Engine missing its counterpart",
+    body: "Product work proceeds without customer evidence, or cash planning ignores delivery capacity.",
+  },
+  {
+    title: "System archetype emerging",
+    body: "A recurring pattern starts to look like drift, delay, over-control, or unchecked acceleration.",
+  },
+];
+
+const setupOptions = [
+  {
+    title: "SimOne starter",
+    label: "Recommended",
+    body: "Four engines, four drivers, approval boundaries, and a SIM Wiki-ready Sprint Zero.",
+    action: "Open starter",
+    href: "/teams-catalog/paperclipai%3Abundled%3Asimone%3Asimone-starter",
+  },
+  {
+    title: "Blank company",
+    label: "Advanced",
+    body: "A clean control plane for teams that already know how agents, tasks, and governance should fit.",
+    action: "Stay blank",
+    href: "/dashboard",
+  },
+];
+
+const reviewBoundaries = [
+  "Strategy",
+  "Spending",
+  "Public claims",
+  "Company structure",
+  "Customer promises",
+];
+
+const coachFlow = [
+  {
+    title: "Messy input",
+    body: "Founder notes, tasks, docs, and research land in the workbench.",
+    icon: FileSearch,
+  },
+  {
+    title: "SIM Wiki",
+    body: "When enabled, the maintainer compiles durable memory instead of relying on repeated raw retrieval.",
+    icon: BookOpenCheck,
+  },
+  {
+    title: "Coach judgment",
+    body: "SimOne flags risks, missing loops, and approval moments before agents run too far.",
+    icon: MessageCircleQuestion,
+  },
+];
+
+export function SimCoach() {
+  const { setBreadcrumbs } = useBreadcrumbs();
+  const { selectedCompany } = useCompany();
+  const companyName = selectedCompany?.name ?? "this company";
+  const driverText = useMemo(() => drivers.join(" / "), []);
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "SIM Coach" }]);
+  }, [setBreadcrumbs]);
+
+  return (
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-6">
+      <section className="flex flex-col gap-4 border-b border-border pb-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="max-w-3xl">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <BookOpenCheck className="h-4 w-4" />
+              <span>SIM Coach</span>
+            </div>
+            <h1 className="mt-3 text-2xl font-semibold tracking-normal text-foreground">
+              Shape {companyName} before assigning agents.
+            </h1>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              Start from a legible operating map, let agents draft and research, then pause at the
+              moments where human judgment protects the company.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button asChild size="sm" className="h-8">
+              <Link to="/teams-catalog/paperclipai%3Abundled%3Asimone%3Asimone-starter">
+                Starter
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="h-8">
+              <Link to="/company/settings/instance/plugins">Enable SIM Wiki</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <h2 className="text-base font-semibold text-foreground">Start State</h2>
+          </div>
+          {setupOptions.map((option) => (
+            <div key={option.title} className="flex flex-col gap-3 border-b border-border py-4 first:pt-1 last:border-b-0">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-medium text-foreground">{option.title}</div>
+                  <p className="mt-1 text-sm leading-5 text-muted-foreground">{option.body}</p>
+                </div>
+                <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                  {option.label}
+                </span>
+              </div>
+              <Button asChild variant="outline" size="sm" className="h-8 w-fit">
+                <Link to={option.href}>{option.action}</Link>
+              </Button>
+            </div>
+          ))}
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Compass className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-base font-semibold text-foreground">Starter SIM Map</h2>
+            </div>
+            <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+              Draft
+            </span>
+          </div>
+          <p className="text-sm text-muted-foreground">{driverText}</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {engines.map((engine) => {
+              const Icon = engine.icon;
+              return (
+                <div key={engine.name} className="border-b border-border py-3">
+                  <div className="flex items-center gap-2">
+                    <span className={cn("rounded-md p-1.5", engine.tone)}>
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <div className="text-sm font-medium text-foreground">{engine.name} Engine</div>
+                      <div className="text-xs text-muted-foreground">{engine.summary}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Scale className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-base font-semibold text-foreground">Approval Boundaries</h2>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {reviewBoundaries.map((boundary) => (
+              <span key={boundary} className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
+                {boundary}
+              </span>
+            ))}
+          </div>
+          <p className="text-sm leading-6 text-muted-foreground">
+            Research and drafting can move quickly. These boundaries turn into approval moments
+            before agents change the shape of the business.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <h2 className="text-base font-semibold text-foreground">Coach Nudges</h2>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {coachNotes.map((note) => (
+              <div key={note.title} className="flex gap-3 border-b border-border py-3">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" aria-hidden="true" />
+                <div>
+                  <div className="text-sm font-medium text-foreground">{note.title}</div>
+                  <p className="mt-1 text-sm leading-5 text-muted-foreground">{note.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-4 border-t border-border pt-6">
+        <div className="flex items-center gap-2">
+          <Workflow className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-base font-semibold text-foreground">Coach Loop</h2>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {coachFlow.map((step) => {
+            const Icon = step.icon;
+            return (
+              <div key={step.title} className="border-b border-border pb-4">
+                <div className="flex items-center gap-2">
+                  <Icon className="h-4 w-4 text-muted-foreground" />
+                  <div className="text-sm font-medium text-foreground">{step.title}</div>
+                </div>
+                <p className="mt-2 text-sm leading-5 text-muted-foreground">{step.body}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    </div>
+  );
+}

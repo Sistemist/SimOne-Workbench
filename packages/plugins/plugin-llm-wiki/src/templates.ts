@@ -7,6 +7,7 @@ export const REQUIRED_WIKI_DIRECTORIES = [
   "wiki/projects",
   "wiki/entities",
   "wiki/concepts",
+  "wiki/sim",
   "wiki/synthesis",
 ] as const;
 
@@ -47,15 +48,20 @@ export const DEFAULT_IDEA = templateFile("IDEA.md");
 export const DEFAULT_INDEX = templateFile("wiki/index.md");
 export const DEFAULT_LOG = templateFile("wiki/log.md");
 export const DEFAULT_GITIGNORE = templateFile("gitignore.template");
+export const DEFAULT_SIM_ARCHETYPES = templateFile("wiki/sim/archetypes.md");
+export const DEFAULT_SIM_COACHING_GUIDANCE = templateFile("wiki/sim/coaching-guidance.md");
+export const DEFAULT_SIM_DRIVERS = templateFile("wiki/sim/drivers.md");
+export const DEFAULT_SIM_ENGINES = templateFile("wiki/sim/engines.md");
+export const DEFAULT_SIM_SYSTEM_LAWS = templateFile("wiki/sim/system-laws.md");
 
-export const QUERY_PROMPT = `Answer from the LLM Wiki using the installed wiki-query skill.
+export const QUERY_PROMPT = `Answer from the SIM Wiki using the installed wiki-query skill.
 
-Read the target space's wiki/index.md first, inspect relevant pages and raw/source references in that same space, cite the wiki page paths and raw source paths used, and say when the wiki does not contain enough evidence. Useful durable synthesis should be filed back into wiki/synthesis/ inside that same space. Always pass the operation issue's wikiId and spaceSlug to LLM Wiki tools.
+Read the target space's wiki/index.md first, inspect relevant pages and raw/source references in that same space, cite the wiki page paths and raw source paths used, and say when the wiki does not contain enough evidence. Useful durable synthesis should be filed back into wiki/synthesis/ inside that same space. Always pass the operation issue's wikiId and spaceSlug to SIM Wiki tools.
 `;
 
-export const LINT_PROMPT = `Lint the LLM Wiki using the installed wiki-lint skill.
+export const LINT_PROMPT = `Lint the SIM Wiki using the installed wiki-lint skill.
 
-Audit the target space only for contradictions, stale claims, orphan pages, missing backlinks, weak provenance, and wiki/index.md / wiki/log.md drift. Also look for important concepts mentioned without pages and answers that should have been filed back into wiki/. Return findings grouped by severity with concrete file paths, evidence, and suggested fixes — do not auto-apply edits. Always pass the operation issue's wikiId and spaceSlug to LLM Wiki tools.
+Audit the target space only for contradictions, stale claims, orphan pages, missing backlinks, weak provenance, and wiki/index.md / wiki/log.md drift. Also look for important concepts mentioned without pages and answers that should have been filed back into wiki/. Return findings grouped by severity with concrete file paths, evidence, and suggested fixes — do not auto-apply edits. Always pass the operation issue's wikiId and spaceSlug to SIM Wiki tools.
 `;
 
 export const BOOTSTRAP_FILES: ReadonlyArray<{ path: string; contents: string }> = [
@@ -69,5 +75,11 @@ export const BOOTSTRAP_FILES: ReadonlyArray<{ path: string; contents: string }> 
   { path: "wiki/projects/.gitkeep", contents: "" },
   { path: "wiki/entities/.gitkeep", contents: "" },
   { path: "wiki/concepts/.gitkeep", contents: "" },
+  { path: "wiki/sim/.gitkeep", contents: "" },
+  { path: "wiki/sim/archetypes.md", contents: DEFAULT_SIM_ARCHETYPES },
+  { path: "wiki/sim/coaching-guidance.md", contents: DEFAULT_SIM_COACHING_GUIDANCE },
+  { path: "wiki/sim/drivers.md", contents: DEFAULT_SIM_DRIVERS },
+  { path: "wiki/sim/engines.md", contents: DEFAULT_SIM_ENGINES },
+  { path: "wiki/sim/system-laws.md", contents: DEFAULT_SIM_SYSTEM_LAWS },
   { path: "wiki/synthesis/.gitkeep", contents: "" },
 ];

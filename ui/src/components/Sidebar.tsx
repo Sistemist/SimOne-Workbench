@@ -18,6 +18,7 @@ import {
   PanelLeftOpen,
   Pin,
   MessagesSquare,
+  BookOpenCheck,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { NavLink } from "@/lib/router";
@@ -159,6 +160,7 @@ export function Sidebar() {
             );
           })()}
           <SidebarNavItem to="/dashboard" label="Dashboard" icon={LayoutDashboard} liveCount={liveRunCount} />
+          <SidebarNavItem to="/sim-coach" label="SIM Coach" icon={BookOpenCheck} />
           <SidebarNavItem
             to="/inbox"
             label="Inbox"

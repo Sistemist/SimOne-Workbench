@@ -710,6 +710,26 @@ function withSafeCatalogAdapterDefaults(
   return merged;
 }
 
+function filterResolvedCatalogSkillWarnings(
+  prepared: CatalogTeamPreparedSource,
+  warnings: string[],
+) {
+  const resolvedCatalogSkillKeys = new Set(
+    prepared.skillPreparations
+      .filter((skill) => skill.action === "catalog_install_required")
+      .map((skill) => skill.catalogSkillKey ?? skill.ref),
+  );
+  if (resolvedCatalogSkillKeys.size === 0) return warnings;
+  return warnings.filter((warning) => {
+    for (const skillKey of resolvedCatalogSkillKeys) {
+      if (warning.includes(`references skill ${skillKey}, but that skill is not present in the package`)) {
+        return false;
+      }
+    }
+    return true;
+  });
+}
+
 function buildPortabilityInput(
   companyId: string,
   source: CompanyPortabilitySource,
@@ -849,6 +869,7 @@ export function teamsCatalogService(db: Db) {
       mode: "agent_safe",
       sourceCompanyId: companyId,
     });
+    portabilityPreview.warnings = filterResolvedCatalogSkillWarnings(prepared, portabilityPreview.warnings);
     portabilityPreview.warnings.push(...prepared.warnings);
     portabilityPreview.errors.push(...prepared.errors);
     await logCatalogEvent("company.team_catalog_previewed", companyId, prepared.team, options.actor, {
@@ -923,20 +944,13 @@ export function teamsCatalogService(db: Db) {
       mode: "agent_safe",
       sourceCompanyId: companyId,
     });
+    importPreview.warnings = filterResolvedCatalogSkillWarnings(prepared, importPreview.warnings);
     if (importPreview.errors.length > 0) {
       throw unprocessable(`Catalog team import preview has errors: ${importPreview.errors.join("; ")}`);
     }
-    const defaultedAdapterSlugs = prepared.team.agentSlugs.filter(
-      (slug) => !options.adapterOverrides?.[slug],
-    );
     const warnings = [
       ...prepared.warnings,
       ...importPreview.warnings,
-      ...(defaultedAdapterSlugs.length > 0
-        ? [
-            `Catalog agents without explicit overrides (${defaultedAdapterSlugs.join(", ")}) default to ${defaultAdapterType}. Pass adapterOverrides or PAPERCLIP_TEAMS_CATALOG_DEFAULT_ADAPTER_TYPE to use a different supported adapter.`,
-          ]
-        : []),
     ];
     const result = await portability.importBundle(
       importInput,
@@ -946,6 +960,7 @@ export function teamsCatalogService(db: Db) {
         sourceCompanyId: companyId,
       },
     );
+    result.warnings = filterResolvedCatalogSkillWarnings(prepared, result.warnings);
     warnings.push(...await prepareSkillInstalls(companyId, prepared));
     result.warnings.push(...warnings);
     await logCatalogEvent("company.team_catalog_installed", companyId, prepared.team, options.actor, {

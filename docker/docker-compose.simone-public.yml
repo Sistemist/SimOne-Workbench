@@ -1,0 +1,7 @@
+services:
+  paperclip:
+    restart: unless-stopped
+    environment:
+      PAPERCLIP_DEPLOYMENT_EXPOSURE: "${PAPERCLIP_DEPLOYMENT_EXPOSURE:-private}"
+      PAPERCLIP_ALLOWED_HOSTNAMES: "${PAPERCLIP_ALLOWED_HOSTNAMES:-sim.sysdom.org,localhost,127.0.0.1}"
+      BETTER_AUTH_TRUSTED_ORIGINS: "${BETTER_AUTH_TRUSTED_ORIGINS:-https://sim.sysdom.org,http://sim.sysdom.org,http://127.0.0.1:3100,http://localhost:3100}"

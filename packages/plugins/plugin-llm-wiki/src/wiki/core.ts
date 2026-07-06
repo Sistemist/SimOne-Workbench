@@ -478,7 +478,7 @@ async function requirePaperclipIngestionPolicy(
 
 function assertPaperclipSourceScopePayload(input: { projectId?: string | null; rootIssueId?: string | null }) {
   if (input.projectId && input.rootIssueId) {
-    throw new Error("Paperclip source scope must specify either projectId or rootIssueId, not both.");
+    throw new Error("SimOne source scope must specify either projectId or rootIssueId, not both.");
   }
 }
 
@@ -488,7 +488,7 @@ function assertRequestedCharacterLimit(name: string, value: unknown, max: number
     throw new Error(`${name} must be a positive number.`);
   }
   if (Math.floor(value) > max) {
-    throw new Error(`${name} exceeds the hard Paperclip ingestion cap of ${max} characters.`);
+    throw new Error(`${name} exceeds the hard SimOne workbench ingestion cap of ${max} characters.`);
   }
 }
 
@@ -623,11 +623,11 @@ function protectDistillationSourceBody(input: {
 
   return {
     body: [
-      `[Suppressed by LLM Wiki distillation security policy for this ${input.sourceKind}.]`,
+      `[Suppressed by SIM Wiki distillation security policy for this ${input.sourceKind}.]`,
       "",
       `- Source ID: ${input.sourceId}`,
       `- Redaction reasons: ${reasons.join(", ")}`,
-      "- Review the original Paperclip source directly if a human needs the unredacted material.",
+      "- Review the original SimOne workbench source directly if a human needs the unredacted material.",
     ].join("\n"),
     warning: `Suppressed ${input.sourceKind} content for ${sourceTitleForIssue(input.issue)} / ${input.sourceId}: ${reasons.join(", ")}.`,
     refPatch: {
@@ -691,7 +691,7 @@ async function assertSourceWithinConfiguredLimit(ctx: PluginContext, contents: s
   const maxSourceBytes = normalizeMaxSourceBytes(config.maxSourceBytes);
   const sourceBytes = byteLength(contents);
   if (sourceBytes > maxSourceBytes) {
-    throw new Error(`Source content is ${sourceBytes} bytes, which exceeds the configured LLM Wiki source limit of ${maxSourceBytes} bytes.`);
+    throw new Error(`Source content is ${sourceBytes} bytes, which exceeds the configured SIM Wiki source limit of ${maxSourceBytes} bytes.`);
   }
 }
 
@@ -864,7 +864,7 @@ function evaluatePaperclipProfilePolicy(input: {
       allowed: false,
       space,
       reason: "archived_space",
-      message: `Paperclip ingestion policy denied ${purpose}: space "${space.slug}" is ${space.status}.`,
+      message: `SimOne ingestion policy denied ${purpose}: space "${space.slug}" is ${space.status}.`,
     };
   }
   if (space.accessScope !== "shared") {
@@ -872,7 +872,7 @@ function evaluatePaperclipProfilePolicy(input: {
       allowed: false,
       space,
       reason: "restricted_space",
-      message: `Paperclip ingestion policy denied ${purpose}: ${space.accessScope} spaces cannot ingest Paperclip sources until host permissions are enforced.`,
+      message: `SimOne ingestion policy denied ${purpose}: ${space.accessScope} spaces cannot ingest SimOne workbench sources until host permissions are enforced.`,
     };
   }
   if (input.requireEnabledProfile && space.slug !== DEFAULT_SPACE_SLUG && !profile?.enabled) {
@@ -880,7 +880,7 @@ function evaluatePaperclipProfilePolicy(input: {
       allowed: false,
       space,
       reason: "profile_disabled",
-      message: `Paperclip ingestion policy denied ${purpose}: Paperclip ingestion is not enabled for space "${space.slug}".`,
+      message: `SimOne ingestion policy denied ${purpose}: SimOne workbench ingestion is not enabled for space "${space.slug}".`,
     };
   }
   if (input.requireEnabledProfile && space.slug !== DEFAULT_SPACE_SLUG && profile?.enabled && profile.sourceScopes.length === 0) {
@@ -888,7 +888,7 @@ function evaluatePaperclipProfilePolicy(input: {
       allowed: false,
       space,
       reason: "profile_empty",
-      message: `Paperclip ingestion policy denied ${purpose}: space "${space.slug}" has no source scopes configured.`,
+      message: `SimOne ingestion policy denied ${purpose}: space "${space.slug}" has no source scopes configured.`,
     };
   }
   return { allowed: true, space };
@@ -989,10 +989,10 @@ async function validatePaperclipIngestionProfile(ctx: PluginContext, input: {
   });
   if (!policy.allowed) throw new Error(policy.message);
   if (input.profile.enabled && input.profile.sourceScopes.length === 0) {
-    throw new Error("Paperclip ingestion profile must include at least one source scope before it can be enabled.");
+    throw new Error("SimOne ingestion profile must include at least one source scope before it can be enabled.");
   }
   if (input.profile.sourceScopes.length > MAX_PAPERCLIP_INGESTION_PROFILE_SOURCE_COUNT) {
-    throw new Error(`Paperclip ingestion profile sources exceed the hard cap of ${MAX_PAPERCLIP_INGESTION_PROFILE_SOURCE_COUNT}.`);
+    throw new Error(`SimOne ingestion profile sources exceed the hard cap of ${MAX_PAPERCLIP_INGESTION_PROFILE_SOURCE_COUNT}.`);
   }
   for (const scope of input.profile.sourceScopes) {
     if (scope.kind === "company_all" && input.space.slug !== DEFAULT_SPACE_SLUG) {
@@ -1050,7 +1050,7 @@ export async function updatePaperclipIngestionProfile(ctx: PluginContext, input:
   }
   await ctx.activity.log({
     companyId: input.companyId,
-    message: `Updated Paperclip ingestion profile for ${space.displayName}`,
+    message: `Updated SimOne ingestion profile for ${space.displayName}`,
     entityType: "llm_wiki_space",
     entityId: space.id,
     metadata: {
@@ -1113,7 +1113,7 @@ export async function listPaperclipIngestionCandidates(ctx: PluginContext, input
   }, "profile_update");
   const sourceKeys = Object.keys(input.settings.sources ?? {});
   if (sourceKeys.length > MAX_PAPERCLIP_INGESTION_PROFILE_SOURCE_COUNT) {
-    throw new Error(`Paperclip ingestion profile sources exceed the hard cap of ${MAX_PAPERCLIP_INGESTION_PROFILE_SOURCE_COUNT}.`);
+    throw new Error(`SimOne ingestion profile sources exceed the hard cap of ${MAX_PAPERCLIP_INGESTION_PROFILE_SOURCE_COUNT}.`);
   }
   assertRequestedCharacterLimit("maxCharacters", input.settings.maxCharacters, MAX_EVENT_SOURCE_CHARS);
   const current = await getEventIngestionSettings(ctx, input.companyId);
@@ -1367,7 +1367,7 @@ export async function resolveSpace(ctx: PluginContext, input: SpaceInput): Promi
       LIMIT 1`,
     [input.companyId, wikiId, slug],
   );
-  if (!rows[0]) throw new Error(`LLM Wiki space not found: ${slug}`);
+  if (!rows[0]) throw new Error(`SIM Wiki space not found: ${slug}`);
   return wikiSpaceFromRow(rows[0]);
 }
 
@@ -1386,7 +1386,7 @@ async function resolveSpaceAnyStatus(ctx: PluginContext, input: SpaceInput): Pro
       LIMIT 1`,
     [input.companyId, wikiId, slug],
   );
-  if (!rows[0]) throw new Error(`LLM Wiki space not found: ${slug}`);
+  if (!rows[0]) throw new Error(`SIM Wiki space not found: ${slug}`);
   return wikiSpaceFromRow(rows[0]);
 }
 
@@ -1465,12 +1465,12 @@ export async function createSpace(ctx: PluginContext, input: CreateSpaceInput): 
 export async function updateSpace(ctx: PluginContext, input: UpdateSpaceInput): Promise<{ status: "ok"; space: WikiSpace }> {
   const nextStatus = input.status ?? null;
   if (nextStatus !== null && nextStatus !== "active" && nextStatus !== "archived") {
-    throw new Error("LLM Wiki space status must be active or archived.");
+    throw new Error("SIM Wiki space status must be active or archived.");
   }
   const space = nextStatus === "active" ? await resolveSpaceAnyStatus(ctx, input) : await resolveSpace(ctx, input);
   const nextDisplayName = stringField(input.displayName);
   if (space.slug === DEFAULT_SPACE_SLUG && nextStatus === "archived") {
-    throw new Error("The default LLM Wiki space cannot be archived.");
+    throw new Error("The default SIM Wiki space cannot be archived.");
   }
   await ctx.db.execute(
     `UPDATE ${spaceTable(ctx)}
@@ -1504,7 +1504,7 @@ export async function updateSpace(ctx: PluginContext, input: UpdateSpaceInput): 
 
 export async function archiveSpace(ctx: PluginContext, input: SpaceInput): Promise<{ status: "archived"; space: WikiSpace }> {
   const space = await resolveSpace(ctx, input);
-  if (space.slug === DEFAULT_SPACE_SLUG) throw new Error("The default LLM Wiki space cannot be archived.");
+  if (space.slug === DEFAULT_SPACE_SLUG) throw new Error("The default SIM Wiki space cannot be archived.");
   await ctx.db.execute(
     `UPDATE ${spaceTable(ctx)}
         SET status = 'archived', updated_at = now()
@@ -2142,7 +2142,7 @@ export async function reconcileWikiRoutineResources(
 export async function selectWikiProjectResource(ctx: PluginContext, input: { companyId: string; projectId: string }): Promise<WikiProjectResource> {
   const project = await ctx.projects.get(input.projectId, input.companyId);
   if (!project) {
-    throw new Error("Selected LLM Wiki project was not found.");
+    throw new Error("Selected SIM Wiki project was not found.");
   }
   await upsertResourceBinding(ctx, {
     companyId: input.companyId,
@@ -2305,13 +2305,13 @@ function operationPromptWithSpaceContext(input: OperationSpaceContext): string {
     `Billing context: ${operationBillingContext(input.wikiId, input.space)}`,
     "",
     "Space isolation requirement:",
-    `- Pass wikiId \`${input.wikiId}\` and spaceSlug \`${input.space.slug}\` on every LLM Wiki tool call.`,
+    `- Pass wikiId \`${input.wikiId}\` and spaceSlug \`${input.space.slug}\` on every SIM Wiki tool call.`,
     "- Treat all paths in the prompt as relative to this space root.",
     paperclipDerived
-      ? "- Paperclip-derived distill/backfill operations are default-space-only in Phase 1. Stop and comment if asked to write Paperclip-derived pages into a non-default space."
+      ? "- SimOne-derived distill/backfill operations are default-space-only in Phase 1. Stop and comment if asked to write SimOne-derived pages into a non-default space."
       : "- Manual ingest, query, lint, index, and file-as-page operations follow the named destination space. Do not cross into another space unless the operation explicitly asks for a multi-space sweep.",
     "",
-    input.prompt ?? "Created by the LLM Wiki plugin.",
+    input.prompt ?? "Created by the SIM Wiki plugin.",
   ].join("\n");
 }
 
@@ -2337,7 +2337,7 @@ export async function createOperationIssue(ctx: PluginContext, input: OperationI
   const managedAgent = await resolveWikiAgentResource(ctx, input.companyId, { reconcileMissing: true });
   const managedProject = await resolveWikiProjectResource(ctx, input.companyId, { reconcileMissing: true });
   const operationId = randomUUID();
-  const title = operationTitleWithSpace(input.title ?? `LLM Wiki ${input.operationType}`, space);
+  const title = operationTitleWithSpace(input.title ?? `SIM Wiki ${input.operationType}`, space);
   const originId = operationIssueOriginId({ wikiId, space, operationId });
   const operationContext = { wikiId, space, operationType: input.operationType, operationId, prompt: input.prompt };
   const assignableAgentId =
@@ -2480,7 +2480,7 @@ export async function enableActiveProjectDistillation(ctx: PluginContext, input:
   const wikiId = normalizeWikiId(input.wikiId);
   const space = await requirePaperclipIngestionPolicy(ctx, { companyId: input.companyId, wikiId, spaceSlug: input.spaceSlug }, "candidate_search", { requireEnabledProfile: true });
   if (typeof input.limit === "number" && Number.isFinite(input.limit) && Math.floor(input.limit) > MAX_PAPERCLIP_DISTILLATION_FAN_OUT) {
-    throw new Error(`Paperclip ingestion fan-out exceeds the hard cap of ${MAX_PAPERCLIP_DISTILLATION_FAN_OUT} enabled profiles.`);
+    throw new Error(`SimOne ingestion fan-out exceeds the hard cap of ${MAX_PAPERCLIP_DISTILLATION_FAN_OUT} enabled profiles.`);
   }
   const limit = normalizeLimit(input.limit ?? 3, 3, 25);
   const projects = await ctx.projects.list({ companyId: input.companyId, limit: 200 });
@@ -2622,7 +2622,7 @@ export async function assemblePaperclipSourceBundle(ctx: PluginContext, input: P
   const sourceRefs: PaperclipSourceRef[] = [];
   const warnings: string[] = [];
   const lines = [
-    `# Paperclip source bundle`,
+    `# SimOne source bundle`,
     "",
     "## Bundle Metadata",
     "",
@@ -2933,7 +2933,7 @@ export async function createPaperclipDistillationWorkItem(ctx: PluginContext, in
 }
 
 function sourceRefLabel(ref: PaperclipSourceRef): string {
-  const issue = ref.issueIdentifier ? issueReference(ref.issueIdentifier) : (ref.title ?? "Paperclip source");
+  const issue = ref.issueIdentifier ? issueReference(ref.issueIdentifier) : (ref.title ?? "SimOne source");
   if (ref.kind === "document") return `${issue} document:${ref.documentKey ?? "unknown"}`;
   if (ref.kind === "comment") return `${issue} comment`;
   return issue;
@@ -2959,7 +2959,7 @@ function issueSourceRef(issue: Issue): PaperclipSourceRef {
 }
 
 function projectPageSlug(input: { project: Project | null; rootIssue: Issue | null }): string {
-  return slugify(input.project?.name ?? input.rootIssue?.title ?? "paperclip-project");
+  return slugify(input.project?.name ?? input.rootIssue?.title ?? "simone-project");
 }
 
 function issueDescription(issue: Issue): string {
@@ -3022,7 +3022,7 @@ function standupPageContents(input: {
   durablePagePath: string;
 }): string {
   const currentAsOf = input.bundle.sourceWindowEnd ?? new Date().toISOString();
-  const title = input.project?.name ?? input.rootIssue?.title ?? "Paperclip Project";
+  const title = input.project?.name ?? input.rootIssue?.title ?? "SimOne Project";
   const activeIssues = input.issues.filter((issue) => !["done", "cancelled"].includes(issue.status));
   const recentlyChanged = [...input.issues]
     .sort((a, b) => (isoString(b.updatedAt) ?? "").localeCompare(isoString(a.updatedAt) ?? ""))
@@ -3048,7 +3048,7 @@ function standupPageContents(input: {
     "## Executive Readout",
     "",
     lead
-      ? `The current center of gravity is **${issueConcept(lead)}** (${issueReferenceFor(lead)}). ${input.bundle.clipped ? "The source window was clipped, so treat this as a bounded readout rather than the full live state." : "This is a high-level readout of the meaningful Paperclip work in the current source window."}`
+      ? `The current center of gravity is **${issueConcept(lead)}** (${issueReferenceFor(lead)}). ${input.bundle.clipped ? "The source window was clipped, so treat this as a bounded readout rather than the full live state." : "This is a high-level readout of the meaningful SimOne work in the current source window."}`
       : "No meaningful project movement was present in this source window.",
     "",
     "## What Changed",
@@ -3093,7 +3093,7 @@ function projectPageContents(input: {
   pagePath: string;
 }): string {
   const currentAsOf = input.bundle.sourceWindowEnd ?? new Date().toISOString();
-  const title = input.project?.name ?? input.rootIssue?.title ?? "Paperclip Project";
+  const title = input.project?.name ?? input.rootIssue?.title ?? "SimOne Project";
   const description = input.project?.description?.trim() || input.rootIssue?.description?.trim() || "";
   const activeIssues = input.issues.filter((issue) => !["done", "cancelled"].includes(issue.status));
   const recentIssues = [...input.issues]
@@ -3114,14 +3114,14 @@ function projectPageContents(input: {
     "",
     "## Overview",
     "",
-    description ? excerpt(description, 700) : `This page synthesizes Paperclip issue history into a stable project brief for ${title}.`,
+    description ? excerpt(description, 700) : `This page synthesizes SimOne task history into a stable project brief for ${title}.`,
     "",
     "## Current Direction",
     "",
     activeIssues.length
       ? `Work is currently organized around ${activeIssues.slice(0, 3).map((issue) => `**${issueConcept(issue)}** (${issueReferenceFor(issue)})`).join(", ")}. The useful project view is the concept being advanced, not the raw issue queue.`
       : "The current source window does not show active project work.",
-    input.bundle.clipped ? "\nThe source window was clipped, so verify Paperclip before treating this as complete state." : null,
+    input.bundle.clipped ? "\nThe source window was clipped, so verify SimOne before treating this as complete state." : null,
     "",
     "## Workstreams",
     "",
@@ -3150,7 +3150,7 @@ function projectPageContents(input: {
 }
 
 function decisionsPageContents(input: { project: Project | null; rootIssue: Issue | null; issues: Issue[]; bundle: PaperclipSourceBundle }): string {
-  const title = input.project?.name ?? input.rootIssue?.title ?? "Paperclip Project";
+  const title = input.project?.name ?? input.rootIssue?.title ?? "SimOne Project";
   const decisionIssues = input.issues.filter((issue) => hasDecisionSignal(`${issue.title}\n${issueDescription(issue)}`));
   return [
     `# ${title} Decisions`,
@@ -3175,7 +3175,7 @@ function decisionsPageContents(input: { project: Project | null; rootIssue: Issu
 }
 
 function historyPageContents(input: { project: Project | null; rootIssue: Issue | null; issues: Issue[]; bundle: PaperclipSourceBundle }): string {
-  const title = input.project?.name ?? input.rootIssue?.title ?? "Paperclip Project";
+  const title = input.project?.name ?? input.rootIssue?.title ?? "SimOne Project";
   const timeline = [...input.issues]
     .sort((a, b) => (isoString(a.updatedAt) ?? "").localeCompare(isoString(b.updatedAt) ?? ""))
     .slice(-30);
@@ -3220,7 +3220,7 @@ function appendProjectLogContents(current: string | null, input: { standupPath: 
     ? input.warnings.map((warning) => `- warning: ${warning}`)
     : ["- warnings: none"];
   const entry = [
-    `## [${new Date().toISOString().slice(0, 10)}] paperclip-distill | ${input.status}`,
+    `## [${new Date().toISOString().slice(0, 10)}] simone-distill | ${input.status}`,
     `- standup: \`${input.standupPath}\``,
     `- page: \`${input.pagePath}\``,
     `- run: \`${input.runId}\``,
@@ -3363,7 +3363,7 @@ export async function distillPaperclipProjectPage(ctx: PluginContext, input: Pap
       status: "succeeded",
       sourceHash: bundle.sourceHash,
       sourceWindowEnd: bundle.sourceWindowEnd,
-      warning: "Skipped low-signal Paperclip source window.",
+      warning: "Skipped low-signal SimOne source window.",
     });
     return {
       status: "skipped",
@@ -3372,7 +3372,7 @@ export async function distillPaperclipProjectPage(ctx: PluginContext, input: Pap
       runId: run.runId,
       cursorId: run.cursorId,
       sourceHash: bundle.sourceHash,
-      warnings: ["Skipped low-signal Paperclip source window."],
+      warnings: ["Skipped low-signal SimOne source window."],
       patches: [] as PaperclipDistillationPatch[],
     };
   }
@@ -3388,7 +3388,7 @@ export async function distillPaperclipProjectPage(ctx: PluginContext, input: Pap
       status: "succeeded",
       sourceHash: bundle.sourceHash,
       sourceWindowEnd: bundle.sourceWindowEnd,
-      warning: "Skipped unchanged Paperclip source hash.",
+      warning: "Skipped unchanged SimOne source hash.",
     });
     return {
       status: "skipped",
@@ -3397,7 +3397,7 @@ export async function distillPaperclipProjectPage(ctx: PluginContext, input: Pap
       runId: run.runId,
       cursorId: run.cursorId,
       sourceHash: bundle.sourceHash,
-      warnings: ["Skipped unchanged Paperclip source hash."],
+      warnings: ["Skipped unchanged SimOne source hash."],
       patches: [] as PaperclipDistillationPatch[],
     };
   }
@@ -3405,7 +3405,7 @@ export async function distillPaperclipProjectPage(ctx: PluginContext, input: Pap
   const warnings = [...bundle.warnings];
   const confidence: "high" | "medium" | "low" = bundle.clipped ? "medium" : "high";
   const reviewRequired = bundle.clipped || warnings.length > 0;
-  const title = project?.name ?? rootIssue?.title ?? "Paperclip Project";
+  const title = project?.name ?? rootIssue?.title ?? "SimOne Project";
   const standupCurrent = await readCurrentWithHash(ctx, input.companyId, standupPath, space);
   const standupContents = standupPageContents({ project, rootIssue, issues, bundle, pagePath: standupPath, durablePagePath: pagePath });
   const projectContents = projectPageContents({ project, rootIssue, issues, bundle, pagePath });
@@ -3499,7 +3499,7 @@ export async function distillPaperclipProjectPage(ctx: PluginContext, input: Pap
       path: patch.pagePath,
       contents: patch.proposedContents,
       expectedHash: patch.currentHash,
-      summary: `Paperclip distillation ${patch.operationType} from ${bundle.sourceHash}`,
+      summary: `SimOne distillation ${patch.operationType} from ${bundle.sourceHash}`,
       sourceRefs: patch.sourceRefs,
     });
     await upsertPageBinding(ctx, {
@@ -3541,7 +3541,7 @@ export async function distillPaperclipProjectPage(ctx: PluginContext, input: Pap
 
 function truncateEventSource(contents: string, maxCharacters: number): string {
   if (contents.length <= maxCharacters) return contents;
-  return `${contents.slice(0, maxCharacters)}\n\n[Truncated by LLM Wiki event ingestion policy at ${maxCharacters} characters.]\n`;
+  return `${contents.slice(0, maxCharacters)}\n\n[Truncated by SIM Wiki event ingestion policy at ${maxCharacters} characters.]\n`;
 }
 
 function eventPayload(event: PluginEvent): Record<string, unknown> {
@@ -3563,12 +3563,12 @@ function rawPathForPaperclipEvent(input: {
 }): string {
   const identifier = input.issue.identifier ?? input.issue.id.slice(0, 8);
   const eventDate = input.event.occurredAt.slice(0, 10);
-  return assertRawPath(`raw/paperclip/${input.sourceKind}/${eventDate}-${slugify(identifier)}-${slugify(input.label)}-${contentHash(input.contents).slice(0, 8)}.md`);
+  return assertRawPath(`raw/simone/${input.sourceKind}/${eventDate}-${slugify(identifier)}-${slugify(input.label)}-${contentHash(input.contents).slice(0, 8)}.md`);
 }
 
 function formatIssueEventSource(issue: Issue, event: PluginEvent, maxCharacters: number): string {
   return truncateEventSource([
-    `# Paperclip issue: ${sourceTitleForIssue(issue)}`,
+    `# SimOne task: ${sourceTitleForIssue(issue)}`,
     "",
     "## Provenance",
     "",
@@ -3589,7 +3589,7 @@ function formatIssueEventSource(issue: Issue, event: PluginEvent, maxCharacters:
 
 function formatCommentEventSource(issue: Issue, comment: IssueComment, event: PluginEvent, maxCharacters: number): string {
   return truncateEventSource([
-    `# Paperclip comment on ${sourceTitleForIssue(issue)}`,
+    `# SimOne comment on ${sourceTitleForIssue(issue)}`,
     "",
     "## Provenance",
     "",
@@ -3609,7 +3609,7 @@ function formatCommentEventSource(issue: Issue, comment: IssueComment, event: Pl
 
 function formatDocumentEventSource(issue: Issue, document: IssueDocument, event: PluginEvent, maxCharacters: number): string {
   return truncateEventSource([
-    `# Paperclip document: ${document.title ?? document.key}`,
+    `# SimOne document: ${document.title ?? document.key}`,
     "",
     "## Provenance",
     "",
@@ -3718,7 +3718,7 @@ async function routePaperclipCursorObservation(ctx: PluginContext, input: {
     if (!(await paperclipProfileIncludesIssue(ctx, { companyId: input.companyId, issue: input.issue, profile }))) continue;
     eligibleProfileCount += 1;
     if (eligibleProfileCount > MAX_PAPERCLIP_DISTILLATION_FAN_OUT) {
-      throw new Error(`Paperclip ingestion fan-out exceeds the hard cap of ${MAX_PAPERCLIP_DISTILLATION_FAN_OUT} enabled profiles.`);
+      throw new Error(`SimOne ingestion fan-out exceeds the hard cap of ${MAX_PAPERCLIP_DISTILLATION_FAN_OUT} enabled profiles.`);
     }
     if (await ctx.state.get(eventIngestionDedupKey(input.companyId, space.wikiId, space.id, input.sourceKind, input.sourceId))) {
       continue;
@@ -3795,7 +3795,7 @@ function buildQueryPrompt(input: { companyId: string; wikiId: string; space: Wik
     `Space: ${input.space.displayName} (${input.space.slug})`,
     `Space root: ${operationSpaceRoot(input.space)}`,
     `Tool arguments: always pass wikiId \`${input.wikiId}\` and spaceSlug \`${input.space.slug}\`.`,
-    "Use the LLM Wiki plugin tools against that space only. Read wiki/index.md first with wiki_read_page, then use wiki_search, wiki_read_page, wiki_list_sources, and wiki_read_source as needed.",
+    "Use the SIM Wiki tools against that space only. Read wiki/index.md first with wiki_read_page, then use wiki_search, wiki_read_page, wiki_list_sources, and wiki_read_source as needed.",
     "Cite the wiki page paths and raw source paths you used. If the wiki does not contain enough evidence, say that directly.",
     `Question: ${input.question}`,
   ].join("\n\n");
@@ -3844,7 +3844,7 @@ export async function startWikiQuerySession(ctx: PluginContext, input: QuerySess
     wikiId,
     spaceSlug: space.slug,
     operationType: "query",
-    title: input.title ?? `Query LLM Wiki: ${question.slice(0, 72)}`,
+    title: input.title ?? `Query SIM Wiki: ${question.slice(0, 72)}`,
     prompt: question,
   });
   const agentId = operation.issue.assigneeAgentId;
@@ -3881,7 +3881,7 @@ export async function startWikiQuerySession(ctx: PluginContext, input: QuerySess
 
   const session = await ctx.agents.sessions.create(agentId, input.companyId, {
     taskKey: `plugin:${PLUGIN_ID}:session:wiki:${wikiId}:query:${operation.operationId}`,
-    reason: "LLM Wiki query session",
+    reason: "SIM Wiki query session",
   });
   await ctx.db.execute(
     `INSERT INTO ${tableName(ctx.db.namespace, "wiki_query_sessions")}
@@ -3904,7 +3904,7 @@ export async function startWikiQuerySession(ctx: PluginContext, input: QuerySess
   let answer = "";
   const sendResult = await ctx.agents.sessions.sendMessage(session.sessionId, input.companyId, {
     prompt,
-    reason: "LLM Wiki query",
+    reason: "SIM Wiki query",
     onEvent: (event) => {
       if (event.eventType === "chunk" && event.stream !== "stderr" && event.message) {
         answer += event.message;
@@ -4003,7 +4003,7 @@ export async function fileQueryAnswerAsPage(ctx: PluginContext, input: FileQuery
     wikiId,
     spaceSlug: space.slug,
     operationType: "file-as-page",
-    title: `File LLM Wiki answer as ${path}`,
+    title: `File SIM Wiki answer as ${path}`,
     prompt: input.question ?? answer ?? `Write ${path}`,
   });
   const result = await writeWikiPage(ctx, {

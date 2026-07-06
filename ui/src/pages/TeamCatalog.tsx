@@ -185,6 +185,11 @@ function decodeTeamFilePath(encoded: string | undefined): string | null {
 type ParsedRoute = { catalogRef: string | null; filePath: string | null };
 
 const TEAM_CATALOG_ROUTE_ROOT = "/teams-catalog";
+const SAFE_CATALOG_DEFAULT_ADAPTER_TYPE = "claude_local";
+
+function catalogPreviewAdapterType(adapterType: string): string {
+  return adapterType === "process" ? SAFE_CATALOG_DEFAULT_ADAPTER_TYPE : adapterType;
+}
 
 export function parseTeamRoute(routePath: string | undefined): ParsedRoute {
   if (!routePath) return { catalogRef: null, filePath: null };
@@ -1836,9 +1841,9 @@ export function StepPreview({
 
       {/* Adapter selection — install schema accepts adapterOverrides (design §4.4) */}
       {manifestAgents.length > 0 && (
-        <PreviewSection title={`Adapter selection · ${manifestAgents.length}`}>
+        <PreviewSection title={`How agents run · ${manifestAgents.length}`}>
           {manifestAgents.map((agent) => {
-            const selected = adapterOverrides[agent.slug] ?? agent.adapterType;
+            const selected = adapterOverrides[agent.slug] ?? catalogPreviewAdapterType(agent.adapterType);
             return (
               <li key={agent.slug} className="flex items-center gap-2 px-3 py-2 text-sm">
                 <Cpu className="h-3.5 w-3.5 text-muted-foreground" />
@@ -1858,8 +1863,8 @@ export function StepPreview({
             );
           })}
           <li className="px-3 py-1.5 text-[11px] text-muted-foreground">
-            Each imported agent defaults to its package adapter; override here before install.
-            Deeper per-adapter model config is editable on the agent after install.
+            SimOne applies the recommended runtime unless you change it here.
+            Advanced model settings remain editable on each agent after install.
           </li>
         </PreviewSection>
       )}

@@ -18,8 +18,24 @@ const mockCompaniesApi = vi.hoisted(() => ({
   create: vi.fn(),
 }));
 
+const mockAuthApi = vi.hoisted(() => ({
+  getSession: vi.fn(),
+}));
+
+const mockHealthApi = vi.hoisted(() => ({
+  get: vi.fn(),
+}));
+
 vi.mock("../api/companies", () => ({
   companiesApi: mockCompaniesApi,
+}));
+
+vi.mock("../api/auth", () => ({
+  authApi: mockAuthApi,
+}));
+
+vi.mock("../api/health", () => ({
+  healthApi: mockHealthApi,
 }));
 
 const activeCompany = { id: "company-1" };
@@ -133,6 +149,8 @@ describe("CompanyProvider", () => {
   beforeEach(() => {
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
     localStorage.clear();
+    mockAuthApi.getSession.mockResolvedValue(null);
+    mockHealthApi.get.mockResolvedValue({ deploymentMode: "local_trusted" });
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -168,6 +186,28 @@ describe("CompanyProvider", () => {
     });
 
     expect(seen).toEqual([null]);
+  });
+
+  it("does not load companies before a session exists in authenticated mode", async () => {
+    mockHealthApi.get.mockResolvedValue({ deploymentMode: "authenticated" });
+    mockAuthApi.getSession.mockResolvedValue(null);
+    mockCompaniesApi.list.mockResolvedValue([]);
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <CompanyProvider>
+            <Probe onSelectedCompanyId={() => {}} />
+          </CompanyProvider>
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(mockCompaniesApi.list).not.toHaveBeenCalled();
   });
 
   it("replaces a stale stored company id with the first loaded company", async () => {

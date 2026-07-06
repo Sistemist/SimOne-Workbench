@@ -155,11 +155,11 @@ describe("CloudAccessGate", () => {
     mockAuthApi.getSession.mockResolvedValue(null);
 
     const root = renderGate(container);
-    await waitForText(container, "Finish setting up this Paperclip");
+    await waitForText(container, "Finish setting up SimOne");
 
-    expect(container.textContent).toContain("Finish setting up this Paperclip");
+    expect(container.textContent).toContain("Finish setting up SimOne");
     expect(container.textContent).toContain("Sign in / Create account");
-    expect(container.textContent).toContain("pnpm paperclipai auth bootstrap-ceo");
+    expect(container.textContent).not.toContain("pnpm paperclipai auth bootstrap-ceo");
     expect(mockAccessApi.getCurrentBoardAccess).not.toHaveBeenCalled();
 
     unmountRoot(root);
@@ -180,23 +180,23 @@ describe("CloudAccessGate", () => {
     mockAccessApi.claimBootstrapAdmin.mockResolvedValue({ claimed: true, userId: "user-1" });
 
     const root = renderGate(container);
-    await waitForText(container, "Claim this instance");
+    await waitForText(container, "Claim this workspace");
 
-    expect(container.textContent).toContain("Claim this instance");
+    expect(container.textContent).toContain("Claim this workspace");
     expect(container.textContent).toContain("Signed in as user@example.com");
     expect(mockAccessApi.getCurrentBoardAccess).not.toHaveBeenCalled();
 
     const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Claim this instance"),
+      candidate.textContent?.includes("Claim this workspace"),
     );
     expect(button).toBeTruthy();
     flushSync(() => {
       button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
-    await waitForText(container, "You're the instance admin");
+    await waitForText(container, "You're the workspace admin");
 
     expect(mockAccessApi.claimBootstrapAdmin).toHaveBeenCalledTimes(1);
-    expect(container.textContent).toContain("You're the instance admin");
+    expect(container.textContent).toContain("You're the workspace admin");
     expect(container.textContent).toContain("Continue to dashboard");
 
     unmountRoot(root);
@@ -216,11 +216,11 @@ describe("CloudAccessGate", () => {
     });
 
     const root = renderGate(container);
-    await waitForText(container, "This Paperclip is waiting on its first admin");
+    await waitForText(container, "This SimOne workspace is waiting on its first admin");
 
-    expect(container.textContent).toContain("This Paperclip is waiting on its first admin");
-    expect(container.textContent).toContain("invite-only mode");
-    expect(container.textContent).not.toContain("Claim this instance");
+    expect(container.textContent).toContain("This SimOne workspace is waiting on its first admin");
+    expect(container.textContent).toContain("invite-only");
+    expect(container.textContent).not.toContain("Claim this workspace");
     expect(container.textContent).not.toContain("Sign in / Create account");
     expect(mockAccessApi.claimBootstrapAdmin).not.toHaveBeenCalled();
 

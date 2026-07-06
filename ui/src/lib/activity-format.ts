@@ -82,6 +82,15 @@ const ACTIVITY_ROW_VERBS: Record<string, string> = {
   "company.archived": "archived",
   "company.reactivated": "reactivated",
   "company.budget_updated": "updated budget for",
+  "plugin.enabled": "enabled",
+  "plugin.disabled": "disabled",
+  "plugin.managed_agent.created": "created",
+  "plugin.managed_agent.reset": "reset",
+  "plugin.managed_project.created": "created a project",
+  "plugin.managed_project.reset": "reset a project",
+  "plugin.managed_routine.created": "created a routine",
+  "plugin.managed_routine.reset": "reset a routine",
+  "plugin.managed_skill.reconciled": "updated a skill",
 };
 
 const ISSUE_ACTIVITY_LABELS: Record<string, string> = {
@@ -139,6 +148,49 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 function humanizeValue(value: unknown): string {
   if (typeof value !== "string") return String(value ?? "none");
   return value.replace(/_/g, " ");
+}
+
+function humanizeSlug(value: string): string {
+  const words = value
+    .trim()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : "Resource";
+}
+
+function readString(details: ActivityDetails, key: string): string | null {
+  const value = details?.[key];
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+}
+
+function pluginKeyLabel(pluginKey: string): string {
+  if (pluginKey === "paperclipai.plugin-llm-wiki") return "SIM Wiki";
+  const last = pluginKey.split(".").filter(Boolean).at(-1) ?? pluginKey;
+  return humanizeSlug(last.replace(/^plugin-/, ""));
+}
+
+export function formatPluginActorName(details: ActivityDetails, actorId: string | null | undefined): string {
+  const key = readString(details, "sourcePluginKey") ?? readString(details, "pluginKey");
+  if (key) return pluginKeyLabel(key);
+  if (!actorId) return "Plugin";
+  return `Plugin ${actorId.slice(0, 8)}`;
+}
+
+export function formatPluginEntityLabel(entityType: string, details: ActivityDetails): string | null {
+  if (entityType === "plugin") {
+    const key = readString(details, "pluginKey") ?? readString(details, "sourcePluginKey");
+    return key ? pluginKeyLabel(key) : null;
+  }
+
+  const managedResourceKey = readString(details, "managedResourceKey");
+  if (!managedResourceKey) return null;
+
+  const label = humanizeSlug(managedResourceKey);
+  if (entityType === "routine") return `${label} routine`;
+  if (entityType === "company_skill") return `${label} skill`;
+  if (entityType === "project") return `${label} project`;
+  return label;
 }
 
 function isActivityParticipant(value: unknown): value is ActivityParticipant {
@@ -336,6 +388,10 @@ export function formatActivityVerb(
   if (action === "issue.updated") {
     const issueUpdatedVerb = formatIssueUpdatedVerb(details);
     if (issueUpdatedVerb) return issueUpdatedVerb;
+  }
+
+  if (action === "plugin.managed_skill.reconciled" && details?.status === "created") {
+    return "installed a skill";
   }
 
   const structuredChange = formatStructuredIssueChange({

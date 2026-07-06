@@ -9,8 +9,10 @@ import {
 } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Company } from "@paperclipai/shared";
+import { authApi } from "../api/auth";
 import { companiesApi } from "../api/companies";
 import { companiesListQueryOptions, type CompanyListResult } from "../api/companies-query";
+import { healthApi } from "../api/health";
 import { queryKeys } from "../lib/queryKeys";
 import type { CompanySelectionSource } from "../lib/company-selection";
 type CompanySelectionOptions = { source?: CompanySelectionSource };
@@ -68,8 +70,28 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const [selectionSource, setSelectionSource] = useState<CompanySelectionSource>("bootstrap");
   const [selectedCompanyId, setSelectedCompanyIdState] = useState<string | null>(null);
 
+  const healthQuery = useQuery({
+    queryKey: queryKeys.health,
+    queryFn: () => healthApi.get(),
+    retry: false,
+  });
+  const isAuthenticatedMode = healthQuery.data?.deploymentMode === "authenticated";
+  const sessionQuery = useQuery({
+    queryKey: queryKeys.auth.session,
+    queryFn: () => authApi.getSession(),
+    enabled: isAuthenticatedMode,
+    retry: false,
+  });
+  const shouldLoadCompanies = Boolean(
+    healthQuery.data &&
+    (!isAuthenticatedMode || sessionQuery.data),
+  );
+
   const { data: companiesResult = { companies: [], unauthorized: false }, isLoading, error } =
-    useQuery<CompanyListResult>(companiesListQueryOptions);
+    useQuery<CompanyListResult>({
+      ...companiesListQueryOptions,
+      enabled: shouldLoadCompanies,
+    });
   const companies = companiesResult.companies;
   const companyListUnauthorized = companiesResult.unauthorized;
   const sidebarCompanies = useMemo(

@@ -3,6 +3,7 @@ import {
   applyCompanyPrefix,
   extractCompanyPrefixFromPath,
   isBoardPathWithoutPrefix,
+  isGlobalPath,
   toCompanyRelativePath,
 } from "./company-routes";
 
@@ -34,6 +35,29 @@ describe("company routes", () => {
     expect(applyCompanyPrefix("/search", "PAP")).toBe("/PAP/search");
     expect(applyCompanyPrefix("/search?q=hello%20world", "PAP")).toBe("/PAP/search?q=hello%20world");
     expect(toCompanyRelativePath("/PAP/search?q=foo")).toBe("/search?q=foo");
+  });
+
+  it("treats /sim-coach as a board route that needs a company prefix", () => {
+    expect(isBoardPathWithoutPrefix("/sim-coach")).toBe(true);
+    expect(extractCompanyPrefixFromPath("/sim-coach")).toBeNull();
+    expect(applyCompanyPrefix("/sim-coach", "SYS")).toBe("/SYS/sim-coach");
+    expect(toCompanyRelativePath("/SYS/sim-coach")).toBe("/sim-coach");
+  });
+
+  it("treats /wiki as a board route that needs a company prefix", () => {
+    expect(isBoardPathWithoutPrefix("/wiki")).toBe(true);
+    expect(isBoardPathWithoutPrefix("/wiki/query")).toBe(true);
+    expect(extractCompanyPrefixFromPath("/wiki/query")).toBeNull();
+    expect(applyCompanyPrefix("/wiki/query", "SYS")).toBe("/SYS/wiki/query");
+    expect(toCompanyRelativePath("/SYS/wiki/query")).toBe("/wiki/query");
+  });
+
+  it("treats /app as a global launch route, not a company prefix", () => {
+    expect(isGlobalPath("/app")).toBe(true);
+    expect(isGlobalPath("/app/dashboard")).toBe(true);
+    expect(extractCompanyPrefixFromPath("/app")).toBeNull();
+    expect(extractCompanyPrefixFromPath("/app/dashboard")).toBeNull();
+    expect(applyCompanyPrefix("/app", "SYS")).toBe("/app");
   });
 
   // Regression for PAP-10257: Team Catalog navigation (auto-select + row/file

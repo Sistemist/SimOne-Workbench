@@ -1313,7 +1313,7 @@ export function SidebarLink({ context }: PluginSidebarProps) {
       <span aria-hidden="true" className="shrink-0">
         <BookOpenIcon />
       </span>
-      <span className="flex-1 truncate">Wiki</span>
+      <span className="flex-1 truncate">SIM Wiki</span>
     </a>
   );
 }
@@ -1342,11 +1342,11 @@ const SECTIONS: ReadonlyArray<{
   Icon: (props: LucideIconProps) => ReactElement;
   description: string;
 }> = [
-  { key: "browse", label: "Wiki", Icon: BookOpenIcon, description: "Open wiki pages and raw sources from the sidebar." },
-  { key: "query", label: "Ask", Icon: MessageSquareTextIcon, description: "Ask the Wiki Maintainer agent a cited question against the local wiki." },
+  { key: "browse", label: "SIM Wiki", Icon: BookOpenIcon, description: "Open SIM Wiki pages and raw sources from the sidebar." },
+  { key: "query", label: "Ask", Icon: MessageSquareTextIcon, description: "Ask the SIM Wiki Maintainer agent a cited question against the local wiki." },
   { key: "ingest", label: "Add Content", Icon: PlusCircleIcon, description: "Capture a new source into the active space and queue an ingest operation." },
   { key: "lint", label: "Lint", Icon: ListChecksIcon, description: "Run structural checks for orphan pages, missing backlinks, and stale provenance." },
-  { key: "history", label: "History", Icon: HistoryIcon, description: "Inspect recent LLM Wiki operation issues." },
+  { key: "history", label: "History", Icon: HistoryIcon, description: "Inspect recent SIM Wiki operation issues." },
   { key: "settings", label: "Settings", Icon: SlidersHorizontalIcon, description: "Folder, agent, project, and routine configuration scoped to this company." },
 ];
 
@@ -1675,7 +1675,7 @@ export function WikiPage({ context }: PluginPageProps) {
   }, [isDragActive, resetDragState]);
 
   if (!context.companyId) {
-    return <main style={{ ...shellStyle, height: isMobile ? "auto" : "100%", minHeight: isMobile ? "auto" : 600 }}>Choose a company to open the LLM Wiki.</main>;
+    return <main style={{ ...shellStyle, height: isMobile ? "auto" : "100%", minHeight: isMobile ? "auto" : 600 }}>Choose a company to open the SIM Wiki.</main>;
   }
 
   return (
@@ -1690,7 +1690,7 @@ export function WikiPage({ context }: PluginPageProps) {
       <section style={{ flex: 1, minHeight: isMobile ? "auto" : 0, overflow: isMobile ? "visible" : "hidden", display: "flex" }}>
         {overview.error ? (
           <div style={{ padding: 24, flex: 1 }}>
-            <Callout tone="danger">LLM Wiki bridge error: {overview.error.message}</Callout>
+            <Callout tone="danger">SIM Wiki bridge error: {overview.error.message}</Callout>
           </div>
         ) : !overview.data ? (
           <div style={{ padding: 24, flex: 1, color: tokens.muted, fontSize: 13 }}>Loading wiki…</div>
@@ -1799,8 +1799,8 @@ function WikiPageDropOverlay({ onClose }: { onClose: () => void }) {
         <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: 8, background: tokens.pluginBg, color: tokens.pluginFg, marginBottom: 12 }}>
           <DownloadCloudIcon size={24} />
         </div>
-        <div style={{ fontSize: 18, fontWeight: 650, marginBottom: 6 }}>Drop to ingest into LLM Wiki</div>
-        <Tiny>Files will be staged for review before the wiki maintainer queues ingest operations.</Tiny>
+        <div style={{ fontSize: 18, fontWeight: 650, marginBottom: 6 }}>Drop to ingest into SIM Wiki</div>
+        <Tiny>Files will be staged for review before the SIM Wiki Maintainer queues ingest operations.</Tiny>
       </div>
     </div>
   );
@@ -1929,8 +1929,8 @@ function IngestFilesModal({
           <div style={{ flex: 1, minWidth: 0 }}>
             <h2 id="llm-wiki-ingest-modal-title" style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>Ingest files into {targetSpace?.displayName ?? targetSpaceSlug}</h2>
             <Tiny style={{ marginTop: 4 }}>
-              Review the staged files, switch the destination space if needed, then queue them as LLM
-              Wiki ingest operations. This is manual file ingest - Paperclip-derived distillation always
+              Review the staged files, switch the destination space if needed, then queue them as SIM
+              Wiki ingest operations. This is manual file ingest - SimOne workbench distillation always
               routes to the default space regardless of the destination picked here.
             </Tiny>
           </div>
@@ -1983,7 +1983,7 @@ function IngestFilesModal({
           </div>
           {errorMsg ? <Callout tone="danger">{errorMsg}</Callout> : null}
           <Callout>
-            Confirming captures each file into <Mono>{targetSpaceSlug}/raw/</Mono>, attaches the original file to the ingest task, and initiates a task for the Wiki Maintainer to process.
+            Confirming captures each file into <Mono>{targetSpaceSlug}/raw/</Mono>, attaches the original file to the ingest task, and initiates a task for the SIM Wiki Maintainer to process.
           </Callout>
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
             <Button variant="ghost" onClick={requestClose} disabled={busy}>Cancel</Button>
@@ -2144,8 +2144,8 @@ function CreateSpaceModal({
             <h2 id="create-space-modal-title" style={{ margin: 0, fontSize: 17, fontWeight: 650 }}>Create a shared space</h2>
             <Tiny style={{ marginTop: 4 }}>
               Spaces partition wiki pages, sources, and manual ingest into separate slug-prefixed folders
-              under the wiki root. Paperclip distillation and event capture always write into the
-              default space and skip new spaces created here - per-space Paperclip routing is a later
+              under the wiki root. SimOne distillation and event capture always write into the
+              default space and skip new spaces created here - per-space SimOne routing is a later
               phase.
             </Tiny>
           </div>
@@ -2209,7 +2209,7 @@ function CreateSpaceModal({
               />
             </div>
           </FormField>
-          <FormField label="Access scope" help="Access scope is metadata only. It does not currently enforce who can read or write the space, and it does not change which Paperclip sources reach the space.">
+          <FormField label="Access scope" help="Access scope is metadata only. It does not currently enforce who can read or write the space, and it does not change which SimOne sources reach the space.">
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 8 }}>
               <ScopeTile
                 selected={accessScope === "shared"}
@@ -2560,7 +2560,7 @@ export function WikiRouteSidebar({ context }: PluginRouteSidebarProps) {
         <div className="mb-1 flex items-center gap-1 px-2 text-[11px] font-semibold uppercase tracking-normal text-muted-foreground" style={{ height: 24 }}>
           <span
             className="flex-1 truncate"
-            title="Destination spaces. Browsing and manual ingest happen in the active space; Paperclip distillation always writes into the default space in Phase 1."
+            title="Destination spaces. Browsing and manual ingest happen in the active space; SimOne distillation always writes into the default space in Phase 1."
           >
             Shared Spaces
           </span>
@@ -3005,12 +3005,12 @@ function UnconfiguredFolder({ context, folder, refresh }: { context: { companyId
     try {
       const result = await bootstrap({ companyId: context.companyId, path: path.trim() });
       const written = (result as { writtenFiles?: string[] }).writtenFiles ?? [];
-      toast({ tone: "success", title: "Wiki root configured", body: written.length ? `Created ${written.length} bootstrap file(s).` : "Existing files preserved." });
+      toast({ tone: "success", title: "SIM Wiki root configured", body: written.length ? `Created ${written.length} bootstrap file(s).` : "Existing files preserved." });
       refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setErrorMsg(message);
-      toast({ tone: "error", title: "Could not configure wiki root", body: message });
+      toast({ tone: "error", title: "Could not configure SIM Wiki root", body: message });
     } finally {
       setBusy(false);
     }
@@ -3019,11 +3019,11 @@ function UnconfiguredFolder({ context, folder, refresh }: { context: { companyId
   return (
     <div style={{ flex: 1, padding: isMobile ? 16 : 28, display: "grid", placeItems: "start", overflow: isMobile ? "visible" : "auto", minWidth: 0 }}>
       <Card style={{ maxWidth: 720, width: "100%" }}>
-        <CardHeader title={configuredButUnhealthy ? "Repair wiki root folder" : "Choose a wiki root folder"} />
+        <CardHeader title={configuredButUnhealthy ? "Repair SIM Wiki root folder" : "Choose a SIM Wiki root folder"} />
         <CardBody>
           <Tiny style={{ marginBottom: 12 }}>
             {configuredButUnhealthy
-              ? "The configured wiki root is not ready. Update the path or repair it to recreate required baseline files."
+              ? "The configured SIM Wiki root is not ready. Update the path or repair it to recreate required baseline files."
               : "Pick an absolute path on this machine. The plugin creates "}
             {!configuredButUnhealthy ? <><Mono>raw/</Mono>, <Mono>wiki/</Mono>, <Mono>AGENTS.md</Mono>, <Mono>IDEA.md</Mono>, <Mono>wiki/index.md</Mono>, and <Mono>wiki/log.md</Mono> if they don't already exist.</> : null}
           </Tiny>
@@ -3064,7 +3064,7 @@ function UnconfiguredFolder({ context, folder, refresh }: { context: { companyId
 // ---------------------------------------------------------------------------
 
 const TEMPLATE_PATHS = ["AGENTS.md", "IDEA.md"] as const;
-const BASELINE_DIRECTORIES = ["raw", "wiki", "wiki/sources", "wiki/projects", "wiki/entities", "wiki/concepts", "wiki/synthesis"] as const;
+const BASELINE_DIRECTORIES = ["raw", "wiki", "wiki/sources", "wiki/projects", "wiki/entities", "wiki/concepts", "wiki/sim", "wiki/synthesis"] as const;
 const BASELINE_FILES = [...TEMPLATE_PATHS, "wiki/index.md", "wiki/log.md"] as const;
 const BASELINE_TREE_ORDER = new Map<string, number>([
   ["AGENTS.md", 0],
@@ -3077,7 +3077,8 @@ const BASELINE_TREE_ORDER = new Map<string, number>([
   ["wiki/projects", 3],
   ["wiki/entities", 4],
   ["wiki/concepts", 5],
-  ["wiki/synthesis", 6],
+  ["wiki/sim", 6],
+  ["wiki/synthesis", 7],
 ]);
 
 function basename(path: string): string {
@@ -3328,7 +3329,7 @@ function PageDetail({ context, path, spaceSlug }: { context: { companyId: string
         path,
         contents: nextContents,
         expectedHash: savedHash ?? content.data.hash,
-        summary: `Edited ${path} from the LLM Wiki page`,
+        summary: `Edited ${path} from the SIM Wiki page`,
     }) as { hash?: string };
     if (typeof result.hash === "string") setSavedHash(result.hash);
   }, [context.companyId, content.data, editable, path, savedHash, writePage, spaceSlug]);
@@ -3339,7 +3340,7 @@ function PageDetail({ context, path, spaceSlug }: { context: { companyId: string
     return (
       <div style={{ padding: isMobile ? 16 : 28, display: "grid", gap: 12 }}>
         <Callout tone="warn">
-          The captured source <Mono>{path}</Mono> is indexed but no longer exists in the configured wiki folder. Refresh the wiki or re-ingest the source to restore it.
+          The captured source <Mono>{path}</Mono> is indexed but no longer exists in the configured SIM Wiki folder. Refresh the wiki or re-ingest the source to restore it.
         </Callout>
         <Tiny>{content.error.message}</Tiny>
       </div>
@@ -3424,8 +3425,8 @@ function PageDetail({ context, path, spaceSlug }: { context: { companyId: string
                 resolveWikiLinkHref={resolveWikiLinkHref}
               />
               {displaySourceRefs.length > 0 ? (
-                <section aria-label="Paperclip source refs" style={{ marginTop: 16, display: "grid", gap: 6 }}>
-                  <Tiny style={{ fontWeight: 650 }}>Paperclip source refs</Tiny>
+                <section aria-label="SimOne source refs" style={{ marginTop: 16, display: "grid", gap: 6 }}>
+                  <Tiny style={{ fontWeight: 650 }}>SimOne source refs</Tiny>
                   <ul style={{ margin: 0, paddingLeft: 18, color: tokens.muted, fontSize: 12, lineHeight: 1.5 }}>
                     {displaySourceRefs.map((ref) => (
                       <li key={ref.id}>{ref.label}</li>
@@ -3661,7 +3662,7 @@ function FreshnessChip({ companyId, pagePath, companyPrefix }: { companyId: stri
       </span>
       {projectLink ? (
         <a href={projectLink} style={{ marginLeft: 8, color: "inherit", textDecoration: "underline" }}>
-          Open Paperclip for live state →
+          Open workbench for live state →
         </a>
       ) : null}
     </FreshnessChipShell>
@@ -4059,7 +4060,7 @@ function IngestTab({ context, refreshOverview }: { context: { companyId: string 
         <div style={{ marginBottom: 4, fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: tokens.muted }}>Add Content</div>
         <h2 style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 650 }}>Capture into <span style={{ color: tokens.fg }}>{spaceLabel}</span></h2>
         <Tiny style={{ marginBottom: 18 }}>
-          Each capture queues an ingest operation scoped to <Mono>{activeSpaceSlug}</Mono>. Files land in that space's <Mono>raw/</Mono> folder and the Wiki Maintainer proposes a patch.
+          Each capture queues an ingest operation scoped to <Mono>{activeSpaceSlug}</Mono>. Files land in that space's <Mono>raw/</Mono> folder and the SIM Wiki Maintainer proposes a patch.
         </Tiny>
         <div style={{ display: "grid", gap: 14, marginBottom: 18 }}>
           <SpacePicker
@@ -4109,7 +4110,7 @@ function IngestTab({ context, refreshOverview }: { context: { companyId: string 
           </div>
           <div>
             <label style={{ fontSize: 11, color: tokens.muted, display: "block", marginBottom: 4 }}>Source title (optional)</label>
-            <TextInput value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Karpathy LLM Wiki gist" />
+            <TextInput value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. SIM course notes" />
           </div>
           <div>
             <label style={{ fontSize: 11, color: tokens.muted, display: "block", marginBottom: 4 }}>URL</label>
@@ -4292,7 +4293,7 @@ function OperationCard({ op }: { op: WikiOperationRow }) {
       <div style={{ padding: "12px 14px" }}>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", minWidth: 0 }}>
           <StatusIcon status={op.status} />
-          <strong style={{ flex: "1 1 180px", minWidth: 0, fontSize: 13, overflowWrap: "anywhere" }}>{op.hiddenIssueTitle ?? `LLM Wiki ${op.operationType}`}</strong>
+          <strong style={{ flex: "1 1 180px", minWidth: 0, fontSize: 13, overflowWrap: "anywhere" }}>{op.hiddenIssueTitle ?? `SIM Wiki ${op.operationType}`}</strong>
           <Badge tone={statusTone(op.status)} style={{ marginLeft: "auto" }}>{op.status}</Badge>
         </div>
         <Tiny style={{ marginTop: 4 }}>
@@ -4475,7 +4476,7 @@ function QueryTab({ context, overview }: { context: { companyId: string | null }
       <div style={{ flex: 1, padding: isMobile ? "16px" : "24px 28px", overflow: isMobile ? "visible" : "auto", minWidth: 0 }}>
         {thread.length === 0 ? (
           <Callout>
-            Ask the wiki anything. Each question initiates a task assigned to the Wiki Maintainer. The answer streams below; you can promote useful answers into a wiki page.
+            Ask the SIM Wiki anything. Each question initiates a task assigned to the SIM Wiki Maintainer. The answer streams below; you can promote useful answers into a wiki page.
           </Callout>
         ) : null}
         <div style={{ display: "grid", gap: 22, marginTop: 18 }}>
@@ -4484,7 +4485,7 @@ function QueryTab({ context, overview }: { context: { companyId: string | null }
               <Tiny style={{ marginBottom: 4 }}>You · {formatTime(entry.createdAt)}</Tiny>
               <div style={{ background: tokens.card, border: `1px solid ${tokens.border}`, padding: "10px 12px", borderRadius: 8, fontSize: 13 }}>{entry.prompt}</div>
               <Tiny style={{ marginTop: 8 }}>
-                Wiki Maintainer · {entry.status}
+                SIM Wiki Maintainer · {entry.status}
                 {entry.hiddenIssueIdentifier ? <> · <Mono>{entry.hiddenIssueIdentifier}</Mono></> : null}
               </Tiny>
               {entry.status === "error" ? (
@@ -4516,7 +4517,7 @@ function QueryTab({ context, overview }: { context: { companyId: string | null }
           ))}
         </div>
         <div style={{ borderTop: `1px solid ${tokens.border}`, paddingTop: 14, marginTop: 22 }}>
-          <TextArea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="Ask the wiki…" rows={3} />
+          <TextArea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="Ask the SIM Wiki…" rows={3} />
           <div style={{ display: "flex", gap: 6, marginTop: 8, alignItems: "center", flexWrap: "wrap" }}>
             <Button variant="primary" size="sm" onClick={send} disabled={!prompt.trim()} loading={busy}>Send (⌘↵)</Button>
             <Badge>Cite: wiki + raw</Badge>
@@ -4534,7 +4535,7 @@ function QueryTab({ context, overview }: { context: { companyId: string | null }
         minWidth: 0,
       }}>
         <Tiny style={{ marginBottom: 8 }}>SESSION</Tiny>
-        <PropRow label="Wiki" value={overview.wikiId} />
+        <PropRow label="SIM Wiki" value={overview.wikiId} />
         <PropRow label="Project" value={overview.managedProject.details?.name ?? overview.managedProject.status} />
         <PropRow label="Agent" value={overview.managedAgent.details?.name ?? overview.managedAgent.status} />
         <PropRow label="Operations" value={overview.operationCount} />
@@ -4565,7 +4566,7 @@ function SettingsLintPanel({ context }: { context: { companyId: string | null } 
 
   if (overview.error) {
     return <SettingsPanel title="Lint" badge={<HiddenOpBadge />} description="Run structural checks for orphan pages, missing backlinks, and stale provenance.">
-      <Callout tone="danger">LLM Wiki bridge error: {overview.error.message}</Callout>
+      <Callout tone="danger">SIM Wiki bridge error: {overview.error.message}</Callout>
     </SettingsPanel>;
   }
 
@@ -4613,10 +4614,10 @@ function LintPanelContent({
         companyId: context.companyId,
         spaceSlug: activeSpaceSlug,
         operationType: "lint",
-        title: `Run LLM Wiki lint · ${activeSpaceSlug}`,
+        title: `Run SIM Wiki lint · ${activeSpaceSlug}`,
         prompt: overview.prompts.lint,
       });
-      toast({ tone: "success", title: "Lint queued", body: "Lint runs as a Wiki Maintainer task. Findings will appear here once the run completes." });
+      toast({ tone: "success", title: "Lint queued", body: "Lint runs as a SIM Wiki Maintainer task. Findings will appear here once the run completes." });
       operations.refresh();
       refreshOverview();
     } catch (err) {
@@ -4646,7 +4647,7 @@ function LintPanelContent({
         <StatCard label="Index drift" value={String(counts.index)} hint="wiki/index.md / wiki/log.md" />
       </div>
       <Card style={unfilledSurfaceStyle}>
-        <CardHeader title="Findings" badges={<HiddenOpBadge />} right={<Tiny>Lint runs as a Wiki Maintainer task. Critical findings can optionally open visible follow-up issues — toggle in Settings → Lint policy.</Tiny>} />
+        <CardHeader title="Findings" badges={<HiddenOpBadge />} right={<Tiny>Lint runs as a SIM Wiki Maintainer task. Critical findings can optionally open visible follow-up issues — toggle in Settings → Lint policy.</Tiny>} />
         <CardBody padding={0}>
           {findings.length === 0 ? (
             <div style={{ padding: 16, color: tokens.muted, fontSize: 13 }}>
@@ -4712,7 +4713,7 @@ function aggregateLintFindings(findings: Record<string, unknown>[]): { total: nu
 }
 
 // ---------------------------------------------------------------------------
-// History tab: native Paperclip issue table for recent LLM Wiki operation
+// History tab: native workbench issue table for recent SIM Wiki operation
 // issues. Each plugin run is represented by an issue, so the standard issue
 // history view is the right surface here.
 // ---------------------------------------------------------------------------
@@ -4758,13 +4759,13 @@ function HistoryTab({ context, overview }: { context: { companyId: string | null
   const originKindPrefix = `plugin:${PLUGIN_ID}:operation`;
 
   if (!context.companyId) {
-    return <div style={{ padding: isMobile ? 16 : 24, flex: 1 }}><Callout>Choose a company to view LLM Wiki history.</Callout></div>;
+    return <div style={{ padding: isMobile ? 16 : 24, flex: 1 }}><Callout>Choose a company to view SIM Wiki history.</Callout></div>;
   }
 
   if (!projectId) {
     return (
       <div style={{ padding: isMobile ? 16 : 24, flex: 1 }}>
-        <Callout tone="warn">The LLM Wiki operations project is not resolved yet. Reconcile the managed project in Settings, then history will show its issues here.</Callout>
+        <Callout tone="warn">The SIM Wiki operations project is not resolved yet. Reconcile the managed project in Settings, then history will show its issues here.</Callout>
       </div>
     );
   }
@@ -4796,17 +4797,17 @@ function SettingsTab({ context, initialSection = "root" }: { context: { companyI
 }
 
 const ROUTINE_FALLBACKS: Record<string, { title: string; cron: string }> = {
-  "cursor-window-processing": { title: "Process LLM Wiki updates", cron: "0 */6 * * *" },
-  "nightly-wiki-lint": { title: "Run LLM Wiki lint", cron: "0 3 * * *" },
-  "index-refresh": { title: "Refresh LLM Wiki index", cron: "0 * * * *" },
+  "cursor-window-processing": { title: "Process SIM Wiki updates", cron: "0 */6 * * *" },
+  "nightly-wiki-lint": { title: "Run SIM Wiki lint", cron: "0 3 * * *" },
+  "index-refresh": { title: "Refresh SIM Wiki index", cron: "0 * * * *" },
 };
 
 const MANAGED_SKILL_LABELS: Record<string, string> = {
-  "wiki-maintainer": "LLM Wiki Maintainer",
+  "wiki-maintainer": "SIM Wiki Maintainer",
   "wiki-ingest": "Wiki Ingest",
   "wiki-query": "Wiki Query",
   "wiki-lint": "Wiki Lint",
-  "paperclip-distill": "Paperclip Distill",
+  "paperclip-distill": "Workbench Distill",
   "index-refresh": "Index Refresh",
 };
 
@@ -4851,26 +4852,26 @@ function skillLabel(resource: ManagedSkill) {
 }
 
 function buildAgentHealthItems(managedAgent: ManagedAgent): RoutineHealthItem[] {
-  const agentName = managedAgent.details?.name ?? "Wiki Maintainer";
+  const agentName = managedAgent.details?.name ?? "SIM Wiki Maintainer";
   return [{
     label: agentName,
     ok: managedAgentIsReady(managedAgent) && !managedAgent.defaultDrift?.changedFiles.length,
     detail: managedAgent.source === "managed"
       ? managedAgent.defaultDrift?.changedFiles.length
-        ? `The Wiki Maintainer instructions differ from the plugin default: ${managedAgent.defaultDrift.changedFiles.join(", ")}.`
-        : "The plugin-managed Wiki Maintainer exists with current default instructions."
-      : "The settings page is using a selected maintainer instead of the plugin-managed Wiki Maintainer.",
+        ? `The SIM Wiki Maintainer instructions differ from the plugin default: ${managedAgent.defaultDrift.changedFiles.join(", ")}.`
+        : "The plugin-managed SIM Wiki Maintainer exists with current default instructions."
+      : "The settings page is using a selected maintainer instead of the plugin-managed SIM Wiki Maintainer.",
   }];
 }
 
 function buildProjectHealthItems(managedProject: ManagedProject): RoutineHealthItem[] {
-  const projectName = managedProject.details?.name ?? "LLM Wiki";
+  const projectName = managedProject.details?.name ?? "SIM Wiki";
   return [{
     label: projectName,
     ok: managedProjectIsReady(managedProject),
     detail: managedProject.source === "managed"
-      ? "The plugin-managed LLM Wiki project exists."
-      : "The settings page is using a selected project instead of the plugin-managed LLM Wiki project.",
+      ? "The plugin-managed SIM Wiki project exists."
+      : "The settings page is using a selected project instead of the plugin-managed SIM Wiki project.",
   }];
 }
 
@@ -4915,7 +4916,7 @@ function buildRoutineHealthItems(
     const missingProject = Boolean(expectedProjectId && !routineProjectId);
     const blockedByManagedResources = !expectedAgentId || !expectedProjectId;
     const ok = Boolean(routine && !missing && missingRefs.length === 0 && !wrongAgent && !wrongProject && !missingAgent && !missingProject && !blockedByManagedResources);
-    let detail = `${fallback.title} is installed with the Wiki Maintainer and LLM Wiki project.`;
+    let detail = `${fallback.title} is installed with the SIM Wiki Maintainer and SIM Wiki project.`;
     if (missing) {
       detail = `${fallback.title} is not installed.`;
     } else if (missingRefs.length > 0) {
@@ -4923,9 +4924,9 @@ function buildRoutineHealthItems(
     } else if (blockedByManagedResources) {
       detail = `${fallback.title} cannot be validated until the managed agent and project are restored.`;
     } else if (wrongAgent || missingAgent) {
-      detail = `${fallback.title} is not assigned to the Wiki Maintainer.`;
+      detail = `${fallback.title} is not assigned to the SIM Wiki Maintainer.`;
     } else if (wrongProject || missingProject) {
-      detail = `${fallback.title} is not attached to the LLM Wiki project.`;
+      detail = `${fallback.title} is not attached to the SIM Wiki project.`;
     }
     items.push({ label: fallback.title, ok, detail });
   }
@@ -5014,11 +5015,11 @@ const SETTINGS_SECTIONS: ReadonlyArray<{
   description: string;
 }> = [
   { key: "root", label: "Setup", description: "" },
-  { key: "spaces", label: "Spaces", description: "Destination spaces - folders, slugs, and folder health. Per-space Paperclip indexing is not configurable yet." },
-  { key: "distillation", label: "Distillation", description: "Paperclip -> default space. Cursors, caps, and routines for the company-wide distillation pipeline." },
+  { key: "spaces", label: "Spaces", description: "Destination spaces - folders, slugs, and folder health. Per-space SimOne indexing is not configurable yet." },
+  { key: "distillation", label: "Distillation", description: "SimOne workbench -> default space. Cursors, caps, and routines for the company-wide distillation pipeline." },
   { key: "routines", label: "Managed Routines", description: "Scheduled wiki maintenance." },
   { key: "lint", label: "Lint", description: "Run checks and review wiki health findings." },
-  { key: "events", label: "Ingestion Settings", description: "Paperclip event capture into the default space (issues, comments, documents)." },
+  { key: "events", label: "Ingestion Settings", description: "SimOne event capture into the default space (issues, comments, documents)." },
 ];
 
 function SettingsSectionButton({
@@ -5248,7 +5249,7 @@ function FolderPathPicker({
           <FolderOpenIcon />
         </span>
         <div style={{ display: "grid", gap: 2, minWidth: 0 }}>
-          <span style={{ fontSize: 13, fontWeight: 650 }}>Local wiki folder</span>
+          <span style={{ fontSize: 13, fontWeight: 650 }}>Local SIM Wiki folder</span>
           <Tiny>Absolute path on this machine</Tiny>
         </div>
       </div>
@@ -5279,14 +5280,14 @@ function folderHealthItems(folder: FolderStatus): FolderHealthItem[] {
     { label: "Readable", ok: folder.readable },
     { label: folder.access === "readWrite" ? "Writable" : "Read-only access", ok: folder.access === "read" || folder.writable },
     { label: "Baseline files", ok: folder.missingFiles.length === 0 },
-    { label: "Wiki folders", ok: folder.missingDirectories.length === 0 },
+    { label: "SIM Wiki folders", ok: folder.missingDirectories.length === 0 },
   ];
 }
 
 function FolderHealthChecklist({ folder }: { folder: FolderStatus }) {
   const items = folderHealthItems(folder);
   return (
-    <div style={{ display: "grid", gap: 8 }} aria-label="Wiki root health checklist">
+    <div style={{ display: "grid", gap: 8 }} aria-label="SIM Wiki root health checklist">
       <div style={{ fontSize: 12, fontWeight: 650, color: tokens.muted }}>Health check</div>
       <div role="list" style={{ position: "relative", display: "grid", gap: 0, padding: "2px 0" }}>
         {items.length > 1 ? (
@@ -5469,7 +5470,7 @@ function DistillationSettingsPanel({ context, settings }: { context: { companyId
       toast({
         tone: "success",
         title: "Distill now queued",
-        body: "Wiki Maintainer will scan changed projects in the company and write into the default wiki space.",
+        body: "SIM Wiki Maintainer will scan changed projects in the company and write into the default wiki space.",
       });
       overview.refresh();
     } catch (err) {
@@ -5540,14 +5541,14 @@ function DistillationSettingsPanel({ context, settings }: { context: { companyId
               <div>
                 <h3 style={{ margin: 0, fontSize: 17, fontWeight: 650 }}>Distillation is off</h3>
                 <Tiny style={{ marginTop: 6, fontSize: 13, color: tokens.fg, lineHeight: 1.55, maxWidth: 540 }}>
-                  When enabled, the Wiki Maintainer reads Paperclip issues, comments, and documents for this
+                  When enabled, the SIM Wiki Maintainer reads SimOne issues, comments, and documents for this
                   company and keeps <Mono>wiki/projects/&lt;slug&gt;/standup.md</Mono> plus <Mono>wiki/projects/&lt;slug&gt;/index.md</Mono> pages in the
                   <strong> default wiki space</strong>. Pages stay marked stale until a cursor window succeeds -
                   they never imply live state.
                 </Tiny>
                 <Tiny style={{ marginTop: 6, fontSize: 13, color: tokens.fg, lineHeight: 1.55, maxWidth: 540 }}>
-                  Other spaces do not receive Paperclip-derived pages yet. They stay on manual and raw-file
-                  ingest until per-space Paperclip ingestion profiles ship.
+                  Other spaces do not receive SimOne-derived pages yet. They stay on manual and raw-file
+                  ingest until per-space workbench ingestion profiles ship.
                 </Tiny>
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -5607,7 +5608,7 @@ function DistillationSettingsPanel({ context, settings }: { context: { companyId
           </div>
         </div>
         <Tiny style={{ marginTop: 6 }}>
-          Distillation runs on the assigned Wiki Maintainer agent and writes only into the default
+          Distillation runs on the assigned SIM Wiki Maintainer agent and writes only into the default
           space. Use the cheap path option when the agent exposes a cheap model profile.
         </Tiny>
       </Callout>
@@ -5622,7 +5623,7 @@ function DistillationSettingsPanel({ context, settings }: { context: { companyId
               <CheckboxRow label="Root issues marked distillable" defaultChecked />
               <CheckboxRow label="All company issues" help="May create large source windows." />
               <Tiny>
-                These filters narrow the Paperclip source scope. The destination is always the default
+                These filters narrow the SimOne source scope. The destination is always the default
                 wiki space in Phase 1.
               </Tiny>
               <Tiny>Plugin-operation issues are always excluded to prevent feedback loops.</Tiny>
@@ -5842,7 +5843,7 @@ function SettingsBody({ context, initialSection = "root" }: { context: { company
     setActiveSettingsSection(initialSection);
   }, [initialSection]);
 
-  if (!context.companyId) return <Callout>Choose a company to view LLM Wiki settings.</Callout>;
+  if (!context.companyId) return <Callout>Choose a company to view SIM Wiki settings.</Callout>;
   if (settings.loading) return <Tiny>Loading settings…</Tiny>;
   if (settings.error) return <Callout tone="danger">{settings.error.message}</Callout>;
   if (!settings.data) return <Tiny>No settings available.</Tiny>;
@@ -5851,7 +5852,7 @@ function SettingsBody({ context, initialSection = "root" }: { context: { company
   const maintainerFallbackAgent: MaintainerAgentOption | null = data.managedAgent.agentId
     ? {
         id: data.managedAgent.agentId,
-        name: data.managedAgent.details?.name ?? "Wiki Maintainer",
+        name: data.managedAgent.details?.name ?? "SIM Wiki Maintainer",
         status: data.managedAgent.details?.status ?? data.managedAgent.status,
         adapterType: data.managedAgent.details?.adapterType ?? null,
         icon: data.managedAgent.details?.icon ?? "book-open",
@@ -5889,7 +5890,7 @@ function SettingsBody({ context, initialSection = "root" }: { context: { company
   const skillHealthItems = buildSkillHealthItems(managedSkills);
   const skillHealthWarnings = skillHealthItems.filter((item) => !item.ok);
   const configurationErrors = [
-    ...(!data.folder.healthy ? ["Wiki root folder"] : []),
+    ...(!data.folder.healthy ? ["SIM Wiki root folder"] : []),
     ...(agentHealthWarnings.length > 0 ? ["Managed agents"] : []),
     ...(skillHealthWarnings.length > 0 ? ["Managed skills"] : []),
     ...(projectHealthWarnings.length > 0 ? ["Managed projects"] : []),
@@ -5927,7 +5928,7 @@ function SettingsBody({ context, initialSection = "root" }: { context: { company
       assigneeAgentId,
       cronExpression: routine.details?.cronExpression ?? fallback.cron,
       lastRunAt: routine.routine?.lastTriggeredAt ?? routine.details?.lastRunAt ?? null,
-      managedByPluginDisplayName: routine.routine?.managedByPlugin?.pluginDisplayName ?? "LLM Wiki",
+      managedByPluginDisplayName: routine.routine?.managedByPlugin?.pluginDisplayName ?? "SIM Wiki",
       missingRefs: routine.missingRefs?.map((ref) => ({
         resourceKind: ref.resourceKind,
         resourceKey: ref.resourceKey,
@@ -6040,7 +6041,7 @@ function SettingsBody({ context, initialSection = "root" }: { context: { company
   async function fixAllConfigurationErrors() {
     if (!context.companyId || !hasConfigurationErrors) return;
     const confirmed = typeof window === "undefined" || window.confirm(
-      "Fix all detected LLM Wiki configuration errors? This may recreate missing wiki baseline files and restore plugin-managed agents, projects, routines, and skills to their current defaults.",
+      "Fix all detected SIM Wiki configuration errors? This may recreate missing wiki baseline files and restore plugin-managed agents, projects, routines, and skills to their current defaults.",
     );
     if (!confirmed) return;
 
@@ -6049,7 +6050,7 @@ function SettingsBody({ context, initialSection = "root" }: { context: { company
       if (!data.folder.healthy) {
         const path = folderPath.trim() || data.folder.path?.trim() || "";
         if (!path && !data.folder.configured) {
-          throw new Error("Choose a wiki root folder path before fixing all configuration errors.");
+          throw new Error("Choose a SIM Wiki root folder path before fixing all configuration errors.");
         }
         await bootstrap(path ? { companyId: context.companyId, path } : { companyId: context.companyId });
       }
@@ -6140,7 +6141,7 @@ function SettingsBody({ context, initialSection = "root" }: { context: { company
     const changedFields = (routine as ManagedRoutinesListItemWithDrift).defaultDrift?.changedFields ?? [];
     const fieldList = changedFields.length > 0 ? changedFields.join(", ") : "managed defaults";
     const confirmed = typeof window === "undefined" || window.confirm(
-      `Update "${routine.title}" to the current LLM Wiki plugin defaults? This replaces ${fieldList}. Cancel to keep the current custom routine text.`,
+      `Update "${routine.title}" to the current SIM Wiki plugin defaults? This replaces ${fieldList}. Cancel to keep the current custom routine text.`,
     );
     if (!confirmed) return;
 
@@ -6168,7 +6169,7 @@ function SettingsBody({ context, initialSection = "root" }: { context: { company
     const changedFiles = agentDefaultDrift?.changedFiles ?? [];
     const fileList = changedFiles.length > 0 ? changedFiles.join(", ") : "managed instructions and defaults";
     const confirmed = typeof window === "undefined" || window.confirm(
-      `Update the Wiki Maintainer to the current LLM Wiki plugin defaults? This replaces ${fileList}. Cancel to keep the current custom instructions.`,
+      `Update the SIM Wiki Maintainer to the current SIM Wiki plugin defaults? This replaces ${fileList}. Cancel to keep the current custom instructions.`,
     );
     if (!confirmed) return;
 
@@ -6203,7 +6204,7 @@ function SettingsBody({ context, initialSection = "root" }: { context: { company
         paddingRight: isMobile ? 0 : 16,
         paddingBottom: isMobile ? 12 : 0,
       }}>
-        <nav aria-label="LLM Wiki settings sections" style={{
+        <nav aria-label="SIM Wiki settings sections" style={{
           display: "flex",
           flexDirection: isMobile ? "row" : "column",
           gap: 4,
@@ -6304,17 +6305,17 @@ function SettingsBody({ context, initialSection = "root" }: { context: { company
                   </Tiny>
                   {maintainerPendingApproval ? (
                     <Callout tone="warn">
-                      The Wiki Maintainer is pending approval. Approve the agent before relying on wiki ingest, query, lint, or scheduled maintenance tasks.
+                      The SIM Wiki Maintainer is pending approval. Approve the agent before relying on wiki ingest, query, lint, or scheduled maintenance tasks.
                     </Callout>
                   ) : null}
                   {showMaintainerWarning ? (
                     <Callout tone="warn">
-                      This is not the Paperclip-provided Wiki Maintainer. Plugin operations and routines may miss the recommended wiki role, tools, and default instructions.
+                      This is not the SimOne-provided SIM Wiki Maintainer. Plugin operations and routines may miss the recommended wiki role, tools, and default instructions.
                     </Callout>
                   ) : null}
                   {agentDefaultDrift?.changedFiles.length ? (
                     <Callout tone="warn">
-                      Wiki Maintainer instruction defaults changed: {agentDefaultDrift.changedFiles.join(", ")}. Reset only if you want to replace current custom instructions with the plugin template.
+                      SIM Wiki Maintainer instruction defaults changed: {agentDefaultDrift.changedFiles.join(", ")}. Reset only if you want to replace current custom instructions with the plugin template.
                     </Callout>
                   ) : null}
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -6364,7 +6365,7 @@ function SettingsBody({ context, initialSection = "root" }: { context: { company
                 ) : (
                   <Callout>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                      <span>LLM Wiki skills are installed in the company skill library.</span>
+                      <span>SIM Wiki skills are installed in the company skill library.</span>
                       <Button size="sm" variant="ghost" onClick={resyncManagedSkills} loading={skillBusy}>Re-sync skills</Button>
                     </div>
                   </Callout>
@@ -6467,7 +6468,7 @@ function SettingsBody({ context, initialSection = "root" }: { context: { company
                     </div>
                   </Callout>
                 ) : (
-                  <Tiny>Managed routines are installed with the Wiki Maintainer and LLM Wiki project.</Tiny>
+                  <Tiny>Managed routines are installed with the SIM Wiki Maintainer and SIM Wiki project.</Tiny>
                 )}
               </div>
             </SetupSection>
@@ -6476,7 +6477,7 @@ function SettingsBody({ context, initialSection = "root" }: { context: { company
           <SettingsPanel
             title="Distillation"
             badge={<Badge tone="default">Default space only</Badge>}
-            description="Read Paperclip issues, comments, and documents for this company and write project pages into the default wiki space. Assets/attachments and work products stay metadata-only in Phase 5 and are excluded from source-text extraction. Other spaces cannot be selected as a destination yet - that lands with per-space Paperclip ingestion profiles."
+            description="Read SimOne issues, comments, and documents for this company and write project pages into the default wiki space. Assets/attachments and work products stay metadata-only in Phase 5 and are excluded from source-text extraction. Other spaces cannot be selected as a destination yet - that lands with per-space workbench ingestion profiles."
           >
             <DistillationSettingsPanel context={context} settings={data} />
           </SettingsPanel>
@@ -6488,7 +6489,7 @@ function SettingsBody({ context, initialSection = "root" }: { context: { company
                 <div style={{ display: "grid", gap: 6 }}>
                   <strong>Routine defaults changed.</strong>
                   <span>
-                    Review rows marked with changed defaults. Reset a row to update it to the current LLM Wiki instructions, or leave it unchanged to keep custom routine text.
+                    Review rows marked with changed defaults. Reset a row to update it to the current SIM Wiki instructions, or leave it unchanged to keep custom routine text.
                   </span>
                 </div>
               </Callout>
@@ -6508,7 +6509,7 @@ function SettingsBody({ context, initialSection = "root" }: { context: { company
             ) : (
               <Callout>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                  <span>Managed routines are installed with the Wiki Maintainer and LLM Wiki project.</span>
+                  <span>Managed routines are installed with the SIM Wiki Maintainer and SIM Wiki project.</span>
                   <Button size="sm" disabled>Routines valid</Button>
                 </div>
               </Callout>
@@ -6517,7 +6518,7 @@ function SettingsBody({ context, initialSection = "root" }: { context: { company
               routines={managedRoutineItems}
               agents={maintainerAgentOptions}
               projects={projectOptions}
-              pluginDisplayName="LLM Wiki"
+              pluginDisplayName="SIM Wiki"
               runningRoutineKey={routineBusyKeyFor("run")}
               statusMutationRoutineKey={routineBusyKeyFor("status")}
               resettingRoutineKey={routineBusyKeyFor("reset")}
@@ -6533,12 +6534,12 @@ function SettingsBody({ context, initialSection = "root" }: { context: { company
           <SpacesSettingsPanel context={context} description={activeSettingsConfig.description} />
         ) : activeSettingsSection === "events" ? (
           <SettingsPanel
-            title="Paperclip event ingestion"
+            title="SimOne event ingestion"
             badge={<Badge tone={currentEventPolicy.enabled ? "running" : "default"}>{currentEventPolicy.enabled ? "enabled" : "off by default"}</Badge>}
             description={activeSettingsConfig.description}
           >
           <Tiny style={{ marginBottom: 10 }}>
-            Company-scoped Paperclip events can advance default-space cursors. Enable only the first-party text sources this wiki should observe for default-space distillation.
+            Company-scoped SimOne events can advance default-space cursors. Enable only the first-party text sources this wiki should observe for default-space distillation.
           </Tiny>
           <div style={{ display: "grid", gap: 10 }}>
             <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
@@ -6582,7 +6583,7 @@ function SettingsBody({ context, initialSection = "root" }: { context: { company
               />
             </div>
             <Callout tone="warn">
-              Event ingestion records selected Paperclip issue, comment, and document activity for the default wiki space. Assets/attachments and work products are excluded here: Phase 5 allows metadata-only references later, not blob reads or linked-content fetches. It never reads across companies or creates non-default space cursors.
+              Event ingestion records selected SimOne issue, comment, and document activity for the default wiki space. Assets/attachments and work products are excluded here: Phase 5 allows metadata-only references later, not blob reads or linked-content fetches. It never reads across companies or creates non-default space cursors.
             </Callout>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <Button size="sm" variant="primary" onClick={saveEventPolicy} loading={eventPolicyBusy}>Save controls</Button>
@@ -6867,7 +6868,7 @@ function SpaceEditCard({
             <Tiny>
               Access scope is stored as metadata only. <Mono>shared</Mono>, <Mono>team</Mono>, and{" "}
               <Mono>personal</Mono> are saved on the space record but do not currently enforce
-              read/write permissions, and they do not change which Paperclip sources reach this space.
+              read/write permissions, and they do not change which SimOne sources reach this space.
             </Tiny>
             <FormField label="Owner user id">
               <TextInput value={(settingsRecord.ownerUserHint as string | undefined) ?? space.ownerUserId ?? ""} disabled style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }} />
@@ -6963,7 +6964,7 @@ function PaperclipIngestionSpaceCard({ companyId, space, refresh }: { companyId:
     setBusy(true);
     try {
       await updateProfile({ companyId, spaceSlug: space.slug, profile: draft });
-      toast({ tone: "success", title: "Paperclip ingestion profile saved", body: `${space.displayName} will use the selected Paperclip sources.` });
+      toast({ tone: "success", title: "SimOne ingestion profile saved", body: `${space.displayName} will use the selected SimOne sources.` });
       profileQuery.refresh();
       refresh();
     } catch (err) {
@@ -6976,21 +6977,21 @@ function PaperclipIngestionSpaceCard({ companyId, space, refresh }: { companyId:
   return (
     <Card>
       <CardHeader
-        title={<span>Paperclip → {space.displayName}</span>}
+        title={<span>SimOne to {space.displayName}</span>}
         right={<Badge tone={badge.tone} style={{ fontSize: 10 }}>{badge.label}</Badge>}
       />
       <CardBody>
         <div style={{ display: "grid", gap: 12 }}>
-          {profileQuery.loading && !data ? <Tiny>Loading Paperclip ingestion profile…</Tiny> : null}
+          {profileQuery.loading && !data ? <Tiny>Loading SimOne ingestion profile…</Tiny> : null}
           {profileQuery.error ? <Callout tone="danger">{profileQuery.error.message}</Callout> : null}
           {locked ? (
             <Callout tone="warn">
-              Locked — host permissions pending. Paperclip ingestion stays disabled on team and personal spaces until LLM Wiki enforces read/write permissions for non-shared spaces.
+              Locked — host permissions pending. SimOne ingestion stays disabled on team and personal spaces until SIM Wiki enforces read/write permissions for non-shared spaces.
             </Callout>
           ) : null}
           {data && data.historicalPageCount > 0 && data.effectiveState === "disabled" ? (
             <Callout>
-              Off · {data.historicalPageCount} historical Paperclip page{data.historicalPageCount === 1 ? "" : "s"} still in this space. Disabling stops new observations but does not delete prior wiki pages.
+              Off · {data.historicalPageCount} historical SimOne page{data.historicalPageCount === 1 ? "" : "s"} still in this space. Disabling stops new observations but does not delete prior wiki pages.
             </Callout>
           ) : null}
           {data && data.overlapCount > 0 ? (
@@ -7014,8 +7015,8 @@ function PaperclipIngestionSpaceCard({ companyId, space, refresh }: { companyId:
                   })}
                 />
                 <span>
-                  Enable Paperclip ingestion for this destination space
-                  <Tiny style={{ display: "block" }}>Future Paperclip issue, comment, and document events can advance cursors in {space.displayName}. Existing pages are preserved when this is turned off.</Tiny>
+                  Enable SimOne ingestion for this destination space
+                  <Tiny style={{ display: "block" }}>Future SimOne issue, comment, and document events can advance cursors in {space.displayName}. Existing pages are preserved when this is turned off.</Tiny>
                 </span>
               </label>
               <div style={{ display: "grid", gap: 8 }}>
@@ -7057,7 +7058,7 @@ function PaperclipIngestionSpaceCard({ companyId, space, refresh }: { companyId:
                 </Tiny>
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <Button size="sm" variant="primary" onClick={save} loading={busy} disabled={!canSave || emptyScopes}>Save Paperclip profile</Button>
+                <Button size="sm" variant="primary" onClick={save} loading={busy} disabled={!canSave || emptyScopes}>Save SimOne profile</Button>
                 <Button size="sm" variant="ghost" onClick={() => setDraft(data?.profile ?? null)} disabled={busy}>Revert</Button>
               </div>
             </>

@@ -250,6 +250,63 @@ describe("teamsCatalogService", () => {
     );
   });
 
+  it("filters resolved catalog skill reference warnings from previews", async () => {
+    mockCompanyPortabilityService.previewImport.mockResolvedValueOnce({
+      include: { company: false, agents: true, projects: true, issues: true, skills: true },
+      targetCompanyId: "company-1",
+      targetCompanyName: "Paperclip",
+      collisionStrategy: "rename",
+      selectedAgentSlugs: ["ceo"],
+      plan: { companyAction: "none", agentPlans: [], projectPlans: [], issuePlans: [] },
+      manifest: { agents: [], skills: [], projects: [], issues: [], envInputs: [], includes: { company: false, agents: true, projects: true, issues: true, skills: true }, company: null, schemaVersion: 1, generatedAt: new Date().toISOString(), source: null, sidebar: null },
+      files: {},
+      envInputs: [],
+      warnings: [
+        "Agent ceo references skill paperclipai/bundled/paperclip-operations/task-planning, but that skill is not present in the package.",
+        "Keep this unrelated warning.",
+      ],
+      errors: [],
+    });
+    const svc = teamsCatalogService({} as any);
+
+    const result = await svc.previewCatalogTeamImport("company-1", "core-exec-team");
+
+    expect(result.warnings).toEqual(["Keep this unrelated warning."]);
+  });
+
+  it("filters resolved catalog skill reference warnings from install results", async () => {
+    mockCompanyPortabilityService.previewImport.mockResolvedValueOnce({
+      include: { company: false, agents: true, projects: true, issues: true, skills: true },
+      targetCompanyId: "company-1",
+      targetCompanyName: "Paperclip",
+      collisionStrategy: "rename",
+      selectedAgentSlugs: ["ceo"],
+      plan: { companyAction: "none", agentPlans: [], projectPlans: [], issuePlans: [] },
+      manifest: { agents: [], skills: [], projects: [], issues: [], envInputs: [], includes: { company: false, agents: true, projects: true, issues: true, skills: true }, company: null, schemaVersion: 1, generatedAt: new Date().toISOString(), source: null, sidebar: null },
+      files: {},
+      envInputs: [],
+      warnings: [
+        "Agent ceo references skill paperclipai/bundled/paperclip-operations/task-planning, but that skill is not present in the package.",
+      ],
+      errors: [],
+    });
+    mockCompanyPortabilityService.importBundle.mockResolvedValueOnce({
+      company: { id: "company-1", name: "Paperclip", action: "unchanged" },
+      agents: [],
+      projects: [],
+      envInputs: [],
+      warnings: [
+        "Agent ceo references skill paperclipai/bundled/paperclip-operations/issue-triage, but that skill is not present in the package.",
+        "Keep this import warning.",
+      ],
+    });
+    const svc = teamsCatalogService({} as any);
+
+    const result = await svc.installCatalogTeam("company-1", "core-exec-team");
+
+    expect(result.warnings).toEqual(["Keep this import warning."]);
+  });
+
   it("injects safe claude_local adapter defaults for every bundled agent when no overrides are supplied", async () => {
     const svc = teamsCatalogService({} as any);
 
@@ -261,6 +318,16 @@ describe("teamsCatalogService", () => {
       cto: { adapterType: "claude_local" },
       qa: { adapterType: "claude_local" },
     });
+  });
+
+  it("keeps default adapter injection out of user-facing warnings", async () => {
+    const svc = teamsCatalogService({} as any);
+
+    const result = await svc.installCatalogTeam("company-1", "core-exec-team");
+
+    expect(result.warnings).not.toEqual(
+      expect.arrayContaining([expect.stringContaining("claude_local")]),
+    );
   });
 
   it("uses the configured safe adapter default for bundled agents", async () => {

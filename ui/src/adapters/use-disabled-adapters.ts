@@ -5,6 +5,10 @@ import { setDisabledAdapterTypes } from "@/adapters/disabled-store";
 import { syncExternalAdapters } from "@/adapters/registry";
 import { queryKeys } from "@/lib/queryKeys";
 
+interface AdapterSyncOptions {
+  enabled?: boolean;
+}
+
 /**
  * Fetch adapters and keep the disabled-adapter store + UI adapter registry
  * in sync with the server.
@@ -16,11 +20,13 @@ import { queryKeys } from "@/lib/queryKeys";
  * Returns a reactive Set of disabled types for use as useMemo dependencies.
  * Call this at the top of any component that renders adapter menus.
  */
-export function useDisabledAdaptersSync(): Set<string> {
+export function useDisabledAdaptersSync(options: AdapterSyncOptions = {}): Set<string> {
+  const enabled = options.enabled ?? true;
   const { data: adapters } = useQuery({
     queryKey: queryKeys.adapters.all,
     queryFn: () => adaptersApi.list(),
     staleTime: 5 * 60 * 1000,
+    enabled,
   });
 
   // Eagerly register external adapter types in the UI registry so that

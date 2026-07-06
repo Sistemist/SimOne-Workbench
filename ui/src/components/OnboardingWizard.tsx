@@ -10,6 +10,7 @@ import { agentsApi } from "../api/agents";
 import { approvalsApi } from "../api/approvals";
 import { issuesApi } from "../api/issues";
 import { projectsApi } from "../api/projects";
+import { teamCatalogApi } from "../api/teamCatalog";
 import { queryKeys } from "../lib/queryKeys";
 import { Dialog, DialogPortal } from "@/components/ui/dialog";
 import {
@@ -64,6 +65,9 @@ type Step = 0 | 1 | 2 | 3 | 4 | 5;
 // Plugin/external adapters use arbitrary type ids, so this mirrors the master
 // wizard's registry-driven approach rather than a fixed union.
 type AdapterType = string;
+type OnboardingPath = "starter" | "create" | "grow";
+
+const SIMONE_STARTER_CATALOG_REF = "paperclipai/bundled/simone/simone-starter";
 
 const MISSION_PROMPT_CHIPS = [
   "Build a SaaS product",
@@ -113,9 +117,6 @@ export function OnboardingWizard() {
   const location = useLocation();
   const { companyPrefix } = useParams<{ companyPrefix?: string }>();
 
-  // Sync disabled adapter types from server so the adapter grid filters them out.
-  const disabledTypes = useDisabledAdaptersSync();
-
   // Support opening the wizard from a route (e.g. /onboarding or an existing
   // company's "add agent" entry point) in addition to the dialog context.
   const routeOnboardingOptions =
@@ -132,6 +133,9 @@ export function OnboardingWizard() {
     ? onboardingOptions
     : routeOnboardingOptions ?? {};
 
+  // Sync disabled adapter types from server so the adapter grid filters them out.
+  const disabledTypes = useDisabledAdaptersSync({ enabled: effectiveOnboardingOpen });
+
   const initialStep = effectiveOnboardingOptions.initialStep ?? 0;
   const existingCompanyId = effectiveOnboardingOptions.companyId;
 
@@ -139,7 +143,7 @@ export function OnboardingWizard() {
   const saved = useMemo(loadSavedState, []);
 
   const [step, setStep] = useState<Step>((saved?.step as Step) ?? initialStep);
-  const [onboardingPath, setOnboardingPath] = useState<"create" | "grow" | null>((saved?.onboardingPath as "create" | "grow" | null) ?? null);
+  const [onboardingPath, setOnboardingPath] = useState<OnboardingPath | null>((saved?.onboardingPath as OnboardingPath | null) ?? null);
 
   // "Grow existing" questionnaire fields
   const [growWorkflows, setGrowWorkflows] = useState((saved?.growWorkflows as string) ?? "");
@@ -260,7 +264,7 @@ export function OnboardingWizard() {
     // Models are picked on step 4 (Connect a model).
     enabled: Boolean(createdCompanyId) && effectiveOnboardingOpen && step === 4
   });
-  const getCapabilities = useAdapterCapabilities();
+  const getCapabilities = useAdapterCapabilities({ enabled: effectiveOnboardingOpen });
   const adapterCaps = getCapabilities(adapterType);
   const isLocalAdapterCaps =
     adapterCaps.supportsInstructionsBundle ||
@@ -401,6 +405,87 @@ export function OnboardingWizard() {
     // effectiveOnboardingOpen stays true and the wizard re-renders instead of
     // handing off to the launcher card (PAP-52).
     setRouteDismissed(true);
+  }
+
+  async function ensureCompanyAndGoal() {
+    if (createdCompanyId) {
+      let goalId = createdCompanyGoalId;
+      if (!goalId) {
+        const goals = await goalsApi.list(createdCompanyId);
+        goalId = selectDefaultCompanyGoalId(goals);
+        setCreatedCompanyGoalId(goalId);
+      }
+      return {
+        companyId: createdCompanyId,
+        companyPrefix: createdCompanyPrefix,
+        goalId,
+      };
+    }
+
+    const company = await companiesApi.create({ name: companyName.trim() });
+    setCreatedCompanyId(company.id);
+    setCreatedCompanyPrefix(company.issuePrefix);
+    setSelectedCompanyId(company.id);
+    queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
+
+    const parsedGoal = parseOnboardingGoalInput(companyGoal);
+    const goal = await goalsApi.create(company.id, {
+      title: parsedGoal.title,
+      ...(parsedGoal.description
+        ? { description: parsedGoal.description }
+        : {}),
+      level: "company",
+      status: "active"
+    });
+    setCreatedCompanyGoalId(goal.id);
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.goals.list(company.id)
+    });
+
+    return {
+      companyId: company.id,
+      companyPrefix: company.issuePrefix,
+      goalId: goal.id,
+    };
+  }
+
+  async function handleLaunchStarterTemplate() {
+    if (!companyName.trim() || !companyGoal.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const { companyId, companyPrefix } = await ensureCompanyAndGoal();
+      const result = await teamCatalogApi.install(companyId, SIMONE_STARTER_CATALOG_REF, {
+        targetManagerAgentId: null,
+        collisionStrategy: "rename",
+        sourcePolicy: {
+          allowExternalSources: false,
+          allowUnpinnedOptionalSources: false,
+          allowLocalPathSources: false,
+        },
+      });
+
+      queryClient.invalidateQueries({ queryKey: queryKeys.agents.list(companyId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.list(companyId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.issues.list(companyId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.activity(companyId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.teamCatalog.installed(companyId) });
+
+      const importedAgents = result.portabilityImport.agents.filter((agent) => agent.action !== "skipped").length;
+      const importedProjects = result.portabilityImport.projects.filter((project) => project.action !== "skipped").length;
+      if (importedAgents === 0 && importedProjects === 0) {
+        setError("SIM Starter was already present. Opening your dashboard.");
+      }
+
+      setSelectedCompanyId(companyId);
+      reset();
+      closeOnboarding();
+      navigate(companyPrefix ? `/${companyPrefix}/dashboard` : "/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create SIM Starter");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleLaunchToDashboard() {
@@ -544,26 +629,7 @@ export function OnboardingWizard() {
     setLoading(true);
     setError(null);
     try {
-      const company = await companiesApi.create({ name: companyName.trim() });
-      setCreatedCompanyId(company.id);
-      setCreatedCompanyPrefix(company.issuePrefix);
-      setSelectedCompanyId(company.id);
-      queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
-
-      const parsedGoal = parseOnboardingGoalInput(companyGoal);
-      const goal = await goalsApi.create(company.id, {
-        title: parsedGoal.title,
-        ...(parsedGoal.description
-          ? { description: parsedGoal.description }
-          : {}),
-        level: "company",
-        status: "active"
-      });
-      setCreatedCompanyGoalId(goal.id);
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.goals.list(company.id)
-      });
-
+      await ensureCompanyAndGoal();
       setStep(3); // → Create your team lead
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create company");
@@ -733,7 +799,10 @@ export function OnboardingWizard() {
       e.preventDefault();
       if (step === 0) return; // front door requires click
       if (step === 1 && companyName.trim()) setStep(2);
-      else if (step === 2 && companyName.trim() && companyGoal.trim()) handleConfirmMission();
+      else if (step === 2 && companyName.trim() && companyGoal.trim()) {
+        if (onboardingPath === "starter") handleLaunchStarterTemplate();
+        else handleConfirmMission();
+      }
       else if (step === 3 && agentName.trim()) setStep(4);
       else if (step === 4 && agentName.trim()) handleGiveHeartbeat();
       else if (step === 5) handleLaunchToDashboard();
@@ -1195,9 +1264,23 @@ export function OnboardingWizard() {
 
                   {/* Confirm mission note */}
                   {companyGoal.trim() && (
-                    <p className="text-[11px] text-muted-foreground italic">
-                      You can always change your mission later in settings.
-                    </p>
+                    onboardingPath === "starter" ? (
+                      <div className="rounded-md border border-border bg-muted/20 p-3 text-xs">
+                        <p className="font-medium text-foreground">SIM Starter will create:</p>
+                        <ul className="mt-2 space-y-1 text-muted-foreground">
+                          <li>CEO/controller plus Product, Customer, Cash, and Skills engine leads</li>
+                          <li>SIM Wiki-ready Sprint Zero project structure</li>
+                          <li>A first work item to draft the initial SIM map from messy founder input</li>
+                        </ul>
+                        <p className="mt-2 text-[11px] text-muted-foreground">
+                          You can edit the structure later. SimOne will warn you when a change weakens a core feedback or approval boundary.
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground italic">
+                        You can always change your mission later in settings.
+                      </p>
+                    )
                   )}
 
                   <button
@@ -1661,14 +1744,16 @@ export function OnboardingWizard() {
                     <Button
                       size="sm"
                       disabled={!companyName.trim() || !companyGoal.trim() || loading}
-                      onClick={handleConfirmMission}
+                      onClick={onboardingPath === "starter" ? handleLaunchStarterTemplate : handleConfirmMission}
                     >
                       {loading ? (
                         <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
                       ) : (
                         <ArrowRight className="h-3.5 w-3.5 mr-1" />
                       )}
-                      {loading ? "Creating..." : "Confirm mission"}
+                      {loading
+                        ? onboardingPath === "starter" ? "Creating starter..." : "Creating..."
+                        : onboardingPath === "starter" ? "Create SIM Starter" : "Confirm mission"}
                     </Button>
                   )}
                   {step === 3 && (

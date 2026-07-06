@@ -1,8 +1,7 @@
 import type { ReactNode } from "react";
-import { Loader2, ShieldCheck, Terminal, TriangleAlert } from "lucide-react";
+import { Loader2, ShieldCheck, TriangleAlert } from "lucide-react";
 import { Link } from "@/lib/router";
 import { Button } from "@/components/ui/button";
-import { BOOTSTRAP_FALLBACK_COMMAND } from "@/bootstrapSetup";
 import type { AuthSession } from "@paperclipai/shared";
 
 type BootstrapPendingPageProps = {
@@ -13,25 +12,6 @@ type BootstrapPendingPageProps = {
   claimError?: { status?: number; message?: string } | null;
   onClaim: () => void;
 };
-
-function CliFallback({ hasActiveInvite = false }: { hasActiveInvite?: boolean }) {
-  return (
-    <div className="mt-6 border-t border-border pt-5">
-      <div className="flex items-center gap-2 text-sm font-medium">
-        <Terminal className="size-4 text-muted-foreground" aria-hidden />
-        <span>Prefer to finish setup from the host?</span>
-      </div>
-      <p className="mt-2 text-sm text-muted-foreground">
-        {hasActiveInvite
-          ? "A bootstrap invite is already active. Check your Paperclip startup logs for the first-admin URL, or run this command on the host to rotate it:"
-          : "Run this command on the host that runs Paperclip to print a one-time first-admin invite URL:"}
-      </p>
-      <pre className="mt-3 overflow-x-auto rounded-md border border-border bg-muted/30 p-3 font-mono text-xs">
-{BOOTSTRAP_FALLBACK_COMMAND}
-      </pre>
-    </div>
-  );
-}
 
 function StateChrome({ children }: { children: ReactNode }) {
   return (
@@ -48,13 +28,13 @@ function displayIdentity(session: AuthSession) {
 function claimErrorCopy(error: BootstrapPendingPageProps["claimError"]) {
   if (error?.status === 409) {
     return {
-      title: "Someone else has already claimed this instance.",
+      title: "Someone else has already claimed this workspace.",
       body: "Refresh to sign in, or ask the existing admin to invite you from Instance settings -> Access.",
     };
   }
   if (error?.status === 401) {
     return {
-      title: "Your session expired. Sign in again to claim this instance.",
+      title: "Your session expired. Sign in again to claim this workspace.",
       body: "",
     };
   }
@@ -66,7 +46,6 @@ function claimErrorCopy(error: BootstrapPendingPageProps["claimError"]) {
 
 export function BootstrapPendingPage({
   claimAvailable,
-  hasActiveInvite = false,
   session,
   claimState,
   claimError,
@@ -75,15 +54,13 @@ export function BootstrapPendingPage({
   if (!claimAvailable) {
     return (
       <StateChrome>
-        <h1 className="text-xl font-semibold">This Paperclip is waiting on its first admin</h1>
+        <h1 className="text-xl font-semibold">This SimOne workspace is waiting on its first admin</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          This instance runs in invite-only mode. The operator must generate a one-time first-admin invite URL
-          from the host. Once you have the link, open it from this browser to finish setup.
+          This SimOne workspace is invite-only. Ask the workspace owner for an invite link, then open it
+          from this browser to finish setup.
         </p>
-        <CliFallback hasActiveInvite={hasActiveInvite} />
         <p className="mt-4 text-xs text-muted-foreground">
-          Browser-based claim is intentionally disabled in public mode so anyone on the network can't promote
-          themselves.
+          Browser-based claim is intentionally disabled so visitors cannot promote themselves.
         </p>
       </StateChrome>
     );
@@ -97,7 +74,7 @@ export function BootstrapPendingPage({
             <ShieldCheck className="size-5" aria-hidden />
           </div>
           <div>
-            <h1 className="text-xl font-semibold">You're the instance admin</h1>
+            <h1 className="text-xl font-semibold">You're the workspace admin</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               Setup is complete. Taking you to onboarding to create your first company...
             </p>
@@ -109,7 +86,7 @@ export function BootstrapPendingPage({
         </div>
         <div className="mt-5">
           <Button asChild variant="outline">
-            <a href="/">Continue to dashboard</a>
+            <a href="/app">Continue to dashboard</a>
           </Button>
         </div>
       </StateChrome>
@@ -119,17 +96,15 @@ export function BootstrapPendingPage({
   if (!session) {
     return (
       <StateChrome>
-        <h1 className="text-xl font-semibold">Finish setting up this Paperclip</h1>
+        <h1 className="text-xl font-semibold">Finish setting up SimOne</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          No admin has claimed this instance yet. Sign in or create your Paperclip account to become the first
-          admin from this browser.
+          Create your account to claim the first SimOne workspace for this installation.
         </p>
         <div className="mt-5">
           <Button asChild>
-            <Link to="/auth?next=/">Sign in / Create account</Link>
+            <Link to="/auth?next=/app">Sign in / Create account</Link>
           </Button>
         </div>
-        <CliFallback hasActiveInvite={hasActiveInvite} />
       </StateChrome>
     );
   }
@@ -138,14 +113,14 @@ export function BootstrapPendingPage({
   const isClaiming = claimState === "claiming";
   return (
     <StateChrome>
-      <h1 className="text-xl font-semibold">Finish setting up this Paperclip</h1>
+      <h1 className="text-xl font-semibold">Finish setting up SimOne</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        No admin has claimed this instance yet. Claim it now to become the first admin and start onboarding.
+        Claim this workspace to become the first admin and start onboarding.
       </p>
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <Button onClick={onClaim} disabled={isClaiming}>
           {isClaiming && <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />}
-          {isClaiming ? "Claiming..." : "Claim this instance"}
+          {isClaiming ? "Claiming..." : "Claim this workspace"}
         </Button>
         <span className="text-sm text-muted-foreground">
           Signed in as <span className="font-medium text-foreground">{displayIdentity(session)}</span>
@@ -153,7 +128,7 @@ export function BootstrapPendingPage({
       </div>
       <p className="mt-3 text-xs text-muted-foreground">
         Wrong account?{" "}
-        <Link to="/auth?next=/" className="underline underline-offset-2">
+        <Link to="/auth?next=/app" className="underline underline-offset-2">
           Switch account
         </Link>
         .
@@ -170,7 +145,6 @@ export function BootstrapPendingPage({
           </div>
         </div>
       )}
-      <CliFallback hasActiveInvite={hasActiveInvite} />
     </StateChrome>
   );
 }

@@ -51,15 +51,15 @@ const DEFAULT_MANAGED_SKILL = {
   skillId: "skill-1",
   resourceKey: WIKI_MAINTAINER_SKILL_KEY,
   details: {
-    name: "LLM Wiki Maintainer",
+    name: "SIM Wiki Maintainer",
     key: WIKI_MAINTAINER_SKILL_CANONICAL_KEY,
-    description: "Use the LLM Wiki plugin tools to maintain a cited local company wiki.",
+    description: "Use the SIM Wiki plugin tools to maintain a cited local company knowledge base.",
   },
   skill: {
     id: "skill-1",
-    name: "LLM Wiki Maintainer",
+    name: "SIM Wiki Maintainer",
     key: WIKI_MAINTAINER_SKILL_CANONICAL_KEY,
-    description: "Use the LLM Wiki plugin tools to maintain a cited local company wiki.",
+    description: "Use the SIM Wiki plugin tools to maintain a cited local company knowledge base.",
   },
 };
 const DEFAULT_MANAGED_SKILLS = WIKI_MANAGED_SKILL_KEYS.map((skillKey, index) => ({
@@ -146,8 +146,8 @@ beforeEach(() => {
                 problems: [],
                 checkedAt: new Date().toISOString(),
               },
-              managedAgent: { status: "resolved", source: "managed", agentId: "agent-1", resourceKey: "wiki-maintainer", details: { name: "Wiki Maintainer", status: "idle", adapterType: "claude_local", icon: "book-open", urlKey: "wiki-maintainer" } },
-              managedProject: { status: "resolved", projectId: "project-1", details: { name: "LLM Wiki", status: "in_progress" } },
+              managedAgent: { status: "resolved", source: "managed", agentId: "agent-1", resourceKey: "wiki-maintainer", details: { name: "SIM Wiki Maintainer", status: "idle", adapterType: "claude_local", icon: "book-open", urlKey: "wiki-maintainer" } },
+              managedProject: { status: "resolved", projectId: "project-1", details: { name: "SIM Wiki", status: "in_progress" } },
               managedSkills: DEFAULT_MANAGED_SKILLS,
               operationCount: 0,
               eventIngestion: {
@@ -246,8 +246,8 @@ beforeEach(() => {
                 problems: [],
                 checkedAt: new Date().toISOString(),
               },
-              managedAgent: mockSettingsManagedAgent ?? { status: "resolved", source: "managed", agentId: "agent-1", resourceKey: "wiki-maintainer", details: { name: "Wiki Maintainer", status: "idle", adapterType: "claude_local", icon: "book-open", urlKey: "wiki-maintainer" } },
-              managedProject: { status: "resolved", source: "managed", projectId: "project-1", resourceKey: "llm-wiki", details: { name: "LLM Wiki", status: "in_progress" } },
+              managedAgent: mockSettingsManagedAgent ?? { status: "resolved", source: "managed", agentId: "agent-1", resourceKey: "wiki-maintainer", details: { name: "SIM Wiki Maintainer", status: "idle", adapterType: "claude_local", icon: "book-open", urlKey: "wiki-maintainer" } },
+              managedProject: { status: "resolved", source: "managed", projectId: "project-1", resourceKey: "llm-wiki", details: { name: "SIM Wiki", status: "in_progress" } },
               managedSkills: mockSettingsManagedSkills.length > 0 ? mockSettingsManagedSkills : DEFAULT_MANAGED_SKILLS,
               managedRoutines: mockSettingsManagedRoutines,
               managedRoutine: mockSettingsManagedRoutines[0] ?? null,
@@ -257,8 +257,8 @@ beforeEach(() => {
                 wikiId: "default",
                 maxCharacters: 12000,
               },
-              agentOptions: [{ id: "agent-1", name: "Wiki Maintainer", status: "idle", icon: "book-open", urlKey: "wiki-maintainer" }],
-              projectOptions: [{ id: "project-1", name: "LLM Wiki", status: "in_progress", color: "#2563eb" }],
+              agentOptions: [{ id: "agent-1", name: "SIM Wiki Maintainer", status: "idle", icon: "book-open", urlKey: "wiki-maintainer" }],
+              projectOptions: [{ id: "project-1", name: "SIM Wiki", status: "in_progress", color: "#2563eb" }],
               capabilities: [],
             },
             loading: false,
@@ -329,7 +329,7 @@ beforeEach(() => {
               wikiId: "default",
               path,
               contents,
-              title: path === "AGENTS.md" ? "LLM Wiki Maintainer" : path.replace(/\.md$/, ""),
+              title: path === "AGENTS.md" ? "SIM Wiki Maintainer" : path.replace(/\.md$/, ""),
               pageType: path === "AGENTS.md" ? null : "index",
               backlinks: mockPageMetadataByPath[path]?.backlinks ?? [],
               sourceRefs: mockPageMetadataByPath[path]?.sourceRefs ?? [],
@@ -404,7 +404,7 @@ beforeEach(() => {
           "data-testid": "assignee-picker",
           onClick: () => props.onChange("agent:agent-1", { assigneeAgentId: "agent-1", assigneeUserId: null }),
         },
-        props.value === "agent:agent-1" ? "Wiki Maintainer" : (props.placeholder ?? "Select assignee"),
+        props.value === "agent:agent-1" ? "SIM Wiki Maintainer" : (props.placeholder ?? "Select assignee"),
       ),
       ProjectPicker: (props: {
         value: string;
@@ -417,7 +417,7 @@ beforeEach(() => {
           "data-testid": "project-picker",
           onClick: () => props.onChange("project-1"),
         },
-        props.value === "project-1" ? "LLM Wiki" : (props.placeholder ?? "Project"),
+        props.value === "project-1" ? "SIM Wiki" : (props.placeholder ?? "Project"),
       ),
       ManagedRoutinesList: (props: {
         routines: Array<{
@@ -477,10 +477,10 @@ function wikiMaintainerAgent(): Agent {
   return {
     id: "22222222-2222-4222-8222-222222222222",
     companyId: COMPANY_ID,
-    name: "Wiki Maintainer",
+    name: "SIM Wiki Maintainer",
     urlKey: "wiki-maintainer",
     role: "general",
-    title: "LLM Wiki Maintainer",
+    title: "SIM Wiki Maintainer",
     icon: "book-open",
     status: "idle",
     reportsTo: null,
@@ -674,7 +674,7 @@ describe("LLM Wiki plugin scaffold", () => {
       sandbox: true,
     });
     expect(manifest.agents?.[0]?.instructions?.entryFile).toBe("AGENTS.md");
-    expect(manifest.agents?.[0]?.instructions?.content).toContain("You are the maintainer of this personal wiki");
+    expect(manifest.agents?.[0]?.instructions?.content).toContain("You are the maintainer of the SIM Wiki for SimOne");
     expect(manifest.agents?.[0]?.instructions?.files?.["AGENTS.md"]).toContain("{{localFolders.wiki-root.path}}");
     expect(manifest.agents?.[0]?.instructions?.assetPath).toBe("agents/wiki-maintainer");
     expect(manifest.projects?.[0]?.projectKey).toBe("llm-wiki");
@@ -751,7 +751,7 @@ describe("LLM Wiki plugin scaffold", () => {
   });
 
   it("ships Karpathy-pattern schema and workflow prompts by default", () => {
-    expect(DEFAULT_WIKI_SCHEMA).toContain("You are the maintainer of this personal wiki");
+    expect(DEFAULT_WIKI_SCHEMA).toContain("You are the maintainer of this SIM Wiki");
     expect(DEFAULT_WIKI_SCHEMA).toContain("raw/");
     expect(DEFAULT_WIKI_SCHEMA).toContain("wiki/projects/<project-slug>/standup.md");
     expect(DEFAULT_WIKI_SCHEMA).toContain("wiki/projects/<project-slug>/index.md");
@@ -760,9 +760,9 @@ describe("LLM Wiki plugin scaffold", () => {
     expect(DEFAULT_WIKI_SCHEMA).toContain("wiki/");
     expect(DEFAULT_WIKI_SCHEMA).toContain("AGENTS.md");
     expect(DEFAULT_IDEA).toContain("persistent, compounding artifact");
-    expect(DEFAULT_AGENT_INSTRUCTIONS).toContain("You are the maintainer of this personal wiki");
+    expect(DEFAULT_AGENT_INSTRUCTIONS).toContain("You are the maintainer of the SIM Wiki for SimOne");
     expect(DEFAULT_AGENT_INSTRUCTIONS).toContain("ingest, query, lint, index, or maintenance work");
-    expect(DEFAULT_AGENT_INSTRUCTIONS).toContain("dedicated LLM Wiki skill installed on this agent");
+    expect(DEFAULT_AGENT_INSTRUCTIONS).toContain("dedicated SIM Wiki skill installed on this agent");
     expect(DEFAULT_AGENT_INSTRUCTIONS).not.toContain("skills/<name>/SKILL.md");
     expect(DEFAULT_AGENT_INSTRUCTION_FILES["skills/wiki-ingest/SKILL.md"]).toBeUndefined();
     expect(manifest.skills?.map((skill) => skill.skillKey)).toEqual([...WIKI_MANAGED_SKILL_KEYS]);
@@ -827,8 +827,8 @@ describe("LLM Wiki plugin scaffold", () => {
 
     expect(markup).toContain("AGENTS");
     expect(markup).toContain(">AGENTS.md</h1>");
-    expect(markup).not.toContain(">LLM Wiki Maintainer</h1>");
-    expect(markup).toContain("You are the maintainer of this personal wiki");
+    expect(markup).not.toContain(">SIM Wiki Maintainer</h1>");
+    expect(markup).toContain("You are the maintainer of the SIM Wiki for SimOne");
     expect(markup).toContain("wiki-root `AGENTS.md`");
     expect(markup).toContain("Edit page");
     expect(markup).toContain("Updated —");
@@ -959,7 +959,7 @@ Duplicate headings receive stable suffixes.
       context: { companyId: COMPANY_ID, companyPrefix: "PAP" },
     } as never));
 
-    expect(markup).toContain("Repair wiki root folder");
+    expect(markup).toContain("Repair SIM Wiki root folder");
     expect(markup).toContain("/tmp/deleted-wiki-root");
     expect(markup).toContain("Configured local folder cannot be inspected.");
     expect(markup).toContain("Repair &amp; bootstrap");
@@ -997,13 +997,13 @@ Duplicate headings receive stable suffixes.
       context: { companyId: COMPANY_ID, companyPrefix: "PAP" },
     } as never));
 
-    expect(markup).toContain("Wiki Maintainer");
+    expect(markup).toContain("SIM Wiki Maintainer");
     expect(markup).toContain("Adapter: claude local");
     expect(markup).toContain("Maintainer");
     expect(markup).toContain("Repair");
     expect(markup).toContain("Reset to defaults");
     expect(markup).not.toContain("Provided maintainer");
-    expect(markup).not.toContain("Managed by LLM Wiki");
+    expect(markup).not.toContain("Managed by SIM Wiki");
     expect(markup).not.toContain("Suggested default");
     expect(markup).not.toContain("AGENT INSTRUCTIONS");
     expect(markup).not.toContain("Stable key");
@@ -1017,7 +1017,7 @@ Duplicate headings receive stable suffixes.
       source: "managed",
       agentId: "agent-1",
       resourceKey: "wiki-maintainer",
-      details: { name: "Wiki Maintainer", status: "pending_approval", adapterType: "claude_local", icon: "book-open", urlKey: "wiki-maintainer" },
+      details: { name: "SIM Wiki Maintainer", status: "pending_approval", adapterType: "claude_local", icon: "book-open", urlKey: "wiki-maintainer" },
     };
 
     const markup = renderToStaticMarkup(createElement(WikiPage, {
@@ -1046,7 +1046,7 @@ Duplicate headings receive stable suffixes.
     expect(markup.indexOf(">Managed Projects</h2>")).toBeLessThan(markup.indexOf(">Managed Routines</h2>"));
     expect(markup).toContain("Adapter: claude local");
     expect(markup).toContain("Status: in progress");
-    expect(markup).toContain("Wiki root health checklist");
+    expect(markup).toContain("SIM Wiki root health checklist");
     expect(markup).toContain("Health check");
     expect(markup).toContain("Wiki agents health checklist");
     expect(markup).toContain("Wiki routines health checklist");
@@ -1056,19 +1056,19 @@ Duplicate headings receive stable suffixes.
     const routineChecklist = markup.slice(routineChecklistStart);
     expect(routineChecklist).toContain("left:8px");
     expect(routineChecklist).toContain("background:oklch(0.38 0.09 145)");
-    expect(routineChecklist).toContain("Process LLM Wiki updates");
-    expect(routineChecklist).toContain("Run LLM Wiki lint");
-    expect(routineChecklist).toContain("Refresh LLM Wiki index");
-    expect(routineChecklist).not.toContain("Wiki Maintainer");
-    expect(routineChecklist).not.toContain("LLM Wiki project");
+    expect(routineChecklist).toContain("Process SIM Wiki updates");
+    expect(routineChecklist).toContain("Run SIM Wiki lint");
+    expect(routineChecklist).toContain("Refresh SIM Wiki index");
+    expect(routineChecklist).not.toContain("SIM Wiki Maintainer");
+    expect(routineChecklist).not.toContain("SIM Wiki project");
     const skillChecklistStart = markup.indexOf('aria-label="Wiki skills health checklist"');
     const skillChecklist = markup.slice(skillChecklistStart, markup.indexOf('aria-label="Wiki projects health checklist"'));
     expect(skillChecklist).toContain("left:8px");
     expect(skillChecklist).toContain("background:oklch(0.38 0.09 145)");
-    for (const headline of ["Path configured", "Readable", "Writable", "Baseline files", "Wiki folders"]) {
+    for (const headline of ["Path configured", "Readable", "Writable", "Baseline files", "SIM Wiki folders"]) {
       expect(markup).toContain(headline);
     }
-    expect(markup).toContain("Local wiki folder");
+    expect(markup).toContain("Local SIM Wiki folder");
     expect(markup).toContain("Choose");
     expect(markup).toContain("Apply path");
     expect(markup).not.toContain("AGENTS.md, IDEA.md");
@@ -1076,7 +1076,7 @@ Duplicate headings receive stable suffixes.
     expect(markup).not.toContain("Needs attention</span>");
     expect(markup).not.toContain("wiki/sources/");
     expect(markup).not.toContain("wiki/entities/");
-    expect(markup).not.toContain("Wiki root folder");
+    expect(markup).not.toContain("SIM Wiki root folder");
     expect(markup).not.toContain("Provided maintainer");
     expect(markup).not.toContain(">Project</span>");
     expect(markup).toContain("Ingestion Settings");
@@ -1108,7 +1108,7 @@ Duplicate headings receive stable suffixes.
     } as never));
 
     expect(markup).toContain("configuration errors detected, fix them all?");
-    expect(markup).toContain("Wiki root folder");
+    expect(markup).toContain("SIM Wiki root folder");
     expect(markup).toContain("Managed routines");
     expect(markup).toContain("need attention.");
     expect(markup).toContain("Fix them all");
@@ -1122,7 +1122,7 @@ Duplicate headings receive stable suffixes.
       skillId: null,
       resourceKey: WIKI_MAINTAINER_SKILL_KEY,
       details: {
-        name: "LLM Wiki Maintainer",
+        name: "SIM Wiki Maintainer",
         key: WIKI_MAINTAINER_SKILL_CANONICAL_KEY,
         description: null,
       },
@@ -1134,7 +1134,7 @@ Duplicate headings receive stable suffixes.
 
     expect(markup).toContain("Managed Skills");
     expect(markup).toContain("skill issue(s) need attention");
-    expect(markup).toContain("LLM Wiki Maintainer is not installed in the company skill library.");
+    expect(markup).toContain("SIM Wiki Maintainer is not installed in the company skill library.");
     expect(markup).toContain("Re-sync skills");
   });
 
@@ -1146,7 +1146,7 @@ Duplicate headings receive stable suffixes.
       resourceKey: WIKI_MAINTAINER_SKILL_KEY,
       defaultDrift: { changedFiles: ["SKILL.md"] },
       details: {
-        name: "LLM Wiki Maintainer",
+        name: "SIM Wiki Maintainer",
         key: WIKI_MAINTAINER_SKILL_CANONICAL_KEY,
         description: null,
       },
@@ -1157,7 +1157,7 @@ Duplicate headings receive stable suffixes.
     } as never));
 
     expect(markup).toContain("skill issue(s) need attention");
-    expect(markup).toContain("LLM Wiki Maintainer differs from the plugin default: SKILL.md.");
+    expect(markup).toContain("SIM Wiki Maintainer differs from the plugin default: SKILL.md.");
     expect(markup).toContain("Re-sync skills");
   });
 
@@ -1168,7 +1168,7 @@ Duplicate headings receive stable suffixes.
 
     expect(markup).toContain(">Setup</h1>");
     expect(markup).toContain("Base Folder");
-    expect(markup).not.toContain("LLM Wiki Settings");
+    expect(markup).not.toContain("SIM Wiki Settings");
     expect(markup).not.toContain("These settings live inside the plugin");
   });
 
@@ -1179,12 +1179,12 @@ Duplicate headings receive stable suffixes.
     } as never));
 
     expect(markup).toContain("Use existing project");
-    expect(markup).toContain("LLM Wiki");
+    expect(markup).toContain("SIM Wiki");
     expect(markup).toContain("Save project");
     expect(markup).toContain("Open project");
     expect(markup).toContain("Repair / reconcile");
     expect(markup).toContain("Reset to plugin defaults");
-    expect(markup).not.toContain("Managed by LLM Wiki");
+    expect(markup).not.toContain("Managed by SIM Wiki");
     expect(markup).not.toContain("Operations project binding");
     expect(markup).not.toContain("Stable key");
     expect(markup).not.toContain("Resolved project");
@@ -1233,7 +1233,7 @@ Duplicate headings receive stable suffixes.
 
     expect(markup).toContain("Agent execution");
     expect(markup).toContain("Assigned maintainer");
-    expect(markup).toContain("Wiki Maintainer · claude local");
+    expect(markup).toContain("SIM Wiki Maintainer · claude local");
     expect(markup).toContain("Cheap path");
     expect(markup).toContain("assigneeAdapterOverrides.modelProfile = cheap");
     expect(markup).toContain("All sections — apply when source hash matches and confidence");
@@ -1254,12 +1254,12 @@ Duplicate headings receive stable suffixes.
       resourceKey: "nightly-wiki-lint",
       routine: {
         id: "routine-1",
-        title: "Run LLM Wiki lint",
+        title: "Run SIM Wiki lint",
         status: "active",
         assigneeAgentId: "agent-1",
         projectId: "project-1",
         lastTriggeredAt: "2026-05-03T12:00:00Z",
-        managedByPlugin: { pluginDisplayName: "LLM Wiki", resourceKey: "nightly-wiki-lint" },
+        managedByPlugin: { pluginDisplayName: "SIM Wiki", resourceKey: "nightly-wiki-lint" },
       },
       details: { cronExpression: "0 3 * * *" },
     }];
@@ -1267,11 +1267,11 @@ Duplicate headings receive stable suffixes.
       context: { companyId: COMPANY_ID, companyPrefix: "PAP" },
     } as never));
 
-    expect(markup).toContain("Run LLM Wiki lint");
+    expect(markup).toContain("Run SIM Wiki lint");
     expect(markup).toContain("Run now");
     expect(markup).toContain("Configure");
     expect(markup).toContain("role=\"switch\"");
-    expect(markup).toContain("LLM Wiki · Wiki Maintainer");
+    expect(markup).toContain("SIM Wiki · SIM Wiki Maintainer");
     expect(markup).toContain("href=\"/PAP/routines/routine-1\"");
   });
 
@@ -1283,16 +1283,16 @@ Duplicate headings receive stable suffixes.
       resourceKey: "nightly-wiki-lint",
       defaultDrift: {
         changedFields: ["description"],
-        defaultTitle: "Run LLM Wiki lint",
+        defaultTitle: "Run SIM Wiki lint",
         defaultDescription: "Updated instructions",
       },
       routine: {
         id: "routine-1",
-        title: "Run LLM Wiki lint",
+        title: "Run SIM Wiki lint",
         status: "active",
         assigneeAgentId: "agent-1",
         projectId: "project-1",
-        managedByPlugin: { pluginDisplayName: "LLM Wiki", resourceKey: "nightly-wiki-lint" },
+        managedByPlugin: { pluginDisplayName: "SIM Wiki", resourceKey: "nightly-wiki-lint" },
       },
       details: { cronExpression: "0 3 * * *" },
     }];
@@ -1314,15 +1314,15 @@ Duplicate headings receive stable suffixes.
       agentId: "agent-1",
       resourceKey: "wiki-maintainer",
       defaultDrift: { entryFile: "AGENTS.md", changedFiles: ["AGENTS.md"] },
-      details: { name: "Wiki Maintainer", status: "idle", adapterType: "claude_local", icon: "book-open", urlKey: "wiki-maintainer" },
+      details: { name: "SIM Wiki Maintainer", status: "idle", adapterType: "claude_local", icon: "book-open", urlKey: "wiki-maintainer" },
     };
 
     const markup = renderToStaticMarkup(createElement(WikiPage, {
       context: { companyId: COMPANY_ID, companyPrefix: "PAP" },
     } as never));
 
-    expect(markup).toContain("Wiki Maintainer instructions differ from the plugin default: AGENTS.md.");
-    expect(markup).toContain("Wiki Maintainer instruction defaults changed: AGENTS.md");
+    expect(markup).toContain("SIM Wiki Maintainer instructions differ from the plugin default: AGENTS.md.");
+    expect(markup).toContain("SIM Wiki Maintainer instruction defaults changed: AGENTS.md");
   });
 
   it("shows one routine repair warning instead of per-routine reconcile controls", () => {
@@ -1333,11 +1333,11 @@ Duplicate headings receive stable suffixes.
       resourceKey: "nightly-wiki-lint",
       routine: {
         id: "routine-1",
-        title: "Run LLM Wiki lint",
+        title: "Run SIM Wiki lint",
         status: "active",
         assigneeAgentId: "other-agent",
         projectId: "project-1",
-        managedByPlugin: { pluginDisplayName: "LLM Wiki", resourceKey: "nightly-wiki-lint" },
+        managedByPlugin: { pluginDisplayName: "SIM Wiki", resourceKey: "nightly-wiki-lint" },
       },
       details: { cronExpression: "0 3 * * *" },
     }];
@@ -1348,7 +1348,7 @@ Duplicate headings receive stable suffixes.
 
     expect(markup).toContain("Routine setup needs repair");
     expect(markup).toContain("Fix routines");
-    expect(markup).toContain("not assigned to the Wiki Maintainer");
+    expect(markup).toContain("not assigned to the SIM Wiki Maintainer");
     expect(markup).not.toContain("Plugin-managed routine defaults can be reconciled from here");
     expect(markup).not.toContain(">Reconcile</button>");
     expect(markup).not.toContain(">Reset</button>");
@@ -1362,7 +1362,7 @@ Duplicate headings receive stable suffixes.
 
     expect(markup).toContain("Run lint now");
     expect(markup).toContain("Recent lint runs");
-    expect(markup).toContain("LLM Wiki settings sections");
+    expect(markup).toContain("SIM Wiki settings sections");
   });
 
   it("does not expose IDEA.md pattern editing as a settings section", () => {
@@ -1371,7 +1371,7 @@ Duplicate headings receive stable suffixes.
       context: { companyId: COMPANY_ID, companyPrefix: "PAP" },
     } as never));
 
-    expect(markup).toContain("LLM Wiki settings sections");
+    expect(markup).toContain("SIM Wiki settings sections");
     expect(markup).not.toContain(">Pattern</span>");
     expect(markup).not.toContain("Pattern · IDEA.md");
     expect(markup).not.toContain("IDEA.md skeleton reference");
@@ -1383,7 +1383,7 @@ Duplicate headings receive stable suffixes.
       context: { companyId: COMPANY_ID, companyPrefix: "PAP" },
     } as never));
 
-    expect(markup).toContain("LLM Wiki settings sections");
+    expect(markup).toContain("SIM Wiki settings sections");
     expect(markup).not.toContain("Plugin capabilities");
     expect(markup).not.toContain("api.routes.register");
   });
@@ -1488,7 +1488,7 @@ Duplicate headings receive stable suffixes.
       skillId: expect.any(String),
       resourceKey: WIKI_MAINTAINER_SKILL_KEY,
       details: {
-        name: "LLM Wiki Maintainer",
+        name: "SIM Wiki Maintainer",
         key: WIKI_MAINTAINER_SKILL_CANONICAL_KEY,
       },
     });
@@ -2061,7 +2061,7 @@ Duplicate headings receive stable suffixes.
       maxCharacters: 20000,
     });
 
-    expect(run.bundle.markdown).toContain("Suppressed by LLM Wiki distillation security policy");
+    expect(run.bundle.markdown).toContain("Suppressed by SIM Wiki distillation security policy");
     expect(run.bundle.markdown).not.toContain("ghp_supersecretcommenttoken1234567890");
     expect(run.bundle.markdown).not.toContain("sk-supersecretdocumentvalue1234567890");
     expect(run.bundle.warnings).toEqual(expect.arrayContaining([
@@ -2077,7 +2077,7 @@ Duplicate headings receive stable suffixes.
     const storedSourceRefs = String(snapshotInsert?.params?.[9] ?? "");
     const storedMarkdown = String(snapshotInsert?.params?.[10] ?? "");
     expect(storedSourceRefs).toContain("suppressed_sensitive_content");
-    expect(storedMarkdown).toContain("Suppressed by LLM Wiki distillation security policy");
+    expect(storedMarkdown).toContain("Suppressed by SIM Wiki distillation security policy");
     expect(storedMarkdown).not.toContain("ghp_supersecretcommenttoken1234567890");
     expect(storedMarkdown).not.toContain("sk-supersecretdocumentvalue1234567890");
   });
@@ -2501,7 +2501,7 @@ Duplicate headings receive stable suffixes.
     expect(projectPatch.sourceRefs).toEqual([expect.objectContaining({ issueIdentifier: "PAP-4100" })]);
     expect(result.patches[2].proposedContents).toContain("[[wiki/projects/existing-wiki-project/index.md]]");
     expect(result.patches[2].proposedContents).toContain("[[wiki/projects/existing-wiki-project/standup.md]]");
-    expect(result.patches[3].proposedContents).toContain("paperclip-distill | proposed");
+    expect(result.patches[3].proposedContents).toContain("simone-distill | proposed");
     expect(result.warnings).toContain("Auto-apply policy disabled; proposed patches require review.");
   });
 
@@ -2626,7 +2626,7 @@ Duplicate headings receive stable suffixes.
     expect(files.get("wiki/projects/existing-wiki-project/index.md")).toContain("## Current Direction");
     expect(files.get("wiki/projects/existing-wiki-project/index.md")).toContain("## References");
     expect(files.get("wiki/index.md")).toContain("wiki/projects/existing-wiki-project/index.md");
-    expect(files.get("wiki/log.md")).toContain("paperclip-distill | proposed");
+    expect(files.get("wiki/log.md")).toContain("simone-distill | proposed");
     const bindingWrites = harness.dbExecutes.filter((execute) => execute.sql.includes("paperclip_page_bindings"));
     expect(bindingWrites).toHaveLength(4);
     expect(bindingWrites[0].params).toEqual(expect.arrayContaining([
@@ -2794,11 +2794,19 @@ Duplicate headings receive stable suffixes.
       "wiki/projects/.gitkeep",
       "wiki/entities/.gitkeep",
       "wiki/concepts/.gitkeep",
+      "wiki/sim/.gitkeep",
+      "wiki/sim/archetypes.md",
+      "wiki/sim/coaching-guidance.md",
+      "wiki/sim/drivers.md",
+      "wiki/sim/engines.md",
+      "wiki/sim/system-laws.md",
       "wiki/synthesis/.gitkeep",
     ]);
-    expect(writes.find((write) => write.path === "AGENTS.md")?.contents).toContain("LLM Wiki Schema");
+    expect(writes.find((write) => write.path === "AGENTS.md")?.contents).toContain("SIM Wiki Schema");
     expect(writes.find((write) => write.path === "AGENTS.md")?.contents).toContain("wiki/projects/<project-slug>/index.md");
     expect(writes.find((write) => write.path === "AGENTS.md")?.contents).toContain("wiki/projects/<project-slug>/standup.md");
+    expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/sim/coaching-guidance]]");
+    expect(writes.find((write) => write.path === "wiki/sim/engines.md")?.contents).toContain("Product Engine");
   });
 
   it("creates a managed space with an immediately readable baseline skeleton", async () => {
@@ -2830,7 +2838,7 @@ Duplicate headings receive stable suffixes.
       COMPANY_ID,
       "wiki-root",
       "spaces/qa-space/AGENTS.md",
-    )).resolves.toContain("LLM Wiki Schema");
+    )).resolves.toContain("SIM Wiki Schema");
     expect(files.get("spaces/qa-space/IDEA.md")).toBe(DEFAULT_IDEA);
     expect(files.has("spaces/qa-space/raw/.gitkeep")).toBe(true);
     expect(files.has("spaces/qa-space/projects/.gitkeep")).toBe(false);
@@ -2846,7 +2854,7 @@ Duplicate headings receive stable suffixes.
       companyId: COMPANY_ID,
       spaceSlug: "default",
       status: "archived",
-    })).rejects.toThrow("The default LLM Wiki space cannot be archived.");
+    })).rejects.toThrow("The default SIM Wiki space cannot be archived.");
     const defaultSpaceInsert = harness.dbExecutes.find((execute) =>
       execute.sql.includes("INSERT INTO") && execute.sql.includes("wiki_spaces"));
     expect(defaultSpaceInsert?.params?.[0]).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-8[0-9a-f]{3}-[0-9a-f]{12}$/);
@@ -2957,7 +2965,7 @@ Duplicate headings receive stable suffixes.
       companyId: COMPANY_ID,
       spaceSlug: "default",
       status: "suspended",
-    })).rejects.toThrow("LLM Wiki space status must be active or archived.");
+    })).rejects.toThrow("SIM Wiki space status must be active or archived.");
     expect(harness.dbExecutes.some((execute) =>
       execute.sql.includes("UPDATE") &&
       execute.sql.includes("wiki_spaces") &&
@@ -3087,7 +3095,7 @@ Duplicate headings receive stable suffixes.
       companyId: COMPANY_ID,
       spaceSlug: created.space.slug,
       projectId: existingProject().id,
-    })).rejects.toThrow("Paperclip ingestion policy denied queue");
+    })).rejects.toThrow("SimOne ingestion policy denied queue");
   });
 
   it("fails closed for direct Paperclip ingestion actions against restricted spaces", async () => {
@@ -3137,7 +3145,7 @@ Duplicate headings receive stable suffixes.
       companyId: COMPANY_ID,
       spaceSlug: created.space.slug,
       projectId: existingProject().id,
-    })).rejects.toThrow("Paperclip ingestion policy denied queue");
+    })).rejects.toThrow("SimOne ingestion policy denied queue");
 
     const operations = await harness.ctx.issues.list({
       companyId: COMPANY_ID,
@@ -3197,7 +3205,7 @@ Duplicate headings receive stable suffixes.
     await expect(harness.performAction("create-paperclip-distillation-run", {
       companyId: COMPANY_ID,
       projectId: project.id,
-    })).rejects.toThrow("personal spaces cannot ingest Paperclip sources");
+    })).rejects.toThrow("personal spaces cannot ingest SimOne workbench sources");
     expect(harness.dbExecutes.some((execute) =>
       execute.sql.includes("paperclip_distillation_runs") && execute.sql.includes("'source_ready'"))).toBe(false);
   });
@@ -3244,7 +3252,7 @@ Duplicate headings receive stable suffixes.
       enabled: true,
       maxCharacters: 20001,
       sources: { issues: true },
-    })).rejects.toThrow("maxCharacters exceeds the hard Paperclip ingestion cap");
+    })).rejects.toThrow("maxCharacters exceeds the hard SimOne workbench ingestion cap");
 
     await expect(harness.performAction("enable-paperclip-distillation-active-projects", {
       companyId: COMPANY_ID,
@@ -3261,7 +3269,7 @@ Duplicate headings receive stable suffixes.
       companyId: COMPANY_ID,
       projectId: "77777777-7777-4777-8777-777777777777",
       maxCharacters: 60001,
-    })).rejects.toThrow("maxCharacters exceeds the hard Paperclip ingestion cap");
+    })).rejects.toThrow("maxCharacters exceeds the hard SimOne workbench ingestion cap");
   });
 
   it("keeps default-space files at the root and isolates managed spaces under slug prefixes", async () => {
@@ -3438,7 +3446,7 @@ Duplicate headings receive stable suffixes.
       sourceType: "text",
       title: "Oversized source",
       contents: "x".repeat(17),
-    })).rejects.toThrow("exceeds the configured LLM Wiki source limit");
+    })).rejects.toThrow("exceeds the configured SIM Wiki source limit");
 
     expect(writes).toHaveLength(0);
     expect(harness.dbExecutes.some((execute) => execute.sql.includes("wiki_sources"))).toBe(false);
@@ -3491,7 +3499,7 @@ Duplicate headings receive stable suffixes.
   it("blocks agent-tool writes to AGENTS.md but allows explicit board edits", async () => {
     const harness = createTestHarness({ manifest });
     const files = new Map<string, string>([
-      ["AGENTS.md", "# LLM Wiki Maintainer\n\nOriginal instructions.\n"],
+      ["AGENTS.md", "# SIM Wiki Maintainer\n\nOriginal instructions.\n"],
     ]);
     harness.ctx.localFolders.readText = async (_companyId, _folderKey, relativePath) => {
       const value = files.get(relativePath);
@@ -3509,14 +3517,14 @@ Duplicate headings receive stable suffixes.
       companyId: COMPANY_ID,
       wikiId: "default",
       path: "AGENTS.md",
-      contents: "# LLM Wiki Maintainer\n\nCompromised instructions.\n",
+      contents: "# SIM Wiki Maintainer\n\nCompromised instructions.\n",
     })).rejects.toThrow("Refusing to overwrite protected wiki control file AGENTS.md");
 
     const result = await harness.performAction<{ hash: string }>("write-page", {
       companyId: COMPANY_ID,
       wikiId: "default",
       path: "AGENTS.md",
-      contents: "# LLM Wiki Maintainer\n\nBoard-updated instructions.\n",
+      contents: "# SIM Wiki Maintainer\n\nBoard-updated instructions.\n",
     });
 
     expect(result.hash).toHaveLength(64);
@@ -3591,12 +3599,12 @@ Duplicate headings receive stable suffixes.
     }>("create-operation", {
       companyId: COMPANY_ID,
       operationType: "lint",
-      title: "Run LLM Wiki lint",
+      title: "Run SIM Wiki lint",
       prompt: "Audit wiki structure.",
       spaceSlug: created.space.slug,
     });
 
-    expect(result.issue.title).toBe("Run LLM Wiki lint [space: Research Space / research-space]");
+    expect(result.issue.title).toBe("Run SIM Wiki lint [space: Research Space / research-space]");
     expect(result.issue.description).toContain("Space: Research Space (research-space)");
     expect(result.issue.description).toContain("Space root: wiki-root/spaces/research-space");
     expect(result.issue.description).toContain("Pass wikiId `default` and spaceSlug `research-space`");

@@ -200,7 +200,7 @@ function InviteSummaryPanel({
           className="h-16 w-16 rounded-none border border-zinc-800"
         />
         <div className="min-w-0">
-          <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">You&apos;ve been invited to join Paperclip</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">You&apos;ve been invited to join SimOne</p>
           <h3 className="mt-2 text-2xl font-semibold text-zinc-100">{title}</h3>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-300">{description}</p>
         </div>
@@ -255,8 +255,8 @@ function InlineAuthPreview({
         </h3>
         <p className="mt-1 text-sm text-zinc-400">
           {mode === "sign_up"
-            ? "Start with a Paperclip account. After that, you'll come right back here to accept the invite for Acme Robotics."
-            : "Use the Paperclip account that already matches this invite. If you do not have one yet, switch back to create account."}
+            ? "Start with a SimOne account. After that, you'll come right back here to accept the invite for Acme Robotics."
+            : "Use the SimOne account that already matches this invite. If you do not have one yet, switch back to create account."}
         </p>
       </div>
 
@@ -457,15 +457,15 @@ function AuthScreenPreview({ mode, error }: { mode: "sign_in" | "sign_up"; error
           <div className="mx-auto w-full max-w-md">
             <div className="mb-8 flex items-center gap-2">
               <FlaskConical className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Paperclip</span>
+              <span className="text-sm font-medium">SimOne</span>
             </div>
             <h3 className="text-xl font-semibold">
-              {mode === "sign_in" ? "Sign in to Paperclip" : "Create your Paperclip account"}
+              {mode === "sign_in" ? "Sign in to SimOne" : "Create your SimOne account"}
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
               {mode === "sign_in"
-                ? "Use your email and password to access this instance."
-                : "Create an account for this instance. Email confirmation is not required in v1."}
+                ? "Use your email and password to access your workspace."
+                : "Create an account for this workspace. Email confirmation is not required yet."}
             </p>
             <div className="mt-6 space-y-4">
               {mode === "sign_up" ? (
@@ -811,7 +811,7 @@ export function InviteUxLab() {
             left={
               <InviteSummaryPanel
                 title="Join Acme Robotics"
-                description="Create your Paperclip account first. If you already have one, switch to sign in and continue the invite with the same email."
+                description="Create your SimOne account first. If you already have one, switch to sign in and continue the invite with the same email."
                 inviteMessage="Welcome aboard."
                 requestedAccess="Operator"
               />
@@ -823,7 +823,7 @@ export function InviteUxLab() {
             left={
               <InviteSummaryPanel
                 title="Join Acme Robotics"
-                description="Create your Paperclip account first. If you already have one, switch to sign in and continue the invite with the same email."
+                description="Create your SimOne account first. If you already have one, switch to sign in and continue the invite with the same email."
                 inviteMessage="Welcome aboard."
                 requestedAccess="Operator"
               />

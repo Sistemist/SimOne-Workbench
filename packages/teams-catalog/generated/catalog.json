@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "packageName": "@paperclipai/teams-catalog",
   "packageVersion": "0.1.0",
-  "generatedAt": "2026-06-04T18:03:41.262Z",
+  "generatedAt": "2026-07-06T10:56:19.083Z",
   "teams": [
     {
       "id": "paperclipai:bundled:company-defaults:core-exec-team",
@@ -237,6 +237,135 @@
       "trustLevel": "markdown_only",
       "compatibility": "compatible",
       "contentHash": "sha256:15a04b36f31d4c9a391bb499c92e91fedfcc237cfa6c3d41ea3ddb441bc85c5b"
+    },
+    {
+      "id": "paperclipai:bundled:simone:simone-starter",
+      "key": "paperclipai/bundled/simone/simone-starter",
+      "kind": "bundled",
+      "category": "simone",
+      "slug": "simone-starter",
+      "name": "SimOne Starter",
+      "description": "Starter SIM company map with a CEO and four engine leads for Product, Customer, Cash, and Skills.",
+      "path": "catalog/bundled/simone/simone-starter",
+      "entrypoint": "TEAM.md",
+      "schema": "agentcompanies/v1",
+      "defaultInstall": false,
+      "recommendedForCompanyTypes": [
+        "company-root",
+        "startup",
+        "founder-led",
+        "education",
+        "simone"
+      ],
+      "tags": [
+        "simone",
+        "sprint-zero",
+        "systems-intelligence",
+        "founder"
+      ],
+      "counts": {
+        "agents": 5,
+        "projects": 1,
+        "tasks": 1,
+        "routines": 0,
+        "localSkills": 0,
+        "catalogSkills": 2,
+        "externalSkillSources": 0
+      },
+      "rootAgentSlugs": [
+        "ceo"
+      ],
+      "agentSlugs": [
+        "cash-lead",
+        "ceo",
+        "customer-lead",
+        "product-lead",
+        "skills-lead"
+      ],
+      "projectSlugs": [
+        "sprint-zero"
+      ],
+      "requiredSkills": [
+        {
+          "type": "catalog",
+          "ref": "issue-triage",
+          "agentSlugs": [
+            "ceo"
+          ],
+          "resolved": true,
+          "catalogSkillId": "paperclipai:bundled:paperclip-operations:issue-triage",
+          "catalogSkillKey": "paperclipai/bundled/paperclip-operations/issue-triage"
+        },
+        {
+          "type": "catalog",
+          "ref": "task-planning",
+          "agentSlugs": [
+            "cash-lead",
+            "ceo",
+            "customer-lead",
+            "product-lead",
+            "skills-lead"
+          ],
+          "resolved": true,
+          "catalogSkillId": "paperclipai:bundled:paperclip-operations:task-planning",
+          "catalogSkillKey": "paperclipai/bundled/paperclip-operations/task-planning"
+        }
+      ],
+      "envInputs": [],
+      "sourceRefs": [],
+      "files": [
+        {
+          "path": "TEAM.md",
+          "kind": "team",
+          "sizeBytes": 1719,
+          "sha256": "a0e7d4aaf7674664042d801d60759cdef90036ad71e5229751b7c57cae8d05a7"
+        },
+        {
+          "path": "agents/cash-lead/AGENTS.md",
+          "kind": "agent",
+          "sizeBytes": 664,
+          "sha256": "7a02be3f71bf64e44141bec55e8c25da9edeef478ce1169d019b550dcedf4488"
+        },
+        {
+          "path": "agents/ceo/AGENTS.md",
+          "kind": "agent",
+          "sizeBytes": 1225,
+          "sha256": "b4ca0747e769c800f294c2432d009da1ae1f76bea8ec716d42b20d4806de21d2"
+        },
+        {
+          "path": "agents/customer-lead/AGENTS.md",
+          "kind": "agent",
+          "sizeBytes": 653,
+          "sha256": "24b19ad2775c5cfe57f778ad208752a158dc94deeaa93f3bfc41511742b4159d"
+        },
+        {
+          "path": "agents/product-lead/AGENTS.md",
+          "kind": "agent",
+          "sizeBytes": 743,
+          "sha256": "12ccd083b134d4f407e57297d875c36b4bc7169735e6ced92df50e636d3cbf37"
+        },
+        {
+          "path": "agents/skills-lead/AGENTS.md",
+          "kind": "agent",
+          "sizeBytes": 701,
+          "sha256": "dfb3fa1e84f7962635ae4fbfeb7ba4a897be9afa294f5f9e90f50757c7a120fa"
+        },
+        {
+          "path": "projects/sprint-zero/PROJECT.md",
+          "kind": "project",
+          "sizeBytes": 389,
+          "sha256": "3a1ebde9b406f225737b062f6337a9a7a0cb9c38afae346f897c5c867c8516ce"
+        },
+        {
+          "path": "projects/sprint-zero/tasks/draft-first-sim-map/TASK.md",
+          "kind": "task",
+          "sizeBytes": 393,
+          "sha256": "a9a5ebfd879e779f4c714a473947212a7543d3f105fa98e1fb24addf5e710223"
+        }
+      ],
+      "trustLevel": "markdown_only",
+      "compatibility": "compatible",
+      "contentHash": "sha256:aa91fe226c108e4e010e5a8f339ca655235e7db81f67576043ec4bc19d8bb4a7"
     },
     {
       "id": "paperclipai:bundled:software-development:product-engineering",

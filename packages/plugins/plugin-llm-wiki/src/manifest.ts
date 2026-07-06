@@ -45,36 +45,36 @@ function skillMarkdown(skillKey: (typeof WIKI_MANAGED_SKILL_KEYS)[number]) {
 export const WIKI_MAINTAINER_SKILL_CANONICAL_KEY = canonicalSkillKey(WIKI_MAINTAINER_SKILL_KEY);
 export const WIKI_MANAGED_SKILL_CANONICAL_KEYS = WIKI_MANAGED_SKILL_KEYS.map(canonicalSkillKey);
 
-const CURSOR_WINDOW_ROUTINE_DESCRIPTION = `Process bounded Paperclip issue-history windows into the LLM Wiki.
+const CURSOR_WINDOW_ROUTINE_DESCRIPTION = `Process bounded SimOne issue-history windows into the SIM Wiki.
 
 Run procedure:
-Target space: default (slug: default). Paperclip-derived indexing currently writes only into the default space, so this routine never sweeps other spaces. Per-space Paperclip ingestion profiles are a later phase; until they ship, treat any prompt to operate on a non-default space here as a bug and stop.
+Target space: default (slug: default). SimOne workbench indexing currently writes only into the default space, so this routine never sweeps other spaces. Per-space workbench ingestion profiles are a later phase; until they ship, treat any prompt to operate on a non-default space here as a bug and stop.
 1. Resolve the configured wiki root, then read the default space AGENTS.md, wiki/index.md, and the recent entries in wiki/log.md.
-2. Review recent Paperclip issue, comment, and document activity for non-plugin-operation work. Skip LLM Wiki operation issues so routine output does not feed back into itself.
-3. Synthesize Paperclip project state into wiki/projects/<slug>/standup.md for the executive current-state view, then durable project or root-issue knowledge into focused pages under wiki/projects/<slug>/index.md, wiki/concepts/, or wiki/synthesis/. Keep transient run logs out of durable pages unless they change the project's state or decisions.
-4. Write project material as concept-grouped executive synthesis. Link readable issue identifiers when useful, but do not turn project pages into issue-ID lists, UUID dumps, date ledgers, or metadata reports. Always pass wikiId \`default\` and spaceSlug \`default\` to LLM Wiki tools.
+2. Review recent SimOne workbench issue, comment, and document activity for non-plugin-operation work. Skip SIM Wiki operation issues so routine output does not feed back into itself.
+3. Synthesize SimOne workbench project state into wiki/projects/<slug>/standup.md for the executive current-state view, then durable project or root-issue knowledge into focused pages under wiki/projects/<slug>/index.md, wiki/concepts/, or wiki/synthesis/. Keep transient run logs out of durable pages unless they change the project's state or decisions.
+4. Write project material as concept-grouped executive synthesis. Link readable issue identifiers when useful, but do not turn project pages into issue-ID lists, UUID dumps, date ledgers, or metadata reports. Always pass wikiId \`default\` and spaceSlug \`default\` to SIM Wiki tools.
 5. Refresh wiki/index.md and append a short wiki/log.md entry listing the source window, affected pages, skipped windows, warnings, and any follow-up issue needed.
 6. If there is no new durable signal, record that in wiki/log.md and close the routine issue with a concise note.`;
 
-const NIGHTLY_LINT_ROUTINE_DESCRIPTION = `Lint the LLM Wiki for structure, provenance, and stale synthesis.
+const NIGHTLY_LINT_ROUTINE_DESCRIPTION = `Lint the SIM Wiki for structure, provenance, and stale synthesis.
 
 Run procedure:
-Target space: default (slug: default). Paperclip-derived indexing currently writes only into the default space, so this routine never sweeps other spaces. Per-space Paperclip ingestion profiles are a later phase; until they ship, treat any prompt to operate on a non-default space here as a bug and stop.
+Target space: default (slug: default). SimOne workbench indexing currently writes only into the default space, so this routine never sweeps other spaces. Per-space workbench ingestion profiles are a later phase; until they ship, treat any prompt to operate on a non-default space here as a bug and stop.
 1. Resolve the configured wiki root, then read the default space AGENTS.md, wiki/index.md, wiki/log.md, and the current page list.
 2. Check for orphan pages, missing backlinks, stale source provenance, weak citations, duplicate concepts, contradictory claims, and index/log drift.
 3. Inspect the relevant wiki pages and raw sources before changing content. Do not invent missing provenance.
-4. Apply low-risk fixes directly: refresh backlinks, repair index entries, add missing source links, and append a wiki/log.md lint entry. Always pass wikiId \`default\` and spaceSlug \`default\` to LLM Wiki tools.
-5. For ambiguous contradictions or major rewrites, leave the pages unchanged and create or comment a follow-up Paperclip issue with the exact files and evidence.
+4. Apply low-risk fixes directly: refresh backlinks, repair index entries, add missing source links, and append a wiki/log.md lint entry. Always pass wikiId \`default\` and spaceSlug \`default\` to SIM Wiki tools.
+5. For ambiguous contradictions or major rewrites, leave the pages unchanged and create or comment a follow-up SimOne issue with the exact files and evidence.
 6. Close the routine issue with counts by severity, files changed, and unresolved findings.`;
 
-const INDEX_REFRESH_ROUTINE_DESCRIPTION = `Refresh the LLM Wiki navigation and change log.
+const INDEX_REFRESH_ROUTINE_DESCRIPTION = `Refresh the SIM Wiki navigation and change log.
 
 Run procedure:
-Target space: default (slug: default). Paperclip-derived indexing currently writes only into the default space, so this routine never sweeps other spaces. Per-space Paperclip ingestion profiles are a later phase; until they ship, treat any prompt to operate on a non-default space here as a bug and stop.
+Target space: default (slug: default). SimOne workbench indexing currently writes only into the default space, so this routine never sweeps other spaces. Per-space workbench ingestion profiles are a later phase; until they ship, treat any prompt to operate on a non-default space here as a bug and stop.
 1. Resolve the configured wiki root, then read the default space AGENTS.md, wiki/index.md, wiki/log.md, and the current page list.
 2. Rebuild wiki/index.md so it lists current wiki pages by category with concise summaries and valid wikilinks, and attaches wiki/projects/<slug>/standup.md links to matching project entries.
 3. Verify recently changed wiki pages and project standups are present in the index and that removed or renamed pages no longer appear.
-4. Do not rewrite content pages unless a broken title or link prevents the index from being accurate. Always pass wikiId \`default\` and spaceSlug \`default\` to LLM Wiki tools.
+4. Do not rewrite content pages unless a broken title or link prevents the index from being accurate. Always pass wikiId \`default\` and spaceSlug \`default\` to SIM Wiki tools.
 5. Append a wiki/log.md entry with the index refresh time, page counts by category, and any unresolved indexing problems.
 6. Close the routine issue with the index changes and any follow-up needed.`;
 
@@ -82,9 +82,9 @@ const manifest: PaperclipPluginManifestV1 = {
   id: PLUGIN_ID,
   apiVersion: 1,
   version: "0.1.0",
-  displayName: "LLM Wiki",
-  description: "Local-file LLM Wiki plugin for source ingestion, wiki browsing, query, lint, and maintenance workflows.",
-  author: "Paperclip",
+  displayName: "SIM Wiki",
+  description: "SimOne's local-file knowledge layer for source ingestion, SIM coaching, cited answers, lint, and maintenance workflows.",
+  author: "SimOne",
   categories: ["automation", "ui"],
   capabilities: [
     "events.subscribe",
@@ -134,8 +134,8 @@ const manifest: PaperclipPluginManifestV1 = {
   localFolders: [
     {
       folderKey: WIKI_ROOT_FOLDER_KEY,
-      displayName: "Wiki root",
-      description: "Company-scoped local folder that stores raw sources, wiki pages, Paperclip project standups under wiki/projects/, AGENTS.md, IDEA.md, wiki/index.md, and wiki/log.md.",
+      displayName: "SIM Wiki root",
+      description: "Company-scoped local folder that stores raw sources, SIM Wiki pages, SimOne project standups under wiki/projects/, AGENTS.md, IDEA.md, wiki/index.md, and wiki/log.md.",
       access: "readWrite",
       requiredDirectories: [
         "raw",
@@ -144,6 +144,7 @@ const manifest: PaperclipPluginManifestV1 = {
         "wiki/projects",
         "wiki/entities",
         "wiki/concepts",
+        "wiki/sim",
         "wiki/synthesis"
       ],
       requiredFiles: ["AGENTS.md", "IDEA.md", "wiki/index.md", "wiki/log.md"]
@@ -152,11 +153,11 @@ const manifest: PaperclipPluginManifestV1 = {
   agents: [
     {
       agentKey: WIKI_MAINTAINER_AGENT_KEY,
-      displayName: "Wiki Maintainer",
-      role: "knowledge-maintainer",
-      title: "LLM Wiki Maintainer",
+      displayName: "SIM Wiki Maintainer",
+      role: "sim-knowledge-maintainer",
+      title: "SIM Wiki Maintainer",
       icon: "book-open",
-      capabilities: "Ingests source material, maintains local wiki pages, answers cited questions, and runs wiki lint/maintenance through plugin tools.",
+      capabilities: "Ingests source material, maintains SIM Wiki pages, answers cited questions, and runs knowledge lint/maintenance through plugin tools.",
       adapterType: "claude_local",
       adapterPreference: ["claude_local", "codex_local", "gemini_local", "opencode_local", "cursor", "pi_local"],
       adapterConfig: {
@@ -190,8 +191,8 @@ const manifest: PaperclipPluginManifestV1 = {
   projects: [
     {
       projectKey: WIKI_PROJECT_KEY,
-      displayName: "LLM Wiki",
-      description: "Plugin-managed inspection area for LLM Wiki ingest, query, lint, and maintenance operation issues.",
+      displayName: "SIM Wiki",
+      description: "Plugin-managed inspection area for SIM Wiki ingest, query, lint, and maintenance operation issues.",
       status: "in_progress",
       color: "#2563eb"
     }
@@ -199,37 +200,37 @@ const manifest: PaperclipPluginManifestV1 = {
   skills: [
     {
       skillKey: WIKI_MAINTAINER_SKILL_KEY,
-      displayName: "LLM Wiki Maintainer",
+      displayName: "SIM Wiki Maintainer",
       slug: "llm-wiki-maintainer",
-      description: "Use the LLM Wiki plugin tools to maintain a cited local company wiki.",
+      description: "Use the SIM Wiki plugin tools to maintain a cited local company knowledge base.",
       markdown: skillMarkdown(WIKI_MAINTAINER_SKILL_KEY)
     },
     {
       skillKey: WIKI_INGEST_SKILL_KEY,
       displayName: "Wiki Ingest",
       slug: WIKI_INGEST_SKILL_KEY,
-      description: "Turn captured raw source material into cited durable LLM Wiki pages.",
+      description: "Turn captured raw source material into cited durable SIM Wiki pages.",
       markdown: skillMarkdown(WIKI_INGEST_SKILL_KEY)
     },
     {
       skillKey: WIKI_QUERY_SKILL_KEY,
       displayName: "Wiki Query",
       slug: WIKI_QUERY_SKILL_KEY,
-      description: "Answer questions from the LLM Wiki with citations and optional durable synthesis.",
+      description: "Answer questions from the SIM Wiki with citations and optional durable synthesis.",
       markdown: skillMarkdown(WIKI_QUERY_SKILL_KEY)
     },
     {
       skillKey: WIKI_LINT_SKILL_KEY,
       displayName: "Wiki Lint",
       slug: WIKI_LINT_SKILL_KEY,
-      description: "Audit the LLM Wiki for contradictions, orphan pages, weak provenance, broken links, and missing concepts.",
+      description: "Audit the SIM Wiki for contradictions, orphan pages, weak provenance, broken links, and missing concepts.",
       markdown: skillMarkdown(WIKI_LINT_SKILL_KEY)
     },
     {
       skillKey: PAPERCLIP_DISTILL_SKILL_KEY,
-      displayName: "Paperclip Distill",
+      displayName: "Workbench Distill",
       slug: PAPERCLIP_DISTILL_SKILL_KEY,
-      description: "Turn Paperclip cursor-window, distill, or backfill source bundles into wiki-insightful project knowledge.",
+      description: "Turn SimOne workbench cursor-window, distill, or backfill source bundles into SIM Wiki project knowledge.",
       markdown: skillMarkdown(PAPERCLIP_DISTILL_SKILL_KEY)
     },
     {
@@ -243,7 +244,7 @@ const manifest: PaperclipPluginManifestV1 = {
   routines: [
     {
       routineKey: CURSOR_WINDOW_ROUTINE_KEY,
-      title: "Process LLM Wiki updates",
+      title: "Process SIM Wiki updates",
       description: CURSOR_WINDOW_ROUTINE_DESCRIPTION,
       status: "paused",
       priority: "low",
@@ -270,7 +271,7 @@ const manifest: PaperclipPluginManifestV1 = {
     },
     {
       routineKey: NIGHTLY_LINT_ROUTINE_KEY,
-      title: "Run LLM Wiki lint",
+      title: "Run SIM Wiki lint",
       description: NIGHTLY_LINT_ROUTINE_DESCRIPTION,
       status: "paused",
       priority: "low",
@@ -297,7 +298,7 @@ const manifest: PaperclipPluginManifestV1 = {
     },
     {
       routineKey: INDEX_REFRESH_ROUTINE_KEY,
-      title: "Refresh LLM Wiki index",
+      title: "Refresh SIM Wiki index",
       description: INDEX_REFRESH_ROUTINE_DESCRIPTION,
       status: "paused",
       priority: "low",
@@ -576,21 +577,21 @@ const manifest: PaperclipPluginManifestV1 = {
       {
         type: "sidebar",
         id: "wiki-sidebar",
-        displayName: "Wiki",
+        displayName: "SIM Wiki",
         exportName: "SidebarLink",
         order: 35
       },
       {
         type: "page",
         id: "wiki-page",
-        displayName: "Wiki",
+        displayName: "SIM Wiki",
         exportName: "WikiPage",
         routePath: "wiki"
       },
       {
         type: "routeSidebar",
         id: "wiki-route-sidebar",
-        displayName: "Wiki",
+        displayName: "SIM Wiki",
         exportName: "WikiRouteSidebar",
         routePath: "wiki"
       }

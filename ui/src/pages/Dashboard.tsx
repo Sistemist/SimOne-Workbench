@@ -176,7 +176,7 @@ export function Dashboard() {
       return (
         <EmptyState
           icon={LayoutDashboard}
-          message="Welcome to Paperclip. Set up your first company and agent to get started."
+          message="Welcome to SimOne. Set up your first company and agent to get started."
           action="Get Started"
           onAction={openOnboarding}
         />
@@ -201,20 +201,24 @@ export function Dashboard() {
         <div className="flex items-center justify-between gap-3 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-500/25 dark:bg-amber-950/60">
           <div className="flex items-center gap-2.5">
             <Bot className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
-            <p className="text-sm text-amber-900 dark:text-amber-100">
-              You have no agents.
+          <p className="text-sm text-amber-900 dark:text-amber-100">
+              Your operating team is empty.
             </p>
           </div>
           <button
             onClick={() => openOnboarding({ initialStep: 2, companyId: selectedCompanyId! })}
             className="text-sm font-medium text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100 underline underline-offset-2 shrink-0"
           >
-            Create one here
+            Add a team member
           </button>
         </div>
       )}
 
-      <ActiveAgentsPanel companyId={selectedCompanyId!} />
+      <ActiveAgentsPanel
+        companyId={selectedCompanyId!}
+        title="Active Work"
+        emptyMessage="No agent work has run yet."
+      />
 
       {data && (
         <>
@@ -241,7 +245,7 @@ export function Dashboard() {
             <MetricCard
               icon={Bot}
               value={data.agents.active + data.agents.running + data.agents.paused + data.agents.error}
-              label="Agents Enabled"
+              label="Operating Team"
               to="/agents"
               description={
                 <span>
@@ -253,12 +257,12 @@ export function Dashboard() {
             />
             <MetricCard
               icon={CircleDot}
-              value={data.tasks.inProgress}
-              label="Tasks In Progress"
+              value={data.tasks.open}
+              label="Open Work"
               to="/issues"
               description={
                 <span>
-                  {data.tasks.open} open{", "}
+                  {data.tasks.inProgress} in progress{", "}
                   {data.tasks.blocked} blocked
                 </span>
               }
@@ -266,7 +270,7 @@ export function Dashboard() {
             <MetricCard
               icon={DollarSign}
               value={formatCents(data.costs.monthSpendCents)}
-              label="Month Spend"
+              label="AI Spend"
               to="/costs"
               description={
                 <span>
@@ -279,7 +283,7 @@ export function Dashboard() {
             <MetricCard
               icon={ShieldCheck}
               value={data.pendingApprovals + data.budgets.pendingApprovals}
-              label="Pending Approvals"
+              label="Human Review"
               to="/approvals"
               description={
                 <span>
@@ -292,16 +296,16 @@ export function Dashboard() {
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <ChartCard title="Run Activity" subtitle="Last 14 days">
+            <ChartCard title="Execution Activity" subtitle="Last 14 days">
               <RunActivityChart activity={data.runActivity} />
             </ChartCard>
-            <ChartCard title="Tasks by Priority" subtitle="Last 14 days">
+            <ChartCard title="Work by Priority" subtitle="Last 14 days">
               <PriorityChart issues={issues ?? []} />
             </ChartCard>
-            <ChartCard title="Tasks by Status" subtitle="Last 14 days">
+            <ChartCard title="Work by Status" subtitle="Last 14 days">
               <IssueStatusChart issues={issues ?? []} />
             </ChartCard>
-            <ChartCard title="Success Rate" subtitle="Last 14 days">
+            <ChartCard title="Run Success" subtitle="Last 14 days">
               <SuccessRateChart activity={data.runActivity} />
             </ChartCard>
           </div>
@@ -318,7 +322,7 @@ export function Dashboard() {
             {recentActivity.length > 0 && (
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                  Recent Activity
+                  System Activity
                 </h3>
                 <div className="border border-border divide-y divide-border overflow-hidden">
                   {recentActivity.map((event) => (
@@ -339,11 +343,11 @@ export function Dashboard() {
             {/* Recent Tasks */}
             <div className="min-w-0">
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                Recent Tasks
+                Open Work
               </h3>
               {recentIssues.length === 0 ? (
                 <div className="border border-border p-4">
-                  <p className="text-sm text-muted-foreground">No tasks yet.</p>
+                  <p className="text-sm text-muted-foreground">No work items yet.</p>
                 </div>
               ) : (
                 <div className="border border-border divide-y divide-border overflow-hidden">

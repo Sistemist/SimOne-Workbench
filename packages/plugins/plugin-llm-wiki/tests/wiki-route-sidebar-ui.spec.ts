@@ -33,6 +33,24 @@ type FileTreePropsLike = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
+function ensureTestLocalStorage() {
+  if (typeof window.localStorage?.clear === "function") return;
+  const store = new Map<string, string>();
+  Object.defineProperty(window, "localStorage", {
+    configurable: true,
+    value: {
+      clear: () => store.clear(),
+      getItem: (key: string) => store.get(key) ?? null,
+      removeItem: (key: string) => {
+        store.delete(key);
+      },
+      setItem: (key: string, value: string) => {
+        store.set(key, value);
+      },
+    },
+  });
+}
+
 function createFileDragEvent(
   type: string,
   options: { files?: File[]; relatedTarget?: EventTarget | null } = {},
@@ -95,7 +113,8 @@ describe("WikiRouteSidebar", () => {
   let pluginActionCalls: Array<{ key: string; params?: unknown }>;
   let spacesRefreshCount: number;
 
-  beforeEach(() => {
+	beforeEach(() => {
+    ensureTestLocalStorage();
     window.localStorage.clear();
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -547,14 +566,14 @@ describe("WikiPage", () => {
                   source: "managed",
                   agentId: "agent-1",
                   resourceKey: "wiki-maintainer",
-                  details: { name: "Wiki Maintainer", status: "idle", adapterType: "claude_local", icon: "book-open", urlKey: "wiki-maintainer" },
+                  details: { name: "SIM Wiki Maintainer", status: "idle", adapterType: "claude_local", icon: "book-open", urlKey: "wiki-maintainer" },
                 },
                 managedProject: {
                   status: "resolved",
                   source: "managed",
                   projectId: "project-1",
                   resourceKey: "llm-wiki",
-                  details: { name: "LLM Wiki", status: "in_progress" },
+                  details: { name: "SIM Wiki", status: "in_progress" },
                 },
                 managedSkills: [],
                 managedRoutines: [],
@@ -564,8 +583,8 @@ describe("WikiPage", () => {
                   wikiId: "default",
                   maxCharacters: 12000,
                 },
-                agentOptions: [{ id: "agent-1", name: "Wiki Maintainer", status: "idle", icon: "book-open", urlKey: "wiki-maintainer" }],
-                projectOptions: [{ id: "project-1", name: "LLM Wiki", status: "in_progress", color: "#2563eb" }],
+                agentOptions: [{ id: "agent-1", name: "SIM Wiki Maintainer", status: "idle", icon: "book-open", urlKey: "wiki-maintainer" }],
+                projectOptions: [{ id: "project-1", name: "SIM Wiki", status: "in_progress", color: "#2563eb" }],
                 capabilities: [],
               },
               loading: false,
@@ -656,7 +675,7 @@ describe("WikiPage", () => {
     delete (globalThis as BridgeGlobal).__paperclipPluginBridge__;
   });
 
-  it("renders structured Paperclip source refs as text", () => {
+  it("renders structured SimOne source refs as text", () => {
     act(() => {
       root.render(createElement(WikiPage, {
         context: { companyId: COMPANY_ID, companyPrefix: "PAP" },

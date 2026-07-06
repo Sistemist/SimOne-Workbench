@@ -59,14 +59,13 @@ function StateChrome({ children }: { children: ReactNode }) {
 function SignedOutPrivate() {
   return (
     <StateChrome>
-      <h1 className="text-xl font-semibold">Finish setting up this Paperclip</h1>
+      <h1 className="text-xl font-semibold">Finish setting up SimOne</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        No admin has claimed this instance yet. Sign in or create your Paperclip account to become the first
-        admin from this browser.
+        Create your account to claim the first SimOne workspace for this installation.
       </p>
       <div className="mt-5">
         <Button asChild>
-          <a href="/auth?next=/">Sign in / Create account</a>
+          <a href="/auth?next=/app">Sign in / Create account</a>
         </Button>
       </div>
       <CliFallback hasActiveInvite={false} />
@@ -77,19 +76,19 @@ function SignedOutPrivate() {
 function SignedInPrivate() {
   return (
     <StateChrome>
-      <h1 className="text-xl font-semibold">Finish setting up this Paperclip</h1>
+      <h1 className="text-xl font-semibold">Finish setting up SimOne</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        No admin has claimed this instance yet. Claim it now to become the first admin and start onboarding.
+        Claim this workspace to become the first admin and start onboarding.
       </p>
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        <Button>Claim this instance</Button>
+        <Button>Claim this workspace</Button>
         <span className="text-sm text-muted-foreground">
           Signed in as <span className="font-medium text-foreground">jane@appliance.local</span>
         </span>
       </div>
       <p className="mt-3 text-xs text-muted-foreground">
         Wrong account?{" "}
-        <a href="/auth?next=/" className="underline underline-offset-2">
+        <a href="/auth?next=/app" className="underline underline-offset-2">
           Switch account
         </a>
         .
@@ -102,9 +101,9 @@ function SignedInPrivate() {
 function ClaimingPrivate() {
   return (
     <StateChrome>
-      <h1 className="text-xl font-semibold">Finish setting up this Paperclip</h1>
+      <h1 className="text-xl font-semibold">Finish setting up SimOne</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        No admin has claimed this instance yet. Claim it now to become the first admin and start onboarding.
+        Claim this workspace to become the first admin and start onboarding.
       </p>
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <Button disabled>
@@ -123,12 +122,12 @@ function ClaimingPrivate() {
 function ClaimErrorPrivate() {
   return (
     <StateChrome>
-      <h1 className="text-xl font-semibold">Finish setting up this Paperclip</h1>
+      <h1 className="text-xl font-semibold">Finish setting up SimOne</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        No admin has claimed this instance yet. Claim it now to become the first admin and start onboarding.
+        Claim this workspace to become the first admin and start onboarding.
       </p>
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        <Button>Claim this instance</Button>
+        <Button>Claim this workspace</Button>
         <span className="text-sm text-muted-foreground">
           Signed in as <span className="font-medium text-foreground">jane@appliance.local</span>
         </span>
@@ -159,7 +158,7 @@ function ClaimSuccess() {
           <ShieldCheck className="size-5" aria-hidden />
         </div>
         <div>
-          <h1 className="text-xl font-semibold">You&rsquo;re the instance admin</h1>
+          <h1 className="text-xl font-semibold">You&rsquo;re the workspace admin</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Setup is complete. Taking you to onboarding to create your first company&hellip;
           </p>
@@ -171,7 +170,7 @@ function ClaimSuccess() {
       </div>
       <div className="mt-5">
         <Button asChild variant="outline">
-          <a href="/">Continue to dashboard</a>
+          <a href="/app">Continue to dashboard</a>
         </Button>
       </div>
     </StateChrome>
@@ -181,15 +180,14 @@ function ClaimSuccess() {
 function PublicInviteOnly() {
   return (
     <StateChrome>
-      <h1 className="text-xl font-semibold">This Paperclip is waiting on its first admin</h1>
+      <h1 className="text-xl font-semibold">This SimOne workspace is waiting on its first admin</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        This instance runs in invite‑only mode. The operator must generate a one‑time first‑admin invite URL
-        from the host. Once you have the link, open it from this browser to finish setup.
+        This SimOne workspace is invite-only. Ask the workspace owner for an invite link, then open it
+        from this browser to finish setup.
       </p>
       <CliFallback hasActiveInvite />
       <p className="mt-4 text-xs text-muted-foreground">
-        Browser‑based claim is intentionally disabled in public mode so anyone on the network can&rsquo;t
-        promote themselves.
+        Browser‑based claim is intentionally disabled so visitors cannot promote themselves.
       </p>
     </StateChrome>
   );
