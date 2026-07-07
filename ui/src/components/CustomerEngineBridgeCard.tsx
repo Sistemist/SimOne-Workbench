@@ -12,12 +12,19 @@ type CustomerEngineSignal = {
   tone?: "default" | "muted" | "attention";
 };
 
+type CustomerEngineReviewLoop = {
+  changed: string;
+  needsHuman: string;
+  memory: string;
+};
+
 export type CustomerEngineBridgeState = {
   status: CustomerEngineStatus;
   statusLabel: string;
   headline: string;
   summary: string;
   signals: CustomerEngineSignal[];
+  reviewLoop: CustomerEngineReviewLoop;
   judgmentPrompt: string;
   nextReview?: {
     title: string;
@@ -36,6 +43,11 @@ const defaultState: CustomerEngineBridgeState = {
     { label: "Review", value: "Approval stays human", tone: "attention" },
     { label: "Memory", value: "Capture decisions in SIM Wiki" },
   ],
+  reviewLoop: {
+    changed: "Waiting for the next customer readout.",
+    needsHuman: "Approval stays with the human before any public or relationship move.",
+    memory: "Promote decisions and proof points into SIM Wiki when they matter.",
+  },
   judgmentPrompt: "Decide what changes in Product, Cash, or SIM memory.",
 };
 
@@ -66,6 +78,11 @@ export function bridgeSnapshotToCardState(
         { label: "Review", value: "Approval stays in Tissuu" },
         { label: "Memory", value: "Do not invent signal", tone: "muted" },
       ],
+      reviewLoop: {
+        changed: "No trusted customer signal is available yet.",
+        needsHuman: "Wait for the live bridge before changing the company map.",
+        memory: "Do not create SIM memory from missing or invented customer data.",
+      },
       judgmentPrompt: "Wait for live customer signal before changing the company map.",
     };
   }
@@ -87,6 +104,14 @@ export function bridgeSnapshotToCardState(
         tone: snapshot.ops.overall === "healthy" ? "default" : "attention",
       },
     ],
+    reviewLoop: {
+      changed: snapshot.digest.headline,
+      needsHuman:
+        nextReviewItem?.title ??
+        nextDigestAction?.title ??
+        (snapshot.actions.count > 0 ? `${snapshot.actions.count} customer items need review.` : "No live review item is waiting."),
+      memory: "Promote only proof, positioning, or relationship decisions; keep live counts ephemeral.",
+    },
     judgmentPrompt: "Decide what changes in Product, Cash, or SIM memory.",
     nextReview:
       nextReviewItem || nextDigestAction
@@ -131,27 +156,23 @@ export function CustomerEngineBridgeCard({ state = defaultState }: { state?: Cus
           ))}
         </div>
 
-        <div className="grid gap-3 border-y border-border py-3 md:grid-cols-[0.85fr_1.15fr]">
+        <div className="grid gap-3 border-y border-border py-3 md:grid-cols-3">
           <div>
-            <div className="text-[11px] font-medium uppercase text-muted-foreground">
-              Ready for your judgment
-            </div>
-            <p className="mt-1 text-sm font-medium text-foreground">{state.judgmentPrompt}</p>
+            <div className="text-[11px] font-medium uppercase text-muted-foreground">What changed</div>
+            <p className="mt-1 text-sm font-medium text-foreground">{state.reviewLoop.changed}</p>
           </div>
-          {state.nextReview ? (
-            <div className="border-l border-border pl-3">
-              <div className="text-[11px] font-medium uppercase text-muted-foreground">Next review</div>
-              <p className="mt-1 text-sm font-medium text-foreground">{state.nextReview.title}</p>
-              {state.nextReview.reason ? (
-                <p className="mt-1 text-sm text-muted-foreground">{state.nextReview.reason}</p>
-              ) : null}
-            </div>
-          ) : (
-            <div className="border-l border-border pl-3">
-              <div className="text-[11px] font-medium uppercase text-muted-foreground">Next review</div>
-              <p className="mt-1 text-sm text-muted-foreground">No live review item is waiting.</p>
-            </div>
-          )}
+          <div className="border-t border-border pt-3 md:border-l md:border-t-0 md:pl-3 md:pt-0">
+            <div className="text-[11px] font-medium uppercase text-muted-foreground">Ready for your judgment</div>
+            <p className="mt-1 text-sm font-medium text-foreground">{state.judgmentPrompt}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{state.reviewLoop.needsHuman}</p>
+            {state.nextReview?.reason ? (
+              <p className="mt-1 text-sm text-muted-foreground">{state.nextReview.reason}</p>
+            ) : null}
+          </div>
+          <div className="border-t border-border pt-3 md:border-l md:border-t-0 md:pl-3 md:pt-0">
+            <div className="text-[11px] font-medium uppercase text-muted-foreground">Becomes SIM memory</div>
+            <p className="mt-1 text-sm text-muted-foreground">{state.reviewLoop.memory}</p>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">

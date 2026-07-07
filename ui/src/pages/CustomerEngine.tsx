@@ -28,10 +28,10 @@ const bridgeSurfaces = [
     icon: BarChart3,
   },
   {
-    title: "Engine Health",
-    status: "Ops pending",
-    body: "Tissuu job status, stale signals, failures, and cost notes.",
-    icon: HeartPulse,
+    title: "SIM Memory",
+    status: "Promotion only",
+    body: "Proof, positioning, and relationship decisions can become durable knowledge when the human promotes them.",
+    icon: BookOpenCheck,
   },
 ];
 
@@ -92,8 +92,8 @@ export function CustomerEngine() {
                 ? `${liveSnapshot.actions.count} items`
                 : liveSnapshot && surface.title === "Funnel Signals"
                   ? `${liveSnapshot.metrics.waitlistTotal} people`
-                  : liveSnapshot && surface.title === "Engine Health"
-                    ? liveSnapshot.ops.overall === "healthy" ? "Engine healthy" : "Needs attention"
+                  : liveSnapshot && surface.title === "SIM Memory"
+                    ? "Human-promoted"
                     : surface.status;
           const body =
             liveSnapshot && surface.title === "Daily Readout"
@@ -102,8 +102,8 @@ export function CustomerEngine() {
                 ? liveSnapshot.actions.items[0]?.title ?? "No review items waiting."
                 : liveSnapshot && surface.title === "Funnel Signals"
                   ? `${liveSnapshot.metrics.qualifiedLeads} qualified leads, ${liveSnapshot.metrics.proofEvents} proof events.`
-                  : liveSnapshot && surface.title === "Engine Health"
-                    ? `${liveSnapshot.ops.jobs.length} observed jobs; stale signals: ${liveSnapshot.ops.staleSignals.length}.`
+                  : liveSnapshot && surface.title === "SIM Memory"
+                    ? `Keep ${liveSnapshot.actions.count} live review items ephemeral unless a proof point or decision should be remembered.`
                     : surface.body;
           return (
             <div key={surface.title} className="rounded-lg border bg-card p-4 shadow-sm">
@@ -129,12 +129,16 @@ export function CustomerEngine() {
       {liveSnapshot ? (
         <section className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 p-4 text-emerald-950 dark:text-emerald-50">
           <div className="flex items-start gap-3">
-            <BookOpenCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <HeartPulse className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <div>
               <h2 className="text-sm font-semibold">Why SimOne stops here</h2>
               <p className="mt-1 text-sm leading-5 text-emerald-950/80 dark:text-emerald-50/80">
                 Customer replies and proof points can change the company map. SimOne can surface the pattern,
                 but the relationship move stays with a human before anything is posted, promoted, or remembered.
+              </p>
+              <p className="mt-2 text-sm leading-5 text-emerald-950/80 dark:text-emerald-50/80">
+                Ops check: {liveSnapshot.ops.overall === "healthy" ? "engine healthy" : "needs attention"} across{" "}
+                {liveSnapshot.ops.jobs.length} observed job{liveSnapshot.ops.jobs.length === 1 ? "" : "s"}.
               </p>
             </div>
           </div>

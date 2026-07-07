@@ -98,17 +98,21 @@ describe("CustomerEngine", () => {
     expect(text).toContain("11 people");
     expect(text).toContain("Engine healthy");
     expect(text).toContain("Approval stays in Tissuu");
+    expect(text).toContain("What changed");
     expect(text).toContain("Ready for your judgment");
-    expect(text).toContain("Next review");
+    expect(text).toContain("Becomes SIM memory");
+    expect(text).toContain("Promote only proof, positioning, or relationship decisions");
     expect(text).toContain("Grounded in a real signal.");
     expect(text).toContain("Decide what changes in Product, Cash, or SIM memory.");
     expect(text).toContain("Ask why this stays human");
     expect(text).toContain("Daily Readout");
     expect(text).toContain("Human Review Queue");
     expect(text).toContain("Funnel Signals");
-    expect(text).toContain("Engine Health");
+    expect(text).toContain("SIM Memory");
+    expect(text).toContain("Human-promoted");
     expect(text).toContain("Why SimOne stops here");
     expect(text).toContain("Customer replies and proof points can change the company map");
+    expect(text).toContain("Ops check: engine healthy across 1 observed job.");
     expect(text).toContain("First bridge rule");
     expect(text).toContain("Posting, publishing, following, and prospect changes stay in Tissuu");
     expect(mockSetBreadcrumbs).toHaveBeenCalledWith([{ label: "Customer Engine" }]);
@@ -147,6 +151,7 @@ describe("CustomerEngine", () => {
     const text = container.textContent ?? "";
     expect(text).toContain("Tissuu Customer Engine bridge token is not configured.");
     expect(text).toContain("Do not invent signal");
+    expect(text).toContain("No trusted customer signal is available yet.");
     expect(text).not.toContain("Open in Tissuu");
 
     flushSync(() => {

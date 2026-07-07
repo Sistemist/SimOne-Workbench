@@ -239,7 +239,9 @@ describe("Dashboard", () => {
     expect(text).toContain("11 people");
     expect(text).toContain("Engine healthy");
     expect(text).toContain("Approval stays in Tissuu");
+    expect(text).toContain("What changed");
     expect(text).toContain("Ready for your judgment");
+    expect(text).toContain("Becomes SIM memory");
     expect(text).toContain("Decide what changes in Product, Cash, or SIM memory.");
     expect(text).toContain("Ask why this stays human");
     expect(text).toContain("Execution Activity");
