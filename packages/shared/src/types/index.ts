@@ -538,6 +538,15 @@ export type {
   CompanyPortabilityExportRequest,
 } from "./company-portability.js";
 export type {
+  CreateVentureShareResponse,
+  VentureShareAgent,
+  VentureShareCompany,
+  VentureShareNextMove,
+  VentureShareProject,
+  VentureShareRecord,
+  VentureShareSnapshot,
+} from "./venture-share.js";
+export type {
   JsonSchema,
   PluginJobDeclaration,
   PluginWebhookDeclaration,

@@ -7,6 +7,7 @@ import type {
   CompanyPortabilityImportResult,
   CompanyPortabilityPreviewRequest,
   CompanyPortabilityPreviewResult,
+  CreateVentureShareResponse,
   UpdateCompanyBranding,
 } from "@paperclipai/shared";
 import { api } from "./client";
@@ -58,4 +59,6 @@ export const companiesApi = {
     api.post<CompanyPortabilityPreviewResult>("/companies/import/preview", data),
   importBundle: (data: CompanyPortabilityImportRequest) =>
     api.post<CompanyPortabilityImportResult>("/companies/import", data),
+  createVentureShare: (companyId: string) =>
+    api.post<CreateVentureShareResponse>(`/companies/${companyId}/venture-shares`, {}),
 };

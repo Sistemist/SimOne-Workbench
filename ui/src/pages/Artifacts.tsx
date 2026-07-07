@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { ArrowLeft, Check, Layers, Package, Search, X } from "lucide-react";
+import { ArrowLeft, Check, Layers, Package, Search, Share2, X } from "lucide-react";
 import type { To } from "react-router-dom";
 import {
   artifactsApi,
   type ArtifactGroupBy,
   type ArtifactKindFilter,
 } from "../api/artifacts";
+import { companiesApi } from "../api/companies";
 import { useCompany } from "../context/CompanyContext";
 import { useBreadcrumbs } from "../context/BreadcrumbContext";
 import { queryKeys } from "../lib/queryKeys";
@@ -72,6 +73,9 @@ export function Artifacts() {
   const groupIssueId = searchParams.get("groupIssueId") ?? undefined;
 
   const [draftQuery, setDraftQuery] = useState(query);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [shareError, setShareError] = useState<string | null>(null);
+  const [sharingVentureMap, setSharingVentureMap] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const grouping = groupBy !== "none";
@@ -245,6 +249,20 @@ export function Artifacts() {
           ? "No artifacts yet. Outputs attached to issues will appear here."
           : "No artifacts of this type yet.";
 
+  async function createShareableVentureMap() {
+    if (!selectedCompanyId || sharingVentureMap) return;
+    setShareError(null);
+    setSharingVentureMap(true);
+    try {
+      const result = await companiesApi.createVentureShare(selectedCompanyId);
+      setShareUrl(result.shareUrl);
+    } catch (err) {
+      setShareError(err instanceof Error ? err.message : "Could not create share link.");
+    } finally {
+      setSharingVentureMap(false);
+    }
+  }
+
   return (
     <div className="w-full max-w-6xl space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -270,6 +288,19 @@ export function Artifacts() {
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8"
+            onClick={() => {
+              void createShareableVentureMap();
+            }}
+            disabled={sharingVentureMap}
+          >
+            <Share2 className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
+            {sharingVentureMap ? "Creating..." : "Share venture map"}
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -323,6 +354,21 @@ export function Artifacts() {
           </div>
         </div>
       </div>
+
+      {shareUrl || shareError ? (
+        <div className="rounded-lg border bg-card px-3 py-2 text-sm shadow-sm">
+          {shareUrl ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-muted-foreground">Share link</span>
+              <a className="font-medium text-primary hover:underline" href={shareUrl}>
+                {shareUrl}
+              </a>
+            </div>
+          ) : (
+            <p className="text-destructive">{shareError}</p>
+          )}
+        </div>
+      ) : null}
 
       {viewingSelectedStack ? (
         <div className="flex flex-wrap items-center gap-2 text-sm">

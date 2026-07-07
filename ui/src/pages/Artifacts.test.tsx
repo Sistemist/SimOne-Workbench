@@ -20,6 +20,10 @@ const artifactsApiMock = vi.hoisted(() => ({
   list: vi.fn(),
 }));
 
+const companiesApiMock = vi.hoisted(() => ({
+  createVentureShare: vi.fn(),
+}));
+
 vi.mock("../context/CompanyContext", () => ({
   useCompany: () => companyState,
 }));
@@ -30,6 +34,10 @@ vi.mock("../context/BreadcrumbContext", () => ({
 
 vi.mock("../api/artifacts", () => ({
   artifactsApi: artifactsApiMock,
+}));
+
+vi.mock("../api/companies", () => ({
+  companiesApi: companiesApiMock,
 }));
 
 // Render the menu inline (no radix portal / pointer-capture) so option clicks
@@ -161,6 +169,7 @@ describe("Artifacts page", () => {
     document.body.appendChild(container);
     breadcrumbState.setBreadcrumbs.mockReset();
     artifactsApiMock.list.mockReset();
+    companiesApiMock.createVentureShare.mockReset();
     latestObserverCallback = null;
     originalIntersectionObserver = window.IntersectionObserver;
     window.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
@@ -194,6 +203,41 @@ describe("Artifacts page", () => {
       expect(groupControl.getAttribute("data-size")).toBe("icon");
       expect(groupControl.getAttribute("data-group-by")).toBe("task");
       expect(Boolean(groupControl.compareDocumentPosition(allFilter) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+    });
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
+  it("creates a shareable venture map from the artifacts surface", async () => {
+    artifactsApiMock.list.mockResolvedValue({ artifacts: [], groups: [sampleGroup()], nextCursor: null });
+    companiesApiMock.createVentureShare.mockResolvedValue({
+      shareId: "share-1",
+      shareUrl: "/share/venture/share-1",
+      snapshot: {
+        company: { name: "Acme Systems" },
+      },
+    });
+
+    const { root } = renderArtifacts(container);
+
+    await waitForAssertion(() => {
+      expect(container.textContent).toContain("Share venture map");
+    });
+
+    const button = [...container.querySelectorAll("button")].find((candidate) =>
+      candidate.textContent?.includes("Share venture map"),
+    ) as HTMLButtonElement;
+    expect(button).toBeTruthy();
+
+    flushSync(() => {
+      button.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+
+    await waitForAssertion(() => {
+      expect(companiesApiMock.createVentureShare).toHaveBeenCalledWith("company-1");
+      expect(container.textContent).toContain("/share/venture/share-1");
     });
 
     flushSync(() => {

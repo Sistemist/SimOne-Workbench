@@ -184,6 +184,9 @@ export {
   type CompanyPortabilityPreview,
   type CompanyPortabilityImport,
 } from "./company-portability.js";
+export {
+  ventureShareSnapshotSchema,
+} from "./venture-share.js";
 
 export {
   trustPresetSchema,

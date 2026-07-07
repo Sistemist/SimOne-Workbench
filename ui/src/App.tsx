@@ -11,6 +11,7 @@ import { DashboardLive } from "./pages/DashboardLive";
 import { SimCoach } from "./pages/SimCoach";
 import { CustomerEngine } from "./pages/CustomerEngine";
 import { SystemsBottleneckScanner } from "./pages/SystemsBottleneckScanner";
+import { VentureShare } from "./pages/VentureShare";
 import { Companies } from "./pages/Companies";
 import { Agents } from "./pages/Agents";
 import { AgentDetail } from "./pages/AgentDetail";
@@ -401,6 +402,7 @@ export function App() {
         <Route path="invite/:token" element={<InviteLandingPage />} />
         <Route path="scanner" element={<SystemsBottleneckScanner />} />
         <Route path="systems-bottleneck-scanner" element={<SystemsBottleneckScanner />} />
+        <Route path="share/venture/:shareId" element={<VentureShare />} />
         <Route path="tests/perf/long-thread" element={<IssueChatLongThreadPerf />} />
         <Route path="ux-lab/cloud-upstream" element={<CloudUpstreamUxLab />} />
         <Route path="ux-lab/bootstrap-setup" element={<BootstrapSetupUxLab />} />
