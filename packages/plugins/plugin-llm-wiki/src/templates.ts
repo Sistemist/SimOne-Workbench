@@ -53,6 +53,7 @@ export const DEFAULT_SIM_COACHING_GUIDANCE = templateFile("wiki/sim/coaching-gui
 export const DEFAULT_SIM_DRIVERS = templateFile("wiki/sim/drivers.md");
 export const DEFAULT_SIM_ENGINES = templateFile("wiki/sim/engines.md");
 export const DEFAULT_SIM_SYSTEM_LAWS = templateFile("wiki/sim/system-laws.md");
+export const DEFAULT_SIMONE_PRODUCT_LANGUAGE = templateFile("wiki/concepts/simone-product-language.md");
 
 export const QUERY_PROMPT = `Answer from the SIM Wiki using the installed wiki-query skill.
 
@@ -75,6 +76,7 @@ export const BOOTSTRAP_FILES: ReadonlyArray<{ path: string; contents: string }> 
   { path: "wiki/projects/.gitkeep", contents: "" },
   { path: "wiki/entities/.gitkeep", contents: "" },
   { path: "wiki/concepts/.gitkeep", contents: "" },
+  { path: "wiki/concepts/simone-product-language.md", contents: DEFAULT_SIMONE_PRODUCT_LANGUAGE },
   { path: "wiki/sim/.gitkeep", contents: "" },
   { path: "wiki/sim/archetypes.md", contents: DEFAULT_SIM_ARCHETYPES },
   { path: "wiki/sim/coaching-guidance.md", contents: DEFAULT_SIM_COACHING_GUIDANCE },

@@ -16,7 +16,7 @@ _(none yet)_
 
 ## Concepts
 
-_(none yet)_
+- [[wiki/concepts/simone-product-language]] — product-language definitions for SimOne, SIM Coach, SIM Wiki, share artifacts, and hidden model choices.
 
 ## SIM
 

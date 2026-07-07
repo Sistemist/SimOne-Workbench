@@ -2794,6 +2794,7 @@ Duplicate headings receive stable suffixes.
       "wiki/projects/.gitkeep",
       "wiki/entities/.gitkeep",
       "wiki/concepts/.gitkeep",
+      "wiki/concepts/simone-product-language.md",
       "wiki/sim/.gitkeep",
       "wiki/sim/archetypes.md",
       "wiki/sim/coaching-guidance.md",
@@ -2806,6 +2807,10 @@ Duplicate headings receive stable suffixes.
     expect(writes.find((write) => write.path === "AGENTS.md")?.contents).toContain("wiki/projects/<project-slug>/index.md");
     expect(writes.find((write) => write.path === "AGENTS.md")?.contents).toContain("wiki/projects/<project-slug>/standup.md");
     expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/sim/coaching-guidance]]");
+    expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-product-language]]");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("SIM Coach");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("SIM Wiki");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("Model/provider choices belong in advanced settings, not first-run onboarding.");
     expect(writes.find((write) => write.path === "wiki/sim/engines.md")?.contents).toContain("Product Engine");
   });
 

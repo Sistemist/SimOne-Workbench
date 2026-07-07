@@ -29,7 +29,7 @@ certifications.
 | Paperclip control-plane reuse | 55% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted |
 | PLG/Barnum layer | 52% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts |
 | Customer Engine bridge | 75% | Read-only Tissuu bridge live; richer native SimOne surfacing still needed |
-| SIM Coach and SIM Wiki | 32% | Product direction documented; contextual coach loop now explains scanner results; Coach now shows a SIM Wiki seed map; wiki substrate not fully wired |
+| SIM Coach and SIM Wiki | 34% | Product direction documented; contextual coach loop now explains scanner results; Coach shows a SIM Wiki seed map; new wiki roots include a SimOne product-language page |
 | Model routing and auditability | 30% | Strategy documented; Workbench now has an initial `model_route_decisions` ledger; actual provider orchestration and evaluations remain |
 | Compression/headroom | 0% | Headroom/SmartCrusher not implemented yet |
 | Full SIM operating system | 30% | Engines and governance are defined, but onboarding, memory, routing, evaluations, and product polish remain |
@@ -196,6 +196,15 @@ SIM Wiki should store:
 It should not silently absorb ephemeral live bridge counts or private customer
 queues without a deliberate promotion action.
 
+Current SIM Wiki template behavior:
+
+- Bootstraps SIM method pages for engines, drivers, system laws, archetypes, and
+  coaching guidance.
+- Bootstraps a `wiki/concepts/simone-product-language.md` page so SimOne, SIM
+  Coach, SIM Wiki, Venture Architecture Map, Systems Bottleneck Scanner, Sprint
+  Zero, Tissuu bridge boundaries, and hidden model/provider choices have a
+  durable first definition.
+
 ## 7. Model And Agent Strategy
 
 ### Dev Mode Stance
@@ -352,7 +361,8 @@ inspectable first map.
 - Replace manual engine/driver setup as the first action.
 - Install or wrap the LLM Wiki plugin as SIM Wiki.
 - Seed SIM Wiki structure and glossary. The plugin template already carries SIM
-  pages, and the Coach page now explains the first seed buckets to the user.
+  pages plus a SimOne product-language page, and the Coach page explains the
+  first seed buckets to the user.
 - Promote useful coach answers into durable wiki pages.
 
 ### M3: Sovereign Model Routing
