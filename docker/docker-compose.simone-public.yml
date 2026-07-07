@@ -5,3 +5,5 @@ services:
       PAPERCLIP_DEPLOYMENT_EXPOSURE: "${PAPERCLIP_DEPLOYMENT_EXPOSURE:-private}"
       PAPERCLIP_ALLOWED_HOSTNAMES: "${PAPERCLIP_ALLOWED_HOSTNAMES:-sim.sysdom.org,localhost,127.0.0.1}"
       BETTER_AUTH_TRUSTED_ORIGINS: "${BETTER_AUTH_TRUSTED_ORIGINS:-https://sim.sysdom.org,http://sim.sysdom.org,http://127.0.0.1:3100,http://localhost:3100}"
+      SIMONE_BRIDGE_TOKEN: "${SIMONE_BRIDGE_TOKEN:-}"
+      SIMONE_TISSUU_BRIDGE_BASE_URL: "${SIMONE_TISSUU_BRIDGE_BASE_URL:-https://app.tissuu.ai/api/simone/customer-engine}"
