@@ -35,6 +35,12 @@ type ScannerCoachContext = {
   firstSection: string;
 };
 
+type MethodologyContext = {
+  concept: string;
+  idea: string;
+  useWhen: string;
+};
+
 const engines = [
   {
     name: "Product",
@@ -172,12 +178,42 @@ function loadScannerCoachContext(): ScannerCoachContext | null {
   }
 }
 
+function methodologyForScannerContext(context: ScannerCoachContext): MethodologyContext {
+  if (context.engine.toLowerCase().includes("customer")) {
+    return {
+      concept: context.firstSection || "Customer review loop",
+      idea: "SIM idea: signal becomes useful only when it moves through judgment and into memory.",
+      useWhen: "Use this when customer replies, proof, or promises are scattered.",
+    };
+  }
+  if (context.engine.toLowerCase().includes("cash")) {
+    return {
+      concept: context.firstSection || "Money decision loop",
+      idea: "SIM idea: financial pressure needs an explicit decision boundary before it steers the whole system.",
+      useWhen: "Use this when pricing, runway, spend, or revenue choices are shaping the next move.",
+    };
+  }
+  if (context.engine.toLowerCase().includes("skills")) {
+    return {
+      concept: context.firstSection || "Ownership loop",
+      idea: "SIM idea: recurring work becomes leverage only when capability and responsibility are visible.",
+      useWhen: "Use this when work keeps returning to the founder or no role clearly owns the next step.",
+    };
+  }
+  return {
+    concept: context.firstSection || "Product proof loop",
+    idea: "SIM idea: product direction stays coherent when promises, proof, and approval move together.",
+    useWhen: "Use this when features, positioning, or roadmap choices are moving faster than evidence.",
+  };
+}
+
 export function SimCoach() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const { selectedCompany } = useCompany();
   const companyName = selectedCompany?.name ?? "this company";
   const driverText = useMemo(() => drivers.join(" / "), []);
   const scannerContext = useMemo(loadScannerCoachContext, []);
+  const methodologyContext = scannerContext ? methodologyForScannerContext(scannerContext) : null;
   const { data: plugins } = useQuery({
     queryKey: queryKeys.plugins.all,
     queryFn: () => pluginsApi.list(),
@@ -284,6 +320,14 @@ export function SimCoach() {
                 <Link to={simWikiReady ? "/wiki" : SIM_WIKI_FOCUS_ROUTE}>Learn why</Link>
               </Button>
             </div>
+            {methodologyContext ? (
+              <div className="rounded-md border border-border bg-background/60 p-3">
+                <div className="text-xs font-medium uppercase text-muted-foreground">Method underneath</div>
+                <h3 className="mt-2 text-sm font-medium text-foreground">{methodologyContext.concept}</h3>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">{methodologyContext.idea}</p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">{methodologyContext.useWhen}</p>
+              </div>
+            ) : null}
             {scannerContext.questions.length > 0 ? (
               <ul className="grid gap-2 text-sm text-muted-foreground">
                 {scannerContext.questions.map((question) => (

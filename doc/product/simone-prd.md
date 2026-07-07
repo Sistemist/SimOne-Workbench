@@ -29,7 +29,7 @@ certifications.
 | Paperclip control-plane reuse | 55% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted |
 | PLG/Barnum layer | 52% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts |
 | Customer Engine bridge | 75% | Read-only Tissuu bridge live; richer native SimOne surfacing still needed |
-| SIM Coach and SIM Wiki | 25% | Product direction documented; contextual coach loop started; wiki substrate not fully wired |
+| SIM Coach and SIM Wiki | 30% | Product direction documented; contextual coach loop now explains scanner results; wiki substrate not fully wired |
 | Model routing and auditability | 30% | Strategy documented; Workbench now has an initial `model_route_decisions` ledger; actual provider orchestration and evaluations remain |
 | Compression/headroom | 0% | Headroom/SmartCrusher not implemented yet |
 | Full SIM operating system | 30% | Engines and governance are defined, but onboarding, memory, routing, evaluations, and product polish remain |
@@ -167,6 +167,15 @@ SIM Coach is the contextual explainer and reviewer. It should answer:
 
 SIM Coach is not a generic chatbot and not the top-level execution engine. It is
 a product surface that helps the human keep judgment.
+
+Current Coach behavior:
+
+- Reads the latest public scanner result from local protected browser state.
+- Explains the bottleneck in plain language.
+- Names the method underneath the moment, such as a customer review loop,
+  money decision loop, ownership loop, or product proof loop.
+- Points to SIM Wiki/course methodology only after the user has context for why
+  the explanation matters.
 
 ### SIM Wiki
 
@@ -319,7 +328,9 @@ Goal: make the current live signals feel native to SimOne.
 - Make public scanner and share artifacts feel like coherent SimOne outputs.
   The Venture Architecture Map share page now has a first plain-language
   interpretation layer, and the scanner now exposes a safe share summary.
-- Make SIM Coach contextual explanations feel helpful, not academic.
+- Make SIM Coach contextual explanations feel helpful, not academic. Scanner
+  handoff now includes a "Method underneath" card instead of a generic course
+  prompt.
 - Add a first useful PRD/glossary/docs bundle for human and future wiki use.
 
 Related Linear:

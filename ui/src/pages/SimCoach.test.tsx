@@ -162,6 +162,10 @@ describe("SimCoach", () => {
     expect(text).toContain("From your scanner result");
     expect(text).toContain("Customer loop is leaking");
     expect(text).toContain("Plain English: signal needs a decision, a decision needs an owner, and the answer needs a place to live.");
+    expect(text).toContain("Method underneath");
+    expect(text).toContain("Customer review loop");
+    expect(text).toContain("SIM idea: signal becomes useful only when it moves through judgment and into memory.");
+    expect(text).toContain("Use this when customer replies, proof, or promises are scattered.");
     expect(text).toContain("Learn why");
     expect(text).toContain("Who should approve the next customer reply or offer?");
     expect(text).toContain("Venture Architecture Map");
