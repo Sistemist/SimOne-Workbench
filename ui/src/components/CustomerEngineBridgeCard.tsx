@@ -18,6 +18,11 @@ export type CustomerEngineBridgeState = {
   headline: string;
   summary: string;
   signals: CustomerEngineSignal[];
+  judgmentPrompt: string;
+  nextReview?: {
+    title: string;
+    reason?: string;
+  };
   reviewHref?: string;
 };
 
@@ -31,6 +36,7 @@ const defaultState: CustomerEngineBridgeState = {
     { label: "Review", value: "Approval stays human", tone: "attention" },
     { label: "Memory", value: "Capture decisions in SIM Wiki" },
   ],
+  judgmentPrompt: "Decide what changes in Product, Cash, or SIM memory.",
 };
 
 const statusTone: Record<CustomerEngineStatus, string> = {
@@ -60,8 +66,12 @@ export function bridgeSnapshotToCardState(
         { label: "Review", value: "Approval stays in Tissuu" },
         { label: "Memory", value: "Do not invent signal", tone: "muted" },
       ],
+      judgmentPrompt: "Wait for live customer signal before changing the company map.",
     };
   }
+
+  const nextReviewItem = snapshot.actions.items[0];
+  const nextDigestAction = snapshot.digest.nextActions[0];
 
   return {
     status: snapshot.ops.overall === "healthy" ? "connected" : "attention",
@@ -77,7 +87,15 @@ export function bridgeSnapshotToCardState(
         tone: snapshot.ops.overall === "healthy" ? "default" : "attention",
       },
     ],
-    reviewHref: snapshot.digest.nextActions[0]?.deepLink ?? snapshot.actions.items[0]?.deepLink,
+    judgmentPrompt: "Decide what changes in Product, Cash, or SIM memory.",
+    nextReview:
+      nextReviewItem || nextDigestAction
+        ? {
+            title: nextReviewItem?.title ?? nextDigestAction?.title ?? "Review the next customer move",
+            reason: nextReviewItem?.reason,
+          }
+        : undefined,
+    reviewHref: nextDigestAction?.deepLink ?? nextReviewItem?.deepLink,
   };
 }
 
@@ -111,6 +129,29 @@ export function CustomerEngineBridgeCard({ state = defaultState }: { state?: Cus
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="grid gap-3 border-y border-border py-3 md:grid-cols-[0.85fr_1.15fr]">
+          <div>
+            <div className="text-[11px] font-medium uppercase text-muted-foreground">
+              Ready for your judgment
+            </div>
+            <p className="mt-1 text-sm font-medium text-foreground">{state.judgmentPrompt}</p>
+          </div>
+          {state.nextReview ? (
+            <div className="border-l border-border pl-3">
+              <div className="text-[11px] font-medium uppercase text-muted-foreground">Next review</div>
+              <p className="mt-1 text-sm font-medium text-foreground">{state.nextReview.title}</p>
+              {state.nextReview.reason ? (
+                <p className="mt-1 text-sm text-muted-foreground">{state.nextReview.reason}</p>
+              ) : null}
+            </div>
+          ) : (
+            <div className="border-l border-border pl-3">
+              <div className="text-[11px] font-medium uppercase text-muted-foreground">Next review</div>
+              <p className="mt-1 text-sm text-muted-foreground">No live review item is waiting.</p>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
