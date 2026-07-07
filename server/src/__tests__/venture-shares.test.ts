@@ -163,7 +163,7 @@ describe("venture share snapshots", () => {
       priority: "high",
     });
     expect(JSON.stringify(snapshot)).not.toMatch(
-      /apiKey|adapterConfig|runtimeConfig|permissions|envInputs|OPENAI_API_KEY|secret-provider-choice|private\/workspace/,
+      /apiKey|api key|adapterConfig|runtimeConfig|permissions|envInputs|OPENAI_API_KEY|secret-provider-choice|private\/workspace|model|provider|runtime/i,
     );
   });
 });

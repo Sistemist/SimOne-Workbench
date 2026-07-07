@@ -68,7 +68,7 @@ export function buildVentureShareSnapshot(
     nextMoves,
     principles: [
       "Human judgment stays visible.",
-      "Roles are shown as operating responsibilities, not model settings.",
+      "Roles are shown as operating responsibilities.",
       "Private setup details and internal files are not included.",
     ],
   };
