@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@/lib/router";
 import { useQuery } from "@tanstack/react-query";
 import { dashboardApi } from "../api/dashboard";
+import { customerEngineApi } from "../api/customerEngine";
 import { activityApi } from "../api/activity";
 import { accessApi } from "../api/access";
 import { issuesApi } from "../api/issues";
@@ -23,12 +24,13 @@ import { cn, formatCents } from "../lib/utils";
 import { Bot, CircleDot, DollarSign, ShieldCheck, LayoutDashboard, PauseCircle } from "lucide-react";
 import { ActiveAgentsPanel } from "../components/ActiveAgentsPanel";
 import { ChartCard, RunActivityChart, PriorityChart, IssueStatusChart, SuccessRateChart } from "../components/ActivityCharts";
-import { CustomerEngineBridgeCard } from "../components/CustomerEngineBridgeCard";
+import { CustomerEngineBridgeCard, bridgeSnapshotToCardState } from "../components/CustomerEngineBridgeCard";
 import { PageSkeleton } from "../components/PageSkeleton";
 import type { Agent, Issue } from "@paperclipai/shared";
 import { PluginSlotOutlet } from "@/plugins/slots";
 
 const DASHBOARD_ACTIVITY_LIMIT = 10;
+const SIMONE_STARTER_TEAM_ROUTE = "/teams-catalog/paperclipai%3Abundled%3Asimone%3Asimone-starter";
 
 function getRecentIssues(issues: Issue[]): Issue[] {
   return [...issues]
@@ -75,6 +77,12 @@ export function Dashboard() {
   const { data: projects } = useQuery({
     queryKey: queryKeys.projects.list(selectedCompanyId!),
     queryFn: () => projectsApi.list(selectedCompanyId!),
+    enabled: !!selectedCompanyId,
+  });
+
+  const { data: customerEngineBridge } = useQuery({
+    queryKey: ["customer-engine-bridge", selectedCompanyId],
+    queryFn: () => customerEngineApi.bridgeSnapshot(selectedCompanyId!),
     enabled: !!selectedCompanyId,
   });
 
@@ -202,16 +210,16 @@ export function Dashboard() {
         <div className="flex items-center justify-between gap-3 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-500/25 dark:bg-amber-950/60">
           <div className="flex items-center gap-2.5">
             <Bot className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
-          <p className="text-sm text-amber-900 dark:text-amber-100">
-              Your operating team is empty.
+            <p className="text-sm text-amber-900 dark:text-amber-100">
+              Your operating team is empty. Start with the SIM Starter instead of configuring agents by hand.
             </p>
           </div>
-          <button
-            onClick={() => openOnboarding({ initialStep: 2, companyId: selectedCompanyId! })}
+          <Link
+            to={SIMONE_STARTER_TEAM_ROUTE}
             className="text-sm font-medium text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100 underline underline-offset-2 shrink-0"
           >
-            Add a team member
-          </button>
+            Install SIM Starter
+          </Link>
         </div>
       )}
 
@@ -296,7 +304,7 @@ export function Dashboard() {
             />
           </div>
 
-          <CustomerEngineBridgeCard />
+          <CustomerEngineBridgeCard state={bridgeSnapshotToCardState(customerEngineBridge)} />
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <ChartCard title="Execution Activity" subtitle="Last 14 days">

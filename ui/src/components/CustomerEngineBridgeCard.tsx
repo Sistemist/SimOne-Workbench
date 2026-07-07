@@ -2,6 +2,7 @@ import { ArrowRight, BookOpenCheck, MessageCircleWarning, Radio, Users } from "l
 import { Link } from "@/lib/router";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { CustomerEngineBridgeSnapshot } from "@/api/customerEngine";
 
 type CustomerEngineStatus = "connected" | "pending" | "attention";
 
@@ -42,6 +43,41 @@ const signalTone: Record<NonNullable<CustomerEngineSignal["tone"]>, string> = {
   muted: "text-muted-foreground",
   attention: "text-amber-700 dark:text-amber-200",
 };
+
+export function bridgeSnapshotToCardState(
+  snapshot: CustomerEngineBridgeSnapshot | undefined,
+): CustomerEngineBridgeState {
+  if (!snapshot) return defaultState;
+  if (snapshot.status === "unavailable") {
+    return {
+      status: "attention",
+      statusLabel: "Bridge unavailable",
+      headline: "Customer Engine",
+      summary: snapshot.message,
+      signals: [
+        { label: "Digest", value: "Unavailable", tone: "attention" },
+        { label: "Review", value: "Approval stays in Tissuu" },
+        { label: "Memory", value: "Do not invent signal", tone: "muted" },
+      ],
+    };
+  }
+
+  return {
+    status: snapshot.ops.overall === "healthy" ? "connected" : "attention",
+    statusLabel: "Live Tissuu signal",
+    headline: snapshot.digest.headline,
+    summary: snapshot.digest.summary,
+    signals: [
+      { label: "Review", value: `${snapshot.actions.count} waiting`, tone: snapshot.actions.count > 0 ? "attention" : "default" },
+      { label: "Funnel", value: `${snapshot.metrics.waitlistTotal} waitlist` },
+      {
+        label: "Ops",
+        value: snapshot.ops.overall === "healthy" ? "Engine healthy" : "Needs attention",
+        tone: snapshot.ops.overall === "healthy" ? "default" : "attention",
+      },
+    ],
+  };
+}
 
 export function CustomerEngineBridgeCard({ state = defaultState }: { state?: CustomerEngineBridgeState }) {
   return (

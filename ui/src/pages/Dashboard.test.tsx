@@ -31,6 +31,10 @@ const mockProjectsApi = vi.hoisted(() => ({
   list: vi.fn(),
 }));
 
+const mockCustomerEngineApi = vi.hoisted(() => ({
+  bridgeSnapshot: vi.fn(),
+}));
+
 const mockSetBreadcrumbs = vi.hoisted(() => vi.fn());
 const mockOpenOnboarding = vi.hoisted(() => vi.fn());
 
@@ -62,6 +66,10 @@ vi.mock("../api/agents", () => ({
 
 vi.mock("../api/projects", () => ({
   projectsApi: mockProjectsApi,
+}));
+
+vi.mock("../api/customerEngine", () => ({
+  customerEngineApi: mockCustomerEngineApi,
 }));
 
 vi.mock("../context/CompanyContext", () => ({
@@ -185,6 +193,24 @@ describe("Dashboard", () => {
     mockIssuesApi.list.mockResolvedValue([]);
     mockProjectsApi.list.mockResolvedValue([]);
     mockAccessApi.listUserDirectory.mockResolvedValue({ users: [] });
+    mockCustomerEngineApi.bridgeSnapshot.mockResolvedValue({
+      status: "live",
+      generatedAt: "2026-07-07T08:53:06Z",
+      digest: {
+        headline: "33 items waiting on you (10 high-priority)",
+        summary: "10 replies + 3 posts to review",
+        nextActions: [],
+      },
+      actions: { count: 33, items: [] },
+      metrics: {
+        waitlistTotal: 11,
+        weeklyNew: 0,
+        qualifiedLeads: 2,
+        replyRate: 0.03,
+        proofEvents: 10,
+      },
+      ops: { overall: "healthy", jobs: [], staleSignals: [] },
+    });
   });
 
   afterEach(() => {
@@ -205,11 +231,12 @@ describe("Dashboard", () => {
     expect(text).toContain("Open Work");
     expect(text).toContain("AI Spend");
     expect(text).toContain("Human Review");
-    expect(text).toContain("Customer Engine");
-    expect(text).toContain("Live signal pending");
-    expect(text).toContain("Customer discovery can keep running in Tissuu");
-    expect(text).toContain("Approval stays human");
-    expect(text).toContain("Capture decisions in SIM Wiki");
+    expect(text).toContain("33 items waiting on you (10 high-priority)");
+    expect(text).toContain("Live Tissuu signal");
+    expect(text).toContain("10 replies + 3 posts to review");
+    expect(text).toContain("33 waiting");
+    expect(text).toContain("11 waitlist");
+    expect(text).toContain("Engine healthy");
     expect(text).toContain("Execution Activity");
     expect(text).toContain("Work by Priority");
     expect(text).toContain("Work by Status");
@@ -219,6 +246,29 @@ describe("Dashboard", () => {
     expect(text).not.toContain("Tasks In Progress");
     expect(text).not.toContain("Month Spend");
     expect(text).not.toContain("Pending Approvals");
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
+  it("points an empty operating team to the SIM Starter catalog entry", async () => {
+    mockAgentsApi.list.mockResolvedValue([]);
+    const root = renderDashboard(container);
+    await waitForText(container, "Install SIM Starter");
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Your operating team is empty.");
+    expect(text).toContain("Start with the SIM Starter instead of configuring agents by hand.");
+    expect(text).toContain("Install SIM Starter");
+    expect(mockOpenOnboarding).not.toHaveBeenCalled();
+
+    const link = Array.from(container.querySelectorAll<HTMLAnchorElement>("a")).find((candidate) =>
+      (candidate.textContent ?? "").includes("Install SIM Starter")
+    );
+    expect(link?.getAttribute("href")).toBe(
+      "/teams-catalog/paperclipai%3Abundled%3Asimone%3Asimone-starter"
+    );
 
     flushSync(() => {
       root.unmount();
