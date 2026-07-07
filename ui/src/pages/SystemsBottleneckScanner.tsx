@@ -300,6 +300,23 @@ export function SystemsBottleneckScanner() {
                     </div>
                   </div>
                 </div>
+                <div className="rounded-md border border-border bg-background/60 p-3">
+                  <div className="text-xs font-medium uppercase text-muted-foreground">
+                    Safe share summary
+                  </div>
+                  <div className="mt-2 grid gap-1 text-sm text-muted-foreground">
+                    <p>
+                      <span className="font-medium text-foreground">Likely bottleneck:</span> {result.headline}
+                    </p>
+                    <p>
+                      <span className="font-medium text-foreground">Focus:</span> {result.engine}
+                    </p>
+                    <p>
+                      <span className="font-medium text-foreground">Next move:</span> {result.nextAction}
+                    </p>
+                    <p className="text-xs">Founder note and startup URL are not included.</p>
+                  </div>
+                </div>
                 <a
                   href="/auth?next=%2Fonboarding"
                   className="inline-flex h-9 w-fit items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"

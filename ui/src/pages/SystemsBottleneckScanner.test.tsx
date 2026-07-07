@@ -66,6 +66,11 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("What proof would make this worth doing now?");
     expect(text).toContain("Starter map preview");
     expect(text).toContain("Venture Architecture Map");
+    expect(text).toContain("Safe share summary");
+    expect(text).toContain("Likely bottleneck: Customer loop is leaking");
+    expect(text).toContain("Focus: Customer Engine");
+    expect(text).toContain("Next move: Make one review queue for replies, prospects, and proof points.");
+    expect(text).toContain("Founder note and startup URL are not included.");
     expect(text).toContain("Create my map");
     expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
 
