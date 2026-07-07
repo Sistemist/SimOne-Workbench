@@ -97,16 +97,17 @@ sequenceDiagram
   participant R as Sovereign Router
   participant H as Headroom candidate
   participant M as Model or Adapter
-  participant L as Run Ledger
+  participant L as Route and Run Ledger
   participant U as Human
 
   S->>R: Submit task intent, risk level, context summary
   R->>R: Choose lane and required approval gate
+  R->>L: Record route decision before execution
   R->>H: Optionally compress large JSON/code/RAG context
   H-->>R: Compressed context plus retrieval references
   R->>M: Run explicit provider/model/adapter
   M-->>R: Return output and usage
-  R->>L: Record route, context summary, model, cost, output, confidence
+  R->>L: Link route to run, cost, output, confidence
   R-->>S: Return result and review requirements
   S-->>U: Ask approval when boundary requires judgment
 ```
@@ -121,9 +122,10 @@ sequenceDiagram
   participant R as SimOne sovereign router
   participant O as OpenRouter Fusion
   participant J as Judge analysis
-  participant L as Run Ledger
+  participant L as Route and Run Ledger
   participant U as Human
 
+  R->>L: Record deliberation_audit route decision
   R->>O: Send high-risk or uncertain prompt
   O->>O: Panel models answer in parallel
   O->>J: Compare consensus, contradictions, gaps, blind spots
@@ -141,9 +143,10 @@ being wrong is higher than the extra cost/latency of multiple model calls.
 sequenceDiagram
   participant R as SimOne sovereign router
   participant F as Fugu or Fugu Ultra
-  participant L as Run Ledger
+  participant L as Route and Run Ledger
   participant V as Evaluator or frontier reviewer
 
+  R->>L: Record external_specialist route decision
   R->>F: Send bounded specialist task
   F-->>R: Return synthesized result and usage fields
   R->>V: Compare or review result

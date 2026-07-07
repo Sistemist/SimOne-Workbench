@@ -70,6 +70,7 @@ Relevant Linear issues:
 - SYS-199: Shareable SimOne venture artifacts
 - SYS-200: Public Systems Bottleneck Scanner
 - SYS-201: Contextual methodology loop from SIM Coach to book/course
+- SYS-202: Auditable SimOne model routing and escalation lanes
 
 ## Main Runtime
 
@@ -233,6 +234,18 @@ Use models by task:
 - frontier models only for high-stakes strategy, architecture, code review, and
   SIM methodology audits
 
+Routing audit spine:
+
+- `model_route_decisions` records the intended lane, provider/model, reason,
+  risk level, context summary, approval gate, and metadata before execution.
+- Use `deliberation_audit` for OpenRouter Fusion-style high-risk review where
+  disagreement and blind spots are valuable.
+- Use `external_specialist` for future Fugu/Fugu Ultra-style specialist
+  execution experiments.
+- Headroom/SmartCrusher-style compression is not implemented yet; it remains a
+  planned context-infrastructure candidate before large JSON, code, log, or RAG
+  payloads enter model context.
+
 Fable 5 discussion, verified 2026-07-07:
 
 - Anthropic lists Claude Fable 5 as available through the API as
@@ -291,6 +304,7 @@ Important active/related issues:
 - SYS-199: Shareable SimOne venture artifacts
 - SYS-200: Public Systems Bottleneck Scanner
 - SYS-201: Contextual methodology loop from SIM Coach to book/course
+- SYS-202: Auditable SimOne model routing and escalation lanes
 
 Earlier related issues:
 
@@ -305,6 +319,7 @@ Keep Linear synced after meaningful code, deploy, or product-direction changes.
 Common checks:
 
 ```bash
+pnpm --dir server exec vitest run --config ./vitest.config.ts src/__tests__/model-route-decisions-routes.test.ts
 pnpm --dir server exec vitest run --config ./vitest.config.ts src/services/customer-engine-bridge.test.ts
 pnpm --dir ui exec vitest run --config ./vitest.config.ts src/pages/Dashboard.test.tsx src/pages/CustomerEngine.test.tsx src/components/OnboardingWizard.simone-starter.test.tsx src/components/FrontDoor.test.tsx
 pnpm --filter @paperclipai/server typecheck
@@ -337,6 +352,7 @@ These were already present and are not blockers for the bridge work.
 
 - `57ea1ca91`: Wire Tissuu customer engine bridge
 - `069ff08c8`: Expose Tissuu bridge env in KVM compose
+- `80f300a27`: Make Customer Engine bridge feel native
 
 ## Guardrails
 
@@ -349,4 +365,3 @@ These were already present and are not blockers for the bridge work.
   enough.
 - Do not let SIM diagrams and engine drawings become first-use friction.
 - Do keep Paperclip conventions where they make upstream updates easier.
-

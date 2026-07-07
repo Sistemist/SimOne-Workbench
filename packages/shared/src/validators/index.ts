@@ -506,6 +506,15 @@ export {
 } from "./cost.js";
 
 export {
+  createModelRouteDecisionSchema,
+  modelRouteDecisionLaneSchema,
+  modelRouteDecisionRiskLevelSchema,
+  type CreateModelRouteDecision,
+  type ModelRouteDecisionLane,
+  type ModelRouteDecisionRiskLevel,
+} from "./model-route-decision.js";
+
+export {
   createFinanceEventSchema,
   type CreateFinanceEvent,
 } from "./finance.js";

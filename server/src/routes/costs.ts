@@ -3,6 +3,7 @@ import type { Db } from "@paperclipai/db";
 import {
   createCostEventSchema,
   createFinanceEventSchema,
+  createModelRouteDecisionSchema,
   normalizeIssueIdentifier,
   resolveBudgetIncidentSchema,
   updateBudgetSchema,
@@ -17,6 +18,7 @@ import {
   agentService,
   issueService,
   heartbeatService,
+  modelRouteDecisionService,
   accessService,
   logActivity,
 } from "../services/index.js";
@@ -58,6 +60,7 @@ export function costRoutes(
   };
   const costs = costService(db, budgetHooks);
   const finance = financeService(db);
+  const modelRouteDecisions = modelRouteDecisionService(db);
   const budgets = budgetService(db, budgetHooks);
   const companies = companyService(db);
   const agents = agentService(db);
@@ -138,6 +141,60 @@ export function costRoutes(
     });
 
     res.status(201).json(event);
+  });
+
+  router.post(
+    "/companies/:companyId/model-route-decisions",
+    validate(createModelRouteDecisionSchema),
+    async (req, res) => {
+      const companyId = req.params.companyId as string;
+      assertCompanyAccess(req, companyId);
+
+      if (req.actor.type === "agent" && req.actor.agentId !== req.body.agentId) {
+        res.status(403).json({ error: "Agent can only report its own model route decisions" });
+        return;
+      }
+
+      const actor = getActorInfo(req);
+      const decision = await modelRouteDecisions.create(companyId, req.body, {
+        createdByAgentId: actor.agentId,
+        createdByUserId: actor.actorType === "user" ? actor.actorId : null,
+      });
+
+      await logActivity(db, {
+        companyId,
+        actorType: actor.actorType,
+        actorId: actor.actorId,
+        agentId: actor.agentId,
+        action: "model_route_decision.recorded",
+        entityType: "model_route_decision",
+        entityId: decision.id,
+        details: {
+          lane: decision.lane,
+          provider: decision.provider,
+          model: decision.model,
+          riskLevel: decision.riskLevel,
+          approvalGate: decision.approvalGate,
+        },
+      });
+
+      res.status(201).json(decision);
+    },
+  );
+
+  router.get("/companies/:companyId/model-route-decisions", async (req, res) => {
+    const companyId = req.params.companyId as string;
+    assertCompanyAccess(req, companyId);
+
+    const limit = parseCostLimit(req.query);
+    const requestedAgentId = Array.isArray(req.query.agentId) ? req.query.agentId[0] : req.query.agentId;
+    const agentId = req.actor.type === "agent"
+      ? req.actor.agentId
+      : typeof requestedAgentId === "string" && requestedAgentId.length > 0
+        ? requestedAgentId
+        : undefined;
+    const items = await modelRouteDecisions.list(companyId, { limit, agentId });
+    res.json({ items });
   });
 
   router.post("/companies/:companyId/finance-events", validate(createFinanceEventSchema), async (req, res) => {

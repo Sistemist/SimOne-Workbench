@@ -30,7 +30,7 @@ certifications.
 | PLG/Barnum layer | 45% | Public scanner, shareable venture maps, methodology loop beginnings |
 | Customer Engine bridge | 75% | Read-only Tissuu bridge live; richer native SimOne surfacing still needed |
 | SIM Coach and SIM Wiki | 25% | Product direction documented; contextual coach loop started; wiki substrate not fully wired |
-| Model routing and auditability | 20% | Strategy documented; older alpha has provider-role code; Workbench needs sovereign route ledger and Fusion/Fugu escalation policies |
+| Model routing and auditability | 30% | Strategy documented; Workbench now has an initial `model_route_decisions` ledger; actual provider orchestration and evaluations remain |
 | Compression/headroom | 0% | Headroom/SmartCrusher not implemented yet |
 | Full SIM operating system | 30% | Engines and governance are defined, but onboarding, memory, routing, evaluations, and product polish remain |
 
@@ -190,6 +190,11 @@ cleverness. SimOne needs to know:
 
 The root routing layer should therefore be explicit and inspectable.
 
+Workbench now has an initial `model_route_decisions` table and company-scoped
+API for recording the chosen lane, provider/model, reason, risk level, context
+summary, approval gate, and metadata before execution. This is the first
+concrete routing ledger primitive, not a full router yet.
+
 ### Fable 5
 
 Fable 5 is a candidate "boardroom brain" or meta-controller for high-level SIM
@@ -329,7 +334,7 @@ delegation.
 
 - Define routing lanes: cheap/background, workhorse, frontier, external
   specialist, deliberation/audit.
-- Add route decision records.
+- Add route decision records. Initial `model_route_decisions` API exists.
 - Log model/provider/adapter/cost/context summaries.
 - Add human approval gates for risky boundaries.
 - Add evaluation cases for routing quality.
