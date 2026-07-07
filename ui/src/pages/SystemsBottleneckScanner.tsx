@@ -10,6 +10,12 @@ type ScannerResult = {
   reason: string;
   nextAction: string;
   watches: string;
+  questions: string[];
+  mapPreview: {
+    artifact: "Venture Architecture Map";
+    primaryEngine: ScannerResult["engine"];
+    firstSection: string;
+  };
 };
 
 const SCAN_STORAGE_KEY = "simone:bottleneck-scan";
@@ -21,6 +27,16 @@ const fallbackResult: ScannerResult = {
   reason: "The note has a goal, but the system that turns feedback into a decision is not visible yet.",
   nextAction: "Write down the next customer decision and who approves it.",
   watches: "SimOne would watch for missing feedback, ownership, and approval boundaries.",
+  questions: [
+    "What decision is waiting for a human yes?",
+    "What proof would make this worth doing now?",
+    "Where should the answer be saved so it is not lost?",
+  ],
+  mapPreview: {
+    artifact: "Venture Architecture Map",
+    primaryEngine: "Product Engine",
+    firstSection: "Decision loop",
+  },
 };
 
 const patterns: Array<{
@@ -30,6 +46,8 @@ const patterns: Array<{
   reason: string;
   nextAction: string;
   watches: string;
+  questions: string[];
+  firstSection: string;
 }> = [
   {
     engine: "Customer Engine",
@@ -38,6 +56,12 @@ const patterns: Array<{
     reason: "Customer signal exists, but it is not moving through one trusted review loop.",
     nextAction: "Make one review queue for replies, prospects, and proof points.",
     watches: "SimOne would watch the handoff from signal to human approval to durable memory.",
+    questions: [
+      "Who should approve the next customer reply or offer?",
+      "What proof would make this worth doing now?",
+      "Where should the answer be saved so it is not lost?",
+    ],
+    firstSection: "Customer review loop",
   },
   {
     engine: "Cash Engine",
@@ -46,6 +70,12 @@ const patterns: Array<{
     reason: "The business constraint is financial, but the next pricing or revenue decision is not explicit.",
     nextAction: "Name the next money decision and the evidence needed to make it.",
     watches: "SimOne would watch budget pressure, pricing assumptions, and approval thresholds.",
+    questions: [
+      "Which money decision needs a human yes next?",
+      "What proof would make this worth doing now?",
+      "What number should SimOne keep visible each week?",
+    ],
+    firstSection: "Money decision loop",
   },
   {
     engine: "Skills Engine",
@@ -54,6 +84,12 @@ const patterns: Array<{
     reason: "The work depends on people or skills that are not yet mapped to a clear operating role.",
     nextAction: "List the recurring work and assign one accountable role for the next week.",
     watches: "SimOne would watch ownership, missing skills, and work that keeps bouncing back to the founder.",
+    questions: [
+      "Which recurring work keeps coming back to the founder?",
+      "Who should own the next visible step?",
+      "What proof would show this role is working?",
+    ],
+    firstSection: "Ownership loop",
   },
   {
     engine: "Product Engine",
@@ -62,6 +98,12 @@ const patterns: Array<{
     reason: "The product surface is moving, but the next sharp decision is not anchored to customer evidence.",
     nextAction: "Pick one user promise and one proof point that would make it believable.",
     watches: "SimOne would watch product promises, proof, and the approval point before building more.",
+    questions: [
+      "Which user promise should be protected first?",
+      "What proof would make this worth doing now?",
+      "Who should approve the next product move?",
+    ],
+    firstSection: "Product proof loop",
   },
 ];
 
@@ -87,6 +129,12 @@ function scanBottleneck(input: string): ScannerResult {
     reason: best.pattern.reason,
     nextAction: best.pattern.nextAction,
     watches: best.pattern.watches,
+    questions: best.pattern.questions,
+    mapPreview: {
+      artifact: "Venture Architecture Map",
+      primaryEngine: best.pattern.engine,
+      firstSection: best.pattern.firstSection,
+    },
   };
 }
 
@@ -220,11 +268,43 @@ export function SystemsBottleneckScanner() {
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">{result.watches}</p>
                 </div>
+                <div className="rounded-md border border-border bg-background/60 p-3">
+                  <div className="text-xs font-medium uppercase text-muted-foreground">
+                    Questions SimOne would ask next
+                  </div>
+                  <ul className="mt-2 grid gap-2 text-sm text-muted-foreground">
+                    {result.questions.map((question) => (
+                      <li key={question} className="flex gap-2">
+                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+                        <span>{question}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="rounded-md border border-border bg-background/60 p-3">
+                  <div className="text-xs font-medium uppercase text-muted-foreground">
+                    Starter map preview
+                  </div>
+                  <div className="mt-2 grid gap-1 text-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-muted-foreground">Artifact</span>
+                      <span className="text-right font-medium">{result.mapPreview.artifact}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-muted-foreground">First focus</span>
+                      <span className="text-right font-medium">{result.mapPreview.primaryEngine}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-muted-foreground">Opening section</span>
+                      <span className="text-right font-medium">{result.mapPreview.firstSection}</span>
+                    </div>
+                  </div>
+                </div>
                 <a
                   href="/auth?next=%2Fonboarding"
                   className="inline-flex h-9 w-fit items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                 >
-                  Create the full SimOne map
+                  Create my map
                   <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                 </a>
               </div>

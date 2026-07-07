@@ -30,7 +30,7 @@ describe("SystemsBottleneckScanner", () => {
     document.body.innerHTML = "";
   });
 
-  it("turns a messy founder note into one bottleneck and one next action", async () => {
+  it("turns a messy founder note into a bottleneck, next action, and starter map preview", async () => {
     const container = document.createElement("div");
     document.body.appendChild(container);
     const root = renderScanner(container);
@@ -61,7 +61,13 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Customer loop is leaking");
     expect(text).toContain("Customer Engine");
     expect(text).toContain("Make one review queue for replies, prospects, and proof points.");
-    expect(text).toContain("Create the full SimOne map");
+    expect(text).toContain("Questions SimOne would ask next");
+    expect(text).toContain("Who should approve the next customer reply or offer?");
+    expect(text).toContain("What proof would make this worth doing now?");
+    expect(text).toContain("Starter map preview");
+    expect(text).toContain("Venture Architecture Map");
+    expect(text).toContain("Create my map");
+    expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
 
     const storedScan = window.localStorage.getItem("simone:bottleneck-scan");
     expect(storedScan).not.toBeNull();
@@ -74,6 +80,15 @@ describe("SystemsBottleneckScanner", () => {
       result: {
         headline: "Customer loop is leaking",
         engine: "Customer Engine",
+        questions: [
+          "Who should approve the next customer reply or offer?",
+          "What proof would make this worth doing now?",
+          "Where should the answer be saved so it is not lost?",
+        ],
+        mapPreview: {
+          artifact: "Venture Architecture Map",
+          primaryEngine: "Customer Engine",
+        },
       },
     });
 
