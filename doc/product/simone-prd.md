@@ -29,7 +29,7 @@ certifications.
 | Paperclip control-plane reuse | 55% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted |
 | PLG/Barnum layer | 52% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts |
 | Customer Engine bridge | 75% | Read-only Tissuu bridge live; richer native SimOne surfacing still needed |
-| SIM Coach and SIM Wiki | 30% | Product direction documented; contextual coach loop now explains scanner results; wiki substrate not fully wired |
+| SIM Coach and SIM Wiki | 32% | Product direction documented; contextual coach loop now explains scanner results; Coach now shows a SIM Wiki seed map; wiki substrate not fully wired |
 | Model routing and auditability | 30% | Strategy documented; Workbench now has an initial `model_route_decisions` ledger; actual provider orchestration and evaluations remain |
 | Compression/headroom | 0% | Headroom/SmartCrusher not implemented yet |
 | Full SIM operating system | 30% | Engines and governance are defined, but onboarding, memory, routing, evaluations, and product polish remain |
@@ -176,6 +176,8 @@ Current Coach behavior:
   money decision loop, ownership loop, or product proof loop.
 - Points to SIM Wiki/course methodology only after the user has context for why
   the explanation matters.
+- Shows a SIM Wiki Seed Map naming the first durable memory buckets: method
+  pages, venture memory, and explicit promotion rules.
 
 ### SIM Wiki
 
@@ -330,7 +332,7 @@ Goal: make the current live signals feel native to SimOne.
   interpretation layer, and the scanner now exposes a safe share summary.
 - Make SIM Coach contextual explanations feel helpful, not academic. Scanner
   handoff now includes a "Method underneath" card instead of a generic course
-  prompt.
+  prompt, and the Coach page now shows the first SIM Wiki seed map.
 - Add a first useful PRD/glossary/docs bundle for human and future wiki use.
 
 Related Linear:
@@ -349,7 +351,8 @@ inspectable first map.
 - Draft first SIM map from messy founder input.
 - Replace manual engine/driver setup as the first action.
 - Install or wrap the LLM Wiki plugin as SIM Wiki.
-- Seed SIM Wiki structure and glossary.
+- Seed SIM Wiki structure and glossary. The plugin template already carries SIM
+  pages, and the Coach page now explains the first seed buckets to the user.
 - Promote useful coach answers into durable wiki pages.
 
 ### M3: Sovereign Model Routing

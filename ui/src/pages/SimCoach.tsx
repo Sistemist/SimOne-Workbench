@@ -132,6 +132,21 @@ const coachFlow = [
   },
 ];
 
+const simWikiSeedMap = [
+  {
+    title: "Method pages",
+    body: "Engines, drivers, system laws, archetypes, and coaching guidance.",
+  },
+  {
+    title: "Venture memory",
+    body: "Founder notes, first maps, decisions, proof points, and Sprint Zero context.",
+  },
+  {
+    title: "Promotion rule",
+    body: "Live bridge counts stay live. Only useful decisions and proof become durable wiki pages.",
+  },
+];
+
 function loadScannerCoachContext(): ScannerCoachContext | null {
   try {
     const raw = window.localStorage.getItem(BOTTLENECK_SCAN_STORAGE_KEY);
@@ -465,6 +480,33 @@ export function SimCoach() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      <section className="space-y-4 border-t border-border pt-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <BookOpenCheck className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-base font-semibold text-foreground">SIM Wiki Seed Map</h2>
+            </div>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              This keeps SIM understandable without hiding where the knowledge came from.
+            </p>
+          </div>
+          <Button asChild variant="outline" size="sm" className="h-8">
+            <Link to={simWikiReady ? "/wiki" : SIM_WIKI_FOCUS_ROUTE}>
+              {simWikiReady ? "Open SIM Wiki" : "Enable SIM Wiki"}
+            </Link>
+          </Button>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {simWikiSeedMap.map((item) => (
+            <div key={item.title} className="border-b border-border pb-4">
+              <div className="text-sm font-medium text-foreground">{item.title}</div>
+              <p className="mt-2 text-sm leading-5 text-muted-foreground">{item.body}</p>
+            </div>
+          ))}
         </div>
       </section>
     </div>

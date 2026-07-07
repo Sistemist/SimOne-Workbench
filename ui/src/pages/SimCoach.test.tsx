@@ -97,6 +97,26 @@ describe("SimCoach", () => {
     });
   });
 
+  it("shows what the SIM Wiki will preserve before heavy automation starts", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderSimCoach(container);
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("SIM Wiki Seed Map");
+    expect(text).toContain("Method pages");
+    expect(text).toContain("Engines, drivers, system laws, archetypes, and coaching guidance.");
+    expect(text).toContain("Venture memory");
+    expect(text).toContain("Founder notes, first maps, decisions, proof points, and Sprint Zero context.");
+    expect(text).toContain("Promotion rule");
+    expect(text).toContain("Live bridge counts stay live. Only useful decisions and proof become durable wiki pages.");
+    expect(text).toContain("This keeps SIM understandable without hiding where the knowledge came from.");
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
   it("opens SIM Wiki directly once the wiki plugin is ready", async () => {
     mockPluginsApi.list.mockResolvedValue([
       {
