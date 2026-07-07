@@ -62,6 +62,10 @@ export function artifactGroupByLabel(value: ArtifactGroupBy): string {
   return ARTIFACT_GROUP_OPTIONS.find((option) => option.value === value)?.label ?? "None";
 }
 
+function absoluteShareUrl(shareUrl: string) {
+  return new URL(shareUrl, window.location.origin).href;
+}
+
 export function Artifacts() {
   const { selectedCompanyId } = useCompany();
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -255,7 +259,7 @@ export function Artifacts() {
     setSharingVentureMap(true);
     try {
       const result = await companiesApi.createVentureShare(selectedCompanyId);
-      setShareUrl(result.shareUrl);
+      setShareUrl(absoluteShareUrl(result.shareUrl));
     } catch (err) {
       setShareError(err instanceof Error ? err.message : "Could not create share link.");
     } finally {

@@ -5,6 +5,10 @@ import type { VentureShareRecord } from "@paperclipai/shared";
 import { Button } from "@/components/ui/button";
 import { ventureSharesApi } from "../api/ventureShares";
 
+function countLabel(count: number, singular: string, plural: string) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 export function VentureShare() {
   const { shareId } = useParams();
   const [share, setShare] = useState<VentureShareRecord | null>(null);
@@ -53,6 +57,32 @@ export function VentureShare() {
           </section>
         ) : snapshot ? (
           <>
+            <section className="rounded-lg border bg-card p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
+                <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                What this map means
+              </div>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
+                A public, safe view of how {snapshot.company.name} is organized to move work forward.
+                Private setup details are left out; this page shows the shape of the work, the current
+                streams, and the moves that need attention.
+              </p>
+              <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+                <div>
+                  <div className="font-medium">{countLabel(snapshot.agents.length, "operating role", "operating roles")}</div>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">Who carries responsibility.</p>
+                </div>
+                <div>
+                  <div className="font-medium">{countLabel(snapshot.projects.length, "work stream", "work streams")}</div>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">Where the venture is moving.</p>
+                </div>
+                <div>
+                  <div className="font-medium">{countLabel(snapshot.nextMoves.length, "next move", "next moves")}</div>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">What needs judgment next.</p>
+                </div>
+              </div>
+            </section>
+
             <section className="grid gap-4 md:grid-cols-3">
               <div className="rounded-lg border bg-card p-4 shadow-sm">
                 <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">

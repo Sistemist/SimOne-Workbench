@@ -239,6 +239,9 @@ describe("Artifacts page", () => {
       expect(companiesApiMock.createVentureShare).toHaveBeenCalledWith("company-1");
       expect(container.textContent).toContain("/share/venture/share-1");
     });
+    const expectedHref = new URL("/share/venture/share-1", window.location.origin).href;
+    const shareLink = container.querySelector(`a[href="${expectedHref}"]`);
+    expect(shareLink?.textContent).toContain(expectedHref);
 
     flushSync(() => {
       root.unmount();

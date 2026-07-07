@@ -87,6 +87,11 @@ describe("VentureShare", () => {
       const text = container.textContent ?? "";
       expect(text).toContain("Acme Systems");
       expect(text).toContain("Venture Architecture Map");
+      expect(text).toContain("What this map means");
+      expect(text).toContain("A public, safe view of how Acme Systems is organized to move work forward.");
+      expect(text).toContain("1 operating role");
+      expect(text).toContain("1 work stream");
+      expect(text).toContain("1 next move");
       expect(text).toContain("Thomasina");
       expect(text).toContain("Customer Engine");
       expect(text).toContain("Review customer replies");

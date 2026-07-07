@@ -27,7 +27,7 @@ certifications.
 | --- | ---: | --- |
 | Hosted alpha shell | 65% | KVM deployment, auth-gated app, health checks, SimOne routes, deploy script |
 | Paperclip control-plane reuse | 55% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted |
-| PLG/Barnum layer | 45% | Public scanner, shareable venture maps, methodology loop beginnings |
+| PLG/Barnum layer | 50% | Public scanner, shareable venture maps, methodology loop beginnings; Venture Architecture Map now has a safer public readout |
 | Customer Engine bridge | 75% | Read-only Tissuu bridge live; richer native SimOne surfacing still needed |
 | SIM Coach and SIM Wiki | 25% | Product direction documented; contextual coach loop started; wiki substrate not fully wired |
 | Model routing and auditability | 30% | Strategy documented; Workbench now has an initial `model_route_decisions` ledger; actual provider orchestration and evaluations remain |
@@ -142,6 +142,15 @@ before the user understands the theory. Current PLG directions:
 - Sprint Zero Brief
 - Customer Engine Readout
 - contextual "Ask SIM Coach" and "Learn why"
+
+Current share artifact behavior:
+
+- The Artifacts surface can create a shareable Venture Architecture Map.
+- The generated link uses the current public origin so it can be handed to
+  another person directly.
+- The public page explains what the map means in plain language, summarizes
+  operating roles, work streams, and next moves, and omits adapter/runtime/model
+  setup details.
 
 ### SIM Coach
 
@@ -305,6 +314,8 @@ Goal: make the current live signals feel native to SimOne.
 
 - Improve Dashboard and Customer Engine surfaces around the Tissuu bridge.
 - Make public scanner and share artifacts feel like coherent SimOne outputs.
+  The Venture Architecture Map share page now has a first plain-language
+  interpretation layer.
 - Make SIM Coach contextual explanations feel helpful, not academic.
 - Add a first useful PRD/glossary/docs bundle for human and future wiki use.
 
