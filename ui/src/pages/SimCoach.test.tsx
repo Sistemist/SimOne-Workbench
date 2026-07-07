@@ -62,6 +62,7 @@ async function flushReact() {
 
 describe("SimCoach", () => {
   beforeEach(() => {
+    localStorage.clear();
     mockPluginsApi.list.mockResolvedValue([]);
   });
 
@@ -128,6 +129,43 @@ describe("SimCoach", () => {
           "/company/settings/instance/plugins?focus=paperclipai.plugin-llm-wiki"
       )
     ).toBe(false);
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
+  it("explains a saved scanner result as a plain-language SIM loop", () => {
+    localStorage.setItem(
+      "simone:bottleneck-scan",
+      JSON.stringify({
+        result: {
+          headline: "Customer loop is leaking",
+          engine: "Customer Engine",
+          questions: [
+            "Who should approve the next customer reply or offer?",
+            "What proof would make this worth doing now?",
+          ],
+          mapPreview: {
+            artifact: "Venture Architecture Map",
+            firstSection: "Customer review loop",
+          },
+        },
+      })
+    );
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderSimCoach(container);
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("From your scanner result");
+    expect(text).toContain("Customer loop is leaking");
+    expect(text).toContain("Plain English: signal needs a decision, a decision needs an owner, and the answer needs a place to live.");
+    expect(text).toContain("Learn why");
+    expect(text).toContain("Who should approve the next customer reply or offer?");
+    expect(text).toContain("Venture Architecture Map");
+    expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
 
     flushSync(() => {
       root.unmount();

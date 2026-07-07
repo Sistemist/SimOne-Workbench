@@ -25,6 +25,15 @@ import { cn } from "../lib/utils";
 
 const SIM_WIKI_PACKAGE = "@paperclipai/plugin-llm-wiki";
 const SIM_WIKI_FOCUS_ROUTE = "/company/settings/instance/plugins?focus=paperclipai.plugin-llm-wiki";
+const BOTTLENECK_SCAN_STORAGE_KEY = "simone:bottleneck-scan";
+
+type ScannerCoachContext = {
+  headline: string;
+  engine: string;
+  questions: string[];
+  artifact: string;
+  firstSection: string;
+};
 
 const engines = [
   {
@@ -117,11 +126,58 @@ const coachFlow = [
   },
 ];
 
+function loadScannerCoachContext(): ScannerCoachContext | null {
+  try {
+    const raw = window.localStorage.getItem(BOTTLENECK_SCAN_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as {
+      result?: {
+        headline?: unknown;
+        engine?: unknown;
+        questions?: unknown;
+        mapPreview?: {
+          artifact?: unknown;
+          firstSection?: unknown;
+        };
+      };
+    };
+    const headline = typeof parsed.result?.headline === "string" ? parsed.result.headline.trim() : "";
+    const engine = typeof parsed.result?.engine === "string" ? parsed.result.engine.trim() : "";
+    const questions = Array.isArray(parsed.result?.questions)
+      ? parsed.result.questions
+          .filter((question): question is string => typeof question === "string" && question.trim().length > 0)
+          .map((question) => question.trim())
+          .slice(0, 3)
+      : [];
+    const artifact =
+      typeof parsed.result?.mapPreview?.artifact === "string"
+        ? parsed.result.mapPreview.artifact.trim()
+        : "Venture Architecture Map";
+    const firstSection =
+      typeof parsed.result?.mapPreview?.firstSection === "string"
+        ? parsed.result.mapPreview.firstSection.trim()
+        : "";
+
+    if (!headline || !engine) return null;
+
+    return {
+      headline,
+      engine,
+      questions,
+      artifact: artifact || "Venture Architecture Map",
+      firstSection,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function SimCoach() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const { selectedCompany } = useCompany();
   const companyName = selectedCompany?.name ?? "this company";
   const driverText = useMemo(() => drivers.join(" / "), []);
+  const scannerContext = useMemo(loadScannerCoachContext, []);
   const { data: plugins } = useQuery({
     queryKey: queryKeys.plugins.all,
     queryFn: () => pluginsApi.list(),
@@ -189,6 +245,69 @@ export function SimCoach() {
           </div>
         </div>
       </section>
+
+      {scannerContext ? (
+        <section className="grid gap-4 border-b border-border pb-6 lg:grid-cols-[0.9fr_1.1fr]">
+          <div>
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Compass className="h-4 w-4" aria-hidden="true" />
+              <span>From your scanner result</span>
+            </div>
+            <h2 className="mt-3 text-xl font-semibold text-foreground">{scannerContext.headline}</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              Plain English: signal needs a decision, a decision needs an owner, and the answer
+              needs a place to live.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-200">
+                {scannerContext.engine}
+              </span>
+              <span className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">
+                {scannerContext.artifact}
+              </span>
+              {scannerContext.firstSection ? (
+                <span className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">
+                  {scannerContext.firstSection}
+                </span>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <h3 className="text-sm font-medium text-foreground">Why SIM cares</h3>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                SimOne keeps the useful question close to the work: what should move, who says yes,
+                and where the decision becomes memory for the team.
+              </p>
+              <Button asChild variant="link" size="sm" className="mt-1 h-auto px-0 text-xs">
+                <Link to={simWikiReady ? "/wiki" : SIM_WIKI_FOCUS_ROUTE}>Learn why</Link>
+              </Button>
+            </div>
+            {scannerContext.questions.length > 0 ? (
+              <ul className="grid gap-2 text-sm text-muted-foreground">
+                {scannerContext.questions.map((question) => (
+                  <li key={question} className="flex gap-2">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+                    <span>{question}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="sm" className="h-8">
+                <Link to="/teams-catalog/paperclipai%3Abundled%3Asimone%3Asimone-starter">
+                  Turn this into Sprint Zero
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm" className="h-8">
+                <Link to="/scanner">Run scanner again</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
         <div className="space-y-3">
