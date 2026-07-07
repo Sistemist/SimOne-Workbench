@@ -29,7 +29,7 @@ certifications.
 | Paperclip control-plane reuse | 55% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted |
 | PLG/Barnum layer | 52% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts |
 | Customer Engine bridge | 75% | Read-only Tissuu bridge live; richer native SimOne surfacing still needed |
-| SIM Coach and SIM Wiki | 38% | Product direction documented; contextual coach loop explains scanner results; Coach can save scanner syntheses into SIM Wiki; new wiki roots include a SimOne product-language page |
+| SIM Coach and SIM Wiki | 39% | Product direction documented; contextual coach loop explains scanner results; Coach can save and reopen scanner syntheses in SIM Wiki; new wiki roots include a SimOne product-language page |
 | Model routing and auditability | 30% | Strategy documented; Workbench now has an initial `model_route_decisions` ledger; actual provider orchestration and evaluations remain |
 | Compression/headroom | 0% | Headroom/SmartCrusher not implemented yet |
 | Full SIM operating system | 30% | Engines and governance are defined, but onboarding, memory, routing, evaluations, and product polish remain |
@@ -181,6 +181,8 @@ Current Coach behavior:
 - When SIM Wiki is enabled, can promote a saved scanner/coach synthesis into a
   dated page under `wiki/synthesis/` through the existing SIM Wiki plugin
   `write-page` action.
+- Shows an "Open saved page" link after promotion so saved memory is immediately
+  inspectable.
 
 ### SIM Wiki
 

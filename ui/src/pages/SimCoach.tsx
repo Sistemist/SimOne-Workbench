@@ -474,9 +474,12 @@ export function SimCoach() {
               </Button>
             </div>
             {promotionState.status === "saved" ? (
-              <p className="text-xs leading-5 text-emerald-700 dark:text-emerald-200">
-                Saved to SIM Wiki: {promotionState.path}
-              </p>
+              <div className="flex flex-wrap items-center gap-2 text-xs leading-5 text-emerald-700 dark:text-emerald-200">
+                <span>Saved to SIM Wiki: {promotionState.path}</span>
+                <Button asChild variant="link" size="sm" className="h-auto px-0 text-xs">
+                  <Link to={`/wiki/page/${promotionState.path}`}>Open saved page</Link>
+                </Button>
+              </div>
             ) : null}
             {promotionState.status === "error" ? (
               <p className="text-xs leading-5 text-destructive">{promotionState.message}</p>

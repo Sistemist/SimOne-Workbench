@@ -273,6 +273,12 @@ describe("SimCoach", () => {
     expect(params.contents).toContain("SIM idea: signal becomes useful only when it moves through judgment and into memory.");
     expect(params.contents).toContain("Live bridge counts stay live. Only useful decisions and proof become durable SIM Wiki pages.");
     expect(container.textContent).toContain("Saved to SIM Wiki");
+    const savedPageLink = Array.from(container.querySelectorAll<HTMLAnchorElement>("a")).find((link) =>
+      link.textContent?.includes("Open saved page")
+    );
+    expect(savedPageLink?.getAttribute("href")).toBe(
+      "/wiki/page/wiki/synthesis/scanner-2026-07-08-customer-loop-is-leaking.md"
+    );
 
     flushSync(() => {
       root.unmount();
