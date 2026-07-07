@@ -231,12 +231,15 @@ describe("Dashboard", () => {
     expect(text).toContain("Open Work");
     expect(text).toContain("AI Spend");
     expect(text).toContain("Human Review");
-    expect(text).toContain("33 items waiting on you (10 high-priority)");
+    expect(text).toContain("Customer Review Loop");
     expect(text).toContain("Live Tissuu signal");
+    expect(text).toContain("33 items waiting on you (10 high-priority)");
     expect(text).toContain("10 replies + 3 posts to review");
-    expect(text).toContain("33 waiting");
-    expect(text).toContain("11 waitlist");
+    expect(text).toContain("33 items");
+    expect(text).toContain("11 people");
     expect(text).toContain("Engine healthy");
+    expect(text).toContain("Approval stays in Tissuu");
+    expect(text).toContain("Ask why this stays human");
     expect(text).toContain("Execution Activity");
     expect(text).toContain("Work by Priority");
     expect(text).toContain("Work by Status");

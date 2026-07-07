@@ -47,6 +47,7 @@ diagnostics/
 .paperclip-local/
 /.idea/
 /.agents/
+.obsidian/
 
 # Doc maintenance cursor
 .doc-review-cursor

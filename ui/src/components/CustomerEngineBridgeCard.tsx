@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpenCheck, MessageCircleWarning, Radio, Users } from "lucide-react";
+import { ArrowRight, BookOpenCheck, ExternalLink, MessageCircleWarning, Radio, Users } from "lucide-react";
 import { Link } from "@/lib/router";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -18,12 +18,13 @@ export type CustomerEngineBridgeState = {
   headline: string;
   summary: string;
   signals: CustomerEngineSignal[];
+  reviewHref?: string;
 };
 
 const defaultState: CustomerEngineBridgeState = {
   status: "pending",
   statusLabel: "Live signal pending",
-  headline: "Customer Engine",
+  headline: "Customer Review Loop",
   summary: "Customer discovery can keep running in Tissuu while SimOne turns the signal into review prompts, assumptions, and durable SIM memory.",
   signals: [
     { label: "Digest", value: "Waiting for readout", tone: "muted" },
@@ -52,7 +53,7 @@ export function bridgeSnapshotToCardState(
     return {
       status: "attention",
       statusLabel: "Bridge unavailable",
-      headline: "Customer Engine",
+      headline: "Customer Review Loop",
       summary: snapshot.message,
       signals: [
         { label: "Digest", value: "Unavailable", tone: "attention" },
@@ -65,17 +66,18 @@ export function bridgeSnapshotToCardState(
   return {
     status: snapshot.ops.overall === "healthy" ? "connected" : "attention",
     statusLabel: "Live Tissuu signal",
-    headline: snapshot.digest.headline,
-    summary: snapshot.digest.summary,
+    headline: "Customer Review Loop",
+    summary: `${snapshot.digest.headline}. ${snapshot.digest.summary}`,
     signals: [
-      { label: "Review", value: `${snapshot.actions.count} waiting`, tone: snapshot.actions.count > 0 ? "attention" : "default" },
-      { label: "Funnel", value: `${snapshot.metrics.waitlistTotal} waitlist` },
+      { label: "Needs review", value: `${snapshot.actions.count} items`, tone: snapshot.actions.count > 0 ? "attention" : "default" },
+      { label: "Waitlist", value: `${snapshot.metrics.waitlistTotal} people` },
       {
-        label: "Ops",
+        label: "Health",
         value: snapshot.ops.overall === "healthy" ? "Engine healthy" : "Needs attention",
         tone: snapshot.ops.overall === "healthy" ? "default" : "attention",
       },
     ],
+    reviewHref: snapshot.digest.nextActions[0]?.deepLink ?? snapshot.actions.items[0]?.deepLink,
   };
 }
 
@@ -125,11 +127,23 @@ export function CustomerEngineBridgeCard({ state = defaultState }: { state?: Cus
               <BookOpenCheck className="h-3.5 w-3.5" aria-hidden="true" />
               SIM memory
             </span>
+            <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-200">
+              <MessageCircleWarning className="h-3.5 w-3.5" aria-hidden="true" />
+              Approval stays in Tissuu
+            </span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline" size="sm" className="h-8">
-              <Link to="/sim-coach">Open SIM Coach</Link>
+              <Link to="/sim-coach">Ask why this stays human</Link>
             </Button>
+            {state.reviewHref ? (
+              <Button asChild variant="outline" size="sm" className="h-8">
+                <a href={state.reviewHref}>
+                  Review in Tissuu
+                  <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
+                </a>
+              </Button>
+            ) : null}
             <Button asChild size="sm" className="h-8">
               <Link to="/customer-engine">
                 Open Customer Engine

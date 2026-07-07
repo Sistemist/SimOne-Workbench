@@ -91,15 +91,20 @@ describe("CustomerEngine", () => {
 
     const text = container.textContent ?? "";
     expect(text).toContain("Turn customer signal into company judgment.");
+    expect(text).toContain("Customer Review Loop");
     expect(text).toContain("10 replies + 3 posts to review");
     expect(text).toContain("Approve reply to @fchollet");
-    expect(text).toContain("33 waiting");
-    expect(text).toContain("11 waitlist");
+    expect(text).toContain("33 items");
+    expect(text).toContain("11 people");
     expect(text).toContain("Engine healthy");
+    expect(text).toContain("Approval stays in Tissuu");
+    expect(text).toContain("Ask why this stays human");
     expect(text).toContain("Daily Readout");
     expect(text).toContain("Human Review Queue");
     expect(text).toContain("Funnel Signals");
     expect(text).toContain("Engine Health");
+    expect(text).toContain("Why SimOne stops here");
+    expect(text).toContain("Customer replies and proof points can change the company map");
     expect(text).toContain("First bridge rule");
     expect(text).toContain("Posting, publishing, following, and prospect changes stay in Tissuu");
     expect(mockSetBreadcrumbs).toHaveBeenCalledWith([{ label: "Customer Engine" }]);

@@ -85,6 +85,7 @@ function buildMissionFromQuestionnaire(q1: string, q2: string, q3: string, q4: s
 }
 
 const ONBOARDING_STORAGE_KEY = "paperclip-onboarding-state";
+const BOTTLENECK_SCAN_STORAGE_KEY = "simone:bottleneck-scan";
 const DEFAULT_TASK_TITLE = "Hire your first engineer and create a hiring plan";
 const DEFAULT_TASK_DESCRIPTION = `You are the CEO. You set the direction for the company.
 
@@ -97,7 +98,31 @@ const INCOMPLETE_ONBOARDING_STATE_MESSAGE =
 function loadSavedState(): Record<string, unknown> | null {
   try {
     const raw = localStorage.getItem(ONBOARDING_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (raw) return JSON.parse(raw);
+    const scanRaw = localStorage.getItem(BOTTLENECK_SCAN_STORAGE_KEY);
+    if (!scanRaw) return null;
+    const scan = JSON.parse(scanRaw) as {
+      input?: { founderNote?: unknown };
+      result?: { headline?: unknown; engine?: unknown; nextAction?: unknown };
+    };
+    const headline = typeof scan.result?.headline === "string" ? scan.result.headline.trim() : "";
+    const engine = typeof scan.result?.engine === "string" ? scan.result.engine.trim() : "";
+    const nextAction = typeof scan.result?.nextAction === "string" ? scan.result.nextAction.trim() : "";
+    const founderNote = typeof scan.input?.founderNote === "string" ? scan.input.founderNote.trim() : "";
+    const missionParts = [
+      headline,
+      engine ? `Primary constraint: ${engine}.` : "",
+      nextAction ? `First move: ${nextAction}` : "",
+    ].filter(Boolean);
+    if (missionParts.length === 0) return null;
+    return {
+      step: 1,
+      onboardingPath: "starter",
+      missionPath: "direct",
+      companyGoal: missionParts.join(" "),
+      q1: founderNote,
+      q3: headline,
+    };
   } catch {
     return null;
   }

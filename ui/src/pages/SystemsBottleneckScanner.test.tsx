@@ -1,0 +1,87 @@
+// @vitest-environment jsdom
+
+import { act } from "react";
+import { createRoot } from "react-dom/client";
+import { flushSync } from "react-dom";
+import { afterEach, describe, expect, it } from "vitest";
+import { SystemsBottleneckScanner } from "./SystemsBottleneckScanner";
+
+function renderScanner(container: HTMLElement) {
+  const root = createRoot(container);
+  flushSync(() => {
+    root.render(<SystemsBottleneckScanner />);
+  });
+  return root;
+}
+
+async function updateField(element: HTMLInputElement | HTMLTextAreaElement, value: string) {
+  const inputValueSetter = Object.getOwnPropertyDescriptor(
+    Object.getPrototypeOf(element),
+    "value",
+  )?.set;
+  await act(async () => {
+    inputValueSetter?.call(element, value);
+    element.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
+describe("SystemsBottleneckScanner", () => {
+  afterEach(() => {
+    document.body.innerHTML = "";
+  });
+
+  it("turns a messy founder note into one bottleneck and one next action", async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderScanner(container);
+
+    expect(container.textContent).toContain("Systems Bottleneck Scanner");
+    expect(container.textContent).not.toMatch(/model|provider|LLM/i);
+
+    const urlInput = container.querySelector<HTMLInputElement>('input[name="startupUrl"]');
+    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
+    expect(urlInput).not.toBeNull();
+    expect(noteInput).not.toBeNull();
+
+    await updateField(urlInput!, "https://example.com");
+    await updateField(
+      noteInput!,
+      "We have interested leads and waitlist replies, but follow-up is scattered and approvals sit in my inbox.",
+    );
+
+    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Scan"),
+    );
+    expect(button).toBeTruthy();
+    await act(async () => {
+      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Customer loop is leaking");
+    expect(text).toContain("Customer Engine");
+    expect(text).toContain("Make one review queue for replies, prospects, and proof points.");
+    expect(text).toContain("Create the full SimOne map");
+
+    const storedScan = window.localStorage.getItem("simone:bottleneck-scan");
+    expect(storedScan).not.toBeNull();
+    expect(JSON.parse(storedScan!)).toMatchObject({
+      input: {
+        startupUrl: "https://example.com",
+        founderNote:
+          "We have interested leads and waitlist replies, but follow-up is scattered and approvals sit in my inbox.",
+      },
+      result: {
+        headline: "Customer loop is leaking",
+        engine: "Customer Engine",
+      },
+    });
+
+    const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
+    expect(links.some((link) => link.getAttribute("href") === "/auth?next=%2Fonboarding")).toBe(true);
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+});

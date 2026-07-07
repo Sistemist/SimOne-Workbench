@@ -10,11 +10,13 @@ public_host="${SIMONE_PUBLIC_HOST:-sim.sysdom.org}"
 
 rsync -az \
   --exclude '.git/' \
+  --exclude '.obsidian/' \
   --exclude '.env*' \
   --exclude 'node_modules/' \
   --exclude '**/node_modules/' \
   --exclude 'dist/' \
   --exclude 'ui/dist/' \
+  --exclude 'ui/storybook-static/' \
   --exclude 'data/' \
   --exclude '.paperclip/' \
   --exclude '.playwright-cli/' \
@@ -40,6 +42,7 @@ done
 "
 
 curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/app" | rg -q '<title>SimOne'
+curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/scanner" | rg -q '<title>SimOne'
 curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/" | rg -q '<title>SimOne \| The conscious agent company'
 
 signup_status="$(

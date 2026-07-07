@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { ArrowRight, BarChart3, ClipboardCheck, HeartPulse, Inbox, Radio, Users } from "lucide-react";
+import { ArrowRight, BarChart3, BookOpenCheck, ClipboardCheck, HeartPulse, Inbox, Radio, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@/lib/router";
 import { Button } from "@/components/ui/button";
@@ -89,9 +89,9 @@ export function CustomerEngine() {
             liveSnapshot && surface.title === "Daily Readout"
               ? "Live digest"
               : liveSnapshot && surface.title === "Human Review Queue"
-                ? `${liveSnapshot.actions.count} waiting`
+                ? `${liveSnapshot.actions.count} items`
                 : liveSnapshot && surface.title === "Funnel Signals"
-                  ? `${liveSnapshot.metrics.waitlistTotal} waitlist`
+                  ? `${liveSnapshot.metrics.waitlistTotal} people`
                   : liveSnapshot && surface.title === "Engine Health"
                     ? liveSnapshot.ops.overall === "healthy" ? "Engine healthy" : "Needs attention"
                     : surface.status;
@@ -125,6 +125,21 @@ export function CustomerEngine() {
           );
         })}
       </section>
+
+      {liveSnapshot ? (
+        <section className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 p-4 text-emerald-950 dark:text-emerald-50">
+          <div className="flex items-start gap-3">
+            <BookOpenCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <div>
+              <h2 className="text-sm font-semibold">Why SimOne stops here</h2>
+              <p className="mt-1 text-sm leading-5 text-emerald-950/80 dark:text-emerald-50/80">
+                Customer replies and proof points can change the company map. SimOne can surface the pattern,
+                but the relationship move stays with a human before anything is posted, promoted, or remembered.
+              </p>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {liveSnapshot?.actions.items.length ? (
         <section className="rounded-lg border bg-card p-4 shadow-sm">

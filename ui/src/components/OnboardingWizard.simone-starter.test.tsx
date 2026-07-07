@@ -198,4 +198,42 @@ describe("OnboardingWizard SIM Starter path", () => {
     expect(mockCloseOnboarding).toHaveBeenCalled();
     expect(mockNavigate).toHaveBeenCalledWith("/SYS/dashboard");
   });
+
+  it("starts the SIM Starter path from a saved public bottleneck scan", () => {
+    localStorage.setItem(
+      "simone:bottleneck-scan",
+      JSON.stringify({
+        input: {
+          startupUrl: "https://example.com",
+          founderNote: "We have leads, but follow-up and approvals are scattered.",
+        },
+        result: {
+          headline: "Customer loop is leaking",
+          engine: "Customer Engine",
+          nextAction: "Make one review queue for replies, prospects, and proof points.",
+        },
+      }),
+    );
+
+    root = renderWizard(container);
+
+    expect(document.body.textContent ?? "").toContain("Name your company");
+    expect(document.body.textContent ?? "").not.toContain("Welcome to SimOne");
+
+    const companyInput = document.body.querySelector<HTMLInputElement>(
+      'input[placeholder="Acme Corp"]'
+    );
+    expect(companyInput).not.toBeNull();
+    updateTextField(companyInput!, "Sysdom");
+
+    flushSync(() => {
+      findButton(document.body, "Next").dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const missionInput = document.body.querySelector<HTMLTextAreaElement>(
+      'textarea[placeholder="What is your team trying to achieve?"]'
+    );
+    expect(missionInput?.value).toContain("Customer loop is leaking");
+    expect(missionInput?.value).toContain("Make one review queue for replies, prospects, and proof points.");
+  });
 });
