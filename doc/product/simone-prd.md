@@ -29,7 +29,7 @@ certifications.
 | Paperclip control-plane reuse | 55% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted |
 | PLG/Barnum layer | 52% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts |
 | Customer Engine bridge | 75% | Read-only Tissuu bridge live; richer native SimOne surfacing still needed |
-| SIM Coach and SIM Wiki | 34% | Product direction documented; contextual coach loop now explains scanner results; Coach shows a SIM Wiki seed map; new wiki roots include a SimOne product-language page |
+| SIM Coach and SIM Wiki | 38% | Product direction documented; contextual coach loop explains scanner results; Coach can save scanner syntheses into SIM Wiki; new wiki roots include a SimOne product-language page |
 | Model routing and auditability | 30% | Strategy documented; Workbench now has an initial `model_route_decisions` ledger; actual provider orchestration and evaluations remain |
 | Compression/headroom | 0% | Headroom/SmartCrusher not implemented yet |
 | Full SIM operating system | 30% | Engines and governance are defined, but onboarding, memory, routing, evaluations, and product polish remain |
@@ -178,6 +178,9 @@ Current Coach behavior:
   the explanation matters.
 - Shows a SIM Wiki Seed Map naming the first durable memory buckets: method
   pages, venture memory, and explicit promotion rules.
+- When SIM Wiki is enabled, can promote a saved scanner/coach synthesis into a
+  dated page under `wiki/synthesis/` through the existing SIM Wiki plugin
+  `write-page` action.
 
 ### SIM Wiki
 
@@ -204,6 +207,8 @@ Current SIM Wiki template behavior:
   Coach, SIM Wiki, Venture Architecture Map, Systems Bottleneck Scanner, Sprint
   Zero, Tissuu bridge boundaries, and hidden model/provider choices have a
   durable first definition.
+- Accepts the first Coach-driven promotion path: scanner syntheses can become
+  durable pages while live bridge counts remain ephemeral.
 
 ## 7. Model And Agent Strategy
 
@@ -363,7 +368,8 @@ inspectable first map.
 - Seed SIM Wiki structure and glossary. The plugin template already carries SIM
   pages plus a SimOne product-language page, and the Coach page explains the
   first seed buckets to the user.
-- Promote useful coach answers into durable wiki pages.
+- Promote useful coach answers into durable wiki pages. First scanner synthesis
+  promotion path exists; broader answer/review promotion remains.
 
 ### M3: Sovereign Model Routing
 

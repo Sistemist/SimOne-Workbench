@@ -12,6 +12,7 @@ import { SimCoach } from "./SimCoach";
 const mockSetBreadcrumbs = vi.hoisted(() => vi.fn());
 const mockPluginsApi = vi.hoisted(() => ({
   list: vi.fn(),
+  bridgePerformAction: vi.fn(),
 }));
 
 vi.mock("@/api/plugins", () => ({
@@ -55,7 +56,9 @@ function renderSimCoach(container: HTMLElement) {
 
 async function flushReact() {
   await act(async () => {
-    await Promise.resolve();
+    for (let i = 0; i < 5; i += 1) {
+      await Promise.resolve();
+    }
     await new Promise((resolve) => window.setTimeout(resolve, 0));
   });
 }
@@ -64,6 +67,12 @@ describe("SimCoach", () => {
   beforeEach(() => {
     localStorage.clear();
     mockPluginsApi.list.mockResolvedValue([]);
+    mockPluginsApi.bridgePerformAction.mockResolvedValue({
+      data: {
+        status: "ok",
+        path: "wiki/synthesis/scanner-2026-07-08-customer-loop-is-leaking.md",
+      },
+    });
   });
 
   afterEach(() => {
@@ -194,5 +203,80 @@ describe("SimCoach", () => {
     flushSync(() => {
       root.unmount();
     });
+  });
+
+  it("promotes a scanner synthesis into SIM Wiki when the wiki plugin is ready", async () => {
+    mockPluginsApi.list.mockResolvedValue([
+      {
+        id: "plugin-1",
+        packageName: "@paperclipai/plugin-llm-wiki",
+        status: "ready",
+        manifestJson: {
+          displayName: "SIM Wiki",
+          description: "SimOne wiki",
+          version: "0.1.0",
+        },
+      } as PluginRecord,
+    ]);
+    localStorage.setItem(
+      "simone:bottleneck-scan",
+      JSON.stringify({
+        result: {
+          headline: "Customer loop is leaking",
+          engine: "Customer Engine",
+          questions: [
+            "Who should approve the next customer reply or offer?",
+            "What proof would make this worth doing now?",
+          ],
+          mapPreview: {
+            artifact: "Venture Architecture Map",
+            firstSection: "Customer review loop",
+          },
+        },
+      })
+    );
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderSimCoach(container);
+    await flushReact();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-08T12:34:56.000Z"));
+
+    const saveButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Save to SIM Wiki")
+    ) as HTMLButtonElement;
+    expect(saveButton).toBeTruthy();
+
+    await act(async () => {
+      saveButton.click();
+      for (let i = 0; i < 5; i += 1) {
+        await Promise.resolve();
+      }
+    });
+
+    expect(mockPluginsApi.bridgePerformAction).toHaveBeenCalledWith(
+      "plugin-1",
+      "write-page",
+      expect.objectContaining({
+        companyId: "company-1",
+        wikiId: "default",
+        spaceSlug: "default",
+        path: "wiki/synthesis/scanner-2026-07-08-123456-customer-loop-is-leaking.md",
+        summary: "Promoted scanner synthesis from SIM Coach",
+      }),
+      "company-1"
+    );
+    const params = mockPluginsApi.bridgePerformAction.mock.calls[0][2];
+    expect(params.contents).toContain("# Customer loop is leaking");
+    expect(params.contents).toContain("engine: Customer Engine");
+    expect(params.contents).toContain("SIM idea: signal becomes useful only when it moves through judgment and into memory.");
+    expect(params.contents).toContain("Live bridge counts stay live. Only useful decisions and proof become durable SIM Wiki pages.");
+    expect(container.textContent).toContain("Saved to SIM Wiki");
+
+    flushSync(() => {
+      root.unmount();
+    });
+    vi.useRealTimers();
   });
 });

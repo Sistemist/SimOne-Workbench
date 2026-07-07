@@ -14,7 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@/lib/router";
 import { Button } from "@/components/ui/button";
 import { pluginsApi } from "@/api/plugins";
@@ -147,6 +147,12 @@ const simWikiSeedMap = [
   },
 ];
 
+type WikiPromotionState =
+  | { status: "idle" }
+  | { status: "saving" }
+  | { status: "saved"; path: string }
+  | { status: "error"; message: string };
+
 function loadScannerCoachContext(): ScannerCoachContext | null {
   try {
     const raw = window.localStorage.getItem(BOTTLENECK_SCAN_STORAGE_KEY);
@@ -193,6 +199,66 @@ function loadScannerCoachContext(): ScannerCoachContext | null {
   }
 }
 
+function slugifyForWikiPath(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 72) || "scanner-synthesis";
+}
+
+function timestampForWikiPath(now: Date): string {
+  return now.toISOString().slice(0, 19).replace("T", "-").replace(/:/g, "");
+}
+
+function buildScannerWikiPromotion(context: ScannerCoachContext, methodology: MethodologyContext, now = new Date()) {
+  const path = `wiki/synthesis/scanner-${timestampForWikiPath(now)}-${slugifyForWikiPath(context.headline)}.md`;
+  const updated = now.toISOString().slice(0, 10);
+  const questions = context.questions.length > 0
+    ? context.questions.map((question) => `- ${question}`).join("\n")
+    : "- No open questions were captured in the scanner result.";
+  const contents = [
+    "---",
+    `title: ${context.headline.replace(/:/g, " -")}`,
+    "type: synthesis",
+    "tags: [simone, scanner, coach]",
+    "sources: []",
+    `created: ${updated}`,
+    `updated: ${updated}`,
+    "---",
+    "",
+    `# ${context.headline}`,
+    "",
+    "## Scanner Signal",
+    "",
+    `- engine: ${context.engine}`,
+    `- artifact: ${context.artifact}`,
+    context.firstSection ? `- map section: ${context.firstSection}` : "- map section: not captured",
+    "",
+    "## Method Underneath",
+    "",
+    `**${methodology.concept}**`,
+    "",
+    methodology.idea,
+    "",
+    methodology.useWhen,
+    "",
+    "## Open Questions",
+    "",
+    questions,
+    "",
+    "## Promotion Note",
+    "",
+    "Live bridge counts stay live. Only useful decisions and proof become durable SIM Wiki pages.",
+    "",
+    "## Next Move",
+    "",
+    "Turn this into Sprint Zero or review the saved synthesis with SIM Coach before assigning agent work.",
+  ].join("\n");
+
+  return { path, contents };
+}
+
 function methodologyForScannerContext(context: ScannerCoachContext): MethodologyContext {
   if (context.engine.toLowerCase().includes("customer")) {
     return {
@@ -225,7 +291,9 @@ function methodologyForScannerContext(context: ScannerCoachContext): Methodology
 export function SimCoach() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const { selectedCompany } = useCompany();
+  const companyId = selectedCompany?.id ?? null;
   const companyName = selectedCompany?.name ?? "this company";
+  const [promotionState, setPromotionState] = useState<WikiPromotionState>({ status: "idle" });
   const driverText = useMemo(() => drivers.join(" / "), []);
   const scannerContext = useMemo(loadScannerCoachContext, []);
   const methodologyContext = scannerContext ? methodologyForScannerContext(scannerContext) : null;
@@ -253,6 +321,35 @@ export function SimCoach() {
   useEffect(() => {
     setBreadcrumbs([{ label: "SIM Coach" }]);
   }, [setBreadcrumbs]);
+
+  async function promoteScannerToWiki() {
+    if (!scannerContext || !methodologyContext || !simWikiPlugin || !companyId) return;
+    const page = buildScannerWikiPromotion(scannerContext, methodologyContext);
+    setPromotionState({ status: "saving" });
+    try {
+      const response = await pluginsApi.bridgePerformAction(
+        simWikiPlugin.id,
+        "write-page",
+        {
+          companyId,
+          wikiId: "default",
+          spaceSlug: "default",
+          path: page.path,
+          contents: page.contents,
+          summary: "Promoted scanner synthesis from SIM Coach",
+          sourceRefs: [{ kind: "simone-bottleneck-scan", artifact: scannerContext.artifact }],
+        },
+        companyId
+      );
+      const data = response.data as { path?: unknown } | undefined;
+      setPromotionState({ status: "saved", path: typeof data?.path === "string" ? data.path : page.path });
+    } catch (error) {
+      setPromotionState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Could not save to SIM Wiki.",
+      });
+    }
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-6">
@@ -360,10 +457,30 @@ export function SimCoach() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
+              {simWikiReady && companyId ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  onClick={promoteScannerToWiki}
+                  disabled={promotionState.status === "saving"}
+                >
+                  {promotionState.status === "saving" ? "Saving..." : "Save to SIM Wiki"}
+                </Button>
+              ) : null}
               <Button asChild variant="outline" size="sm" className="h-8">
                 <Link to="/scanner">Run scanner again</Link>
               </Button>
             </div>
+            {promotionState.status === "saved" ? (
+              <p className="text-xs leading-5 text-emerald-700 dark:text-emerald-200">
+                Saved to SIM Wiki: {promotionState.path}
+              </p>
+            ) : null}
+            {promotionState.status === "error" ? (
+              <p className="text-xs leading-5 text-destructive">{promotionState.message}</p>
+            ) : null}
           </div>
         </section>
       ) : null}
