@@ -1,12 +1,16 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, BarChart3, BookOpenCheck, ClipboardCheck, HeartPulse, Inbox, Radio, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@/lib/router";
 import { Button } from "@/components/ui/button";
-import { customerEngineApi } from "@/api/customerEngine";
+import { customerEngineApi, type CustomerEngineBridgeSnapshot } from "@/api/customerEngine";
+import { pluginsApi } from "@/api/plugins";
 import { CustomerEngineBridgeCard, bridgeSnapshotToCardState } from "../components/CustomerEngineBridgeCard";
 import { useBreadcrumbs } from "../context/BreadcrumbContext";
 import { useCompany } from "../context/CompanyContext";
+import { queryKeys } from "../lib/queryKeys";
+
+const SIM_WIKI_PACKAGE = "@paperclipai/plugin-llm-wiki";
 
 const bridgeSurfaces = [
   {
@@ -35,19 +39,138 @@ const bridgeSurfaces = [
   },
 ];
 
+type LiveCustomerEngineBridgeSnapshot = Extract<CustomerEngineBridgeSnapshot, { status: "live" }>;
+
+type WikiPromotionState =
+  | { status: "idle" }
+  | { status: "saving" }
+  | { status: "saved"; path: string }
+  | { status: "error"; message: string };
+
+function slugifyForWikiPath(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 72) || "customer-engine-readout";
+}
+
+function timestampForWikiPath(now: Date): string {
+  return now.toISOString().slice(0, 19).replace("T", "-").replace(/:/g, "");
+}
+
+function buildCustomerEngineWikiPromotion(snapshot: LiveCustomerEngineBridgeSnapshot, now = new Date()) {
+  const title = "Customer Engine proof readout";
+  const path = `wiki/synthesis/customer-engine-${timestampForWikiPath(now)}-${slugifyForWikiPath(title)}.md`;
+  const updated = now.toISOString().slice(0, 10);
+  const topAction = snapshot.actions.items[0];
+  const durableSignals = [
+    snapshot.metrics.waitlistTotal > 0 ? "- Active waitlist signal is present." : null,
+    snapshot.metrics.qualifiedLeads > 0 ? "- Qualified customer demand is present." : null,
+    snapshot.metrics.proofEvents > 0 ? "- Proof signal is present." : null,
+    snapshot.actions.count > 0 ? "- At least one customer-facing judgment needs human review." : null,
+  ].filter((signal): signal is string => signal !== null);
+  const contents = [
+    "---",
+    `title: ${title}`,
+    "type: synthesis",
+    "tags: [simone, customer-engine, tissuu, proof]",
+    "sources: [tissuu-customer-engine-bridge]",
+    `created: ${updated}`,
+    `updated: ${updated}`,
+    "---",
+    "",
+    `# ${title}`,
+    "",
+    "## Source",
+    "",
+    "- source: Tissuu Customer Engine bridge",
+    `- generated: ${snapshot.generatedAt}`,
+    "- bridge mode: read-only",
+    "",
+    "## Durable Interpretation",
+    "",
+    "Tissuu is showing customer movement that deserves human judgment before any public reply, offer change, or relationship move is made.",
+    "",
+    "## Why Preserve This",
+    "",
+    durableSignals.length > 0 ? durableSignals.join("\n") : "- No durable customer signal was selected for preservation.",
+    topAction ? `- The next useful decision is a ${topAction.priority}-priority human review, kept live in Tissuu.` : "- No specific review decision was selected.",
+    "",
+    "## What Stays Live",
+    "",
+    "Operational counts, pending queues, customer handles, and draft-specific details stay in Tissuu. This page records only the promoted interpretation and provenance.",
+    "",
+    "## Ops Health",
+    "",
+    `- status: ${snapshot.ops.overall}`,
+    snapshot.ops.staleSignals.length ? `- stale signals: ${snapshot.ops.staleSignals.join(", ")}` : "- stale signals: none",
+    "",
+    "## Promotion Note",
+    "",
+    "Live Tissuu counts stay live. Only proof, positioning, or relationship decisions become durable SIM Wiki pages.",
+    "",
+    "## Next Move",
+    "",
+    "Review the customer judgment in Tissuu, then decide whether Product, Cash, or SIM memory should change.",
+  ].join("\n");
+
+  return { path, contents };
+}
+
 export function CustomerEngine() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const { selectedCompanyId } = useCompany();
+  const [promotionState, setPromotionState] = useState<WikiPromotionState>({ status: "idle" });
   const { data: bridgeSnapshot } = useQuery({
     queryKey: ["customer-engine-bridge", selectedCompanyId],
     queryFn: () => customerEngineApi.bridgeSnapshot(selectedCompanyId!),
     enabled: !!selectedCompanyId,
   });
+  const { data: plugins } = useQuery({
+    queryKey: queryKeys.plugins.all,
+    queryFn: () => pluginsApi.list(),
+  });
+  const simWikiPlugin = plugins?.find((plugin) => plugin.packageName === SIM_WIKI_PACKAGE);
+  const simWikiReady = simWikiPlugin?.status === "ready";
   const liveSnapshot = bridgeSnapshot?.status === "live" ? bridgeSnapshot : null;
 
   useEffect(() => {
     setBreadcrumbs([{ label: "Customer Engine" }]);
   }, [setBreadcrumbs]);
+
+  useEffect(() => {
+    setPromotionState({ status: "idle" });
+  }, [selectedCompanyId, liveSnapshot?.generatedAt]);
+
+  async function promoteReadoutToWiki() {
+    if (!liveSnapshot || !simWikiPlugin || !selectedCompanyId) return;
+    const page = buildCustomerEngineWikiPromotion(liveSnapshot);
+    setPromotionState({ status: "saving" });
+    try {
+      const response = await pluginsApi.bridgePerformAction(
+        simWikiPlugin.id,
+        "write-page",
+        {
+          companyId: selectedCompanyId,
+          wikiId: "default",
+          spaceSlug: "default",
+          path: page.path,
+          contents: page.contents,
+          summary: "Promoted Customer Engine readout from SimOne",
+          sourceRefs: [{ kind: "tissuu-customer-engine-bridge", generatedAt: liveSnapshot.generatedAt }],
+        },
+        selectedCompanyId
+      );
+      const data = response.data as { path?: unknown } | undefined;
+      setPromotionState({ status: "saved", path: typeof data?.path === "string" ? data.path : page.path });
+    } catch (error) {
+      setPromotionState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Could not save to SIM Wiki.",
+      });
+    }
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-6">
@@ -140,6 +263,31 @@ export function CustomerEngine() {
                 Ops check: {liveSnapshot.ops.overall === "healthy" ? "engine healthy" : "needs attention"} across{" "}
                 {liveSnapshot.ops.jobs.length} observed job{liveSnapshot.ops.jobs.length === 1 ? "" : "s"}.
               </p>
+              {simWikiReady && selectedCompanyId ? (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 border-emerald-500/30 bg-background/70 text-emerald-950 hover:bg-background dark:text-emerald-50"
+                    onClick={promoteReadoutToWiki}
+                    disabled={promotionState.status === "saving"}
+                  >
+                    {promotionState.status === "saving" ? "Saving..." : "Save proof readout to SIM Wiki"}
+                  </Button>
+                  {promotionState.status === "saved" ? (
+                    <div className="flex flex-wrap items-center gap-2 text-xs leading-5 text-emerald-950/80 dark:text-emerald-50/80">
+                      <span>Saved to SIM Wiki: {promotionState.path}</span>
+                      <Button asChild variant="link" size="sm" className="h-auto px-0 text-xs text-inherit">
+                        <Link to={`/wiki/page/${promotionState.path}`}>Open saved page</Link>
+                      </Button>
+                    </div>
+                  ) : null}
+                  {promotionState.status === "error" ? (
+                    <p className="text-xs leading-5 text-destructive">{promotionState.message}</p>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           </div>
         </section>

@@ -28,8 +28,8 @@ certifications.
 | Hosted alpha shell | 65% | KVM deployment, auth-gated app, health checks, SimOne routes, deploy script |
 | Paperclip control-plane reuse | 55% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted |
 | PLG/Barnum layer | 52% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts |
-| Customer Engine bridge | 75% | Read-only Tissuu bridge live; richer native SimOne surfacing still needed |
-| SIM Coach and SIM Wiki | 39% | Product direction documented; contextual coach loop explains scanner results; Coach can save and reopen scanner syntheses in SIM Wiki; new wiki roots include a SimOne product-language page |
+| Customer Engine bridge | 78% | Read-only Tissuu bridge live; Customer Engine page can promote a proof readout into SIM Wiki without mutating Tissuu |
+| SIM Coach and SIM Wiki | 42% | Product direction documented; contextual coach loop explains scanner results; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include a SimOne product-language page |
 | Model routing and auditability | 30% | Strategy documented; Workbench now has an initial `model_route_decisions` ledger; actual provider orchestration and evaluations remain |
 | Compression/headroom | 0% | Headroom/SmartCrusher not implemented yet |
 | Full SIM operating system | 30% | Engines and governance are defined, but onboarding, memory, routing, evaluations, and product polish remain |
@@ -131,6 +131,10 @@ Bridge v1 is live and read-only. SimOne reads:
 
 SimOne must not invent bridge status. If the bridge is unavailable, the UI shows
 an unavailable state. All action still happens in Tissuu through deep links.
+When the SIM Wiki plugin is ready, the Customer Engine page can promote a
+deliberate proof/readout page into `wiki/synthesis/`; this records the
+review-worthy pattern and provenance while leaving live counts and Tissuu
+operations in Tissuu.
 
 ### PLG/Barnum Layer
 
@@ -211,6 +215,9 @@ Current SIM Wiki template behavior:
   durable first definition.
 - Accepts the first Coach-driven promotion path: scanner syntheses can become
   durable pages while live bridge counts remain ephemeral.
+- Accepts the first Customer Engine promotion path: a live read-only Tissuu
+  readout can become a dated SIM Wiki synthesis page when the human chooses to
+  preserve it.
 
 ## 7. Model And Agent Strategy
 
@@ -343,6 +350,8 @@ Remaining:
 Goal: make the current live signals feel native to SimOne.
 
 - Improve Dashboard and Customer Engine surfaces around the Tissuu bridge.
+  The Customer Engine page now includes a deliberate SIM Wiki promotion action
+  for proof readouts while keeping Tissuu write-back deferred.
 - Make public scanner and share artifacts feel like coherent SimOne outputs.
   The Venture Architecture Map share page now has a first plain-language
   interpretation layer, and the scanner now exposes a safe share summary.
@@ -370,8 +379,9 @@ inspectable first map.
 - Seed SIM Wiki structure and glossary. The plugin template already carries SIM
   pages plus a SimOne product-language page, and the Coach page explains the
   first seed buckets to the user.
-- Promote useful coach answers into durable wiki pages. First scanner synthesis
-  promotion path exists; broader answer/review promotion remains.
+- Promote useful coach answers and Customer Engine proof readouts into durable
+  wiki pages. First scanner synthesis and Customer Engine readout promotion
+  paths exist; broader answer/review promotion remains.
 
 ### M3: Sovereign Model Routing
 
