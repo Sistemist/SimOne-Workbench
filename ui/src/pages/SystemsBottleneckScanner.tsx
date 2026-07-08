@@ -413,6 +413,13 @@ export function SystemsBottleneckScanner() {
     }
   }
 
+  function handleRunAnotherScan() {
+    setStartupUrl("");
+    setFounderNote("");
+    setResult(null);
+    setShareSummaryStatus("idle");
+  }
+
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:py-10">
@@ -768,6 +775,9 @@ export function SystemsBottleneckScanner() {
                     {result.conversionPath.primaryCta}
                     <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                   </a>
+                  <Button type="button" variant="outline" size="sm" onClick={handleRunAnotherScan}>
+                    Run another scan
+                  </Button>
                 </div>
               </div>
             ) : (

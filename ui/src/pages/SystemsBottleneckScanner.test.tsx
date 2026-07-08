@@ -429,6 +429,46 @@ describe("SystemsBottleneckScanner", () => {
     });
   });
 
+  it("lets someone run another scan after a result", async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderScanner(container);
+
+    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
+    expect(noteInput).not.toBeNull();
+    await updateField(
+      noteInput!,
+      "We have interested leads and waitlist replies, but follow-up is scattered and approvals sit in my inbox.",
+    );
+
+    const scanButton = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Scan"),
+    );
+    expect(scanButton).toBeTruthy();
+    await act(async () => {
+      scanButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("Customer loop is leaking");
+    expect(container.textContent).toContain("Run another scan");
+
+    const resetButton = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Run another scan"),
+    );
+    expect(resetButton).toBeTruthy();
+    await act(async () => {
+      resetButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("One bottleneck, one next move.");
+    expect(container.textContent).not.toContain("Customer loop is leaking");
+    expect(noteInput?.value).toBe("");
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
   it("uses the scan focus in the conversion handoff", async () => {
     const container = document.createElement("div");
     document.body.appendChild(container);
