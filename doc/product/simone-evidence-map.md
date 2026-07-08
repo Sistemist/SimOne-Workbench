@@ -42,7 +42,7 @@ SimOne auditable while we build it.
 | Sprint Zero Brief carries into SIM Starter, first-map review, bounded child tasks, reviewed map artifact records, and reviewed map SIM Wiki pages | `ui/src/components/OnboardingWizard.tsx`, `ui/src/components/OnboardingWizard.simone-starter.test.tsx`, `ui/src/components/SimOneSprintZeroGuide.tsx`, `ui/src/components/SimOneSprintZeroGuide.test.tsx`, `ui/src/pages/IssueDetail.tsx`, `ui/src/pages/IssueDetail.test.tsx` | Implemented and tested | Stronger public visual treatment and lived feedback |
 | Shareable Venture Architecture Map includes public preview, proof context, and a generated review package | `server/src/services/venture-shares.ts`, `server/src/__tests__/venture-shares.test.ts`, `ui/src/pages/Artifacts.tsx`, `ui/src/pages/VentureShare.tsx`, `ui/src/pages/VentureShare.test.tsx`, PRD | Implemented and tested | Stronger visual previews and lived public feedback |
 | Customer Engine proof/readout can be promoted into SIM Wiki | `ui/src/pages/CustomerEngine.tsx`, SIM Wiki plugin actions, PRD | Implemented and tested in product path | Broader review/decision promotion paths |
-| SIM Coach explains scanner results and distinguishes Coach/Wiki/control plane | `ui/src/pages/SimCoach.tsx`, `ui/src/pages/SimCoach.test.tsx`, scanner handoff in `ui/src/pages/SystemsBottleneckScanner.tsx`, PRD | Implemented and tested | More contextual Coach entry points beyond scanner |
+| SIM Coach explains scanner results, distinguishes Coach/Wiki/control plane, and shows the operating role stack | `ui/src/pages/SimCoach.tsx`, `ui/src/pages/SimCoach.test.tsx`, scanner handoff in `ui/src/pages/SystemsBottleneckScanner.tsx`, PRD | Implemented and tested | More contextual Coach entry points beyond scanner |
 | SIM Coach can retrieve from SIM Wiki and save returned answers | `ui/src/pages/SimCoach.tsx`, `ui/src/pages/SimCoach.test.tsx`, plugin query/write actions | Implemented and tested | Stronger source graph and broader answer promotion |
 
 ## 4. Model, Routing, And Compression Traceability
@@ -65,7 +65,7 @@ SimOne auditable while we build it.
 | Tissuu Customer Engine bridge | `SYS-198` | Bridge live/read-only; write-back deferred |
 | Shareable venture artifacts | `SYS-199` | Shareable Venture Architecture Map exists with public preview, proof context, and a generated review package; stronger visual previews and lived public feedback remain |
 | Public Systems Bottleneck Scanner | `SYS-200` | Scanner, lived examples, signal strength, secondary engine watch, calibration status, safe diagnosis signals, and Sprint Zero handoff exist; real-submission score tuning remains |
-| SIM Coach methodology loop | `SYS-201` | Scanner-to-Coach handoff, Coach/Wiki definitions, retrieval, answer promotion, wiki seeds |
+| SIM Coach methodology loop | `SYS-201` | Scanner-to-Coach handoff, Coach/Wiki definitions, operating role-stack orientation, retrieval, answer promotion, wiki seeds |
 | Auditable model routing and escalation lanes | `SYS-202` | Route ledger, local compression, routing strategy, heartbeat adapter execution hook, run links, artifact links, audit filters/actions, lane-specific evidence prompts, and initial route-boundary eval cases for Fusion/Fugu-style experiments; broader provider orchestration remains |
 
 ## 6. How To Use This Map
