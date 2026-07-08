@@ -54,11 +54,6 @@ const promotionActions = [
     label: "Save trusted decisions to SIM Wiki",
     href: "/wiki",
   },
-  {
-    icon: Share2,
-    label: "Turn the reviewed map into a shareable artifact",
-    href: "/artifacts",
-  },
 ];
 
 type SimOneSprintZeroGuideProps = {
@@ -66,6 +61,10 @@ type SimOneSprintZeroGuideProps = {
   createBoundedTasksPending?: boolean;
   boundedTasksCreated?: boolean;
   createBoundedTasksError?: string | null;
+  onCreateArtifact?: () => void;
+  createArtifactPending?: boolean;
+  artifactCreated?: boolean;
+  createArtifactError?: string | null;
 };
 
 export function SimOneSprintZeroGuide({
@@ -73,12 +72,21 @@ export function SimOneSprintZeroGuide({
   createBoundedTasksPending = false,
   boundedTasksCreated = false,
   createBoundedTasksError = null,
+  onCreateArtifact,
+  createArtifactPending = false,
+  artifactCreated = false,
+  createArtifactError = null,
 }: SimOneSprintZeroGuideProps = {}) {
   const createBoundedTasksLabel = boundedTasksCreated
     ? "Bounded tasks created"
     : createBoundedTasksPending
       ? "Creating bounded tasks..."
       : "Create bounded next tasks";
+  const createArtifactLabel = artifactCreated
+    ? "Artifact record created"
+    : createArtifactPending
+      ? "Creating artifact record..."
+      : "Turn the reviewed map into a shareable artifact";
 
   return (
     <section className="rounded-md border border-border bg-muted/20 p-4 text-sm">
@@ -142,6 +150,17 @@ export function SimOneSprintZeroGuide({
               <ListChecks className="h-3.5 w-3.5" />
               {createBoundedTasksLabel}
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={onCreateArtifact}
+              disabled={!onCreateArtifact || createArtifactPending || artifactCreated}
+            >
+              <Share2 className="h-3.5 w-3.5" />
+              {createArtifactLabel}
+            </Button>
             {promotionActions.map((action) => {
               const Icon = action.icon;
               return (
@@ -157,6 +176,9 @@ export function SimOneSprintZeroGuide({
         </div>
         {createBoundedTasksError ? (
           <p className="mt-2 text-xs leading-5 text-destructive">{createBoundedTasksError}</p>
+        ) : null}
+        {createArtifactError ? (
+          <p className="mt-2 text-xs leading-5 text-destructive">{createArtifactError}</p>
         ) : null}
       </div>
     </section>

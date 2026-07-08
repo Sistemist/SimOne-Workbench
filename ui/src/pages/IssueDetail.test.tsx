@@ -17,6 +17,7 @@ const mockIssuesApi = vi.hoisted(() => ({
   listComments: vi.fn(),
   listAttachments: vi.fn(),
   listWorkProducts: vi.fn(),
+  createWorkProduct: vi.fn(),
   listFeedbackVotes: vi.fn(),
   markRead: vi.fn(),
   create: vi.fn(),
@@ -943,6 +944,28 @@ describe("IssueDetail", () => {
     mockIssuesApi.listComments.mockResolvedValue([]);
     mockIssuesApi.listAttachments.mockResolvedValue([]);
     mockIssuesApi.listWorkProducts.mockResolvedValue([]);
+    mockIssuesApi.createWorkProduct.mockResolvedValue({
+      id: "work-product-1",
+      companyId: "company-1",
+      projectId: null,
+      issueId: "issue-1",
+      executionWorkspaceId: null,
+      runtimeServiceId: null,
+      type: "artifact",
+      provider: "paperclip",
+      externalId: null,
+      title: "Reviewed Venture Architecture Map",
+      url: null,
+      status: "ready_for_review",
+      reviewState: "needs_board_review",
+      isPrimary: false,
+      healthStatus: "unknown",
+      summary: "Reviewed map",
+      metadata: null,
+      createdByRunId: null,
+      createdAt: new Date("2026-04-21T00:00:00.000Z"),
+      updatedAt: new Date("2026-04-21T00:00:00.000Z"),
+    });
     mockIssuesApi.listFeedbackVotes.mockResolvedValue([]);
     mockIssuesApi.markRead.mockResolvedValue({ id: "issue-1", lastReadAt: new Date().toISOString() });
     mockIssuesApi.create.mockResolvedValue(createIssue({ id: "created-child", parentId: "issue-1" }));
@@ -1100,6 +1123,51 @@ describe("IssueDetail", () => {
       description: expect.stringContaining("Source task: PAP-1"),
     });
     expect(container.textContent ?? "").toContain("Bounded tasks created");
+  });
+
+  it("creates a shareable map artifact work product from the reviewed Sprint Zero map", async () => {
+    mockIssuesApi.get.mockResolvedValue(createIssue({
+      title: "Draft the first SIM map",
+      description: sprintZeroFirstMapDescription,
+      projectId: "project-1",
+      goalId: "goal-1",
+    }));
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <IssueDetail />
+        </QueryClientProvider>,
+      );
+    });
+    await flushReact();
+    await flushReact();
+
+    const artifactButton = Array.from(container.querySelectorAll("button"))
+      .find((button) => button.textContent?.includes("Turn the reviewed map into a shareable artifact"));
+    expect(artifactButton).toBeTruthy();
+
+    await act(async () => {
+      artifactButton!.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+    await flushReact();
+
+    expect(mockIssuesApi.createWorkProduct).toHaveBeenCalledTimes(1);
+    expect(mockIssuesApi.createWorkProduct).toHaveBeenCalledWith("issue-1", expect.objectContaining({
+      projectId: "project-1",
+      type: "artifact",
+      provider: "paperclip",
+      title: "Reviewed Venture Architecture Map",
+      status: "ready_for_review",
+      reviewState: "needs_board_review",
+      summary: expect.stringContaining("Created from the reviewed Sprint Zero first map."),
+      metadata: expect.objectContaining({
+        simoneArtifactKind: "venture_architecture_map",
+        sourceIssueId: "issue-1",
+        sourceIssueIdentifier: "PAP-1",
+      }),
+    }));
+    expect(container.textContent ?? "").toContain("Artifact record created");
   });
 
   it("does not mark the wake comment for the current live run as queued when active-run cache is stale", async () => {

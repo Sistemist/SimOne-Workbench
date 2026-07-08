@@ -263,6 +263,35 @@ Do not contact customers, publish claims, change company structure, or save dura
   }));
 }
 
+function buildSprintZeroArtifactWorkProductPayload(issue: Issue): Record<string, unknown> {
+  const sourceRef = issue.identifier ?? issue.id;
+
+  return {
+    ...(issue.projectId ? { projectId: issue.projectId } : {}),
+    ...(issue.executionWorkspaceId ? { executionWorkspaceId: issue.executionWorkspaceId } : {}),
+    type: "artifact",
+    provider: "paperclip",
+    title: "Reviewed Venture Architecture Map",
+    status: "ready_for_review",
+    reviewState: "needs_board_review",
+    isPrimary: false,
+    summary: [
+      "Created from the reviewed Sprint Zero first map.",
+      `Source task: ${sourceRef}.`,
+      "Use this as a shareable draft only after the human confirms the clear claims, proof gaps, judgment boundaries, and first move.",
+    ].join(" "),
+    metadata: {
+      simoneArtifactKind: "venture_architecture_map",
+      source: "simone_sprint_zero_first_map",
+      sourceIssueId: issue.id,
+      sourceIssueIdentifier: issue.identifier ?? null,
+      sourceIssueTitle: issue.title,
+      approvalBoundary:
+        "Do not treat this as public proof until customer, money, public-claim, and structure decisions are approved by the human.",
+    },
+  };
+}
+
 const FEEDBACK_TERMS_URL = import.meta.env.VITE_FEEDBACK_TERMS_URL?.trim() || "https://paperclip.ing/tos";
 const ISSUE_COMMENT_PAGE_SIZE = 50;
 const ISSUE_COMMENT_AUTOLOAD_LIMIT = ISSUE_COMMENT_PAGE_SIZE * 3;
@@ -1898,6 +1927,34 @@ export function IssueDetail() {
       pushToast({
         title: "Could not create bounded tasks",
         body: err instanceof Error ? err.message : "Unable to create Sprint Zero follow-up tasks",
+        tone: "error",
+      });
+    },
+  });
+  const createSprintZeroArtifact = useMutation({
+    mutationFn: async () => {
+      if (!issue) throw new Error("Task is still loading.");
+      return issuesApi.createWorkProduct(issue.id, buildSprintZeroArtifactWorkProductPayload(issue));
+    },
+    onSuccess: () => {
+      for (const ref of issueCacheRefs) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.issues.workProducts(ref) });
+      }
+      if (issue?.companyId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.artifacts.list(issue.companyId),
+        });
+      }
+      pushToast({
+        title: "Artifact record created",
+        body: "A reviewed Venture Architecture Map artifact was added to this task.",
+        tone: "success",
+      });
+    },
+    onError: (err) => {
+      pushToast({
+        title: "Could not create artifact record",
+        body: err instanceof Error ? err.message : "Unable to create the reviewed map artifact",
         tone: "error",
       });
     },
@@ -4075,6 +4132,14 @@ export function IssueDetail() {
             createBoundedTasksError={
               createSprintZeroBoundedTasks.error instanceof Error
                 ? createSprintZeroBoundedTasks.error.message
+                : null
+            }
+            onCreateArtifact={() => createSprintZeroArtifact.mutate()}
+            createArtifactPending={createSprintZeroArtifact.isPending}
+            artifactCreated={createSprintZeroArtifact.isSuccess}
+            createArtifactError={
+              createSprintZeroArtifact.error instanceof Error
+                ? createSprintZeroArtifact.error.message
                 : null
             }
           />

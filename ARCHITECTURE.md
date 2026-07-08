@@ -233,6 +233,9 @@ Current small UI nudge:
 - The protected Sprint Zero first-map task can seed bounded child tasks after
   human review, keeping proof gaps and approval boundaries visible before
   delegation.
+- The same task can create a reviewed Venture Architecture Map artifact record
+  so the reviewed map becomes visible in Artifacts with source and approval
+  metadata.
 
 ## Model Strategy
 
