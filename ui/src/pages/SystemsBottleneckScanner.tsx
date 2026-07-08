@@ -27,6 +27,7 @@ type ScannerResult = {
 
 const SCAN_STORAGE_KEY = "simone:bottleneck-scan";
 const SCANNER_ONBOARDING_HREF = `/auth?next=${encodeURIComponent("/onboarding?from=scanner")}`;
+const SCANNER_COACH_HREF = `/auth?next=${encodeURIComponent("/sim-coach?from=scanner")}`;
 
 const fallbackResult: ScannerResult = {
   headline: "Feedback loop is unclear",
@@ -442,6 +443,15 @@ export function SystemsBottleneckScanner() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
+                  <p className="text-xs text-muted-foreground">
+                    Coach explains the method before you assign work.
+                  </p>
+                  <a
+                    href={SCANNER_COACH_HREF}
+                    className="inline-flex h-9 w-fit items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent"
+                  >
+                    Ask SIM Coach why
+                  </a>
                   <p className="text-xs text-muted-foreground">
                     Your scan will carry into SIM Starter after sign-in.
                   </p>

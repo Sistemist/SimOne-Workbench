@@ -32,13 +32,14 @@ tested implementation, documented direction, and deferred experiments.
   `server/src/routes/customer-engine-bridge.ts`,
   `ui/src/api/customerEngine.ts`, the Customer Engine/Dashboard UI, and their
   focused UI tests.
-- The Systems Bottleneck Scanner and Sprint Zero handoff are productized enough
-  to carry scanner context into SIM Starter. Scanner results include public-safe
-  diagnosis signals; richer scoring nuance remains.
+- The Systems Bottleneck Scanner, Coach handoff, and Sprint Zero handoff are
+  productized enough to carry scanner context into SIM Coach and SIM Starter.
+  Scanner results include public-safe diagnosis signals; richer scoring nuance
+  remains.
 - Shareable Venture Architecture Maps include public proof context for evidence
   strength, public-safe omissions, and the next assumption to test.
-- SIM Coach and SIM Wiki have first retrieval and promotion loops, with source
-  refs and maintainer-task provenance.
+- SIM Coach and SIM Wiki have first scanner handoff, retrieval, and promotion
+  loops, with source refs and maintainer-task provenance.
 - `model_route_decisions` is the first auditable route ledger. Provider
   execution, run linking, confidence, review status, and evals remain.
 - `simone_json_headroom_v0` is the local compression baseline. External

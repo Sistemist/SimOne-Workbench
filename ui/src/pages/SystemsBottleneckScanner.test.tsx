@@ -84,6 +84,8 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Focus: Customer Engine");
     expect(text).toContain("Next move: Make one review queue for replies, prospects, and proof points.");
     expect(text).toContain("Founder note and startup URL are not included.");
+    expect(text).toContain("Ask SIM Coach why");
+    expect(text).toContain("Coach explains the method before you assign work.");
     expect(text).toContain("Your scan will carry into SIM Starter after sign-in.");
     expect(text).toContain("Create my map");
     const generatedSummary = text.slice(text.indexOf("Why this scan picked Customer Engine"));
@@ -136,6 +138,7 @@ describe("SystemsBottleneckScanner", () => {
     });
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
+    expect(links.some((link) => link.getAttribute("href") === "/auth?next=%2Fsim-coach%3Ffrom%3Dscanner")).toBe(true);
     expect(links.some((link) => link.getAttribute("href") === "/auth?next=%2Fonboarding%3Ffrom%3Dscanner")).toBe(true);
 
     flushSync(() => {

@@ -58,7 +58,9 @@ what happened, and what it cost.
 and next decisions for a venture.
 
 **Systems Bottleneck Scanner** is the lightweight diagnostic that identifies
-the likely bottleneck, the affected engine, and a safe next move.
+the likely bottleneck, the affected engine, and a safe next move. Scanner
+results can hand off to SIM Coach for a contextual method explanation before
+the user creates a protected map.
 
 **Sprint Zero Brief** is the first useful operating brief: what is clear, what
 needs proof, the human review boundary, and the first move. Public scanner
