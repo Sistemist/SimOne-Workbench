@@ -1,0 +1,67 @@
+---
+title: SimOne Agent Flows
+type: concept
+tags: [simone, agents, routing, governance]
+sources: []
+created: 2026-07-08
+updated: 2026-07-08
+---
+
+# SimOne Agent Flows
+
+This page describes the intended agent-control posture without exposing model
+plumbing to first-run users.
+
+## Default User Flow
+
+1. The user signs in and their work is protected.
+2. The user gives messy input about a venture, customer problem, or operating
+   bottleneck.
+3. SimOne drafts a first map or readout in plain language.
+4. SIM Coach explains the method only where it helps the user decide.
+5. The user approves what becomes durable, public, financial, customer-facing,
+   or delegated.
+6. Useful synthesis can be saved into SIM Wiki with provenance.
+
+## Control Layers
+
+**Human meta-stewardship** stays at the top. Han, or the account owner later,
+approves public, financial, customer, governance, and cross-engine boundaries.
+
+**Fable 5 can act as a boardroom brain** for high-level planning, SIM Coach,
+strategy, architecture review, and audits when the API key and cost policy allow
+it. It should not run routine background ticks.
+
+**SimOne route ledger** records the route decision before model execution where
+possible. This is the spine that lets later routers stay accountable.
+
+**Workhorse and background lanes** handle routine drafting, extraction,
+summaries, and bounded maintenance.
+
+**Human approval gates** keep irreversible or trust-sensitive actions from
+becoming invisible automation.
+
+## Experiment Lanes
+
+OpenRouter Fusion should be reserved for critical, high-risk, uncertain tasks
+where parallel disagreement, contradiction checks, and blind-spot detection are
+worth the added cost and latency.
+
+Fugu/Fugu Ultra should start as optional specialist adapters for hard execution,
+multi-step research, or verification tasks. SimOne should judge the returned
+work through its own controller, evidence, and approvals rather than treating
+black-box orchestration as the root authority.
+
+## Mapping To Engines
+
+- Product Engine: maps offers, positioning, proof, and product decisions.
+- Customer Engine: reads customer signal, Tissuu readouts, and market learning.
+- Cash Engine: handles price, revenue, runway, and commercial tradeoffs.
+- Skills Engine: coordinates technical execution, code, tools, and repeatable
+  operating capabilities.
+
+## UI Rule
+
+The user should see roles, decisions, signals, saved knowledge, and next moves.
+Provider names, router names, context compression, and adapter wiring belong in
+advanced review surfaces unless the user explicitly asks.

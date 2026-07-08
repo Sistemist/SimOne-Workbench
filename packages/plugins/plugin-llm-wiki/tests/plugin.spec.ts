@@ -2795,6 +2795,9 @@ Duplicate headings receive stable suffixes.
       "wiki/entities/.gitkeep",
       "wiki/concepts/.gitkeep",
       "wiki/concepts/simone-product-language.md",
+      "wiki/concepts/simone-prd.md",
+      "wiki/concepts/simone-glossary.md",
+      "wiki/concepts/simone-agent-flows.md",
       "wiki/sim/.gitkeep",
       "wiki/sim/archetypes.md",
       "wiki/sim/coaching-guidance.md",
@@ -2808,9 +2811,18 @@ Duplicate headings receive stable suffixes.
     expect(writes.find((write) => write.path === "AGENTS.md")?.contents).toContain("wiki/projects/<project-slug>/standup.md");
     expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/sim/coaching-guidance]]");
     expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-product-language]]");
+    expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-prd]]");
+    expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-glossary]]");
+    expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-agent-flows]]");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("SIM Coach");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("SIM Wiki");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("Model/provider choices belong in advanced settings, not first-run onboarding.");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-prd.md")?.contents).toContain("Overall SimOne alpha state");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-prd.md")?.contents).toContain("OpenRouter Fusion is reserved for high-risk deliberation");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-glossary.md")?.contents).toContain("Thomasina");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-glossary.md")?.contents).toContain("Context compression");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-agent-flows.md")?.contents).toContain("Fable 5 can act as a boardroom brain");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-agent-flows.md")?.contents).toContain("Fugu/Fugu Ultra should start as optional specialist adapters");
     expect(writes.find((write) => write.path === "wiki/sim/engines.md")?.contents).toContain("Product Engine");
   });
 

@@ -29,7 +29,7 @@ certifications.
 | Paperclip control-plane reuse | 55% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted |
 | PLG/Barnum layer | 52% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts |
 | Customer Engine bridge | 78% | Read-only Tissuu bridge live; Customer Engine page can promote a proof readout into SIM Wiki without mutating Tissuu |
-| SIM Coach and SIM Wiki | 42% | Product direction documented; contextual coach loop explains scanner results; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include a SimOne product-language page |
+| SIM Coach and SIM Wiki | 45% | Product direction documented; contextual coach loop explains scanner results; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include SimOne product-language, PRD snapshot, glossary, and agent-flow pages |
 | Model routing and auditability | 32% | Strategy documented; Workbench has an initial `model_route_decisions` ledger; route decisions can now attach a compressed context envelope; actual provider orchestration and evaluations remain |
 | Compression/headroom | 8% | External Headroom/SmartCrusher not integrated; SimOne now has a local audited JSON compression envelope for route-decision context payloads |
 | Full SIM operating system | 30% | Engines and governance are defined, but onboarding, memory, routing, evaluations, and product polish remain |
@@ -209,10 +209,11 @@ Current SIM Wiki template behavior:
 
 - Bootstraps SIM method pages for engines, drivers, system laws, archetypes, and
   coaching guidance.
-- Bootstraps a `wiki/concepts/simone-product-language.md` page so SimOne, SIM
-  Coach, SIM Wiki, Venture Architecture Map, Systems Bottleneck Scanner, Sprint
-  Zero, Tissuu bridge boundaries, and hidden model/provider choices have a
-  durable first definition.
+- Bootstraps `wiki/concepts/simone-product-language.md`,
+  `wiki/concepts/simone-prd.md`, `wiki/concepts/simone-glossary.md`, and
+  `wiki/concepts/simone-agent-flows.md` so product direction, milestone state,
+  Thomasina-facing vocabulary, hidden provider choices, Fusion/Fugu experiment
+  boundaries, and human-in-the-loop agent flow have durable first definitions.
 - Accepts the first Coach-driven promotion path: scanner syntheses can become
   durable pages while live bridge counts remain ephemeral.
 - Accepts the first Customer Engine promotion path: a live read-only Tissuu
@@ -391,8 +392,8 @@ inspectable first map.
 - Replace manual engine/driver setup as the first action.
 - Install or wrap the LLM Wiki plugin as SIM Wiki.
 - Seed SIM Wiki structure and glossary. The plugin template already carries SIM
-  pages plus a SimOne product-language page, and the Coach page explains the
-  first seed buckets to the user.
+  pages plus SimOne product-language, PRD snapshot, glossary, and agent-flow
+  pages; the Coach page explains the first seed buckets to the user.
 - Promote useful coach answers and Customer Engine proof readouts into durable
   wiki pages. First scanner synthesis and Customer Engine readout promotion
   paths exist; broader answer/review promotion remains.
