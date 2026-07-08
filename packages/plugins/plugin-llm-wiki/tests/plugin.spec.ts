@@ -2795,6 +2795,7 @@ Duplicate headings receive stable suffixes.
       "wiki/entities/.gitkeep",
       "wiki/concepts/.gitkeep",
       "wiki/concepts/simone-product-language.md",
+      "wiki/concepts/simone-workbench-field-guide.md",
       "wiki/concepts/simone-docs-index.md",
       "wiki/concepts/simone-prd.md",
       "wiki/concepts/simone-glossary.md",
@@ -2813,6 +2814,7 @@ Duplicate headings receive stable suffixes.
     expect(writes.find((write) => write.path === "AGENTS.md")?.contents).toContain("wiki/projects/<project-slug>/standup.md");
     expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/sim/coaching-guidance]]");
     expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-product-language]]");
+    expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-workbench-field-guide]]");
     expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-docs-index]]");
     expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-prd]]");
     expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-glossary]]");
@@ -2823,6 +2825,11 @@ Duplicate headings receive stable suffixes.
     expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("Paperclip supplies the control plane");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("Issue or task means a protected work item");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("Model/provider choices belong in advanced settings, not first-run onboarding.");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-workbench-field-guide.md")?.contents).toContain("Dashboard is the daily triage surface");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-workbench-field-guide.md")?.contents).toContain("Tasks are protected work items");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-workbench-field-guide.md")?.contents).toContain("Agents are bounded helper roles");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-workbench-field-guide.md")?.contents).toContain("Runs are receipts");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-workbench-field-guide.md")?.contents).toContain("Recovery states are places where stuck work asks for help");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-docs-index.md")?.contents).toContain("Read in this order");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-docs-index.md")?.contents).toContain("When you are confused by a Paperclip term");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-prd.md")?.contents).toContain("Overall SimOne alpha state");

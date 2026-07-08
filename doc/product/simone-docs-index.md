@@ -19,16 +19,20 @@ already knowing Paperclip, SIM Coach, SIM Wiki, or the agent-routing plan?"
 3. `doc/product/simone-milestone-tracker.md`
    - Use this for the short operator view: what is done, what remains, and
      which Linear issues own the work.
-4. `doc/product/simone-glossary.md`
+4. `doc/product/simone-workbench-field-guide.md`
+   - Use this when you want to understand inherited Paperclip screens such as
+     Dashboard, Tasks, Agents, Runs, Costs, Approvals, Recovery, Settings, and
+     Secrets in SimOne language.
+5. `doc/product/simone-glossary.md`
    - Use this when you are confused by a Paperclip term, SIM term, routing
      term, or product-surface name.
-5. `doc/product/simone-agent-flows.md`
+6. `doc/product/simone-agent-flows.md`
    - Use this to understand how human judgment, SIM Coach, SIM Wiki,
      Paperclip, Tissuu, and model-routing lanes interact.
-6. `doc/product/simone-model-routing.md`
+7. `doc/product/simone-model-routing.md`
    - Use this to understand Fable 5, Fusion, Fugu/Fugu Ultra, Headroom, lane
      boundaries, and why dev mode is sovereignty-first.
-7. `doc/product/simone-alpha-flow-blueprint.html`
+8. `doc/product/simone-alpha-flow-blueprint.html`
    - Use this for the visual alpha flow and screen-behavior sketch.
 
 ## What Each Document Answers
@@ -37,7 +41,8 @@ already knowing Paperclip, SIM Coach, SIM Wiki, or the agent-routing plan?"
 | --- | --- |
 | What is SimOne, and what is not SimOne? | `ARCHITECTURE.md`, PRD section 1 and 5 |
 | How complete is the project? | PRD section 2, milestone tracker |
-| What did SimOne add on top of Paperclip? | PRD sections 6 and 8, glossary Paperclip terms |
+| What did SimOne add on top of Paperclip? | PRD sections 6 and 8, Workbench field guide |
+| What are Dashboard, Tasks, Agents, Runs, Costs, Approvals, and Recovery for? | Workbench field guide |
 | What do SIM Coach and SIM Wiki mean? | PRD sections 6, glossary Product Surfaces, agent flows section 5 |
 | Which surface owns which job? | PRD "Surface Ownership Map", agent flows section 4 |
 | Why are we not defaulting to Fugu/Fusion/black-box routing yet? | Model-routing strategy, PRD section 7, milestone tracker product stance, architecture model strategy |

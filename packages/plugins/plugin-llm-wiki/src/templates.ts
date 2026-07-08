@@ -54,6 +54,7 @@ export const DEFAULT_SIM_DRIVERS = templateFile("wiki/sim/drivers.md");
 export const DEFAULT_SIM_ENGINES = templateFile("wiki/sim/engines.md");
 export const DEFAULT_SIM_SYSTEM_LAWS = templateFile("wiki/sim/system-laws.md");
 export const DEFAULT_SIMONE_PRODUCT_LANGUAGE = templateFile("wiki/concepts/simone-product-language.md");
+export const DEFAULT_SIMONE_WORKBENCH_FIELD_GUIDE = templateFile("wiki/concepts/simone-workbench-field-guide.md");
 export const DEFAULT_SIMONE_DOCS_INDEX = templateFile("wiki/concepts/simone-docs-index.md");
 export const DEFAULT_SIMONE_PRD = templateFile("wiki/concepts/simone-prd.md");
 export const DEFAULT_SIMONE_GLOSSARY = templateFile("wiki/concepts/simone-glossary.md");
@@ -82,6 +83,7 @@ export const BOOTSTRAP_FILES: ReadonlyArray<{ path: string; contents: string }> 
   { path: "wiki/entities/.gitkeep", contents: "" },
   { path: "wiki/concepts/.gitkeep", contents: "" },
   { path: "wiki/concepts/simone-product-language.md", contents: DEFAULT_SIMONE_PRODUCT_LANGUAGE },
+  { path: "wiki/concepts/simone-workbench-field-guide.md", contents: DEFAULT_SIMONE_WORKBENCH_FIELD_GUIDE },
   { path: "wiki/concepts/simone-docs-index.md", contents: DEFAULT_SIMONE_DOCS_INDEX },
   { path: "wiki/concepts/simone-prd.md", contents: DEFAULT_SIMONE_PRD },
   { path: "wiki/concepts/simone-glossary.md", contents: DEFAULT_SIMONE_GLOSSARY },

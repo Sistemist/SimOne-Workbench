@@ -27,6 +27,7 @@ Current strongest pieces:
 - public scanner and shareable artifact beginnings
 - first SIM Coach and SIM Wiki promotion paths
 - first auditable model-route ledger and local JSON compression envelope
+- plain Workbench field guide for inherited Paperclip surfaces
 - dedicated model-routing strategy page for Fable, Fusion, Fugu, and Headroom
 
 Current weakest pieces:
@@ -53,6 +54,11 @@ Paperclip concepts translated for SimOne:
 SimOne should keep Paperclip's ledger, assignment, run, cost, and recovery
 machinery while translating first-run screens into maps, proof, decisions,
 review, and next moves.
+
+The Workbench field guide is the best page for translating inherited Dashboard,
+Tasks, Projects, Agents, Teams, Skills, Adapters, Runs, Costs, Approvals,
+Recovery, Documents, Artifacts, Routines, Settings, and Secrets surfaces into
+SimOne language.
 
 ## Milestone Shape
 

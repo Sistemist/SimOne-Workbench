@@ -26,7 +26,7 @@ certifications.
 | Layer | Completion | Evidence |
 | --- | ---: | --- |
 | Hosted alpha shell | 65% | KVM deployment, auth-gated app, health checks, SimOne routes, deploy script |
-| Paperclip control-plane reuse | 58% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted; PRD/glossary/wiki seeds now translate inherited terms into SimOne language |
+| Paperclip control-plane reuse | 60% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted; PRD/glossary/field-guide/wiki seeds now translate inherited terms and screens into SimOne language |
 | PLG/Barnum layer | 56% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts; scanner results now include a structured Sprint Zero brief that carries into SIM Starter |
 | Customer Engine bridge | 78% | Read-only Tissuu bridge live; Customer Engine page can promote a proof readout into SIM Wiki without mutating Tissuu |
 | SIM Coach and SIM Wiki | 58% | Product direction documented; contextual coach loop explains scanner results; Coach can queue an auditable SIM Wiki maintainer retrieval from scanner context, stream the returned answer back into Coach, preserve structured wiki/raw answer source refs, and save useful answers as durable SIM Wiki syntheses; SIM Starter now stores source-note and first-map draft provenance in the first Sprint Zero work item; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include SimOne product-language, PRD snapshot, glossary, and agent-flow pages |
@@ -110,6 +110,11 @@ SimOne Workbench is based on Paperclip. Paperclip supplies:
 - recovery states
 - embedded or external PostgreSQL
 - deployment-compatible Docker runtime
+
+The companion field guide `doc/product/simone-workbench-field-guide.md` explains
+how to read inherited Dashboard, Tasks, Projects, Agents, Teams, Skills,
+Adapters, Runs, Costs, Approvals, Recovery, Documents, Artifacts, Routines,
+Settings, and Secrets surfaces in SimOne language.
 
 SimOne adds:
 
@@ -284,12 +289,13 @@ Current SIM Wiki template behavior:
 - Bootstraps SIM method pages for engines, drivers, system laws, archetypes, and
   coaching guidance.
 - Bootstraps `wiki/concepts/simone-product-language.md`,
-  `wiki/concepts/simone-prd.md`, `wiki/concepts/simone-glossary.md`, and
+  `wiki/concepts/simone-workbench-field-guide.md`,
+  `wiki/concepts/simone-prd.md`, `wiki/concepts/simone-glossary.md`,
   `wiki/concepts/simone-agent-flows.md`, and
   `wiki/concepts/simone-model-routing.md` so product direction, milestone
-  state, Thomasina-facing vocabulary, hidden provider choices, Fusion/Fugu
-  experiment boundaries, Headroom status, and human-in-the-loop agent flow have
-  durable first definitions.
+  state, inherited Workbench screen translations, Thomasina-facing vocabulary,
+  hidden provider choices, Fusion/Fugu experiment boundaries, Headroom status,
+  and human-in-the-loop agent flow have durable first definitions.
 - Accepts the first Coach-driven promotion path: scanner syntheses can become
   durable pages while live bridge counts remain ephemeral.
 - Lets SIM Coach queue a SIM Wiki Maintainer query from saved scanner context
@@ -563,6 +569,7 @@ auditable enough that Han can trust the system while building it.
 - `doc/product/simone-alpha-flow-blueprint.html`
 - `doc/product/simone-docs-index.md`
 - `doc/product/simone-milestone-tracker.md`
+- `doc/product/simone-workbench-field-guide.md`
 - `doc/product/simone-glossary.md`
 - `doc/product/simone-agent-flows.md`
 - `doc/product/simone-model-routing.md`

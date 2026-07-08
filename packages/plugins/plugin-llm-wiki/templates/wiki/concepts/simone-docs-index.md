@@ -21,20 +21,25 @@ answers about SimOne.
    success criteria.
 3. `doc/product/simone-milestone-tracker.md` for the short operator view of
    what is done, what remains, and which Linear issues own the work.
-4. `doc/product/simone-glossary.md` when you are confused by a Paperclip term,
+4. `doc/product/simone-workbench-field-guide.md` when you want to know what the
+   inherited Paperclip dashboard, tasks, agents, runs, costs, approvals, and
+   recovery surfaces mean inside SimOne.
+5. `doc/product/simone-glossary.md` when you are confused by a Paperclip term,
    SIM term, routing term, or product-surface name.
-5. `doc/product/simone-agent-flows.md` for how human judgment, SIM Coach,
+6. `doc/product/simone-agent-flows.md` for how human judgment, SIM Coach,
    SIM Wiki, Paperclip, Tissuu, and routing lanes interact.
-6. `doc/product/simone-model-routing.md` for Fable 5, Fusion, Fugu/Fugu Ultra,
+7. `doc/product/simone-model-routing.md` for Fable 5, Fusion, Fugu/Fugu Ultra,
    Headroom, lane boundaries, and the sovereignty-first dev-mode rule.
-7. `doc/product/simone-alpha-flow-blueprint.html` for the visual alpha flow.
+8. `doc/product/simone-alpha-flow-blueprint.html` for the visual alpha flow.
 
 ## What to read by question
 
 - "What is SimOne?" Read the architecture and PRD.
 - "How complete is the project?" Read the PRD snapshot and milestone tracker.
 - "What did SimOne add on top of Paperclip?" Read the PRD foundation section
-  and glossary Paperclip terms.
+  and Workbench field guide.
+- "What are Dashboard, Tasks, Agents, Runs, Costs, Approvals, and Recovery for?"
+  Read the Workbench field guide.
 - "What do SIM Coach and SIM Wiki mean?" Read the PRD current behavior,
   glossary Product Surfaces, and agent-flow interaction section.
 - "Which surface owns which job?" Read the PRD surface ownership map and
