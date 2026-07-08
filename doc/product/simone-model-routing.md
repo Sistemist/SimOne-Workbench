@@ -25,6 +25,9 @@ That means Fable 5, OpenRouter Fusion, Fugu/Fugu Ultra, and Headroom can all
 fit into SimOne, but only behind an inspectable route ledger and quality gate.
 The first route-to-cost evidence link now exists: cost events can point back to
 the model route decision that caused the spend.
+The first operator-facing audit view also exists in instance settings, showing
+recent decisions, review state, approval boundary, context/output summaries,
+and linked cost evidence.
 
 ## 2. Why This Matters
 
@@ -149,7 +152,8 @@ product experience is useful.
 1. Keep improving the route decision ledger.
 2. Link route decisions to real model/provider execution.
 3. Link route decisions to run records and output artifacts. Cost links, output
-   confidence, and review status are now first-class ledger fields.
+   confidence, review status, and the first read-only audit page are now in
+   place.
 4. Add evaluation cases before relying on routers.
 5. Evaluate Headroom/SmartCrusher against local compression output.
 6. Add Fusion as a high-risk deliberation/audit lane.

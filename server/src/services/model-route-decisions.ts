@@ -1,6 +1,6 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "@paperclipai/db";
-import { agents, modelRouteDecisions } from "@paperclipai/db";
+import { agents, costEvents, modelRouteDecisions } from "@paperclipai/db";
 import type { CreateModelRouteDecision, UpdateModelRouteDecisionReview } from "@paperclipai/shared";
 import { notFound, unprocessable } from "../errors.js";
 
@@ -52,12 +52,44 @@ export function modelRouteDecisionService(db: Db) {
       const conditions = [eq(modelRouteDecisions.companyId, companyId)];
       if (options.agentId) conditions.push(eq(modelRouteDecisions.agentId, options.agentId));
 
-      return db
+      const decisions = await db
         .select()
         .from(modelRouteDecisions)
         .where(and(...conditions))
         .orderBy(desc(modelRouteDecisions.createdAt))
         .limit(options.limit);
+
+      if (decisions.length === 0) return decisions;
+
+      const costRows = await db
+        .select({
+          modelRouteDecisionId: costEvents.modelRouteDecisionId,
+          costEventCount: sql<number>`count(${costEvents.id})::int`,
+          costCents: sql<number>`coalesce(sum(${costEvents.costCents}), 0)::int`,
+        })
+        .from(costEvents)
+        .where(
+          and(
+            eq(costEvents.companyId, companyId),
+            inArray(costEvents.modelRouteDecisionId, decisions.map((decision) => decision.id)),
+          ),
+        )
+        .groupBy(costEvents.modelRouteDecisionId);
+
+      const costByDecision = new Map(
+        costRows
+          .filter((row): row is typeof row & { modelRouteDecisionId: string } => row.modelRouteDecisionId != null)
+          .map((row) => [row.modelRouteDecisionId, row]),
+      );
+
+      return decisions.map((decision) => {
+        const cost = costByDecision.get(decision.id);
+        return {
+          ...decision,
+          costEventCount: cost?.costEventCount ?? 0,
+          costCents: cost?.costCents ?? 0,
+        };
+      });
     },
 
     updateReview: async (

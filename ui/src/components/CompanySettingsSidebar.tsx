@@ -9,6 +9,7 @@ import {
   MailPlus,
   MonitorCog,
   Puzzle,
+  Route,
   Settings,
   Shield,
   SlidersHorizontal,
@@ -203,6 +204,11 @@ export function CompanySettingsSidebar() {
             to={`${INSTANCE_SETTINGS_PATH_PREFIX}/adapters`}
             label="Adapters"
             icon={Cpu}
+          />
+          <SidebarNavItem
+            to={`${INSTANCE_SETTINGS_PATH_PREFIX}/model-routing`}
+            label="Model routing"
+            icon={Route}
           />
         </div>
       </nav>

@@ -222,6 +222,12 @@ describe("CompanySettingsSidebar", () => {
         label: "Adapters",
       }),
     );
+    expect(sidebarNavItemMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "/company/settings/instance/model-routing",
+        label: "Model routing",
+      }),
+    );
 
     await act(async () => {
       root.unmount();

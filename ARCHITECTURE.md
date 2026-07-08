@@ -255,6 +255,9 @@ Routing audit spine:
   result was accepted, rejected, or needs revision.
 - Cost events can link back to the route decision that caused the spend, giving
   the audit ledger its first route-to-cost evidence trail.
+- `Company Settings > Instance settings > Model routing` gives operators a
+  read-only audit surface for recent route decisions, review state, approval
+  boundary, context summary, output summary, and linked cost evidence.
 - Use `deliberation_audit` for OpenRouter Fusion-style high-risk review where
   disagreement and blind spots are valuable.
 - Use `external_specialist` for future Fugu/Fugu Ultra-style specialist

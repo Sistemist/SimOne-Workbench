@@ -248,6 +248,15 @@ describeEmbeddedPostgres("model route decision routes", () => {
       model: "fugu-ultra",
       costCents: 87,
     });
+
+    const listRes = await request(app).get(`/api/companies/${companyId}/model-route-decisions?limit=10`);
+
+    expect(listRes.status).toBe(200);
+    expect(listRes.body.items[0]).toMatchObject({
+      id: decisionRes.body.id,
+      costEventCount: 1,
+      costCents: 87,
+    });
   });
 
   it("compresses bulky JSON context into auditable metadata instead of storing raw payloads", async () => {
