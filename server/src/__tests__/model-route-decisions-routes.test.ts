@@ -141,6 +141,65 @@ describeEmbeddedPostgres("model route decision routes", () => {
     });
   });
 
+  it("updates a route decision with output confidence and human review state after execution", async () => {
+    const { companyId, agentId } = await seed();
+    const app = createApp(db, boardActor(companyId));
+
+    const createRes = await request(app)
+      .post(`/api/companies/${companyId}/model-route-decisions`)
+      .send({
+        agentId,
+        lane: "frontier",
+        provider: "anthropic",
+        model: "claude-fable-5",
+        reason: "High-level SIM Coach audit needs a boardroom-brain model.",
+        riskLevel: "high",
+        taskIntent: "Audit a risky public positioning recommendation.",
+        contextSummary: "Scanner result, venture map preview, and draft positioning.",
+        approvalGate: "human_before_publish",
+        metadata: { source: "SYS-202" },
+      });
+
+    expect(createRes.status).toBe(201);
+    expect(createRes.body).toMatchObject({
+      outputSummary: null,
+      outputConfidence: "unknown",
+      reviewStatus: "pending",
+      reviewNote: null,
+    });
+
+    const updateRes = await request(app)
+      .patch(`/api/companies/${companyId}/model-route-decisions/${createRes.body.id}/review`)
+      .send({
+        outputSummary: "Fable audit flagged one overclaim and recommended a narrower proof promise.",
+        outputConfidence: "medium",
+        reviewStatus: "needs_revision",
+        reviewNote: "Human review required before this becomes public copy.",
+      });
+
+    expect(updateRes.status).toBe(200);
+    expect(updateRes.body).toMatchObject({
+      id: createRes.body.id,
+      companyId,
+      agentId,
+      outputSummary: "Fable audit flagged one overclaim and recommended a narrower proof promise.",
+      outputConfidence: "medium",
+      reviewStatus: "needs_revision",
+      reviewNote: "Human review required before this becomes public copy.",
+    });
+
+    const listRes = await request(app).get(`/api/companies/${companyId}/model-route-decisions?limit=10`);
+
+    expect(listRes.status).toBe(200);
+    expect(listRes.body.items[0]).toMatchObject({
+      id: createRes.body.id,
+      outputSummary: "Fable audit flagged one overclaim and recommended a narrower proof promise.",
+      outputConfidence: "medium",
+      reviewStatus: "needs_revision",
+      reviewNote: "Human review required before this becomes public copy.",
+    });
+  });
+
   it("compresses bulky JSON context into auditable metadata instead of storing raw payloads", async () => {
     const { companyId, agentId } = await seed();
     const app = createApp(db, boardActor(companyId));

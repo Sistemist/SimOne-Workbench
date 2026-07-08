@@ -42,8 +42,9 @@ tested implementation, documented direction, and deferred experiments.
   evidence strength, public-safe omissions, and the next assumption to test.
 - SIM Coach and SIM Wiki have first scanner handoff, retrieval, and promotion
   loops, with source refs and maintainer-task provenance.
-- `model_route_decisions` is the first auditable route ledger. Provider
-  execution, run linking, confidence, review status, and evals remain.
+- `model_route_decisions` is the first auditable route ledger. It now records
+  post-run output confidence and review status; provider execution, run/cost
+  linking, output artifacts, and evals remain.
 - `simone_json_headroom_v0` is the local compression baseline. External
   Headroom/SmartCrusher is not wired yet.
 - OpenRouter Fusion and Fugu/Fugu Ultra are design lanes, not production roots.

@@ -16,6 +16,20 @@ export const modelRouteDecisionRiskLevelSchema = z.enum([
   "critical",
 ]);
 
+export const modelRouteDecisionOutputConfidenceSchema = z.enum([
+  "unknown",
+  "low",
+  "medium",
+  "high",
+]);
+
+export const modelRouteDecisionReviewStatusSchema = z.enum([
+  "pending",
+  "approved",
+  "needs_revision",
+  "rejected",
+]);
+
 export const createModelRouteDecisionSchema = z.object({
   agentId: z.string().uuid(),
   issueId: z.string().uuid().optional().nullable(),
@@ -35,6 +49,16 @@ export const createModelRouteDecisionSchema = z.object({
   createdByRunId: z.string().uuid().optional().nullable(),
 });
 
+export const updateModelRouteDecisionReviewSchema = z.object({
+  outputSummary: z.string().min(1).optional().nullable(),
+  outputConfidence: modelRouteDecisionOutputConfidenceSchema.optional().default("unknown"),
+  reviewStatus: modelRouteDecisionReviewStatusSchema.optional().default("pending"),
+  reviewNote: z.string().min(1).optional().nullable(),
+});
+
 export type CreateModelRouteDecision = z.infer<typeof createModelRouteDecisionSchema>;
+export type UpdateModelRouteDecisionReview = z.infer<typeof updateModelRouteDecisionReviewSchema>;
 export type ModelRouteDecisionLane = z.infer<typeof modelRouteDecisionLaneSchema>;
 export type ModelRouteDecisionRiskLevel = z.infer<typeof modelRouteDecisionRiskLevelSchema>;
+export type ModelRouteDecisionOutputConfidence = z.infer<typeof modelRouteDecisionOutputConfidenceSchema>;
+export type ModelRouteDecisionReviewStatus = z.infer<typeof modelRouteDecisionReviewStatusSchema>;

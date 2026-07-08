@@ -250,6 +250,9 @@ Routing audit spine:
 
 - `model_route_decisions` records the intended lane, provider/model, reason,
   risk level, context summary, approval gate, and metadata before execution.
+- Route decisions can be updated after execution with output summary, output
+  confidence, review status, and review note so the ledger records whether the
+  result was accepted, rejected, or needs revision.
 - Use `deliberation_audit` for OpenRouter Fusion-style high-risk review where
   disagreement and blind spots are valuable.
 - Use `external_specialist` for future Fugu/Fugu Ultra-style specialist

@@ -146,11 +146,10 @@ product experience is useful.
 
 1. Keep improving the route decision ledger.
 2. Link route decisions to real model/provider execution.
-3. Link route decisions to run records, costs, outputs, confidence, and review
-   status.
+3. Link route decisions to run records, costs, and output artifacts. Output
+   confidence and review status are now first-class ledger fields.
 4. Add evaluation cases before relying on routers.
 5. Evaluate Headroom/SmartCrusher against local compression output.
 6. Add Fusion as a high-risk deliberation/audit lane.
 7. Add Fugu/Fugu Ultra as optional external specialist lanes.
 8. Compare all experiment lanes against explicit frontier routes.
-

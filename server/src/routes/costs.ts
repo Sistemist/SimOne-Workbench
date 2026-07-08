@@ -6,6 +6,7 @@ import {
   createModelRouteDecisionSchema,
   normalizeIssueIdentifier,
   resolveBudgetIncidentSchema,
+  updateModelRouteDecisionReviewSchema,
   updateBudgetSchema,
   upsertBudgetPolicySchema,
 } from "@paperclipai/shared";
@@ -232,6 +233,40 @@ export function costRoutes(
     const items = await modelRouteDecisions.list(companyId, { limit, agentId });
     res.json({ items });
   });
+
+  router.patch(
+    "/companies/:companyId/model-route-decisions/:decisionId/review",
+    validate(updateModelRouteDecisionReviewSchema),
+    async (req, res) => {
+      const companyId = req.params.companyId as string;
+      const decisionId = req.params.decisionId as string;
+      assertCompanyAccess(req, companyId);
+
+      const updated = await modelRouteDecisions.updateReview(
+        companyId,
+        decisionId,
+        req.body,
+        { agentId: req.actor.type === "agent" ? req.actor.agentId : null },
+      );
+
+      const actor = getActorInfo(req);
+      await logActivity(db, {
+        companyId,
+        actorType: actor.actorType,
+        actorId: actor.actorId,
+        agentId: actor.agentId,
+        action: "model_route_decision.review_updated",
+        entityType: "model_route_decision",
+        entityId: updated.id,
+        details: {
+          outputConfidence: updated.outputConfidence,
+          reviewStatus: updated.reviewStatus,
+        },
+      });
+
+      res.json(updated);
+    },
+  );
 
   router.post("/companies/:companyId/finance-events", validate(createFinanceEventSchema), async (req, res) => {
     const companyId = req.params.companyId as string;

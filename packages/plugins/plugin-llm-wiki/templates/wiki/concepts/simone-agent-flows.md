@@ -33,7 +33,8 @@ strategy, architecture review, and audits when the API key and cost policy allow
 it. It should not run routine background ticks.
 
 **SimOne route ledger** records the route decision before model execution where
-possible. This is the spine that lets later routers stay accountable.
+possible, then records output confidence and review status after execution.
+This is the spine that lets later routers stay accountable.
 
 **Workhorse and background lanes** handle routine drafting, extraction,
 summaries, and bounded maintenance.

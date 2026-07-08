@@ -16,6 +16,8 @@ explain why SimOne favors auditability during dev mode.
 
 Dev mode favors sovereignty and auditability over orchestration cleverness.
 SimOne should record route decisions before depending on black-box routing.
+Route decisions should also capture post-run output confidence and review state
+so later routers can be compared, rejected, or approved from evidence.
 
 The default order is:
 
@@ -74,4 +76,3 @@ Thomasina should not see providers, routers, model IDs, context envelopes, or
 adapter settings during first-run onboarding. She should see what is being
 worked on, what is safe to delegate, what needs judgment, what it cost when cost
 matters, what was saved as memory, and what evidence supports the recommendation.
-

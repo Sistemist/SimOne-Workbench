@@ -1,7 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import type { Db } from "@paperclipai/db";
 import { agents, modelRouteDecisions } from "@paperclipai/db";
-import type { CreateModelRouteDecision } from "@paperclipai/shared";
+import type { CreateModelRouteDecision, UpdateModelRouteDecisionReview } from "@paperclipai/shared";
 import { notFound, unprocessable } from "../errors.js";
 
 export interface ModelRouteDecisionActor {
@@ -58,6 +58,31 @@ export function modelRouteDecisionService(db: Db) {
         .where(and(...conditions))
         .orderBy(desc(modelRouteDecisions.createdAt))
         .limit(options.limit);
+    },
+
+    updateReview: async (
+      companyId: string,
+      id: string,
+      data: UpdateModelRouteDecisionReview,
+      options: { agentId?: string | null } = {},
+    ) => {
+      const conditions = [eq(modelRouteDecisions.companyId, companyId), eq(modelRouteDecisions.id, id)];
+      if (options.agentId) conditions.push(eq(modelRouteDecisions.agentId, options.agentId));
+
+      const updated = await db
+        .update(modelRouteDecisions)
+        .set({
+          outputSummary: data.outputSummary ?? null,
+          outputConfidence: data.outputConfidence,
+          reviewStatus: data.reviewStatus,
+          reviewNote: data.reviewNote ?? null,
+        })
+        .where(and(...conditions))
+        .returning()
+        .then((rows) => rows[0] ?? null);
+
+      if (!updated) throw notFound("Model route decision not found");
+      return updated;
     },
   };
 }

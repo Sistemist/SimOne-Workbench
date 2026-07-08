@@ -508,10 +508,16 @@ export {
 export {
   createModelRouteDecisionSchema,
   modelRouteDecisionLaneSchema,
+  modelRouteDecisionOutputConfidenceSchema,
   modelRouteDecisionRiskLevelSchema,
+  modelRouteDecisionReviewStatusSchema,
+  updateModelRouteDecisionReviewSchema,
   type CreateModelRouteDecision,
   type ModelRouteDecisionLane,
+  type ModelRouteDecisionOutputConfidence,
   type ModelRouteDecisionRiskLevel,
+  type ModelRouteDecisionReviewStatus,
+  type UpdateModelRouteDecisionReview,
 } from "./model-route-decision.js";
 
 export {
