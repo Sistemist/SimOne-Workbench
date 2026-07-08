@@ -53,6 +53,10 @@ type ScannerResult = {
     primaryCta: string;
     onboardingHref: string;
   };
+  handoffPreview: {
+    title: string;
+    items: string[];
+  };
   trustFrame: {
     canSee: string;
     cannotSee: string;
@@ -148,6 +152,14 @@ const fallbackResult: ScannerResult = {
       "SimOne will keep the product loop, proof question, and approval boundary together after sign-in.",
     primaryCta: "Build my Product Engine map",
     onboardingHref: `/auth?next=${encodeURIComponent("/onboarding?from=scanner&focus=product-engine")}`,
+  },
+  handoffPreview: {
+    title: "What happens after sign-in",
+    items: [
+      "Prefill the starter map with this product loop readout.",
+      "Create the first setup task: Write down the next customer decision and who approves it.",
+      "Keep any customer, money, public-claim, or structure decision behind your approval.",
+    ],
   },
   trustFrame: {
     canSee: "It read patterns in the text you provided.",
@@ -277,7 +289,7 @@ function scanBottleneck(input: string): ScannerResult {
   const severity: ScannerResult["severity"] = best.score > 2 ? "high" : "medium";
   const result: Omit<
     ScannerResult,
-    "sprintZeroBrief" | "approvalPath" | "shareSummary" | "conversionPath" | "trustFrame"
+    "sprintZeroBrief" | "approvalPath" | "shareSummary" | "conversionPath" | "handoffPreview" | "trustFrame"
   > = {
     headline: best.pattern.headline,
     engine: best.pattern.engine,
@@ -347,6 +359,14 @@ function scanBottleneck(input: string): ScannerResult {
       summary: `SimOne will keep the ${engineLoopLabel(result.engine)}, proof question, and approval boundary together after sign-in.`,
       primaryCta: `Build my ${result.engine} map`,
       onboardingHref: `/auth?next=${encodeURIComponent(`/onboarding?from=scanner&focus=${engineFocusSlug(result.engine)}`)}`,
+    },
+    handoffPreview: {
+      title: "What happens after sign-in",
+      items: [
+        `Prefill the starter map with this ${engineLoopLabel(result.engine)} readout.`,
+        `Create the first setup task: ${result.nextAction}`,
+        "Keep any customer, money, public-claim, or structure decision behind your approval.",
+      ],
     },
     trustFrame: {
       canSee: "It read patterns in the text you provided.",
@@ -674,6 +694,19 @@ export function SystemsBottleneckScanner() {
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
                       {result.conversionPath.summary}
                     </p>
+                  </div>
+                  <div className="rounded-md border border-border bg-background/60 p-3">
+                    <h3 className="text-xs font-medium uppercase text-muted-foreground">
+                      {result.handoffPreview.title}
+                    </h3>
+                    <ul className="mt-2 grid gap-2 text-sm text-muted-foreground">
+                      {result.handoffPreview.items.map((item) => (
+                        <li key={item} className="flex gap-2">
+                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Coach explains the method before you assign work.

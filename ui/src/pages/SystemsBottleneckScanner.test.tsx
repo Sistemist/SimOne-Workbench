@@ -372,6 +372,10 @@ describe("SystemsBottleneckScanner", () => {
     const text = container.textContent ?? "";
     expect(text).toContain("Turn this into a Customer Engine map");
     expect(text).toContain("SimOne will keep the customer loop, proof question, and approval boundary together after sign-in.");
+    expect(text).toContain("What happens after sign-in");
+    expect(text).toContain("Prefill the starter map with this customer loop readout.");
+    expect(text).toContain("Create the first setup task: Make one review queue for replies, prospects, and proof points.");
+    expect(text).toContain("Keep any customer, money, public-claim, or structure decision behind your approval.");
     expect(text).toContain("Build my Customer Engine map");
     expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
 
@@ -392,6 +396,14 @@ describe("SystemsBottleneckScanner", () => {
           title: "Turn this into a Customer Engine map",
           primaryCta: "Build my Customer Engine map",
           onboardingHref: "/auth?next=%2Fonboarding%3Ffrom%3Dscanner%26focus%3Dcustomer-engine",
+        },
+        handoffPreview: {
+          title: "What happens after sign-in",
+          items: [
+            "Prefill the starter map with this customer loop readout.",
+            "Create the first setup task: Make one review queue for replies, prospects, and proof points.",
+            "Keep any customer, money, public-claim, or structure decision behind your approval.",
+          ],
         },
       },
     });
