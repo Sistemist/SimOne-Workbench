@@ -26,10 +26,10 @@ certifications.
 | Layer | Completion | Evidence |
 | --- | ---: | --- |
 | Hosted alpha shell | 65% | KVM deployment, auth-gated app, health checks, SimOne routes, deploy script |
-| Paperclip control-plane reuse | 60% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted; PRD/glossary/field-guide/wiki seeds now translate inherited terms and screens into SimOne language |
+| Paperclip control-plane reuse | 61% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted; PRD/glossary/field-guide/wiki seeds and SIM Coach now translate inherited terms and screens into SimOne language |
 | PLG/Barnum layer | 66% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts with proof context, a plain public preview, and a generated review package; scanner results now include lived example notes, signal strength, secondary engine watch, calibration status, diagnosis signals, a direct SIM Coach handoff, and a structured Sprint Zero brief that carries into SIM Starter |
 | Customer Engine bridge | 80% | Read-only Tissuu bridge live; Dashboard and Customer Engine frame it as a native Customer Signal loop; Customer Engine page can promote a proof readout into SIM Wiki without mutating Tissuu |
-| SIM Coach and SIM Wiki | 63% | Product direction documented; public scanner now offers a contextual Coach handoff before map creation; contextual coach loop explains scanner results; Coach now explains the operating role stack in-app; Coach can queue an auditable SIM Wiki maintainer retrieval from scanner context, stream the returned answer back into Coach, preserve structured wiki/raw answer source refs, and save useful answers as durable SIM Wiki syntheses; SIM Starter now stores source-note and first-map draft provenance in the first Sprint Zero work item and can save the reviewed first map as a durable SIM Wiki page; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include SimOne product-language, PRD snapshot, glossary, and agent-flow pages |
+| SIM Coach and SIM Wiki | 64% | Product direction documented; public scanner now offers a contextual Coach handoff before map creation; contextual coach loop explains scanner results; Coach now explains the operating role stack and inherited Workbench terms in-app; Coach can queue an auditable SIM Wiki maintainer retrieval from scanner context, stream the returned answer back into Coach, preserve structured wiki/raw answer source refs, and save useful answers as durable SIM Wiki syntheses; SIM Starter now stores source-note and first-map draft provenance in the first Sprint Zero work item and can save the reviewed first map as a durable SIM Wiki page; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include SimOne product-language, PRD snapshot, glossary, and agent-flow pages |
 | Model routing and auditability | 48% | Strategy documented; Workbench has an initial `model_route_decisions` ledger; route decisions can now attach a compressed context envelope, record post-run output confidence/review state, link heartbeat adapter execution to the route ledger before a run spends, link spend rows back to the route that caused them, link out to recorded runs and output artifacts when present, explain Fusion/Fugu-style lane evidence requirements, add initial route-boundary eval cases, and be filtered/reviewed from an advanced settings audit surface; broader provider orchestration remains |
 | Compression/headroom | 8% | External Headroom/SmartCrusher not integrated; SimOne now has a local audited JSON compression envelope for route-decision context payloads |
 | Full SIM operating system | 35% | Engines and governance are defined, SIM Starter now has a protected first-map review path, can seed bounded child tasks, can create a reviewed map artifact record, and can save the reviewed map into SIM Wiki, but durable operating loops, routing, evaluations, and production polish remain |
@@ -152,6 +152,10 @@ The product goal is not to erase Paperclip's terms everywhere immediately. The
 goal is to make first-run SimOne screens speak in ventures, maps, decisions,
 proof, review, and next moves, while keeping Paperclip's stronger work ledger
 available underneath.
+
+SIM Coach now carries the same translation in-product with a compact Workbench
+terms guide for Company, Project, Task, Agent, Run, and Recovery so inherited
+control-plane language has a plain meaning before users delegate work.
 
 ### Surface Ownership Map
 

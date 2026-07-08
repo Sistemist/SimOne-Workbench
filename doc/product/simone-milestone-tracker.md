@@ -34,10 +34,10 @@ enough to evaluate them.
 | Layer | State | What Is Done | Remaining Work |
 | --- | ---: | --- | --- |
 | Hosted alpha shell | 65% | Authenticated KVM app, one-origin app/API, deploy smoke path | More authenticated visual QA, release checklist |
-| Paperclip control-plane reuse | 60% | Companies, agents, tasks, skills, adapters, runs, costs, recovery inherited; PRD/glossary/field guide now translate Paperclip terms and screens into SimOne language | Keep reducing raw control-plane concepts in first run |
+| Paperclip control-plane reuse | 61% | Companies, agents, tasks, skills, adapters, runs, costs, recovery inherited; PRD/glossary/field guide and SIM Coach now translate Paperclip terms and screens into SimOne language | Keep reducing raw control-plane concepts in first run |
 | PLG/Barnum layer | 66% | Public scanner, lived example notes, signal strength, secondary engine watch, calibration status, safer share summaries, diagnosis signals, shareable map interpretation, public preview, generated share review package, public proof context, scanner-to-coach and scanner-to-starter handoffs, structured Sprint Zero brief | Visual share polish, score tuning against real submissions |
 | Customer Engine bridge | 80% | Read-only Tissuu bridge live, native Customer Signal framing on dashboard/page, SIM Wiki proof promotion | More authenticated visual QA, lived use, defer write-back v2 |
-| SIM Coach and SIM Wiki | 63% | Scanner-to-Coach handoff, Coach scanner explanations, in-app operating role-stack orientation, scanner-to-wiki maintainer retrieval with streamed answer return, structured answer source refs, returned-answer promotion to wiki, SIM Starter source-note provenance, reviewed first-map wiki promotion, SIM method/product seed pages, shared operating role-stack definitions | Better wiki navigation, broader review promotion |
+| SIM Coach and SIM Wiki | 64% | Scanner-to-Coach handoff, Coach scanner explanations, in-app operating role-stack orientation, in-app Workbench term translations, scanner-to-wiki maintainer retrieval with streamed answer return, structured answer source refs, returned-answer promotion to wiki, SIM Starter source-note provenance, reviewed first-map wiki promotion, SIM method/product seed pages, shared operating role-stack definitions | Better wiki navigation, broader review promotion |
 | Model routing and auditability | 48% | `model_route_decisions` ledger, lane vocabulary, local context compression envelope, heartbeat adapter execution route decisions, output confidence/review fields, cost-event route links, run-detail links, output artifact links, settings audit page with review filters/actions, lane-specific Fusion/Fugu evidence prompts, and initial route-boundary eval cases | Broader provider orchestration, richer artifact/eval evidence |
 | Compression/headroom | 8% | Local `simone_json_headroom_v0` envelope for bulky JSON route context | Evaluate Headroom/SmartCrusher, compare quality, support RAG/log/transcript payloads |
 | Full SIM operating system | 35% | Engines, drivers, governance, bridge, coach/wiki beginnings, SIM Starter review plus bounded-task, artifact, and wiki promotion paths | Durable operating loops, production hardening |
@@ -107,6 +107,9 @@ Done:
   preserves durable memory, and the control plane tracks delegated work.
 - SIM Coach now shows the operating role stack in-app: human owner, boardroom
   brain, engine stewards, specialist adapters, and task agents.
+- SIM Coach now translates inherited Workbench/Paperclip terms in-app so
+  Company, Project, Task, Agent, Run, and Recovery have plain venture meanings
+  before users delegate work.
 - The repo now has a PRD, glossary, agent-flow map, and milestone tracker.
 - The PRD, glossary, and SIM Wiki seeds now translate inherited Paperclip
   concepts into SimOne/Thomasina language and define which surface owns which

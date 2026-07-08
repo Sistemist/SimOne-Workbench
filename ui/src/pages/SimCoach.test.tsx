@@ -190,6 +190,33 @@ describe("SimCoach", () => {
     });
   });
 
+  it("translates Workbench terms without exposing setup complexity", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderSimCoach(container);
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Workbench terms");
+    expect(text).toContain("When inherited Paperclip words appear, read them this way.");
+    expect(text).toContain("Company");
+    expect(text).toContain("The protected venture workspace.");
+    expect(text).toContain("Project");
+    expect(text).toContain("A workstream, sprint, or operating area.");
+    expect(text).toContain("Task");
+    expect(text).toContain("A protected work item that can be drafted, reviewed, approved, or delegated.");
+    expect(text).toContain("Agent");
+    expect(text).toContain("A bounded helper role with instructions and limits.");
+    expect(text).toContain("Run");
+    expect(text).toContain("The receipt for one helper attempt: what happened, what it cost, and where review happened.");
+    expect(text).toContain("Recovery");
+    expect(text).toContain("A visible stuck-work state that asks for help instead of hiding failure.");
+    expect(text).not.toMatch(/choose a provider|paste an api key|adapter setup|model router/i);
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
   it("opens SIM Wiki directly once the wiki plugin is ready", async () => {
     mockPluginsApi.list.mockResolvedValue([
       {

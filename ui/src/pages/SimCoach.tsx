@@ -185,6 +185,33 @@ const operatingRoleStack = [
   },
 ];
 
+const workbenchTerms = [
+  {
+    title: "Company",
+    body: "The protected venture workspace.",
+  },
+  {
+    title: "Project",
+    body: "A workstream, sprint, or operating area.",
+  },
+  {
+    title: "Task",
+    body: "A protected work item that can be drafted, reviewed, approved, or delegated.",
+  },
+  {
+    title: "Agent",
+    body: "A bounded helper role with instructions and limits.",
+  },
+  {
+    title: "Run",
+    body: "The receipt for one helper attempt: what happened, what it cost, and where review happened.",
+  },
+  {
+    title: "Recovery",
+    body: "A visible stuck-work state that asks for help instead of hiding failure.",
+  },
+];
+
 function buildWikiRetrievalQuestion(context: ScannerCoachContext): string {
   return `What should SIM Coach check before assigning work on ${context.headline}?`;
 }
@@ -811,6 +838,22 @@ export function SimCoach() {
                 <div key={role.title} className="border-b border-border pb-3 md:border-b-0 md:border-r md:pr-3 md:last:border-r-0">
                   <div className="text-xs font-medium uppercase text-muted-foreground">{role.title}</div>
                   <p className="mt-1 text-sm leading-5 text-muted-foreground">{role.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="mt-3 rounded-md border border-border bg-background p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="text-sm font-medium text-foreground">Workbench terms</div>
+              <p className="text-xs leading-5 text-muted-foreground">
+                When inherited Paperclip words appear, read them this way.
+              </p>
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {workbenchTerms.map((term) => (
+                <div key={term.title} className="border-b border-border pb-3 sm:border-b-0">
+                  <div className="text-xs font-medium uppercase text-muted-foreground">{term.title}</div>
+                  <p className="mt-1 text-sm leading-5 text-muted-foreground">{term.body}</p>
                 </div>
               ))}
             </div>
