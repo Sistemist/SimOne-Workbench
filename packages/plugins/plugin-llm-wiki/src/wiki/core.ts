@@ -512,6 +512,32 @@ function byteLength(contents: string): number {
   return Buffer.byteLength(contents, "utf8");
 }
 
+function extractWikiAnswerSourceRefs(answer: string): Array<{ kind: "wiki-page" | "raw-source"; path: string }> {
+  const refs: Array<{ kind: "wiki-page" | "raw-source"; path: string }> = [];
+  const seen = new Set<string>();
+  const addRef = (kind: "wiki-page" | "raw-source", rawPath: string) => {
+    const path = rawPath.trim().replace(/[),.;:]+$/g, "");
+    if (!path || seen.has(`${kind}:${path}`)) return;
+    seen.add(`${kind}:${path}`);
+    refs.push({ kind, path });
+  };
+
+  for (const match of answer.matchAll(/\[\[(wiki\/[^\]\|]+)(?:\|[^\]]+)?\]\]/g)) {
+    addRef("wiki-page", match[1] ?? "");
+  }
+  for (const match of answer.matchAll(/(?:^|[\s(])`?(wiki\/[A-Za-z0-9_./-]+\.md)`?/g)) {
+    addRef("wiki-page", match[1] ?? "");
+  }
+  for (const match of answer.matchAll(/\[\[(raw\/[^\]\|]+)(?:\|[^\]]+)?\]\]/g)) {
+    addRef("raw-source", match[1] ?? "");
+  }
+  for (const match of answer.matchAll(/(?:^|[\s(])`?(raw\/[A-Za-z0-9_./-]+)`?/g)) {
+    addRef("raw-source", match[1] ?? "");
+  }
+
+  return refs.slice(0, 12);
+}
+
 function slugify(value: string): string {
   const slug = value
     .trim()
@@ -3922,6 +3948,7 @@ export async function startWikiQuerySession(ctx: PluginContext, input: QuerySess
       });
       if (isTerminalSessionEvent(event)) {
         const finalStatus = event.eventType === "done" ? "done" : "failed";
+        const sourceRefs = event.eventType === "done" ? extractWikiAnswerSourceRefs(answer) : [];
         ctx.streams.emit(channel, {
           type: event.eventType === "done" ? "query.done" : "query.error",
           operationId: operation.operationId,
@@ -3930,6 +3957,7 @@ export async function startWikiQuerySession(ctx: PluginContext, input: QuerySess
           sessionId: session.sessionId,
           runId: event.runId,
           answer,
+          sourceRefs,
           message: event.message,
         });
         ctx.streams.close(channel);
@@ -3939,7 +3967,7 @@ export async function startWikiQuerySession(ctx: PluginContext, input: QuerySess
           status: finalStatus,
           runId: event.runId,
           warning: event.eventType === "error" ? event.message : null,
-          metadata: { answerLength: answer.length },
+          metadata: { answerLength: answer.length, sourceRefs },
         });
         void ctx.db.execute(
           `UPDATE ${tableName(ctx.db.namespace, "wiki_query_sessions")}

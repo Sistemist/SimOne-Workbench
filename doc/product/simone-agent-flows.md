@@ -90,8 +90,9 @@ flowchart LR
 Product rule: the coach should explain the method when it helps the user act,
 not turn the app into a course ad. A returned wiki answer is still ephemeral
 until the human deliberately saves it as a synthesis page. Current Coach source
-rendering is path-based: it lifts explicit `wiki/...` and `raw/...` references
-from answer text while the maintainer task remains the stronger audit trail.
+rendering uses structured `wiki/...` and `raw/...` answer refs when the SIM Wiki
+stream provides them, with answer-text path extraction as a fallback. The
+maintainer task remains the stronger audit trail.
 
 ## 5. Sovereign Model Routing Flow
 

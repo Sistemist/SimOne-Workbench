@@ -516,8 +516,11 @@ describe("SimCoach", () => {
     await act(async () => {
       fakeEventSources[0]?.emitMessage({
         type: "query.done",
-        answer:
-          "Check saved method pages. Customer review loop is the durable method here. See [[wiki/sim/engines.md]] and raw/founder-note.md.",
+        answer: "Check saved method pages. Customer review loop is the durable method here.",
+        sourceRefs: [
+          { kind: "wiki-page", path: "wiki/sim/engines.md" },
+          { kind: "raw-source", path: "raw/founder-note.md" },
+        ],
       });
     });
 
@@ -558,7 +561,7 @@ describe("SimCoach", () => {
     expect(params.contents).toContain("# SIM Wiki answer: Customer loop is leaking");
     expect(params.contents).toContain("## SIM Wiki Answer");
     expect(params.contents).toContain(
-      "Check saved method pages. Customer review loop is the durable method here. See [[wiki/sim/engines.md]] and raw/founder-note.md."
+      "Check saved method pages. Customer review loop is the durable method here."
     );
     expect(params.contents).toContain("## Sources Mentioned");
     expect(params.contents).toContain("- [[wiki/sim/engines.md]]");
@@ -572,6 +575,16 @@ describe("SimCoach", () => {
         kind: "sim-wiki-query",
         issueRef: "SYS-777",
         operationId: "operation-1",
+      },
+      {
+        kind: "sim-wiki-answer-source",
+        sourceKind: "wiki-page",
+        path: "wiki/sim/engines.md",
+      },
+      {
+        kind: "sim-wiki-answer-source",
+        sourceKind: "raw-source",
+        path: "raw/founder-note.md",
       },
       { kind: "simone-bottleneck-scan", artifact: "Venture Architecture Map" },
     ]);

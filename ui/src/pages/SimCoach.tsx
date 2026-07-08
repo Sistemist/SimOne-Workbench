@@ -166,6 +166,7 @@ type WikiRetrievalState =
       issueRef: string | null;
       channel: string | null;
       answer: string;
+      sourceRefs: WikiAnswerSource[];
       streamStatus: "connecting" | "running" | "done" | "error";
       streamMessage: string | null;
     }
@@ -262,6 +263,41 @@ function extractWikiAnswerSources(answer: string): WikiAnswerSource[] {
   return sources.slice(0, 8);
 }
 
+function normalizeWikiAnswerSourceRefs(value: unknown): WikiAnswerSource[] {
+  if (!Array.isArray(value)) return [];
+  const sources: WikiAnswerSource[] = [];
+  const seen = new Set<string>();
+
+  for (const ref of value) {
+    if (typeof ref !== "object" || ref == null || Array.isArray(ref)) continue;
+    const kind = (ref as { kind?: unknown }).kind;
+    const path = (ref as { path?: unknown }).path;
+    if ((kind !== "wiki-page" && kind !== "raw-source") || typeof path !== "string") continue;
+    const normalizedPath = path.trim().replace(/[),.;:]+$/g, "");
+    if (!normalizedPath || seen.has(`${kind}:${normalizedPath}`)) continue;
+    seen.add(`${kind}:${normalizedPath}`);
+    sources.push({ kind, path: normalizedPath });
+    if (sources.length >= 8) break;
+  }
+
+  return sources;
+}
+
+function collectWikiAnswerSources(answer: string, sourceRefs: WikiAnswerSource[] = []): WikiAnswerSource[] {
+  const sources: WikiAnswerSource[] = [];
+  const seen = new Set<string>();
+  const addSource = (source: WikiAnswerSource) => {
+    if (seen.has(`${source.kind}:${source.path}`)) return;
+    seen.add(`${source.kind}:${source.path}`);
+    sources.push(source);
+  };
+
+  sourceRefs.forEach(addSource);
+  extractWikiAnswerSources(answer).forEach(addSource);
+
+  return sources.slice(0, 8);
+}
+
 function wikiAnswerSourceMarkdown(source: WikiAnswerSource): string {
   return source.kind === "wiki-page" ? `- [[${source.path}]]` : `- \`${source.path}\``;
 }
@@ -317,7 +353,7 @@ function buildScannerWikiPromotion(context: ScannerCoachContext, methodology: Me
 function buildWikiAnswerPromotion(context: ScannerCoachContext, retrieval: QueuedWikiRetrieval, now = new Date()) {
   const path = `wiki/synthesis/coach-answer-${timestampForWikiPath(now)}-${slugifyForWikiPath(context.headline)}.md`;
   const updated = now.toISOString().slice(0, 10);
-  const answerSources = extractWikiAnswerSources(retrieval.answer);
+  const answerSources = collectWikiAnswerSources(retrieval.answer, retrieval.sourceRefs);
   const sourcesMentioned = answerSources.length > 0
     ? answerSources.map(wikiAnswerSourceMarkdown).join("\n")
     : "- No explicit wiki or raw source paths were mentioned in the answer.";
@@ -406,7 +442,7 @@ export function SimCoach() {
   const methodologyContext = scannerContext ? methodologyForScannerContext(scannerContext) : null;
   const wikiRetrievalQuestion = scannerContext ? buildWikiRetrievalQuestion(scannerContext) : null;
   const wikiAnswerSources =
-    retrievalState.status === "queued" ? extractWikiAnswerSources(retrievalState.answer) : [];
+    retrievalState.status === "queued" ? collectWikiAnswerSources(retrievalState.answer, retrievalState.sourceRefs) : [];
   const { data: plugins } = useQuery({
     queryKey: queryKeys.plugins.all,
     queryFn: () => pluginsApi.list(),
@@ -459,6 +495,7 @@ export function SimCoach() {
         stream?: unknown;
         message?: unknown;
         answer?: unknown;
+        sourceRefs?: unknown;
       };
       try {
         parsed = JSON.parse(event.data) as typeof parsed;
@@ -493,6 +530,7 @@ export function SimCoach() {
             ? {
                 ...current,
                 answer: typeof parsed.answer === "string" ? parsed.answer : current.answer,
+                sourceRefs: normalizeWikiAnswerSourceRefs(parsed.sourceRefs),
                 streamStatus: "done",
                 streamMessage: "Answer finished.",
               }
@@ -602,6 +640,7 @@ export function SimCoach() {
         issueRef: issueIdentifier || issueId || null,
         channel: typeof data?.channel === "string" ? data.channel : null,
         answer: "",
+        sourceRefs: [],
         streamStatus: typeof data?.channel === "string" ? "connecting" : "done",
         streamMessage: typeof data?.channel === "string" ? null : "SIM Wiki check queued.",
       });
@@ -643,6 +682,11 @@ export function SimCoach() {
               issueRef: retrievalState.issueRef,
               operationId: retrievalState.operationId,
             },
+            ...collectWikiAnswerSources(retrievalState.answer, retrievalState.sourceRefs).map((source) => ({
+              kind: "sim-wiki-answer-source",
+              sourceKind: source.kind,
+              path: source.path,
+            })),
             { kind: "simone-bottleneck-scan", artifact: scannerContext.artifact },
           ],
         },

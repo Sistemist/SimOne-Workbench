@@ -3717,7 +3717,7 @@ Duplicate headings receive stable suffixes.
       seq: 1,
       eventType: "chunk",
       stream: "stdout",
-      message: "Keep wiki behavior in the plugin.",
+      message: "Keep wiki behavior in [[wiki/sim/coach.md]] and `raw/founder-note.md`.",
       payload: null,
     });
     harness.simulateSessionEvent(result.sessionId, {
@@ -3732,8 +3732,15 @@ Duplicate headings receive stable suffixes.
 
     expect(streamEvents).toEqual(expect.arrayContaining([
       expect.objectContaining({ type: "query.started", operationId: result.operationId }),
-      expect.objectContaining({ type: "agent.event", message: "Keep wiki behavior in the plugin." }),
-      expect.objectContaining({ type: "query.done", answer: "Keep wiki behavior in the plugin." }),
+      expect.objectContaining({ type: "agent.event", message: "Keep wiki behavior in [[wiki/sim/coach.md]] and `raw/founder-note.md`." }),
+      expect.objectContaining({
+        type: "query.done",
+        answer: "Keep wiki behavior in [[wiki/sim/coach.md]] and `raw/founder-note.md`.",
+        sourceRefs: [
+          { kind: "wiki-page", path: "wiki/sim/coach.md" },
+          { kind: "raw-source", path: "raw/founder-note.md" },
+        ],
+      }),
     ]));
     expect(harness.dbExecutes.some((execute) =>
       execute.sql.includes("wiki_query_sessions") && execute.params?.includes("completed"),

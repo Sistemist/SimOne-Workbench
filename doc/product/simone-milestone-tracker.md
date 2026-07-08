@@ -37,7 +37,7 @@ enough to evaluate them.
 | Paperclip control-plane reuse | 55% | Companies, agents, tasks, skills, adapters, runs, costs, recovery inherited | Better Thomasina-facing labels, fewer raw control-plane concepts in first run |
 | PLG/Barnum layer | 53% | Public scanner, safer share summaries, shareable map interpretation, scanner-to-starter handoff | Stronger Sprint Zero brief, richer share previews, less generic public copy |
 | Customer Engine bridge | 78% | Read-only Tissuu bridge live, native dashboard/page card, SIM Wiki proof promotion | More visual QA, lived use, defer write-back v2 |
-| SIM Coach and SIM Wiki | 54% | Coach scanner explanations, scanner-to-wiki maintainer retrieval with streamed answer return, inline source-path rendering, returned-answer promotion to wiki, SIM method seed pages, product glossary/flow seed pages | Structured citation metadata, better wiki navigation, broader review promotion |
+| SIM Coach and SIM Wiki | 56% | Coach scanner explanations, scanner-to-wiki maintainer retrieval with streamed answer return, structured answer source refs, returned-answer promotion to wiki, SIM method seed pages, product glossary/flow seed pages | Better wiki navigation, broader review promotion |
 | Model routing and auditability | 32% | `model_route_decisions` ledger, lane vocabulary, local context compression envelope | Real provider execution, route/run linking, cost review UI, evaluations |
 | Compression/headroom | 8% | Local `simone_json_headroom_v0` envelope for bulky JSON route context | Evaluate Headroom/SmartCrusher, compare quality, support RAG/log/transcript payloads |
 | Full SIM operating system | 30% | Engines, drivers, governance, bridge, coach/wiki beginnings | SIM Starter, durable operating loops, production hardening |
@@ -111,6 +111,9 @@ Done:
   scanner context and maintainer-task provenance.
 - SIM Coach renders explicit wiki/raw source paths mentioned in returned answers
   and carries them into saved answer pages.
+- SIM Wiki query completion events now carry structured wiki/raw answer source
+  refs, and SIM Coach preserves those refs in rendered answers and saved-page
+  provenance.
 - Product definitions now exist in repo docs and in future wiki root templates.
 - SIM Starter now carries messy venture context into the first Sprint Zero
   "Draft the first SIM map" work item before opening the dashboard.
@@ -120,7 +123,6 @@ Done:
 Remaining:
 
 - Store founder source notes and first map drafts with provenance.
-- Add structured citation metadata beyond answer-text path extraction.
 - Add broader review/decision promotion paths beyond scanner-derived answers.
 
 ### M3: Sovereign Model Routing
