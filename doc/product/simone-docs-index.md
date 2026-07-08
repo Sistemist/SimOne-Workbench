@@ -25,7 +25,10 @@ already knowing Paperclip, SIM Coach, SIM Wiki, or the agent-routing plan?"
 5. `doc/product/simone-agent-flows.md`
    - Use this to understand how human judgment, SIM Coach, SIM Wiki,
      Paperclip, Tissuu, and model-routing lanes interact.
-6. `doc/product/simone-alpha-flow-blueprint.html`
+6. `doc/product/simone-model-routing.md`
+   - Use this to understand Fable 5, Fusion, Fugu/Fugu Ultra, Headroom, lane
+     boundaries, and why dev mode is sovereignty-first.
+7. `doc/product/simone-alpha-flow-blueprint.html`
    - Use this for the visual alpha flow and screen-behavior sketch.
 
 ## What Each Document Answers
@@ -37,8 +40,8 @@ already knowing Paperclip, SIM Coach, SIM Wiki, or the agent-routing plan?"
 | What did SimOne add on top of Paperclip? | PRD sections 6 and 8, glossary Paperclip terms |
 | What do SIM Coach and SIM Wiki mean? | PRD sections 6, glossary Product Surfaces, agent flows section 5 |
 | Which surface owns which job? | PRD "Surface Ownership Map", agent flows section 4 |
-| Why are we not defaulting to Fugu/Fusion/black-box routing yet? | PRD section 7, milestone tracker product stance, architecture model strategy |
-| What is Headroom status? | PRD section 7, milestone tracker M4, architecture model strategy |
+| Why are we not defaulting to Fugu/Fusion/black-box routing yet? | Model-routing strategy, PRD section 7, milestone tracker product stance, architecture model strategy |
+| What is Headroom status? | Model-routing strategy, PRD section 7, milestone tracker M4, architecture model strategy |
 | What remains before productization? | PRD milestones, milestone tracker next sequence |
 
 ## Vocabulary Rule
@@ -61,4 +64,3 @@ The PRD is the product source of truth. The architecture file is the operating
 source of truth. The milestone tracker is the short status source of truth. The
 glossary and agent-flow map are the alignment aids. SIM Wiki seeds should mirror
 the same definitions so Coach/Wiki answers do not drift away from the repo.
-

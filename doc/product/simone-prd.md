@@ -285,9 +285,11 @@ Current SIM Wiki template behavior:
   coaching guidance.
 - Bootstraps `wiki/concepts/simone-product-language.md`,
   `wiki/concepts/simone-prd.md`, `wiki/concepts/simone-glossary.md`, and
-  `wiki/concepts/simone-agent-flows.md` so product direction, milestone state,
-  Thomasina-facing vocabulary, hidden provider choices, Fusion/Fugu experiment
-  boundaries, and human-in-the-loop agent flow have durable first definitions.
+  `wiki/concepts/simone-agent-flows.md`, and
+  `wiki/concepts/simone-model-routing.md` so product direction, milestone
+  state, Thomasina-facing vocabulary, hidden provider choices, Fusion/Fugu
+  experiment boundaries, Headroom status, and human-in-the-loop agent flow have
+  durable first definitions.
 - Accepts the first Coach-driven promotion path: scanner syntheses can become
   durable pages while live bridge counts remain ephemeral.
 - Lets SIM Coach queue a SIM Wiki Maintainer query from saved scanner context
@@ -328,6 +330,10 @@ compresses that payload into `metadata.contextCompression` using the local
 counts, input/output hashes, redacted keys, omitted array items, and the
 compressed JSON string. This keeps the audit spine explicit before model calls
 consume large bridge/tool/RAG payloads.
+
+The companion strategy note `doc/product/simone-model-routing.md` is the
+reader-friendly source for the Fable 5, Fusion, Fugu/Fugu Ultra, Headroom, and
+lane-boundary discussion.
 
 ### Fable 5
 
@@ -559,6 +565,7 @@ auditable enough that Han can trust the system while building it.
 - `doc/product/simone-milestone-tracker.md`
 - `doc/product/simone-glossary.md`
 - `doc/product/simone-agent-flows.md`
+- `doc/product/simone-model-routing.md`
 - `doc/plans/2026-07-07-simone-plg-barnum-layer.md`
 - `doc/plans/2026-07-02-simone-memory-coach-layer.md`
 - `doc/plans/2026-07-07-tissuu-bridge-response.md`

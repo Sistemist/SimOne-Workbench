@@ -21,6 +21,7 @@ _(none yet)_
 - [[wiki/concepts/simone-prd]] — current product state, milestone shape, and routing posture for the alpha.
 - [[wiki/concepts/simone-glossary]] — short definitions for Thomasina-facing SimOne, SIM, bridge, wiki, and routing terms.
 - [[wiki/concepts/simone-agent-flows]] — default human-in-the-loop agent flow, routing layers, and experiment-lane boundaries.
+- [[wiki/concepts/simone-model-routing]] — sovereignty-first routing posture, Fable/Fusion/Fugu lane boundaries, and Headroom status.
 
 ## SIM
 

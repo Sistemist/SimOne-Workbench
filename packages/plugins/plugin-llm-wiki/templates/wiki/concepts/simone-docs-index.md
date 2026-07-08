@@ -25,7 +25,9 @@ answers about SimOne.
    SIM term, routing term, or product-surface name.
 5. `doc/product/simone-agent-flows.md` for how human judgment, SIM Coach,
    SIM Wiki, Paperclip, Tissuu, and routing lanes interact.
-6. `doc/product/simone-alpha-flow-blueprint.html` for the visual alpha flow.
+6. `doc/product/simone-model-routing.md` for Fable 5, Fusion, Fugu/Fugu Ultra,
+   Headroom, lane boundaries, and the sovereignty-first dev-mode rule.
+7. `doc/product/simone-alpha-flow-blueprint.html` for the visual alpha flow.
 
 ## What to read by question
 
@@ -37,8 +39,9 @@ answers about SimOne.
   glossary Product Surfaces, and agent-flow interaction section.
 - "Which surface owns which job?" Read the PRD surface ownership map and
   agent-flow ownership map.
-- "Why not Fugu or Fusion by default yet?" Read the PRD model strategy,
-  milestone tracker product stance, and architecture model strategy.
+- "Why not Fugu or Fusion by default yet?" Read the model-routing strategy,
+  PRD model strategy, milestone tracker product stance, and architecture model
+  strategy.
 - "What is Headroom status?" Read the PRD Headroom section, milestone tracker
   M4, and architecture model strategy.
 
@@ -57,4 +60,3 @@ The PRD is the product source of truth. The architecture file is the operating
 source of truth. The milestone tracker is the short status source of truth. The
 glossary and agent-flow map are alignment aids. SIM Wiki answers should mirror
 these definitions and cite source pages when possible.
-

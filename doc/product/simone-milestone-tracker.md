@@ -91,6 +91,9 @@ Done:
 - The repo and SIM Wiki seeds now include a SimOne documentation index that
   tells Han, Coach, and future wiki maintainers what to read first and which
   document answers which kind of question.
+- The repo and SIM Wiki seeds now include a dedicated model-routing strategy
+  page for sovereignty-first dev mode, Fable 5, Fusion, Fugu/Fugu Ultra, and
+  Headroom status.
 - The alpha product-flow blueprint now maps landing, sign-in, messy venture
   intake, guided draft, SIM map, Sprint Zero, diagnosis, next action, settings
   placement, and incomplete-data behavior.
@@ -192,6 +195,8 @@ Done:
 - Fugu/Fugu Ultra is defined as an optional specialist execution adapter, not
   the root controller.
 - Fable 5 is defined as a possible boardroom brain/meta-review model.
+- `doc/product/simone-model-routing.md` now keeps the model/router decision
+  logic in one reader-friendly source.
 
 Remaining:
 

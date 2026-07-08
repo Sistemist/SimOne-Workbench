@@ -80,6 +80,7 @@ Current product source docs:
 - `doc/product/simone-milestone-tracker.md`
 - `doc/product/simone-glossary.md`
 - `doc/product/simone-agent-flows.md`
+- `doc/product/simone-model-routing.md`
 
 ## Main Runtime
 

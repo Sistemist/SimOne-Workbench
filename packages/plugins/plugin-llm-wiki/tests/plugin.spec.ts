@@ -2799,6 +2799,7 @@ Duplicate headings receive stable suffixes.
       "wiki/concepts/simone-prd.md",
       "wiki/concepts/simone-glossary.md",
       "wiki/concepts/simone-agent-flows.md",
+      "wiki/concepts/simone-model-routing.md",
       "wiki/sim/.gitkeep",
       "wiki/sim/archetypes.md",
       "wiki/sim/coaching-guidance.md",
@@ -2816,6 +2817,7 @@ Duplicate headings receive stable suffixes.
     expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-prd]]");
     expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-glossary]]");
     expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-agent-flows]]");
+    expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-model-routing]]");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("SIM Coach");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("SIM Wiki");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("Paperclip supplies the control plane");
@@ -2831,6 +2833,10 @@ Duplicate headings receive stable suffixes.
     expect(writes.find((write) => write.path === "wiki/concepts/simone-agent-flows.md")?.contents).toContain("Fable 5 can act as a boardroom brain");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-agent-flows.md")?.contents).toContain("Fugu/Fugu Ultra should start as optional specialist adapters");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-agent-flows.md")?.contents).toContain("Surface ownership");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-model-routing.md")?.contents).toContain("Dev mode favors sovereignty and auditability");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-model-routing.md")?.contents).toContain("OpenRouter Fusion is a deliberation and audit lane");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-model-routing.md")?.contents).toContain("Fugu/Fugu Ultra is an external specialist lane");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-model-routing.md")?.contents).toContain("External Headroom/SmartCrusher is not wired yet");
     expect(writes.find((write) => write.path === "wiki/sim/engines.md")?.contents).toContain("Product Engine");
   });
 

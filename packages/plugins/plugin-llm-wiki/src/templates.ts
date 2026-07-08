@@ -58,6 +58,7 @@ export const DEFAULT_SIMONE_DOCS_INDEX = templateFile("wiki/concepts/simone-docs
 export const DEFAULT_SIMONE_PRD = templateFile("wiki/concepts/simone-prd.md");
 export const DEFAULT_SIMONE_GLOSSARY = templateFile("wiki/concepts/simone-glossary.md");
 export const DEFAULT_SIMONE_AGENT_FLOWS = templateFile("wiki/concepts/simone-agent-flows.md");
+export const DEFAULT_SIMONE_MODEL_ROUTING = templateFile("wiki/concepts/simone-model-routing.md");
 
 export const QUERY_PROMPT = `Answer from the SIM Wiki using the installed wiki-query skill.
 
@@ -85,6 +86,7 @@ export const BOOTSTRAP_FILES: ReadonlyArray<{ path: string; contents: string }> 
   { path: "wiki/concepts/simone-prd.md", contents: DEFAULT_SIMONE_PRD },
   { path: "wiki/concepts/simone-glossary.md", contents: DEFAULT_SIMONE_GLOSSARY },
   { path: "wiki/concepts/simone-agent-flows.md", contents: DEFAULT_SIMONE_AGENT_FLOWS },
+  { path: "wiki/concepts/simone-model-routing.md", contents: DEFAULT_SIMONE_MODEL_ROUTING },
   { path: "wiki/sim/.gitkeep", contents: "" },
   { path: "wiki/sim/archetypes.md", contents: DEFAULT_SIM_ARCHETYPES },
   { path: "wiki/sim/coaching-guidance.md", contents: DEFAULT_SIM_COACHING_GUIDANCE },

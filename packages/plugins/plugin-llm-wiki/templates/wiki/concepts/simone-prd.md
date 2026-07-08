@@ -27,6 +27,7 @@ Current strongest pieces:
 - public scanner and shareable artifact beginnings
 - first SIM Coach and SIM Wiki promotion paths
 - first auditable model-route ledger and local JSON compression envelope
+- dedicated model-routing strategy page for Fable, Fusion, Fugu, and Headroom
 
 Current weakest pieces:
 
@@ -76,6 +77,9 @@ current implementation is a local audited JSON envelope.
 route ledger exists.
 
 ## Routing Notes
+
+The dedicated model-routing page is the best place to answer "which model or
+router should do what?" without exposing provider setup to first-run users.
 
 Fable 5 is a candidate boardroom brain for high-level strategy, SIM Coach,
 architecture review, and audits when API access is available.
