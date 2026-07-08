@@ -231,6 +231,20 @@ Do not ask founders/students to hand-fill engines and drivers at the start.
 UI may use familiar titles like CEO, CTO, CMO, and Customer Lead, but internally
 these should map to SIM engines, drivers, and controller boundaries.
 
+Operating role stack:
+
+- Human owner: final judgment and values; Han now, Thomasina/account owner later.
+- Boardroom brain: optional high-context reviewer such as Fable 5 for strategy,
+  SIM Coach deep review, architecture, or audits. It advises; it does not own the
+  company.
+- Engine steward: Product, Customer, Cash, or Skills lead that makes one SIM
+  engine legible and turns signals into bounded work.
+- Specialist adapter: bounded execution helper such as future Fugu/Fugu Ultra,
+  Codex, Claude, process, or HTTP adapter. It returns candidate output for
+  SimOne review.
+- Task agent: Paperclip agent working one protected task with a run, cost, and
+  approval receipt.
+
 Current small UI nudge:
 
 - Empty operating-team dashboard state points users to SIM Starter instead of

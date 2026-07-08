@@ -27,8 +27,8 @@ SimOne auditable while we build it.
 | --- | --- | --- | --- |
 | SimOne is the hosted product shell and SIM operating layer | `ARCHITECTURE.md`, `doc/product/simone-prd.md` | Documented direction | Continue aligning runtime screens with product language |
 | Paperclip remains the base/reference control plane | `ARCHITECTURE.md`, `doc/product/simone-workbench-field-guide.md`, inherited Paperclip routes/UI | Implemented and documented | Keep reducing raw control-plane language in first-run flows |
-| The docs now explain PRD, architecture, terms, flows, routing, Workbench surfaces, and state ownership | `doc/product/simone-docs-index.md`, PRD, glossary, flow map, routing strategy, field guide | Implemented and tested through SIM Wiki seed coverage | Keep state ownership and surface definitions current as features move |
-| SIM Wiki can bootstrap durable SimOne definitions | `packages/plugins/plugin-llm-wiki/src/templates.ts`, `packages/plugins/plugin-llm-wiki/templates/wiki/concepts/*`, `packages/plugins/plugin-llm-wiki/tests/plugin.spec.ts` | Implemented and tested | Broaden wiki navigation and refresh routines around new concept pages |
+| The docs now explain PRD, architecture, terms, flows, routing, Workbench surfaces, state ownership, and the operating role stack | `ARCHITECTURE.md`, `doc/product/simone-docs-index.md`, PRD, glossary, flow map, routing strategy, field guide | Implemented and tested through SIM Wiki seed coverage | Keep state ownership and surface definitions current as features move |
+| SIM Wiki can bootstrap durable SimOne definitions | `packages/plugins/plugin-llm-wiki/src/templates.ts`, `packages/plugins/plugin-llm-wiki/templates/wiki/concepts/*`, `packages/plugins/plugin-llm-wiki/templates/wiki/sim/*`, `packages/plugins/plugin-llm-wiki/tests/plugin.spec.ts` | Implemented and tested | Broaden wiki navigation and refresh routines around new concept pages |
 
 ## 3. Runtime Feature Traceability
 
@@ -61,7 +61,7 @@ SimOne auditable while we build it.
 
 | Workstream | Linear issue | Current map |
 | --- | --- | --- |
-| Product-flow blueprint, docs, first-screen behavior | `SYS-181` | PRD, docs index, field guide, evidence map, alpha-flow blueprint |
+| Product-flow blueprint, docs, first-screen behavior | `SYS-181` | PRD, docs index, field guide, evidence map, role-stack definitions, alpha-flow blueprint |
 | Tissuu Customer Engine bridge | `SYS-198` | Bridge live/read-only; write-back deferred |
 | Shareable venture artifacts | `SYS-199` | Shareable Venture Architecture Map exists with public preview, proof context, and a generated review package; stronger visual previews and lived public feedback remain |
 | Public Systems Bottleneck Scanner | `SYS-200` | Scanner, lived examples, signal strength, secondary engine watch, calibration status, safe diagnosis signals, and Sprint Zero handoff exist; real-submission score tuning remains |
