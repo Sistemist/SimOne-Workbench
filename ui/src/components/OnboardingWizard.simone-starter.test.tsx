@@ -142,6 +142,7 @@ describe("OnboardingWizard SIM Starter path", () => {
     ]);
     mockIssuesApi.update.mockResolvedValue({
       id: "issue-1",
+      identifier: "SYS-1",
       title: "Draft the first SIM map",
     });
   });
@@ -235,7 +236,7 @@ describe("OnboardingWizard SIM Starter path", () => {
     );
     expect(mockSetSelectedCompanyId).toHaveBeenCalledWith("company-1");
     expect(mockCloseOnboarding).toHaveBeenCalled();
-    expect(mockNavigate).toHaveBeenCalledWith("/SYS/dashboard");
+    expect(mockNavigate).toHaveBeenCalledWith("/SYS/issues/SYS-1");
   });
 
   it("frames the starter input as messy venture context before setup", () => {

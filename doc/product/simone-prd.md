@@ -128,7 +128,9 @@ bundled SIM Starter team and Sprint Zero project, then attaches the messy input
 to the first "Draft the first SIM map" work item. That task asks for a plain
 venture map, Product/Customer/Cash/Skills assumptions, unknowns that need proof,
 the first Sprint Zero move, and approval before agents act on customers, money,
-public claims, or company structure.
+public claims, or company structure. After setup, the user lands on that seeded
+Sprint Zero work item instead of a generic dashboard whenever the task can be
+resolved.
 
 ### Tissuu Bridge
 

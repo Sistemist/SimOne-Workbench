@@ -514,6 +514,7 @@ export function OnboardingWizard() {
         result.portabilityImport.projects.find((project) => project.slug === "sprint-zero" && project.id)?.id ?? null;
       const ceoAgentId =
         result.portabilityImport.agents.find((agent) => agent.slug === "ceo" && agent.id)?.id ?? null;
+      let starterIssuePathId: string | null = null;
 
       try {
         const firstMapIssues = await issuesApi.list(companyId, {
@@ -524,9 +525,10 @@ export function OnboardingWizard() {
           firstMapIssues.find((issue) => issue.title === "Draft the first SIM map") ?? firstMapIssues[0] ?? null;
 
         if (importedFirstMapIssue) {
-          await issuesApi.update(importedFirstMapIssue.id, { description });
+          const updatedIssue = await issuesApi.update(importedFirstMapIssue.id, { description });
+          starterIssuePathId = updatedIssue.identifier ?? updatedIssue.id;
         } else {
-          await issuesApi.create(companyId, {
+          const createdIssue = await issuesApi.create(companyId, {
             title: "Draft the first SIM map from messy context",
             description,
             projectId: sprintZeroProjectId,
@@ -535,6 +537,7 @@ export function OnboardingWizard() {
             status: "todo",
             priority: "high",
           });
+          starterIssuePathId = createdIssue.identifier ?? createdIssue.id;
         }
       } catch (err) {
         console.warn("Failed to attach SIM Starter context to Sprint Zero issue:", err);
@@ -555,7 +558,11 @@ export function OnboardingWizard() {
       setSelectedCompanyId(companyId);
       reset();
       closeOnboarding();
-      navigate(companyPrefix ? `/${companyPrefix}/dashboard` : "/dashboard");
+      if (starterIssuePathId) {
+        navigate(companyPrefix ? `/${companyPrefix}/issues/${starterIssuePathId}` : `/issues/${starterIssuePathId}`);
+      } else {
+        navigate(companyPrefix ? `/${companyPrefix}/dashboard` : "/dashboard");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create SIM Starter");
     } finally {
