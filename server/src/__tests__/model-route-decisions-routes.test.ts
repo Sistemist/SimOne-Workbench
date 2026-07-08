@@ -140,4 +140,112 @@ describeEmbeddedPostgres("model route decision routes", () => {
       model: "openrouter/fusion",
     });
   });
+
+  it("compresses bulky JSON context into auditable metadata instead of storing raw payloads", async () => {
+    const { companyId, agentId } = await seed();
+    const app = createApp(db, boardActor(companyId));
+    const repeatedActions = Array.from({ length: 20 }, (_, index) => ({
+      id: `reply:${index}`,
+      title: `Review reply ${index}`,
+      reason: "Grounded in a real signal that should stay live in the source system.",
+      authorization: "Bearer do-not-store",
+      notes: "Customer queue detail. ".repeat(80),
+    }));
+
+    const createRes = await request(app)
+      .post(`/api/companies/${companyId}/model-route-decisions`)
+      .send({
+        agentId,
+        lane: "workhorse",
+        provider: "anthropic",
+        model: "claude-sonnet",
+        reason: "Summarize bridge context for SIM Coach without bloating the context window.",
+        riskLevel: "medium",
+        taskIntent: "Explain Customer Engine signal.",
+        contextSummary: "Live Tissuu bridge digest plus review queue sample.",
+        approvalGate: "human_before_customer_action",
+        metadata: { source: "SYS-202" },
+        contextPayload: {
+          sourceKind: "tissuu-customer-engine-bridge",
+          generatedAt: "2026-07-08T00:00:00Z",
+          actions: repeatedActions,
+        },
+      });
+
+    expect(createRes.status).toBe(201);
+    expect(createRes.body.metadata.source).toBe("SYS-202");
+    expect(createRes.body.metadata.contextCompression).toMatchObject({
+      strategy: "simone_json_headroom_v0",
+      sourceKind: "tissuu-customer-engine-bridge",
+      lossy: true,
+      redactedKeys: ["authorization"],
+      omittedArrayItems: 17,
+    });
+    expect(createRes.body.metadata.contextCompression.inputBytes).toBeGreaterThan(
+      createRes.body.metadata.contextCompression.outputBytes,
+    );
+    expect(createRes.body.metadata.contextCompression.inputSha256).toEqual(expect.any(String));
+    expect(createRes.body.metadata.contextCompression.outputSha256).toEqual(expect.any(String));
+    expect(createRes.body.metadata.contextCompression.compressedJson).toContain("__simoneCompressedArray");
+    expect(createRes.body.metadata.contextCompression.compressedJson).toContain("[redacted]");
+    expect(createRes.body.metadata.contextCompression.compressedJson).not.toContain("do-not-store");
+    expect(createRes.body.metadata.contextCompression.compressedJson).not.toContain("reply:19");
+  });
+
+  it("redacts obvious secret values and bounds wide context payloads", async () => {
+    const { companyId, agentId } = await seed();
+    const app = createApp(db, boardActor(companyId));
+    const widePayload = Object.fromEntries(
+      Array.from({ length: 80 }, (_, index) => [`field${index}`, `value-${index}`]),
+    );
+
+    const createRes = await request(app)
+      .post(`/api/companies/${companyId}/model-route-decisions`)
+      .send({
+        agentId,
+        lane: "workhorse",
+        provider: "anthropic",
+        model: "claude-sonnet",
+        reason: "Compress a wide context object before routing.",
+        metadata: { source: "SYS-202" },
+        contextPayload: {
+          sourceKind: "wide-test",
+          prompt: "Use Authorization: Bearer live-secret-value before continuing.",
+          cookieHeader: "session=live-cookie-value",
+          widePayload,
+        },
+      });
+
+    expect(createRes.status).toBe(201);
+    const envelope = createRes.body.metadata.contextCompression;
+    expect(envelope.redactedValues).toBeGreaterThanOrEqual(2);
+    expect(envelope.omittedObjectKeys).toBeGreaterThan(0);
+    expect(envelope.compressedJson).toContain("__simoneCompressedObject");
+    expect(envelope.compressedJson).toContain("[redacted]");
+    expect(envelope.compressedJson).not.toContain("live-secret-value");
+    expect(envelope.compressedJson).not.toContain("live-cookie-value");
+    expect(envelope.compressedJson).not.toContain("field79");
+  });
+
+  it("rejects raw context-like or secret-like metadata fields", async () => {
+    const { companyId, agentId } = await seed();
+    const app = createApp(db, boardActor(companyId));
+
+    const createRes = await request(app)
+      .post(`/api/companies/${companyId}/model-route-decisions`)
+      .send({
+        agentId,
+        lane: "workhorse",
+        provider: "anthropic",
+        model: "claude-sonnet",
+        reason: "Attempt to bypass context compression.",
+        metadata: {
+          source: "SYS-202",
+          rawContext: { authorization: "Bearer do-not-store" },
+        },
+      });
+
+    expect(createRes.status).toBe(400);
+    expect(createRes.body.error).toContain("Use contextPayload");
+  });
 });

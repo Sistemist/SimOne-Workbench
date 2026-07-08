@@ -188,11 +188,15 @@ settings, not first-run.
 
 **Headroom**
 : A candidate compression layer for tool outputs, JSON, code, RAG chunks, files,
-logs, and conversation history. Not yet implemented in SimOne.
+logs, and conversation history. External Headroom is not wired into SimOne yet;
+SimOne currently has a local audited JSON compression envelope for bulky route
+decision context payloads.
 
 **SmartCrusher**
 : Headroom's JSON compression component. Candidate first use: Tissuu bridge
-payloads, scanner payloads, wiki retrieval results, and run transcripts.
+payloads, scanner payloads, wiki retrieval results, and run transcripts. The
+current local baseline is `simone_json_headroom_v0`, which can later be compared
+against SmartCrusher.
 
 **Dify**
 : Existing knowledge/RAG service used by Tissuu and possibly SimOne. It remains

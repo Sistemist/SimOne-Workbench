@@ -29,6 +29,7 @@ export const createModelRouteDecisionSchema = z.object({
   riskLevel: modelRouteDecisionRiskLevelSchema.optional().default("unknown"),
   taskIntent: z.string().min(1).optional().nullable(),
   contextSummary: z.string().min(1).optional().nullable(),
+  contextPayload: z.unknown().optional(),
   approvalGate: z.string().min(1).optional().nullable(),
   metadata: z.record(z.string(), z.unknown()).optional().default({}),
   createdByRunId: z.string().uuid().optional().nullable(),

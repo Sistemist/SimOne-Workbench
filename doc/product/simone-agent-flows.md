@@ -17,7 +17,7 @@ flowchart TD
   R --> M["Model lanes\nbackground, workhorse, frontier, deliberation/audit, specialist"]
   M --> OR["Optional OpenRouter Fusion deliberation lane"]
   M --> F["Optional Fugu/Fugu Ultra execution lane"]
-  M --> HR["Optional Headroom compression before model context"]
+  M --> HR["Local compression envelope\nfuture Headroom/SmartCrusher adapter"]
 ```
 
 Principle: the human keeps judgment, SimOne supervises and explains, Paperclip
@@ -103,8 +103,8 @@ sequenceDiagram
   S->>R: Submit task intent, risk level, context summary
   R->>R: Choose lane and required approval gate
   R->>L: Record route decision before execution
-  R->>H: Optionally compress large JSON/code/RAG context
-  H-->>R: Compressed context plus retrieval references
+  R->>H: Compress bulky JSON context payload
+  H-->>R: Audited envelope with hashes, byte counts, redactions, samples
   R->>M: Run explicit provider/model/adapter
   M-->>R: Return output and usage
   R->>L: Link route to run, cost, output, confidence

@@ -24,8 +24,13 @@ import {
 } from "../services/index.js";
 import { assertBoard, assertCompanyAccess, getActorInfo } from "./authz.js";
 import { fetchAllQuotaWindows } from "../services/quota-windows.js";
+import { compressJsonContextPayload } from "../services/context-compression.js";
 import { badRequest } from "../errors.js";
 import type { PluginWorkerManager } from "../services/plugin-worker-manager.js";
+
+const RAW_CONTEXT_METADATA_KEY_PATTERN = /authorization|api[-_]?key|bearer|context|cookie|password|payload|secret|token/i;
+const RAW_CONTEXT_METADATA_VALUE_PATTERN =
+  /authorization:\s*bearer\s+|bearer\s+[a-z0-9._~+/=-]+|session=[^;\s]+|-----BEGIN [A-Z ]*PRIVATE KEY-----/i;
 
 export function parseCostDateRange(query: Record<string, unknown>) {
   const fromRaw = query.from as string | undefined;
@@ -45,6 +50,29 @@ export function parseCostLimit(query: Record<string, unknown>) {
     throw badRequest("invalid 'limit' value");
   }
   return limit;
+}
+
+function assertModelRouteMetadataSafe(metadata: Record<string, unknown> | undefined) {
+  if (!metadata) return;
+  const stack: Array<{ path: string; value: unknown }> = Object.entries(metadata).map(([key, value]) => ({
+    path: key,
+    value,
+  }));
+  while (stack.length > 0) {
+    const { path, value } = stack.pop()!;
+    const key = path.split(".").at(-1) ?? path;
+    if (RAW_CONTEXT_METADATA_KEY_PATTERN.test(key)) {
+      throw badRequest(`Use contextPayload for bulky or sensitive route context instead of metadata.${path}`);
+    }
+    if (typeof value === "string" && RAW_CONTEXT_METADATA_VALUE_PATTERN.test(value)) {
+      throw badRequest(`Use contextPayload for bulky or sensitive route context instead of metadata.${path}`);
+    }
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      for (const [childKey, childValue] of Object.entries(value as Record<string, unknown>)) {
+        stack.push({ path: `${path}.${childKey}`, value: childValue });
+      }
+    }
+  }
 }
 
 export function costRoutes(
@@ -156,7 +184,15 @@ export function costRoutes(
       }
 
       const actor = getActorInfo(req);
-      const decision = await modelRouteDecisions.create(companyId, req.body, {
+      const { contextPayload, ...decisionInput } = req.body;
+      assertModelRouteMetadataSafe(decisionInput.metadata);
+      const metadata = {
+        ...(decisionInput.metadata ?? {}),
+        ...(contextPayload === undefined
+          ? {}
+          : { contextCompression: compressJsonContextPayload(contextPayload) }),
+      };
+      const decision = await modelRouteDecisions.create(companyId, { ...decisionInput, metadata }, {
         createdByAgentId: actor.agentId,
         createdByUserId: actor.actorType === "user" ? actor.actorId : null,
       });

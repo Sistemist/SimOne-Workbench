@@ -242,9 +242,11 @@ Routing audit spine:
   disagreement and blind spots are valuable.
 - Use `external_specialist` for future Fugu/Fugu Ultra-style specialist
   execution experiments.
-- Headroom/SmartCrusher-style compression is not implemented yet; it remains a
-  planned context-infrastructure candidate before large JSON, code, log, or RAG
-  payloads enter model context.
+- External Headroom/SmartCrusher integration is not wired yet. SimOne now has a
+  local `simone_json_headroom_v0` JSON compression envelope for route-decision
+  `contextPayload` input: it records input/output hashes and byte counts,
+  source kind, redacted keys, omitted array items, and compressed JSON before a
+  future model call consumes bulky bridge/tool/RAG context.
 
 Fable 5 discussion, verified 2026-07-07:
 

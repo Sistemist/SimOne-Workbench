@@ -30,15 +30,19 @@ export function modelRouteDecisionService(db: Db) {
         throw unprocessable("Agent does not belong to company");
       }
 
+      const { contextPayload: _contextPayload, ...insertData } = data as CreateModelRouteDecision & {
+        contextPayload?: unknown;
+      };
+
       return db
         .insert(modelRouteDecisions)
         .values({
-          ...data,
+          ...insertData,
           companyId,
-          metadata: data.metadata ?? {},
+          metadata: insertData.metadata ?? {},
           createdByAgentId: actor.createdByAgentId ?? null,
           createdByUserId: actor.createdByUserId ?? null,
-          createdByRunId: data.createdByRunId ?? data.heartbeatRunId ?? null,
+          createdByRunId: insertData.createdByRunId ?? insertData.heartbeatRunId ?? null,
         })
         .returning()
         .then((rows) => rows[0]);

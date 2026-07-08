@@ -30,8 +30,8 @@ certifications.
 | PLG/Barnum layer | 52% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts |
 | Customer Engine bridge | 78% | Read-only Tissuu bridge live; Customer Engine page can promote a proof readout into SIM Wiki without mutating Tissuu |
 | SIM Coach and SIM Wiki | 42% | Product direction documented; contextual coach loop explains scanner results; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include a SimOne product-language page |
-| Model routing and auditability | 30% | Strategy documented; Workbench now has an initial `model_route_decisions` ledger; actual provider orchestration and evaluations remain |
-| Compression/headroom | 0% | Headroom/SmartCrusher not implemented yet |
+| Model routing and auditability | 32% | Strategy documented; Workbench has an initial `model_route_decisions` ledger; route decisions can now attach a compressed context envelope; actual provider orchestration and evaluations remain |
+| Compression/headroom | 8% | External Headroom/SmartCrusher not integrated; SimOne now has a local audited JSON compression envelope for route-decision context payloads |
 | Full SIM operating system | 30% | Engines and governance are defined, but onboarding, memory, routing, evaluations, and product polish remain |
 
 Overall: SimOne is roughly 45-55% complete as a coherent alpha product shell and
@@ -241,6 +241,13 @@ API for recording the chosen lane, provider/model, reason, risk level, context
 summary, approval gate, and metadata before execution. This is the first
 concrete routing ledger primitive, not a full router yet.
 
+Route decisions can also accept an optional bulky JSON `contextPayload`. SimOne
+compresses that payload into `metadata.contextCompression` using the local
+`simone_json_headroom_v0` strategy, recording source kind, input/output byte
+counts, input/output hashes, redacted keys, omitted array items, and the
+compressed JSON string. This keeps the audit spine explicit before model calls
+consume large bridge/tool/RAG payloads.
+
 ### Fable 5
 
 Fable 5 is a candidate "boardroom brain" or meta-controller for high-level SIM
@@ -296,6 +303,13 @@ compression, local reversible storage, and cache-aligned prefixes.
 
 SimOne has not implemented Headroom yet. It belongs in the model/context
 infrastructure milestone, not in the public first-use UI.
+
+Current implementation status: the external Headroom/SmartCrusher provider is
+not wired. SimOne now has a local, deterministic JSON compression envelope for
+route-decision context payloads. It is lossy, redacts obvious secret-bearing
+keys, samples long arrays, truncates long strings, and stores hashes and byte
+counts so later Headroom or SmartCrusher integration can be compared against a
+known internal baseline.
 
 ## 8. Required Product Surfaces
 
@@ -403,7 +417,9 @@ Goal: preserve useful context without bloating model calls.
 - Evaluate Headroom locally against SimOne payloads.
 - Start with JSON bridge payloads, wiki retrieval chunks, run transcripts, and
   scanner context.
-- Store compression metadata and original retrieval references.
+- Store compression metadata and original retrieval references. The first local
+  implementation stores audited JSON compression metadata on model route
+  decisions.
 - Confirm that compressed context does not degrade answer quality.
 
 ### M5: Experiment Lane
