@@ -48,6 +48,19 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Product proof");
     expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
 
+    const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
+    expect(links.some((link) => link.textContent?.includes("SimOne") && link.getAttribute("href") === "/")).toBe(true);
+    expect(
+      links.some((link) => link.textContent?.includes("Sign in") && link.getAttribute("href") === "/auth?next=%2Fapp"),
+    ).toBe(true);
+    expect(
+      links.some(
+        (link) =>
+          link.textContent?.includes("Create full map") &&
+          link.getAttribute("href") === "/auth?mode=sign_up&next=%2Fonboarding",
+      ),
+    ).toBe(true);
+
     const cashExample = Array.from(container.querySelectorAll("button")).find((candidate) =>
       candidate.textContent?.includes("Cash runway"),
     );

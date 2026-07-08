@@ -418,10 +418,13 @@ export function SystemsBottleneckScanner() {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:py-10">
         <header className="flex flex-wrap items-start justify-between gap-4 border-b border-border pb-5">
           <div className="max-w-3xl">
-            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <a
+              href="/"
+              className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+            >
               <Radar className="h-4 w-4" aria-hidden="true" />
               <span>SimOne</span>
-            </div>
+            </a>
             <h1 className="mt-3 text-2xl font-semibold tracking-normal sm:text-3xl">
               Systems Bottleneck Scanner
             </h1>
@@ -436,12 +439,20 @@ export function SystemsBottleneckScanner() {
               Use it when you can describe what feels stuck, but you are not ready to set up the whole company yet.
             </p>
           </div>
-          <a
-            href={signUpHref("/onboarding")}
-            className="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent"
-          >
-            Create full map
-          </a>
+          <div className="flex items-center gap-3">
+            <a
+              href="/auth?next=%2Fapp"
+              className="inline-flex h-9 items-center justify-center text-sm font-medium text-muted-foreground transition hover:text-foreground"
+            >
+              Sign in
+            </a>
+            <a
+              href={signUpHref("/onboarding")}
+              className="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent"
+            >
+              Create full map
+            </a>
+          </div>
         </header>
 
         <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
