@@ -29,7 +29,7 @@ certifications.
 | Paperclip control-plane reuse | 55% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted |
 | PLG/Barnum layer | 52% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts |
 | Customer Engine bridge | 78% | Read-only Tissuu bridge live; Customer Engine page can promote a proof readout into SIM Wiki without mutating Tissuu |
-| SIM Coach and SIM Wiki | 48% | Product direction documented; contextual coach loop explains scanner results; Coach can queue an auditable SIM Wiki maintainer retrieval from scanner context; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include SimOne product-language, PRD snapshot, glossary, and agent-flow pages |
+| SIM Coach and SIM Wiki | 50% | Product direction documented; contextual coach loop explains scanner results; Coach can queue an auditable SIM Wiki maintainer retrieval from scanner context and stream the returned answer back into Coach; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include SimOne product-language, PRD snapshot, glossary, and agent-flow pages |
 | Model routing and auditability | 32% | Strategy documented; Workbench has an initial `model_route_decisions` ledger; route decisions can now attach a compressed context envelope; actual provider orchestration and evaluations remain |
 | Compression/headroom | 8% | External Headroom/SmartCrusher not integrated; SimOne now has a local audited JSON compression envelope for route-decision context payloads |
 | Full SIM operating system | 30% | Engines and governance are defined, but onboarding, memory, routing, evaluations, and product polish remain |
@@ -202,6 +202,9 @@ Current Coach behavior:
 - When SIM Wiki is enabled, can promote a saved scanner/coach synthesis into a
   dated page under `wiki/synthesis/` through the existing SIM Wiki plugin
   `write-page` action.
+- When SIM Wiki retrieval is queued from Coach, streams the returned SIM Wiki
+  answer back into the Coach surface while keeping the maintainer task
+  inspectable.
 - Shows an "Open saved page" link after promotion so saved memory is immediately
   inspectable.
 
@@ -235,7 +238,7 @@ Current SIM Wiki template behavior:
   durable pages while live bridge counts remain ephemeral.
 - Lets SIM Coach queue a SIM Wiki Maintainer query from saved scanner context
   before stronger advice or agent assignment, with the generated maintainer task
-  visible for inspection.
+  visible for inspection and the returned answer streamed back into Coach.
 - Accepts the first Customer Engine promotion path: a live read-only Tissuu
   readout can become a dated SIM Wiki synthesis page when the human chooses to
   preserve it.
@@ -422,8 +425,9 @@ inspectable first map.
   pages plus SimOne product-language, PRD snapshot, glossary, and agent-flow
   pages; the Coach page explains the first seed buckets to the user.
 - Promote useful coach answers and Customer Engine proof readouts into durable
-  wiki pages. First scanner synthesis and Customer Engine readout promotion
-  paths exist; broader answer/review promotion remains.
+  wiki pages. First scanner synthesis, Customer Engine readout promotion, and
+  streamed Coach retrieval answer paths exist; broader answer/review promotion
+  remains.
 
 ### M3: Sovereign Model Routing
 

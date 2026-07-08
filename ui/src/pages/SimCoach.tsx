@@ -160,7 +160,15 @@ type WikiPromotionState =
 type WikiRetrievalState =
   | { status: "idle" }
   | { status: "starting" }
-  | { status: "queued"; operationId: string | null; issueRef: string | null }
+  | {
+      status: "queued";
+      operationId: string | null;
+      issueRef: string | null;
+      channel: string | null;
+      answer: string;
+      streamStatus: "connecting" | "running" | "done" | "error";
+      streamMessage: string | null;
+    }
   | { status: "error"; message: string };
 
 function loadScannerCoachContext(): ScannerCoachContext | null {
@@ -315,6 +323,7 @@ export function SimCoach() {
   });
   const simWikiPlugin = plugins?.find((plugin) => plugin.packageName === SIM_WIKI_PACKAGE);
   const simWikiReady = simWikiPlugin?.status === "ready";
+  const retrievalChannel = retrievalState.status === "queued" ? retrievalState.channel : null;
   const resolvedCoachFlow = useMemo(
     () =>
       coachFlow.map((step) =>
@@ -329,6 +338,114 @@ export function SimCoach() {
       ),
     [simWikiReady]
   );
+
+  useEffect(() => {
+    if (
+      !retrievalChannel ||
+      !simWikiPlugin ||
+      !companyId
+    ) {
+      return undefined;
+    }
+
+    let closed = false;
+    const params = new URLSearchParams({ companyId });
+    const source = new EventSource(
+      `/api/plugins/${encodeURIComponent(simWikiPlugin.id)}/bridge/stream/${encodeURIComponent(
+        retrievalChannel
+      )}?${params.toString()}`,
+      { withCredentials: true }
+    );
+
+    source.onopen = () => {
+      setRetrievalState((current) =>
+        current.status === "queued" ? { ...current, streamStatus: "running", streamMessage: null } : current
+      );
+    };
+    source.onmessage = (event) => {
+      let parsed: {
+        type?: unknown;
+        eventType?: unknown;
+        stream?: unknown;
+        message?: unknown;
+        answer?: unknown;
+      };
+      try {
+        parsed = JSON.parse(event.data) as typeof parsed;
+      } catch {
+        return;
+      }
+
+      if (
+        parsed.type === "agent.event" &&
+        parsed.eventType === "chunk" &&
+        parsed.stream !== "stderr" &&
+        typeof parsed.message === "string" &&
+        parsed.message.length > 0
+      ) {
+        setRetrievalState((current) =>
+          current.status === "queued"
+            ? {
+                ...current,
+                answer: `${current.answer}${parsed.message as string}`,
+                streamStatus: current.streamStatus === "connecting" ? "running" : current.streamStatus,
+              }
+            : current
+        );
+        return;
+      }
+
+      if (parsed.type === "query.done") {
+        closed = true;
+        source.close();
+        setRetrievalState((current) =>
+          current.status === "queued"
+            ? {
+                ...current,
+                answer: typeof parsed.answer === "string" ? parsed.answer : current.answer,
+                streamStatus: "done",
+                streamMessage: "Answer finished.",
+              }
+            : current
+        );
+        return;
+      }
+
+      if (parsed.type === "query.error") {
+        closed = true;
+        source.close();
+        setRetrievalState((current) =>
+          current.status === "queued"
+            ? {
+                ...current,
+                streamStatus: "error",
+                streamMessage:
+                  typeof parsed.message === "string"
+                    ? parsed.message
+                    : "Could not stream the SIM Wiki answer. Open the maintainer task to inspect it.",
+              }
+            : current
+        );
+      }
+    };
+    source.onerror = () => {
+      if (closed) return;
+      setRetrievalState((current) =>
+        current.status === "queued"
+          ? {
+              ...current,
+              streamStatus: "error",
+              streamMessage: "Could not stream the SIM Wiki answer. Open the maintainer task to inspect it.",
+            }
+          : current
+      );
+    };
+
+    return () => {
+      closed = true;
+      source.close();
+    };
+  }, [companyId, retrievalChannel, simWikiPlugin]);
 
   useEffect(() => {
     setBreadcrumbs([{ label: "SIM Coach" }]);
@@ -381,6 +498,7 @@ export function SimCoach() {
       );
       const data = response.data as {
         operationId?: unknown;
+        channel?: unknown;
         issue?: {
           id?: unknown;
           identifier?: unknown;
@@ -392,6 +510,10 @@ export function SimCoach() {
         status: "queued",
         operationId: typeof data?.operationId === "string" ? data.operationId : null,
         issueRef: issueIdentifier || issueId || null,
+        channel: typeof data?.channel === "string" ? data.channel : null,
+        answer: "",
+        streamStatus: typeof data?.channel === "string" ? "connecting" : "done",
+        streamMessage: typeof data?.channel === "string" ? null : "SIM Wiki check queued.",
       });
     } catch (error) {
       setRetrievalState({
@@ -527,13 +649,41 @@ export function SimCoach() {
                   </Button>
                 </div>
                 {retrievalState.status === "queued" ? (
-                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs leading-5 text-emerald-700 dark:text-emerald-200">
-                    <span>SIM Wiki check queued</span>
-                    {retrievalState.issueRef ? <span>Maintainer task: {retrievalState.issueRef}</span> : null}
-                    {retrievalState.issueRef ? (
-                      <Button asChild variant="link" size="sm" className="h-auto px-0 text-xs">
-                        <Link to={`/issues/${retrievalState.issueRef}`}>Open maintainer task</Link>
-                      </Button>
+                  <div className="mt-2 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2 text-xs leading-5 text-emerald-700 dark:text-emerald-200">
+                      <span>SIM Wiki check queued</span>
+                      {retrievalState.issueRef ? <span>Maintainer task: {retrievalState.issueRef}</span> : null}
+                      {retrievalState.issueRef ? (
+                        <Button asChild variant="link" size="sm" className="h-auto px-0 text-xs">
+                          <Link to={`/issues/${retrievalState.issueRef}`}>Open maintainer task</Link>
+                        </Button>
+                      ) : null}
+                    </div>
+                    {retrievalState.answer ? (
+                      <div className="rounded-md border border-emerald-500/20 bg-background/70 p-3">
+                        <h4 className="text-xs font-medium uppercase text-emerald-700 dark:text-emerald-200">
+                          SIM Wiki answer
+                        </h4>
+                        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-foreground">
+                          {retrievalState.answer.trim()}
+                        </p>
+                      </div>
+                    ) : retrievalState.streamStatus === "connecting" || retrievalState.streamStatus === "running" ? (
+                      <p className="text-xs leading-5 text-muted-foreground">
+                        SIM Wiki Maintainer is checking memory.
+                      </p>
+                    ) : null}
+                    {retrievalState.streamMessage ? (
+                      <p
+                        className={cn(
+                          "text-xs leading-5",
+                          retrievalState.streamStatus === "error"
+                            ? "text-destructive"
+                            : "text-emerald-700 dark:text-emerald-200"
+                        )}
+                      >
+                        {retrievalState.streamMessage}
+                      </p>
                     ) : null}
                   </div>
                 ) : null}

@@ -63,9 +63,32 @@ async function flushReact() {
   });
 }
 
+const fakeEventSources: FakeEventSource[] = [];
+
+class FakeEventSource {
+  readonly url: string;
+  readonly eventSourceInitDict?: EventSourceInit;
+  onopen: ((event: Event) => void) | null = null;
+  onmessage: ((event: MessageEvent) => void) | null = null;
+  onerror: ((event: Event) => void) | null = null;
+  readonly close = vi.fn();
+
+  constructor(url: string | URL, eventSourceInitDict?: EventSourceInit) {
+    this.url = String(url);
+    this.eventSourceInitDict = eventSourceInitDict;
+    fakeEventSources.push(this);
+  }
+
+  emitMessage(payload: unknown) {
+    this.onmessage?.({ data: JSON.stringify(payload) } as MessageEvent);
+  }
+}
+
 describe("SimCoach", () => {
   beforeEach(() => {
     localStorage.clear();
+    fakeEventSources.length = 0;
+    vi.stubGlobal("EventSource", FakeEventSource);
     mockPluginsApi.list.mockResolvedValue([]);
     mockPluginsApi.bridgePerformAction.mockResolvedValue({
       data: {
@@ -78,6 +101,7 @@ describe("SimCoach", () => {
   afterEach(() => {
     document.body.innerHTML = "";
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("points SIM Wiki setup to the plugin manager before the wiki plugin is enabled", () => {
@@ -328,6 +352,93 @@ describe("SimCoach", () => {
       link.textContent?.includes("Open maintainer task")
     );
     expect(issueLink?.getAttribute("href")).toBe("/issues/SYS-777");
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
+  it("streams the returned SIM Wiki answer into Coach after queueing retrieval", async () => {
+    mockPluginsApi.list.mockResolvedValue([
+      {
+        id: "plugin-1",
+        packageName: "@paperclipai/plugin-llm-wiki",
+        status: "ready",
+        manifestJson: {
+          displayName: "SIM Wiki",
+          description: "SimOne wiki",
+          version: "0.1.0",
+        },
+      } as PluginRecord,
+    ]);
+    localStorage.setItem(
+      "simone:bottleneck-scan",
+      JSON.stringify({
+        result: {
+          headline: "Customer loop is leaking",
+          engine: "Customer Engine",
+          questions: ["Who should approve the next customer reply or offer?"],
+          mapPreview: {
+            artifact: "Venture Architecture Map",
+            firstSection: "Customer review loop",
+          },
+        },
+      })
+    );
+    mockPluginsApi.bridgePerformAction.mockResolvedValueOnce({
+      data: {
+        status: "running",
+        operationId: "operation-1",
+        querySessionId: "operation-1",
+        channel: "llm-wiki:query:operation-1",
+        issue: {
+          id: "issue-1",
+          identifier: "SYS-777",
+          title: "Query SIM Wiki: Customer loop is leaking",
+        },
+      },
+    });
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderSimCoach(container);
+    await flushReact();
+
+    const askButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Ask SIM Wiki now")
+    ) as HTMLButtonElement;
+    expect(askButton).toBeTruthy();
+
+    await act(async () => {
+      askButton.click();
+      for (let i = 0; i < 5; i += 1) {
+        await Promise.resolve();
+      }
+    });
+
+    expect(fakeEventSources).toHaveLength(1);
+    expect(fakeEventSources[0]?.url).toBe(
+      "/api/plugins/plugin-1/bridge/stream/llm-wiki%3Aquery%3Aoperation-1?companyId=company-1"
+    );
+    expect(fakeEventSources[0]?.eventSourceInitDict).toEqual({ withCredentials: true });
+
+    await act(async () => {
+      fakeEventSources[0]?.emitMessage({
+        type: "agent.event",
+        eventType: "chunk",
+        stream: "stdout",
+        message: "Check saved method pages. ",
+      });
+      fakeEventSources[0]?.emitMessage({
+        type: "query.done",
+        answer: "Check saved method pages. Customer review loop is the durable method here.",
+      });
+    });
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("SIM Wiki answer");
+    expect(text).toContain("Check saved method pages. Customer review loop is the durable method here.");
+    expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
 
     flushSync(() => {
       root.unmount();
