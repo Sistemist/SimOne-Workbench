@@ -95,11 +95,11 @@ describe("AuthPage", () => {
     vi.clearAllMocks();
   });
 
-  async function mount() {
+  async function mount(initialEntry = "/auth") {
     const { root, queryClient } = renderAuthPage(container);
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={["/auth"]}>
+        <MemoryRouter initialEntries={[initialEntry]}>
           <QueryClientProvider client={queryClient}>
             <Routes>
               <Route path="/auth" element={<AuthPage />} />
@@ -164,6 +164,20 @@ describe("AuthPage", () => {
     expect(nameInput).not.toBeNull();
     expect(nameInput.getAttribute("autocomplete")).toBe("name");
     expect(nameInput.required).toBe(true);
+    expect(passwordInput.getAttribute("autocomplete")).toBe("new-password");
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
+
+  it("opens directly in sign-up mode from the public landing CTA", async () => {
+    const root = await mount("/auth?mode=sign_up&next=%2Fapp");
+
+    expect(container.textContent).toContain("Create your SimOne account");
+    expect(container.querySelector('input[name="name"]')).not.toBeNull();
+
+    const passwordInput = container.querySelector('input[name="password"]') as HTMLInputElement;
     expect(passwordInput.getAttribute("autocomplete")).toBe("new-password");
 
     await act(async () => {
