@@ -10,6 +10,13 @@ type ScannerResult = {
   reason: string;
   nextAction: string;
   watches: string;
+  signalStrength: {
+    primaryMatches: number;
+    summary: string;
+    secondaryEngine?: ScannerResult["engine"];
+    secondaryMatches?: number;
+    secondarySummary?: string;
+  };
   diagnosisSignals: string[];
   questions: string[];
   mapPreview: {
@@ -55,6 +62,10 @@ const fallbackResult: ScannerResult = {
   reason: "The note has a goal, but the system that turns feedback into a decision is not visible yet.",
   nextAction: "Write down the next customer decision and who approves it.",
   watches: "SimOne would watch for missing feedback, ownership, and approval boundaries.",
+  signalStrength: {
+    primaryMatches: 0,
+    summary: "A first signal was visible, but not enough signs pointed to one engine yet.",
+  },
   diagnosisSignals: [
     "A goal or stuck point was present.",
     "The decision loop was not yet visible.",
@@ -192,6 +203,9 @@ function scanBottleneck(input: string): ScannerResult {
 
   if (!best || best.score === 0) return fallbackResult;
 
+  const secondary = scored.find(
+    (candidate) => candidate.score > 0 && candidate.pattern.engine !== best.pattern.engine,
+  );
   const severity: ScannerResult["severity"] = best.score > 2 ? "high" : "medium";
   const result: Omit<ScannerResult, "sprintZeroBrief"> = {
     headline: best.pattern.headline,
@@ -200,6 +214,15 @@ function scanBottleneck(input: string): ScannerResult {
     reason: best.pattern.reason,
     nextAction: best.pattern.nextAction,
     watches: best.pattern.watches,
+    signalStrength: {
+      primaryMatches: best.score,
+      summary: `${best.score} ${best.score === 1 ? "sign" : "signs"} pointed to ${best.pattern.engine}.`,
+      secondaryEngine: secondary?.pattern.engine,
+      secondaryMatches: secondary?.score,
+      secondarySummary: secondary
+        ? `${secondary.score} ${secondary.score === 1 ? "sign" : "signs"} pointed there.`
+        : undefined,
+    },
     diagnosisSignals: best.pattern.diagnosisSignals,
     questions: best.pattern.questions,
     mapPreview: {
@@ -363,6 +386,20 @@ export function SystemsBottleneckScanner() {
                 <div>
                   <h2 className="text-xl font-semibold">{result.headline}</h2>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">{result.reason}</p>
+                </div>
+                <div className="rounded-md border border-border bg-background/60 p-3">
+                  <div className="text-xs font-medium uppercase text-muted-foreground">
+                    Signal strength
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">{result.signalStrength.summary}</p>
+                  {result.signalStrength.secondaryEngine ? (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground">
+                        Also watch {result.signalStrength.secondaryEngine}
+                      </span>
+                      {result.signalStrength.secondarySummary ? `: ${result.signalStrength.secondarySummary}` : "."}
+                    </p>
+                  ) : null}
                 </div>
                 <div className="border-l border-border pl-3">
                   <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">

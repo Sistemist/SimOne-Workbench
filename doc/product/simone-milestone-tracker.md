@@ -35,7 +35,7 @@ enough to evaluate them.
 | --- | ---: | --- | --- |
 | Hosted alpha shell | 65% | Authenticated KVM app, one-origin app/API, deploy smoke path | More authenticated visual QA, release checklist |
 | Paperclip control-plane reuse | 60% | Companies, agents, tasks, skills, adapters, runs, costs, recovery inherited; PRD/glossary/field guide now translate Paperclip terms and screens into SimOne language | Keep reducing raw control-plane concepts in first run |
-| PLG/Barnum layer | 62% | Public scanner, lived example notes, safer share summaries, diagnosis signals, shareable map interpretation, public proof context, scanner-to-coach and scanner-to-starter handoffs, structured Sprint Zero brief | Richer share previews, more nuanced scanner scoring |
+| PLG/Barnum layer | 63% | Public scanner, lived example notes, signal strength, secondary engine watch, safer share summaries, diagnosis signals, shareable map interpretation, public proof context, scanner-to-coach and scanner-to-starter handoffs, structured Sprint Zero brief | Richer share previews, scanner calibration against real submissions |
 | Customer Engine bridge | 80% | Read-only Tissuu bridge live, native Customer Signal framing on dashboard/page, SIM Wiki proof promotion | More authenticated visual QA, lived use, defer write-back v2 |
 | SIM Coach and SIM Wiki | 60% | Scanner-to-Coach handoff, Coach scanner explanations, scanner-to-wiki maintainer retrieval with streamed answer return, structured answer source refs, returned-answer promotion to wiki, SIM Starter source-note provenance, SIM method/product seed pages | Better wiki navigation, broader review promotion |
 | Model routing and auditability | 32% | `model_route_decisions` ledger, lane vocabulary, local context compression envelope | Real provider execution, route/run linking, cost review UI, evaluations |
@@ -83,6 +83,8 @@ Done:
 - Public scanner now includes four lived example notes for customer follow-up,
   cash runway, skills capacity, and product proof so users can try the scanner
   without writing a perfect first prompt.
+- Public scanner results now show signal strength and a secondary engine to
+  watch when a messy note points to more than one engine.
 - The public scanner now tells users the scan will carry into SIM Starter after
   sign-in and routes them into onboarding with the saved scan context.
 - Shareable Venture Architecture Maps now include a public Sprint Zero brief
@@ -118,8 +120,8 @@ Remaining:
 
 - Review and adjust the first product-flow/wireframe artifact for `SYS-181`.
 - Keep improving share previews with richer proof and next-action context.
-- Improve Systems Bottleneck Scanner scoring nuance without exposing private
-  notes in public summaries.
+- Calibrate Systems Bottleneck Scanner scoring against real submissions without
+  exposing private notes in public summaries.
 
 ### M2: SIM Starter And SIM Wiki
 

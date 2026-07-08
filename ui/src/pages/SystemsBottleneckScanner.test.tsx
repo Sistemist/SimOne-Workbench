@@ -69,6 +69,52 @@ describe("SystemsBottleneckScanner", () => {
     });
   });
 
+  it("shows signal strength and a secondary engine for mixed notes", async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderScanner(container);
+
+    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
+    expect(noteInput).not.toBeNull();
+    await updateField(
+      noteInput!,
+      "Waitlist replies and customer follow-up are stuck in my inbox, and runway plus pricing decisions are also getting tense.",
+    );
+
+    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Scan"),
+    );
+    expect(button).toBeTruthy();
+    await act(async () => {
+      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Customer loop is leaking");
+    expect(text).toContain("Signal strength");
+    expect(text).toContain("4 signs pointed to Customer Engine.");
+    expect(text).toContain("Also watch Cash Engine");
+    expect(text).toContain("2 signs pointed there.");
+    expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
+
+    const storedScan = window.localStorage.getItem("simone:bottleneck-scan");
+    expect(storedScan).not.toBeNull();
+    expect(JSON.parse(storedScan!)).toMatchObject({
+      result: {
+        engine: "Customer Engine",
+        signalStrength: {
+          primaryMatches: 4,
+          secondaryEngine: "Cash Engine",
+          secondaryMatches: 2,
+        },
+      },
+    });
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
   it("turns a messy founder note into a bottleneck, next action, and starter map preview", async () => {
     const container = document.createElement("div");
     document.body.appendChild(container);

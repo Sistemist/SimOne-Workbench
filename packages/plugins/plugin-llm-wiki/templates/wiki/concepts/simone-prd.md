@@ -24,7 +24,7 @@ Current strongest pieces:
 - hosted authenticated Workbench shell
 - Paperclip control-plane reuse
 - read-only Tissuu Customer Engine bridge
-- public scanner with lived examples, scanner-to-Coach, and shareable artifact beginnings
+- public scanner with lived examples, signal strength, scanner-to-Coach, and shareable artifact beginnings
 - first SIM Coach and SIM Wiki promotion paths
 - first auditable model-route ledger and local JSON compression envelope
 - plain Workbench field guide for inherited Paperclip surfaces
@@ -67,8 +67,9 @@ SimOne language.
 and connected to Tissuu through a read-only bridge.
 
 **M1 Native Alpha Experience** is in progress: live Customer Engine signal,
-public scanner results with lived examples, scanner-to-Coach handoff, share
-artifacts, and Coach explanations should feel like native SimOne surfaces.
+public scanner results with lived examples and signal strength,
+scanner-to-Coach handoff, share artifacts, and Coach explanations should feel
+like native SimOne surfaces.
 
 **M2 SIM Starter and SIM Wiki** is next: a user should bring messy input, get a
 first protected map, and save useful answers into inspectable memory.
