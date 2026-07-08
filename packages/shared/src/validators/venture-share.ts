@@ -26,5 +26,11 @@ export const ventureShareSnapshotSchema = z.object({
     status: z.string().nullable(),
     projectName: z.string().nullable(),
   })),
+  reviewPackage: z.object({
+    headline: z.string().min(1),
+    proofStatus: z.string().min(1),
+    reviewBoundary: z.string().min(1),
+    suggestedQuestion: z.string().min(1),
+  }).optional(),
   principles: z.array(z.string().min(1)),
 });

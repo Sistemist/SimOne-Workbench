@@ -21,6 +21,10 @@ const ROLE_LABELS: Record<string, string> = {
   coo: "COO",
 };
 
+function countLabel(count: number, singular: string, plural: string) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 function roleLabel(role: string) {
   const normalized = role.trim().toLowerCase();
   return ROLE_LABELS[normalized] ?? role.trim();
@@ -53,6 +57,8 @@ export function buildVentureShareSnapshot(
     status: issue.status,
     projectName: issue.projectSlug ? projectsBySlug.get(issue.projectSlug)?.name ?? null : null,
   }));
+  const firstNextMove = nextMoves[0] ?? null;
+  const firstWorkStream = firstNextMove?.projectName ?? projects[0]?.name ?? "the first work stream";
 
   return {
     schemaVersion: 1,
@@ -66,6 +72,14 @@ export function buildVentureShareSnapshot(
     agents,
     projects,
     nextMoves,
+    reviewPackage: {
+      headline: `${companyName} is organizing ${countLabel(agents.length, "operating role", "operating roles")} and ${countLabel(projects.length, "work stream", "work streams")} around ${firstWorkStream}.`,
+      proofStatus: "Ready for Sprint Zero, not proof of market fit.",
+      reviewBoundary: "Review the next move before customers, money, public claims, or structure change.",
+      suggestedQuestion: firstNextMove
+        ? `Which proof would make ${firstNextMove.title} worth doing next?`
+        : "Which proof would make the next move worth doing?",
+    },
     principles: [
       "Human judgment stays visible.",
       "Roles are shown as operating responsibilities.",

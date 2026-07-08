@@ -64,6 +64,11 @@ Near-term PLG features:
 Avoid generic in-app course ads. Use methodology links when users are already
 asking why something works or why a boundary matters.
 
+Shareable Venture Architecture Map snapshots should carry their own review
+package: why the map is shareable, what remains unproven, the human review
+boundary, and the next proof question. Public pages may add visual treatment,
+but they should not be the only place where that meaning exists.
+
 Relevant Linear issues:
 
 - SYS-198: Customer Engine live Tissuu bridge wiring

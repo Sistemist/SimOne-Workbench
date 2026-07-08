@@ -46,6 +46,14 @@ export function VentureShare() {
           : "Which proof would make the next move worth doing?",
       }
     : null;
+  const reviewPackage = snapshot
+    ? snapshot.reviewPackage ?? {
+        headline: publicPreview?.openingLine ?? `${snapshot.company.name} has a public-safe venture map.`,
+        proofStatus: "Ready for Sprint Zero, not proof of market fit.",
+        reviewBoundary: "Review the next move before customers, money, public claims, or structure change.",
+        suggestedQuestion: publicPreview?.suggestedFollowUp ?? "Which proof would make the next move worth doing?",
+      }
+    : null;
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -122,6 +130,32 @@ export function VentureShare() {
                     </p>
                   </div>
                 </div>
+              </section>
+            ) : null}
+
+            {reviewPackage ? (
+              <section className="rounded-lg border bg-card p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
+                  <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                  Review package
+                </div>
+                <div className="mt-3 grid gap-4 text-sm md:grid-cols-3">
+                  <div>
+                    <h2 className="font-medium text-foreground">Why this is shareable</h2>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">{reviewPackage.headline}</p>
+                  </div>
+                  <div>
+                    <h2 className="font-medium text-foreground">What is still unproven</h2>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">{reviewPackage.proofStatus}</p>
+                  </div>
+                  <div>
+                    <h2 className="font-medium text-foreground">What to ask before acting</h2>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">{reviewPackage.suggestedQuestion}</p>
+                  </div>
+                </div>
+                <p className="mt-3 max-w-3xl text-xs leading-5 text-muted-foreground">
+                  {reviewPackage.reviewBoundary}
+                </p>
               </section>
             ) : null}
 

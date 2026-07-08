@@ -77,6 +77,12 @@ describe("VentureShare", () => {
         agents: [{ name: "Thomasina", title: "Founder", role: "CEO", capabilities: "Decides what matters." }],
         projects: [{ name: "Customer Engine", description: "Keep relationship signal moving.", status: "active" }],
         nextMoves: [{ title: "Review customer replies", priority: "high", status: "open", projectName: "Customer Engine" }],
+        reviewPackage: {
+          headline: "Acme Systems is organizing 1 operating role and 1 work stream around Customer Engine.",
+          proofStatus: "Ready for Sprint Zero, not proof of market fit.",
+          reviewBoundary: "Review the next move before customers, money, public claims, or structure change.",
+          suggestedQuestion: "Which proof would make Review customer replies worth doing next?",
+        },
         principles: ["Human judgment stays visible."],
       },
     });
@@ -99,6 +105,9 @@ describe("VentureShare", () => {
       expect(text).toContain("The next judgment is Review customer replies.");
       expect(text).toContain("Suggested follow-up");
       expect(text).toContain("Which proof would make Review customer replies worth doing next?");
+      expect(text).toContain("Review package");
+      expect(text).toContain("Why this is shareable");
+      expect(text).toContain("What is still unproven");
       expect(text).toContain("Sprint Zero brief");
       expect(text).toContain("What is clear");
       expect(text).toContain("Acme Systems has 1 operating role and 1 work stream in motion.");

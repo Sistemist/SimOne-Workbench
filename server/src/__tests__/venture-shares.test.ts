@@ -162,6 +162,12 @@ describe("venture share snapshots", () => {
       title: "Review customer replies",
       priority: "high",
     });
+    expect(snapshot.reviewPackage).toMatchObject({
+      headline: "Acme Systems is organizing 1 operating role and 1 work stream around Customer Engine.",
+      proofStatus: "Ready for Sprint Zero, not proof of market fit.",
+      reviewBoundary: "Review the next move before customers, money, public claims, or structure change.",
+      suggestedQuestion: "Which proof would make Review customer replies worth doing next?",
+    });
     expect(JSON.stringify(snapshot)).not.toMatch(
       /apiKey|api key|adapterConfig|runtimeConfig|permissions|envInputs|OPENAI_API_KEY|secret-provider-choice|private\/workspace|model|provider|runtime/i,
     );

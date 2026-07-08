@@ -24,6 +24,13 @@ export interface VentureShareNextMove {
   projectName: string | null;
 }
 
+export interface VentureShareReviewPackage {
+  headline: string;
+  proofStatus: string;
+  reviewBoundary: string;
+  suggestedQuestion: string;
+}
+
 export interface VentureShareSnapshot {
   schemaVersion: 1;
   shareId: string;
@@ -32,6 +39,7 @@ export interface VentureShareSnapshot {
   agents: VentureShareAgent[];
   projects: VentureShareProject[];
   nextMoves: VentureShareNextMove[];
+  reviewPackage?: VentureShareReviewPackage;
   principles: string[];
 }
 
