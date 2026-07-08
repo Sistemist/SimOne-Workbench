@@ -33,7 +33,8 @@ tested implementation, documented direction, and deferred experiments.
   `ui/src/api/customerEngine.ts`, the Customer Engine/Dashboard UI, and their
   focused UI tests.
 - The Systems Bottleneck Scanner and Sprint Zero handoff are productized enough
-  to carry scanner context into SIM Starter, but richer diagnosis remains.
+  to carry scanner context into SIM Starter. Scanner results include public-safe
+  diagnosis signals; richer scoring nuance remains.
 - Shareable Venture Architecture Maps include public proof context for evidence
   strength, public-safe omissions, and the next assumption to test.
 - SIM Coach and SIM Wiki have first retrieval and promotion loops, with source

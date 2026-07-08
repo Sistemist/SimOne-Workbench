@@ -61,6 +61,11 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Customer loop is leaking");
     expect(text).toContain("Customer Engine");
     expect(text).toContain("Make one review queue for replies, prospects, and proof points.");
+    expect(text).toContain("Why this scan picked Customer Engine");
+    expect(text).toContain("Customer signal was present.");
+    expect(text).toContain("Follow-up or inbox work looked scattered.");
+    expect(text).toContain("Approval was part of the bottleneck.");
+    expect(text).toContain("This is a bounded first read, not a private-data audit.");
     expect(text).toContain("Questions SimOne would ask next");
     expect(text).toContain("Who should approve the next customer reply or offer?");
     expect(text).toContain("What proof would make this worth doing now?");
@@ -81,6 +86,9 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Founder note and startup URL are not included.");
     expect(text).toContain("Your scan will carry into SIM Starter after sign-in.");
     expect(text).toContain("Create my map");
+    const generatedSummary = text.slice(text.indexOf("Why this scan picked Customer Engine"));
+    expect(generatedSummary).not.toContain("https://example.com");
+    expect(generatedSummary).not.toContain("interested leads and waitlist replies");
     expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
 
     const storedScan = window.localStorage.getItem("simone:bottleneck-scan");
@@ -91,10 +99,15 @@ describe("SystemsBottleneckScanner", () => {
         founderNote:
           "We have interested leads and waitlist replies, but follow-up is scattered and approvals sit in my inbox.",
       },
-      result: {
-        headline: "Customer loop is leaking",
-        engine: "Customer Engine",
-        questions: [
+        result: {
+          headline: "Customer loop is leaking",
+          engine: "Customer Engine",
+          diagnosisSignals: [
+            "Customer signal was present.",
+            "Follow-up or inbox work looked scattered.",
+            "Approval was part of the bottleneck.",
+          ],
+          questions: [
           "Who should approve the next customer reply or offer?",
           "What proof would make this worth doing now?",
           "Where should the answer be saved so it is not lost?",

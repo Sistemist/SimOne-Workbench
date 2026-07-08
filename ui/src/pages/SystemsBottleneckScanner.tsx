@@ -10,6 +10,7 @@ type ScannerResult = {
   reason: string;
   nextAction: string;
   watches: string;
+  diagnosisSignals: string[];
   questions: string[];
   mapPreview: {
     artifact: "Venture Architecture Map";
@@ -34,6 +35,11 @@ const fallbackResult: ScannerResult = {
   reason: "The note has a goal, but the system that turns feedback into a decision is not visible yet.",
   nextAction: "Write down the next customer decision and who approves it.",
   watches: "SimOne would watch for missing feedback, ownership, and approval boundaries.",
+  diagnosisSignals: [
+    "A goal or stuck point was present.",
+    "The decision loop was not yet visible.",
+    "Human approval should be made explicit.",
+  ],
   questions: [
     "What decision is waiting for a human yes?",
     "What proof would make this worth doing now?",
@@ -69,6 +75,7 @@ const patterns: Array<{
   reason: string;
   nextAction: string;
   watches: string;
+  diagnosisSignals: string[];
   questions: string[];
   firstSection: string;
 }> = [
@@ -79,6 +86,11 @@ const patterns: Array<{
     reason: "Customer signal exists, but it is not moving through one trusted review loop.",
     nextAction: "Make one review queue for replies, prospects, and proof points.",
     watches: "SimOne would watch the handoff from signal to human approval to durable memory.",
+    diagnosisSignals: [
+      "Customer signal was present.",
+      "Follow-up or inbox work looked scattered.",
+      "Approval was part of the bottleneck.",
+    ],
     questions: [
       "Who should approve the next customer reply or offer?",
       "What proof would make this worth doing now?",
@@ -93,6 +105,11 @@ const patterns: Array<{
     reason: "The business constraint is financial, but the next pricing or revenue decision is not explicit.",
     nextAction: "Name the next money decision and the evidence needed to make it.",
     watches: "SimOne would watch budget pressure, pricing assumptions, and approval thresholds.",
+    diagnosisSignals: [
+      "A money constraint was present.",
+      "Pricing, runway, or revenue pressure appeared.",
+      "The next financial decision needs human approval.",
+    ],
     questions: [
       "Which money decision needs a human yes next?",
       "What proof would make this worth doing now?",
@@ -107,6 +124,11 @@ const patterns: Array<{
     reason: "The work depends on people or skills that are not yet mapped to a clear operating role.",
     nextAction: "List the recurring work and assign one accountable role for the next week.",
     watches: "SimOne would watch ownership, missing skills, and work that keeps bouncing back to the founder.",
+    diagnosisSignals: [
+      "Capacity or recurring work pressure was present.",
+      "Ownership looked unclear.",
+      "The next role boundary needs to be named.",
+    ],
     questions: [
       "Which recurring work keeps coming back to the founder?",
       "Who should own the next visible step?",
@@ -121,6 +143,11 @@ const patterns: Array<{
     reason: "The product surface is moving, but the next sharp decision is not anchored to customer evidence.",
     nextAction: "Pick one user promise and one proof point that would make it believable.",
     watches: "SimOne would watch product promises, proof, and the approval point before building more.",
+    diagnosisSignals: [
+      "Product or positioning movement was present.",
+      "The next user promise needs sharper proof.",
+      "A build decision should wait for human review.",
+    ],
     questions: [
       "Which user promise should be protected first?",
       "What proof would make this worth doing now?",
@@ -153,6 +180,7 @@ function scanBottleneck(input: string): ScannerResult {
     reason: best.pattern.reason,
     nextAction: best.pattern.nextAction,
     watches: best.pattern.watches,
+    diagnosisSignals: best.pattern.diagnosisSignals,
     questions: best.pattern.questions,
     mapPreview: {
       artifact: "Venture Architecture Map",
@@ -312,6 +340,22 @@ export function SystemsBottleneckScanner() {
                     What SimOne would watch
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">{result.watches}</p>
+                </div>
+                <div className="rounded-md border border-border bg-background/60 p-3">
+                  <div className="text-xs font-medium uppercase text-muted-foreground">
+                    Why this scan picked {result.engine}
+                  </div>
+                  <ul className="mt-2 grid gap-2 text-sm text-muted-foreground">
+                    {result.diagnosisSignals.map((signal) => (
+                      <li key={signal} className="flex gap-2">
+                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+                        <span>{signal}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                    This is a bounded first read, not a private-data audit.
+                  </p>
                 </div>
                 <div className="rounded-md border border-border bg-background/60 p-3">
                   <div className="text-xs font-medium uppercase text-muted-foreground">
