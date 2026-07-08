@@ -52,6 +52,21 @@ autonomous executive.
 **Run** means the audit trail for one helper execution: what was attempted,
 what happened, and what it cost.
 
+## State Ownership
+
+SIM Coach can explain a signal, but it is not the durable memory layer.
+
+SIM Wiki owns saved knowledge, synthesis, source refs, and provenance.
+
+Tissuu owns the live Customer Engine queue for now; SimOne reads it and can
+preserve selected proof or decisions.
+
+Paperclip owns delegated work, run receipts, approvals, costs, documents, and
+recovery.
+
+The model routing audit owns provider/model/adapter route decisions and spend
+evidence.
+
 ## Product Artifacts
 
 **Venture Architecture Map** is the map of engines, roles, constraints, risks,

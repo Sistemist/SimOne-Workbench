@@ -106,7 +106,27 @@ Paperclip gives the work ledger. SimOne adds:
 - model-routing strategy and approval gates
 - shareable artifacts that omit private runtime details
 
-## 8. What To Improve Next
+## 8. Where State Lives
+
+When a Workbench surface feels like "the product," separate display from
+ownership:
+
+- SIM Coach may explain a signal, but the explanation is ephemeral until the
+  user saves it into SIM Wiki or turns it into a task.
+- SIM Wiki owns durable memory, synthesis, source refs, and provenance; it
+  should not silently absorb every live bridge count or run transcript.
+- Tissuu owns the live Customer Engine queue for now; SimOne reads it and can
+  preserve selected proof or decisions.
+- Paperclip owns protected work: tasks, agents, runs, approvals, costs, recovery
+  states, documents, and artifacts.
+- The model routing audit owns provider/model/adapter route decisions and spend
+  evidence; this stays in advanced review surfaces.
+
+The practical rule: if a piece of information should be trusted later, it needs
+a durable owner and a receipt. If it is only helping the user decide now, keep
+it lightweight until the human promotes it.
+
+## 9. What To Improve Next
 
 The inherited control-plane surfaces are useful but still too raw for the
 target user. As SimOne productizes, improve them by:
@@ -117,4 +137,3 @@ target user. As SimOne productizes, improve them by:
 - making cost and provenance review easier
 - keeping advanced model/provider controls behind expert settings
 - linking durable decisions into SIM Wiki
-

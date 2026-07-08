@@ -42,6 +42,9 @@ tested implementation, documented direction, and deferred experiments.
   evidence strength, public-safe omissions, and the next assumption to test.
 - SIM Coach and SIM Wiki have first scanner handoff, retrieval, and promotion
   loops, with source refs and maintainer-task provenance.
+- Product definition docs now include a state ownership contract for what stays
+  ephemeral, what belongs in SIM Wiki, what remains live in Tissuu, what belongs
+  in Paperclip work objects, and what belongs in the model routing audit.
 - `model_route_decisions` is the first auditable route ledger. It now records
   heartbeat adapter execution before an adapter runs, post-run output
   confidence and review status, and cost events can link back to the route

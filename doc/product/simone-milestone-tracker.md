@@ -106,6 +106,9 @@ Done:
 - The PRD, glossary, and SIM Wiki seeds now translate inherited Paperclip
   concepts into SimOne/Thomasina language and define which surface owns which
   job.
+- The PRD, field guide, flow map, and SIM Wiki seeds now define state ownership
+  across SIM Coach, SIM Wiki, Tissuu, Paperclip work objects, and the model
+  routing audit ledger.
 - The Workbench field guide now explains inherited Paperclip dashboard, tasks,
   agents, runs, costs, approvals, recovery, settings, secrets, documents,
   artifacts, and routines in SimOne language.

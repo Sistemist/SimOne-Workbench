@@ -17,8 +17,8 @@ answers about SimOne.
 1. `ARCHITECTURE.md` for north star, product boundary, deployment posture,
    bridge rules, model strategy, and guardrails.
 2. `doc/product/simone-prd.md` for the main product source of truth:
-   completion snapshot, scope, definitions, surface ownership, milestones, and
-   success criteria.
+   completion snapshot, scope, definitions, surface/state ownership,
+   milestones, and success criteria.
 3. `doc/product/simone-milestone-tracker.md` for the short operator view of
    what is done, what remains, and which Linear issues own the work.
 4. `doc/product/simone-workbench-field-guide.md` when you want to know what the
@@ -48,6 +48,9 @@ answers about SimOne.
   glossary Product Surfaces, and agent-flow interaction section.
 - "Which surface owns which job?" Read the PRD surface ownership map and
   agent-flow ownership map.
+- "Where does state live: Coach, Wiki, Tissuu, Paperclip, or routing ledger?"
+  Read the PRD state ownership contract, agent-flow state promotion section,
+  and Workbench field guide.
 - "Why not Fugu or Fusion by default yet?" Read the model-routing strategy,
   PRD model strategy, milestone tracker product stance, and architecture model
   strategy.

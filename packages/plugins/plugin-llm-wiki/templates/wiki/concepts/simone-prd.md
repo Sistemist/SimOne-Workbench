@@ -61,6 +61,25 @@ Tasks, Projects, Agents, Teams, Skills, Adapters, Runs, Costs, Approvals,
 Recovery, Documents, Artifacts, Routines, Settings, and Secrets surfaces into
 SimOne language.
 
+## State Ownership Contract
+
+SimOne surfaces can display each other's state, but they should not silently
+own it.
+
+- SIM Coach owns contextual explanation and review. A Coach answer is ephemeral
+  until the user saves it into SIM Wiki or turns it into a task.
+- SIM Wiki owns durable memory, source material, synthesis, and provenance.
+- Tissuu owns the live Customer Engine queue for now. SimOne reads it and
+  preserves selected proof or decisions only when the user promotes them.
+- Paperclip owns delegated work: tasks, agents, runs, approvals, costs,
+  recovery states, documents, and artifacts.
+- The route ledger owns provider/model/adapter decisions, spend evidence, and
+  review state for model execution.
+
+If something should be trusted later, it needs a durable owner and a receipt.
+If it only helps the user decide now, keep it lightweight until the human
+promotes it.
+
 ## Milestone Shape
 
 **M0 Foundation and Bridge** is mostly complete: SimOne is deployed, authenticated,

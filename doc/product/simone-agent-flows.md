@@ -107,7 +107,24 @@ rendering uses structured `wiki/...` and `raw/...` answer refs when the SIM Wiki
 stream provides them, with answer-text path extraction as a fallback. The
 maintainer task remains the stronger audit trail.
 
-## 6. Sovereign Model Routing Flow
+## 6. State Promotion Flow
+
+```mermaid
+flowchart TD
+  E["Ephemeral signal\nscanner result, coach answer, bridge count, run output"] --> J{"Should this be trusted later?"}
+  J -- "No" --> X["Keep it lightweight\nshow it in context only"]
+  J -- "Yes: knowledge or decision" --> W["Promote to SIM Wiki\nsource refs and provenance"]
+  J -- "Yes: work to be done" --> P["Create Paperclip task\nassignee, approval gate, run receipt"]
+  J -- "Yes: model/routing evidence" --> R["Record route ledger\nrun, cost, review state"]
+  J -- "Yes: customer action" --> T["Return to Tissuu for live action\npreserve only selected proof in SimOne"]
+```
+
+Product rule: SIM Coach can help decide what matters, but it does not become
+the durable owner by itself. Durable knowledge belongs in SIM Wiki. Delegated
+work belongs in Paperclip tasks and runs. Live Customer Engine action stays in
+Tissuu until a future write-back phase is deliberately approved.
+
+## 7. Sovereign Model Routing Flow
 
 ```mermaid
 sequenceDiagram
@@ -133,7 +150,7 @@ sequenceDiagram
 Dev-mode rule: every important route should be inspectable before SimOne depends
 on black-box orchestration.
 
-## 7. Optional OpenRouter Fusion Deliberation Flow
+## 8. Optional OpenRouter Fusion Deliberation Flow
 
 ```mermaid
 sequenceDiagram
@@ -155,7 +172,7 @@ sequenceDiagram
 Escalation rule: use Fusion when disagreement is informative and the cost of
 being wrong is higher than the extra cost/latency of multiple model calls.
 
-## 8. Optional Fugu Experiment Flow
+## 9. Optional Fugu Experiment Flow
 
 ```mermaid
 sequenceDiagram
@@ -175,7 +192,7 @@ sequenceDiagram
 Experiment rule: Fugu can be useful without becoming the root of trust. It must
 sit behind SimOne's logs, evaluations, fallback rules, and human approval gates.
 
-## 9. Paperclip Control-Plane Flow
+## 10. Paperclip Control-Plane Flow
 
 ```mermaid
 sequenceDiagram
@@ -196,7 +213,7 @@ sequenceDiagram
 SimOne product rule: keep this proven control-plane machinery where it works;
 adapt the user's conceptual experience around it.
 
-## 10. Approval Gates
+## 11. Approval Gates
 
 Require human approval before:
 

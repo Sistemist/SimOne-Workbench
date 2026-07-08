@@ -167,6 +167,25 @@ The main SimOne surfaces should have clean jobs:
 | SIM Wiki | Durable memory, source material, concepts, synthesis, provenance | Silently absorbing every ephemeral live signal |
 | Paperclip control plane | Tasks, agents, runs, approvals, costs, recovery | First-screen product language for nontechnical users |
 
+### State Ownership Contract
+
+When SimOne feels confusing, ask which layer owns the state. A surface can
+display another layer's state, but it should not silently become the owner of
+that state.
+
+| User question | SimOne surface | Durable owner | Paperclip backing | Promotion rule |
+| --- | --- | --- | --- | --- |
+| "What is my venture, and where is it blocked?" | SIM Starter, Venture Architecture Map, Scanner | Venture map and Sprint Zero brief | Company, project, first task, documents/artifacts | Save map/brief only after the user accepts the protected workspace context |
+| "Why does this matter?" | SIM Coach | Usually ephemeral explanation | Optional maintainer task/run when retrieval is needed | Promote only useful answers into SIM Wiki |
+| "What do we know for later?" | SIM Wiki | Wiki page, synthesis page, source refs, provenance | Documents, wiki plugin files, maintainer task/run | Human chooses to save or promote |
+| "What customer signal needs me?" | Customer Engine Readout | Tissuu for live signal; SIM Wiki for durable proof | Bridge readout, optional synthesis page | Live queues stay in Tissuu; only decisions/proof are promoted |
+| "Who is doing the work?" | Paperclip control plane through SimOne language | Tasks, agents, runs, approvals, costs, recovery | Issues, agents, heartbeat runs, cost events, approvals | Delegation starts only after the approval boundary is clear |
+| "Which model or router handled this?" | Advanced model routing audit | Route decision, run, cost event, review state | `model_route_decisions`, heartbeat runs, cost events | First-run users do not choose this; operators can audit it |
+
+This contract is why SIM Coach is not the memory layer, SIM Wiki is not a live
+automation loop, Tissuu is not being migrated, and Paperclip remains the
+inspectable work ledger underneath SimOne.
+
 ### SIM Starter
 
 The authenticated starter path now begins with a company name and messy venture

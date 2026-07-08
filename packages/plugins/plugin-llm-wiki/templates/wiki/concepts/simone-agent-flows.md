@@ -57,6 +57,20 @@ becoming invisible automation.
 - Paperclip control plane owns tasks, agents, runs, approvals, costs, and
   recovery underneath the SimOne product language.
 
+## State Promotion
+
+Ephemeral signals can come from scanner results, Coach answers, bridge counts,
+or run output. SimOne should decide what happens next:
+
+- keep it lightweight when it only helps the current decision
+- promote it to SIM Wiki when it should become durable knowledge or a decision
+- turn it into a Paperclip task when work should be delegated
+- record it in the route ledger when it is model/routing evidence
+- send the user back to Tissuu when it is live Customer Engine action
+
+SIM Coach can help with that choice, but it should not silently become the
+durable owner of every answer.
+
 ## Experiment Lanes
 
 OpenRouter Fusion should be reserved for critical, high-risk, uncertain tasks
