@@ -516,9 +516,16 @@ describe("SimCoach", () => {
     await act(async () => {
       fakeEventSources[0]?.emitMessage({
         type: "query.done",
-        answer: "Check saved method pages. Customer review loop is the durable method here.",
+        answer:
+          "Check saved method pages. Customer review loop is the durable method here. See [[wiki/sim/engines.md]] and raw/founder-note.md.",
       });
     });
+
+    expect(container.textContent).toContain("Sources mentioned");
+    expect(container.textContent).toContain("wiki/sim/engines.md");
+    expect(container.textContent).toContain("raw/founder-note.md");
+    const sourceLinks = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
+    expect(sourceLinks.some((link) => link.getAttribute("href") === "/wiki/page/wiki/sim/engines.md")).toBe(true);
 
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-08T12:34:56.000Z"));
@@ -550,7 +557,12 @@ describe("SimCoach", () => {
     const params = mockPluginsApi.bridgePerformAction.mock.calls[1][2];
     expect(params.contents).toContain("# SIM Wiki answer: Customer loop is leaking");
     expect(params.contents).toContain("## SIM Wiki Answer");
-    expect(params.contents).toContain("Check saved method pages. Customer review loop is the durable method here.");
+    expect(params.contents).toContain(
+      "Check saved method pages. Customer review loop is the durable method here. See [[wiki/sim/engines.md]] and raw/founder-note.md."
+    );
+    expect(params.contents).toContain("## Sources Mentioned");
+    expect(params.contents).toContain("- [[wiki/sim/engines.md]]");
+    expect(params.contents).toContain("- `raw/founder-note.md`");
     expect(params.contents).toContain("## Scanner Context");
     expect(params.contents).toContain("- engine: Customer Engine");
     expect(params.contents).toContain("- maintainer task: SYS-777");

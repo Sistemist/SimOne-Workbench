@@ -96,6 +96,12 @@ path is to reframe Paperclip's LLM Wiki plugin as SIM Wiki.
 material. In SimOne, its work should stay inspectable through Paperclip tasks
 and only become durable memory through explicit promotion.
 
+**Sources Mentioned**
+: The first Coach-side citation aid for returned SIM Wiki answers. SimOne lifts
+explicit `wiki/...` and `raw/...` paths from the answer text into a visible
+source list and saved synthesis page. It is helpful context, not yet a full
+structured citation graph.
+
 **Customer Engine**
 : The relationship/customer-intelligence engine. For now, Han's Customer Engine
 lives in Tissuu and sends read-only signal into SimOne.

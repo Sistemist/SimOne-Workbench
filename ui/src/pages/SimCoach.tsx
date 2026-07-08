@@ -173,6 +173,11 @@ type WikiRetrievalState =
 
 type QueuedWikiRetrieval = Extract<WikiRetrievalState, { status: "queued" }>;
 
+type WikiAnswerSource = {
+  kind: "wiki-page" | "raw-source";
+  path: string;
+};
+
 function loadScannerCoachContext(): ScannerCoachContext | null {
   try {
     const raw = window.localStorage.getItem(BOTTLENECK_SCAN_STORAGE_KEY);
@@ -231,6 +236,36 @@ function timestampForWikiPath(now: Date): string {
   return now.toISOString().slice(0, 19).replace("T", "-").replace(/:/g, "");
 }
 
+function extractWikiAnswerSources(answer: string): WikiAnswerSource[] {
+  const sources: WikiAnswerSource[] = [];
+  const seen = new Set<string>();
+  const addSource = (kind: WikiAnswerSource["kind"], rawPath: string) => {
+    const path = rawPath.trim().replace(/[),.;:]+$/g, "");
+    if (!path || seen.has(`${kind}:${path}`)) return;
+    seen.add(`${kind}:${path}`);
+    sources.push({ kind, path });
+  };
+
+  for (const match of answer.matchAll(/\[\[(wiki\/[^\]\|]+)(?:\|[^\]]+)?\]\]/g)) {
+    addSource("wiki-page", match[1] ?? "");
+  }
+  for (const match of answer.matchAll(/(?:^|[\s(])`?(wiki\/[A-Za-z0-9_./-]+\.md)`?/g)) {
+    addSource("wiki-page", match[1] ?? "");
+  }
+  for (const match of answer.matchAll(/\[\[(raw\/[^\]\|]+)(?:\|[^\]]+)?\]\]/g)) {
+    addSource("raw-source", match[1] ?? "");
+  }
+  for (const match of answer.matchAll(/(?:^|[\s(])`?(raw\/[A-Za-z0-9_./-]+)`?/g)) {
+    addSource("raw-source", match[1] ?? "");
+  }
+
+  return sources.slice(0, 8);
+}
+
+function wikiAnswerSourceMarkdown(source: WikiAnswerSource): string {
+  return source.kind === "wiki-page" ? `- [[${source.path}]]` : `- \`${source.path}\``;
+}
+
 function buildScannerWikiPromotion(context: ScannerCoachContext, methodology: MethodologyContext, now = new Date()) {
   const path = `wiki/synthesis/scanner-${timestampForWikiPath(now)}-${slugifyForWikiPath(context.headline)}.md`;
   const updated = now.toISOString().slice(0, 10);
@@ -282,6 +317,10 @@ function buildScannerWikiPromotion(context: ScannerCoachContext, methodology: Me
 function buildWikiAnswerPromotion(context: ScannerCoachContext, retrieval: QueuedWikiRetrieval, now = new Date()) {
   const path = `wiki/synthesis/coach-answer-${timestampForWikiPath(now)}-${slugifyForWikiPath(context.headline)}.md`;
   const updated = now.toISOString().slice(0, 10);
+  const answerSources = extractWikiAnswerSources(retrieval.answer);
+  const sourcesMentioned = answerSources.length > 0
+    ? answerSources.map(wikiAnswerSourceMarkdown).join("\n")
+    : "- No explicit wiki or raw source paths were mentioned in the answer.";
   const questions = context.questions.length > 0
     ? context.questions.map((question) => `- ${question}`).join("\n")
     : "- No open questions were captured in the scanner result.";
@@ -300,6 +339,10 @@ function buildWikiAnswerPromotion(context: ScannerCoachContext, retrieval: Queue
     "## SIM Wiki Answer",
     "",
     retrieval.answer.trim(),
+    "",
+    "## Sources Mentioned",
+    "",
+    sourcesMentioned,
     "",
     "## Scanner Context",
     "",
@@ -362,6 +405,8 @@ export function SimCoach() {
   const scannerContext = useMemo(loadScannerCoachContext, []);
   const methodologyContext = scannerContext ? methodologyForScannerContext(scannerContext) : null;
   const wikiRetrievalQuestion = scannerContext ? buildWikiRetrievalQuestion(scannerContext) : null;
+  const wikiAnswerSources =
+    retrievalState.status === "queued" ? extractWikiAnswerSources(retrievalState.answer) : [];
   const { data: plugins } = useQuery({
     queryKey: queryKeys.plugins.all,
     queryFn: () => pluginsApi.list(),
@@ -757,6 +802,26 @@ export function SimCoach() {
                         <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-foreground">
                           {retrievalState.answer.trim()}
                         </p>
+                        {wikiAnswerSources.length > 0 ? (
+                          <div className="mt-3 rounded-md border border-border bg-muted/30 p-2.5">
+                            <div className="text-xs font-medium uppercase text-muted-foreground">
+                              Sources mentioned
+                            </div>
+                            <ul className="mt-2 grid gap-1 text-xs leading-5 text-muted-foreground">
+                              {wikiAnswerSources.map((source) => (
+                                <li key={`${source.kind}:${source.path}`}>
+                                  {source.kind === "wiki-page" ? (
+                                    <Link className="text-primary underline-offset-4 hover:underline" to={`/wiki/page/${source.path}`}>
+                                      {source.path}
+                                    </Link>
+                                  ) : (
+                                    <span>{source.path}</span>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : null}
                         <div className="mt-3 flex flex-wrap items-center gap-2">
                           <Button
                             type="button"
