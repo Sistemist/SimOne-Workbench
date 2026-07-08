@@ -157,6 +157,12 @@ type WikiPromotionState =
   | { status: "saved"; path: string }
   | { status: "error"; message: string };
 
+type WikiRetrievalState =
+  | { status: "idle" }
+  | { status: "starting" }
+  | { status: "queued"; operationId: string | null; issueRef: string | null }
+  | { status: "error"; message: string };
+
 function loadScannerCoachContext(): ScannerCoachContext | null {
   try {
     const raw = window.localStorage.getItem(BOTTLENECK_SCAN_STORAGE_KEY);
@@ -298,6 +304,7 @@ export function SimCoach() {
   const companyId = selectedCompany?.id ?? null;
   const companyName = selectedCompany?.name ?? "this company";
   const [promotionState, setPromotionState] = useState<WikiPromotionState>({ status: "idle" });
+  const [retrievalState, setRetrievalState] = useState<WikiRetrievalState>({ status: "idle" });
   const driverText = useMemo(() => drivers.join(" / "), []);
   const scannerContext = useMemo(loadScannerCoachContext, []);
   const methodologyContext = scannerContext ? methodologyForScannerContext(scannerContext) : null;
@@ -352,6 +359,44 @@ export function SimCoach() {
       setPromotionState({
         status: "error",
         message: error instanceof Error ? error.message : "Could not save to SIM Wiki.",
+      });
+    }
+  }
+
+  async function queueWikiRetrieval() {
+    if (!scannerContext || !wikiRetrievalQuestion || !simWikiPlugin || !companyId) return;
+    setRetrievalState({ status: "starting" });
+    try {
+      const response = await pluginsApi.bridgePerformAction(
+        simWikiPlugin.id,
+        "start-query",
+        {
+          companyId,
+          wikiId: "default",
+          spaceSlug: "default",
+          question: wikiRetrievalQuestion,
+          title: `SIM Coach retrieval: ${scannerContext.headline}`,
+        },
+        companyId
+      );
+      const data = response.data as {
+        operationId?: unknown;
+        issue?: {
+          id?: unknown;
+          identifier?: unknown;
+        };
+      } | undefined;
+      const issueIdentifier = typeof data?.issue?.identifier === "string" ? data.issue.identifier : "";
+      const issueId = typeof data?.issue?.id === "string" ? data.issue.id : "";
+      setRetrievalState({
+        status: "queued",
+        operationId: typeof data?.operationId === "string" ? data.operationId : null,
+        issueRef: issueIdentifier || issueId || null,
+      });
+    } catch (error) {
+      setRetrievalState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Could not ask SIM Wiki.",
       });
     }
   }
@@ -466,9 +511,35 @@ export function SimCoach() {
                   and prior promoted syntheses.
                 </p>
                 <p className="mt-2 text-xs leading-5 text-muted-foreground">Ask: {wikiRetrievalQuestion}</p>
-                <Button asChild variant="link" size="sm" className="mt-1 h-auto px-0 text-xs">
-                  <Link to="/wiki/query">Ask SIM Wiki</Link>
-                </Button>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8"
+                    onClick={queueWikiRetrieval}
+                    disabled={retrievalState.status === "starting"}
+                  >
+                    {retrievalState.status === "starting" ? "Asking..." : "Ask SIM Wiki now"}
+                  </Button>
+                  <Button asChild variant="link" size="sm" className="h-8 px-0 text-xs">
+                    <Link to="/wiki/query">Open Ask tab</Link>
+                  </Button>
+                </div>
+                {retrievalState.status === "queued" ? (
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs leading-5 text-emerald-700 dark:text-emerald-200">
+                    <span>SIM Wiki check queued</span>
+                    {retrievalState.issueRef ? <span>Maintainer task: {retrievalState.issueRef}</span> : null}
+                    {retrievalState.issueRef ? (
+                      <Button asChild variant="link" size="sm" className="h-auto px-0 text-xs">
+                        <Link to={`/issues/${retrievalState.issueRef}`}>Open maintainer task</Link>
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : null}
+                {retrievalState.status === "error" ? (
+                  <p className="mt-2 text-xs leading-5 text-destructive">{retrievalState.message}</p>
+                ) : null}
               </div>
             ) : null}
             <div className="flex flex-wrap gap-2">

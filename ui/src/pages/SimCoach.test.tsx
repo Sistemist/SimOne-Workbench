@@ -251,6 +251,89 @@ describe("SimCoach", () => {
     });
   });
 
+  it("queues a SIM Wiki maintainer retrieval from saved scanner context", async () => {
+    mockPluginsApi.list.mockResolvedValue([
+      {
+        id: "plugin-1",
+        packageName: "@paperclipai/plugin-llm-wiki",
+        status: "ready",
+        manifestJson: {
+          displayName: "SIM Wiki",
+          description: "SimOne wiki",
+          version: "0.1.0",
+        },
+      } as PluginRecord,
+    ]);
+    localStorage.setItem(
+      "simone:bottleneck-scan",
+      JSON.stringify({
+        result: {
+          headline: "Customer loop is leaking",
+          engine: "Customer Engine",
+          questions: ["Who should approve the next customer reply or offer?"],
+          mapPreview: {
+            artifact: "Venture Architecture Map",
+            firstSection: "Customer review loop",
+          },
+        },
+      })
+    );
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderSimCoach(container);
+    await flushReact();
+
+    const askButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Ask SIM Wiki now")
+    ) as HTMLButtonElement;
+    expect(askButton).toBeTruthy();
+    mockPluginsApi.bridgePerformAction.mockResolvedValueOnce({
+      data: {
+        status: "running",
+        operationId: "operation-1",
+        querySessionId: "operation-1",
+        channel: "llm-wiki:query:operation-1",
+        issue: {
+          id: "issue-1",
+          identifier: "SYS-777",
+          title: "Query SIM Wiki: Customer loop is leaking",
+        },
+      },
+    });
+
+    await act(async () => {
+      askButton.click();
+      for (let i = 0; i < 5; i += 1) {
+        await Promise.resolve();
+      }
+    });
+
+    expect(mockPluginsApi.bridgePerformAction).toHaveBeenCalledWith(
+      "plugin-1",
+      "start-query",
+      expect.objectContaining({
+        companyId: "company-1",
+        wikiId: "default",
+        spaceSlug: "default",
+        question: "What should SIM Coach check before assigning work on Customer loop is leaking?",
+        title: "SIM Coach retrieval: Customer loop is leaking",
+      }),
+      "company-1"
+    );
+    expect(container.textContent).toContain("SIM Wiki check queued");
+    expect(container.textContent).toContain("Maintainer task: SYS-777");
+
+    const issueLink = Array.from(container.querySelectorAll<HTMLAnchorElement>("a")).find((link) =>
+      link.textContent?.includes("Open maintainer task")
+    );
+    expect(issueLink?.getAttribute("href")).toBe("/issues/SYS-777");
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
   it("promotes a scanner synthesis into SIM Wiki when the wiki plugin is ready", async () => {
     mockPluginsApi.list.mockResolvedValue([
       {

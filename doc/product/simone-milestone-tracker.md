@@ -37,7 +37,7 @@ enough to evaluate them.
 | Paperclip control-plane reuse | 55% | Companies, agents, tasks, skills, adapters, runs, costs, recovery inherited | Better Thomasina-facing labels, fewer raw control-plane concepts in first run |
 | PLG/Barnum layer | 53% | Public scanner, safer share summaries, shareable map interpretation, scanner-to-starter handoff | Stronger Sprint Zero brief, richer share previews, less generic public copy |
 | Customer Engine bridge | 78% | Read-only Tissuu bridge live, native dashboard/page card, SIM Wiki proof promotion | More visual QA, lived use, defer write-back v2 |
-| SIM Coach and SIM Wiki | 47% | Coach scanner explanations, scanner-to-wiki retrieval handoff, promotion to wiki, SIM method seed pages, product glossary/flow seed pages | Broader answer promotion, deeper retrieval-backed coach answers, better wiki navigation |
+| SIM Coach and SIM Wiki | 48% | Coach scanner explanations, scanner-to-wiki maintainer retrieval, promotion to wiki, SIM method seed pages, product glossary/flow seed pages | Broader answer promotion, streamed retrieval-backed coach answers, better wiki navigation |
 | Model routing and auditability | 32% | `model_route_decisions` ledger, lane vocabulary, local context compression envelope | Real provider execution, route/run linking, cost review UI, evaluations |
 | Compression/headroom | 8% | Local `simone_json_headroom_v0` envelope for bulky JSON route context | Evaluate Headroom/SmartCrusher, compare quality, support RAG/log/transcript payloads |
 | Full SIM operating system | 30% | Engines, drivers, governance, bridge, coach/wiki beginnings | SIM Starter, durable operating loops, production hardening |
@@ -103,8 +103,8 @@ Done:
 - SIM Wiki template seeds SIM method pages and SimOne product-language pages.
 - Scanner/Coach and Customer Engine readouts can be deliberately promoted into
   durable wiki synthesis pages.
-- SIM Coach can point saved scanner context into the SIM Wiki Ask surface before
-  stronger advice or agent assignment.
+- SIM Coach can queue saved scanner context as an auditable SIM Wiki Maintainer
+  retrieval before stronger advice or agent assignment.
 - Product definitions now exist in repo docs and in future wiki root templates.
 - SIM Starter now carries messy venture context into the first Sprint Zero
   "Draft the first SIM map" work item before opening the dashboard.
@@ -114,8 +114,7 @@ Done:
 Remaining:
 
 - Store founder source notes and first map drafts with provenance.
-- Make SIM Coach consume returned SIM Wiki answers directly instead of only
-  linking to the Ask surface.
+- Stream or summarize returned SIM Wiki answers directly inside SIM Coach.
 - Add broader "save this answer to SIM Wiki" paths.
 
 ### M3: Sovereign Model Routing
