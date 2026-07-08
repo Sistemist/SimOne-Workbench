@@ -65,7 +65,11 @@ type ScannerResult = {
 };
 
 const SCAN_STORAGE_KEY = "simone:bottleneck-scan";
-const SCANNER_COACH_HREF = `/auth?next=${encodeURIComponent("/sim-coach?from=scanner")}`;
+function signUpHref(next: string) {
+  return `/auth?mode=sign_up&next=${encodeURIComponent(next)}`;
+}
+
+const SCANNER_COACH_HREF = signUpHref("/sim-coach?from=scanner");
 
 const scannerExamples = [
   {
@@ -151,7 +155,7 @@ const fallbackResult: ScannerResult = {
     summary:
       "SimOne will keep the product loop, proof question, and approval boundary together after sign-in.",
     primaryCta: "Save the full Product Engine map",
-    onboardingHref: `/auth?next=${encodeURIComponent("/onboarding?from=scanner&focus=product-engine")}`,
+    onboardingHref: signUpHref("/onboarding?from=scanner&focus=product-engine"),
   },
   handoffPreview: {
     title: "What happens after sign-in",
@@ -358,7 +362,7 @@ function scanBottleneck(input: string): ScannerResult {
       title: `Turn this into a ${result.engine} map`,
       summary: `SimOne will keep the ${engineLoopLabel(result.engine)}, proof question, and approval boundary together after sign-in.`,
       primaryCta: `Save the full ${result.engine} map`,
-      onboardingHref: `/auth?next=${encodeURIComponent(`/onboarding?from=scanner&focus=${engineFocusSlug(result.engine)}`)}`,
+      onboardingHref: signUpHref(`/onboarding?from=scanner&focus=${engineFocusSlug(result.engine)}`),
     },
     handoffPreview: {
       title: "What happens after sign-in",
@@ -433,7 +437,7 @@ export function SystemsBottleneckScanner() {
             </p>
           </div>
           <a
-            href="/auth?next=%2Fonboarding"
+            href={signUpHref("/onboarding")}
             className="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent"
           >
             Create full map

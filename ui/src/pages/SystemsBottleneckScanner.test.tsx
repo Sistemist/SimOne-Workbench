@@ -249,9 +249,11 @@ describe("SystemsBottleneckScanner", () => {
     });
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
-    expect(links.some((link) => link.getAttribute("href") === "/auth?next=%2Fsim-coach%3Ffrom%3Dscanner")).toBe(true);
     expect(
-      links.some((link) => link.getAttribute("href") === "/auth?next=%2Fonboarding%3Ffrom%3Dscanner%26focus%3Dcustomer-engine"),
+      links.some((link) => link.getAttribute("href") === "/auth?mode=sign_up&next=%2Fsim-coach%3Ffrom%3Dscanner"),
+    ).toBe(true);
+    expect(
+      links.some((link) => link.getAttribute("href") === "/auth?mode=sign_up&next=%2Fonboarding%3Ffrom%3Dscanner%26focus%3Dcustomer-engine"),
     ).toBe(true);
 
     flushSync(() => {
@@ -411,7 +413,7 @@ describe("SystemsBottleneckScanner", () => {
       links.some(
         (link) =>
           link.textContent?.includes("Save the full Customer Engine map") &&
-          link.getAttribute("href") === "/auth?next=%2Fonboarding%3Ffrom%3Dscanner%26focus%3Dcustomer-engine",
+          link.getAttribute("href") === "/auth?mode=sign_up&next=%2Fonboarding%3Ffrom%3Dscanner%26focus%3Dcustomer-engine",
       ),
     ).toBe(true);
 
@@ -422,7 +424,7 @@ describe("SystemsBottleneckScanner", () => {
         conversionPath: {
           title: "Turn this into a Customer Engine map",
           primaryCta: "Save the full Customer Engine map",
-          onboardingHref: "/auth?next=%2Fonboarding%3Ffrom%3Dscanner%26focus%3Dcustomer-engine",
+          onboardingHref: "/auth?mode=sign_up&next=%2Fonboarding%3Ffrom%3Dscanner%26focus%3Dcustomer-engine",
         },
         handoffPreview: {
           title: "What happens after sign-in",
