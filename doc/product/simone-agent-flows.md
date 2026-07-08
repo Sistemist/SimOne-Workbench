@@ -80,14 +80,16 @@ flowchart LR
   C --> A{"User asks why or needs judgment?"}
   A -- "No" --> Q
   A -- "Yes" --> W["Retrieve from SIM Wiki"]
-  W --> E["Explain in plain language"]
-  E --> P{"Worth preserving?"}
+  W --> E["Stream answer into Coach"]
+  E --> R["Explain in plain language"]
+  R --> P{"Worth preserving?"}
   P -- "No" --> Q
-  P -- "Yes" --> L["Promote synthesis to SIM Wiki with provenance"]
+  P -- "Yes" --> L["Promote answer or synthesis to SIM Wiki with provenance"]
 ```
 
 Product rule: the coach should explain the method when it helps the user act,
-not turn the app into a course ad.
+not turn the app into a course ad. A returned wiki answer is still ephemeral
+until the human deliberately saves it as a synthesis page.
 
 ## 5. Sovereign Model Routing Flow
 

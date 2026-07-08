@@ -171,6 +171,8 @@ type WikiRetrievalState =
     }
   | { status: "error"; message: string };
 
+type QueuedWikiRetrieval = Extract<WikiRetrievalState, { status: "queued" }>;
+
 function loadScannerCoachContext(): ScannerCoachContext | null {
   try {
     const raw = window.localStorage.getItem(BOTTLENECK_SCAN_STORAGE_KEY);
@@ -277,6 +279,48 @@ function buildScannerWikiPromotion(context: ScannerCoachContext, methodology: Me
   return { path, contents };
 }
 
+function buildWikiAnswerPromotion(context: ScannerCoachContext, retrieval: QueuedWikiRetrieval, now = new Date()) {
+  const path = `wiki/synthesis/coach-answer-${timestampForWikiPath(now)}-${slugifyForWikiPath(context.headline)}.md`;
+  const updated = now.toISOString().slice(0, 10);
+  const questions = context.questions.length > 0
+    ? context.questions.map((question) => `- ${question}`).join("\n")
+    : "- No open questions were captured in the scanner result.";
+  const contents = [
+    "---",
+    `title: SIM Wiki answer - ${context.headline.replace(/:/g, " -")}`,
+    "type: synthesis",
+    "tags: [simone, coach, sim-wiki-answer]",
+    "sources: []",
+    `created: ${updated}`,
+    `updated: ${updated}`,
+    "---",
+    "",
+    `# SIM Wiki answer: ${context.headline}`,
+    "",
+    "## SIM Wiki Answer",
+    "",
+    retrieval.answer.trim(),
+    "",
+    "## Scanner Context",
+    "",
+    `- engine: ${context.engine}`,
+    `- artifact: ${context.artifact}`,
+    context.firstSection ? `- map section: ${context.firstSection}` : "- map section: not captured",
+    retrieval.issueRef ? `- maintainer task: ${retrieval.issueRef}` : "- maintainer task: not captured",
+    retrieval.operationId ? `- operation id: ${retrieval.operationId}` : "- operation id: not captured",
+    "",
+    "## Open Questions",
+    "",
+    questions,
+    "",
+    "## Promotion Note",
+    "",
+    "This answer was returned from SIM Wiki and deliberately promoted from SIM Coach. Use it as durable coaching memory, not as a replacement for live source checks.",
+  ].join("\n");
+
+  return { path, contents };
+}
+
 function methodologyForScannerContext(context: ScannerCoachContext): MethodologyContext {
   if (context.engine.toLowerCase().includes("customer")) {
     return {
@@ -312,6 +356,7 @@ export function SimCoach() {
   const companyId = selectedCompany?.id ?? null;
   const companyName = selectedCompany?.name ?? "this company";
   const [promotionState, setPromotionState] = useState<WikiPromotionState>({ status: "idle" });
+  const [answerPromotionState, setAnswerPromotionState] = useState<WikiPromotionState>({ status: "idle" });
   const [retrievalState, setRetrievalState] = useState<WikiRetrievalState>({ status: "idle" });
   const driverText = useMemo(() => drivers.join(" / "), []);
   const scannerContext = useMemo(loadScannerCoachContext, []);
@@ -523,6 +568,51 @@ export function SimCoach() {
     }
   }
 
+  async function promoteWikiAnswerToWiki() {
+    if (
+      !scannerContext ||
+      retrievalState.status !== "queued" ||
+      !retrievalState.answer.trim() ||
+      !simWikiPlugin ||
+      !companyId
+    ) {
+      return;
+    }
+
+    const page = buildWikiAnswerPromotion(scannerContext, retrievalState);
+    setAnswerPromotionState({ status: "saving" });
+    try {
+      const response = await pluginsApi.bridgePerformAction(
+        simWikiPlugin.id,
+        "write-page",
+        {
+          companyId,
+          wikiId: "default",
+          spaceSlug: "default",
+          path: page.path,
+          contents: page.contents,
+          summary: "Promoted SIM Wiki answer from SIM Coach",
+          sourceRefs: [
+            {
+              kind: "sim-wiki-query",
+              issueRef: retrievalState.issueRef,
+              operationId: retrievalState.operationId,
+            },
+            { kind: "simone-bottleneck-scan", artifact: scannerContext.artifact },
+          ],
+        },
+        companyId
+      );
+      const data = response.data as { path?: unknown } | undefined;
+      setAnswerPromotionState({ status: "saved", path: typeof data?.path === "string" ? data.path : page.path });
+    } catch (error) {
+      setAnswerPromotionState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Could not save answer to SIM Wiki.",
+      });
+    }
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-6">
       <section className="flex flex-col gap-4 border-b border-border pb-6">
@@ -667,6 +757,33 @@ export function SimCoach() {
                         <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-foreground">
                           {retrievalState.answer.trim()}
                         </p>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8"
+                            onClick={promoteWikiAnswerToWiki}
+                            disabled={answerPromotionState.status === "saving"}
+                          >
+                            {answerPromotionState.status === "saving"
+                              ? "Saving answer..."
+                              : "Save answer to SIM Wiki"}
+                          </Button>
+                        </div>
+                        {answerPromotionState.status === "saved" ? (
+                          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs leading-5 text-emerald-700 dark:text-emerald-200">
+                            <span>Saved answer to SIM Wiki: {answerPromotionState.path}</span>
+                            <Button asChild variant="link" size="sm" className="h-auto px-0 text-xs">
+                              <Link to={`/wiki/page/${answerPromotionState.path}`}>Open saved answer</Link>
+                            </Button>
+                          </div>
+                        ) : null}
+                        {answerPromotionState.status === "error" ? (
+                          <p className="mt-2 text-xs leading-5 text-destructive">
+                            {answerPromotionState.message}
+                          </p>
+                        ) : null}
                       </div>
                     ) : retrievalState.streamStatus === "connecting" || retrievalState.streamStatus === "running" ? (
                       <p className="text-xs leading-5 text-muted-foreground">

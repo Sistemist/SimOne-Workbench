@@ -89,6 +89,8 @@ describe("SimCoach", () => {
     localStorage.clear();
     fakeEventSources.length = 0;
     vi.stubGlobal("EventSource", FakeEventSource);
+    mockPluginsApi.list.mockReset();
+    mockPluginsApi.bridgePerformAction.mockReset();
     mockPluginsApi.list.mockResolvedValue([]);
     mockPluginsApi.bridgePerformAction.mockResolvedValue({
       data: {
@@ -101,6 +103,7 @@ describe("SimCoach", () => {
   afterEach(() => {
     document.body.innerHTML = "";
     vi.clearAllMocks();
+    vi.useRealTimers();
     vi.unstubAllGlobals();
   });
 
@@ -443,6 +446,135 @@ describe("SimCoach", () => {
     flushSync(() => {
       root.unmount();
     });
+  });
+
+  it("promotes a returned SIM Wiki answer into durable wiki memory", async () => {
+    mockPluginsApi.list.mockResolvedValue([
+      {
+        id: "plugin-1",
+        packageName: "@paperclipai/plugin-llm-wiki",
+        status: "ready",
+        manifestJson: {
+          displayName: "SIM Wiki",
+          description: "SimOne wiki",
+          version: "0.1.0",
+        },
+      } as PluginRecord,
+    ]);
+    localStorage.setItem(
+      "simone:bottleneck-scan",
+      JSON.stringify({
+        result: {
+          headline: "Customer loop is leaking",
+          engine: "Customer Engine",
+          questions: ["Who should approve the next customer reply or offer?"],
+          mapPreview: {
+            artifact: "Venture Architecture Map",
+            firstSection: "Customer review loop",
+          },
+        },
+      })
+    );
+    mockPluginsApi.bridgePerformAction
+      .mockResolvedValueOnce({
+        data: {
+          status: "running",
+          operationId: "operation-1",
+          querySessionId: "operation-1",
+          channel: "llm-wiki:query:operation-1",
+          issue: {
+            id: "issue-1",
+            identifier: "SYS-777",
+            title: "Query SIM Wiki: Customer loop is leaking",
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          status: "ok",
+          path: "wiki/synthesis/coach-answer-2026-07-08-123456-customer-loop-is-leaking.md",
+        },
+      });
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderSimCoach(container);
+    await flushReact();
+
+    const askButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Ask SIM Wiki now")
+    ) as HTMLButtonElement;
+    expect(askButton).toBeTruthy();
+
+    await act(async () => {
+      askButton.click();
+      for (let i = 0; i < 5; i += 1) {
+        await Promise.resolve();
+      }
+    });
+
+    await act(async () => {
+      fakeEventSources[0]?.emitMessage({
+        type: "query.done",
+        answer: "Check saved method pages. Customer review loop is the durable method here.",
+      });
+    });
+
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-08T12:34:56.000Z"));
+
+    const saveAnswerButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Save answer to SIM Wiki")
+    ) as HTMLButtonElement;
+    expect(saveAnswerButton).toBeTruthy();
+
+    await act(async () => {
+      saveAnswerButton.click();
+      for (let i = 0; i < 5; i += 1) {
+        await Promise.resolve();
+      }
+    });
+
+    expect(mockPluginsApi.bridgePerformAction).toHaveBeenLastCalledWith(
+      "plugin-1",
+      "write-page",
+      expect.objectContaining({
+        companyId: "company-1",
+        wikiId: "default",
+        spaceSlug: "default",
+        path: "wiki/synthesis/coach-answer-2026-07-08-123456-customer-loop-is-leaking.md",
+        summary: "Promoted SIM Wiki answer from SIM Coach",
+      }),
+      "company-1"
+    );
+    const params = mockPluginsApi.bridgePerformAction.mock.calls[1][2];
+    expect(params.contents).toContain("# SIM Wiki answer: Customer loop is leaking");
+    expect(params.contents).toContain("## SIM Wiki Answer");
+    expect(params.contents).toContain("Check saved method pages. Customer review loop is the durable method here.");
+    expect(params.contents).toContain("## Scanner Context");
+    expect(params.contents).toContain("- engine: Customer Engine");
+    expect(params.contents).toContain("- maintainer task: SYS-777");
+    expect(params.contents).toContain("Who should approve the next customer reply or offer?");
+    expect(params.sourceRefs).toEqual([
+      {
+        kind: "sim-wiki-query",
+        issueRef: "SYS-777",
+        operationId: "operation-1",
+      },
+      { kind: "simone-bottleneck-scan", artifact: "Venture Architecture Map" },
+    ]);
+    expect(container.textContent).toContain("Saved answer to SIM Wiki");
+    const savedAnswerLink = Array.from(container.querySelectorAll<HTMLAnchorElement>("a")).find((link) =>
+      link.textContent?.includes("Open saved answer")
+    );
+    expect(savedAnswerLink?.getAttribute("href")).toBe(
+      "/wiki/page/wiki/synthesis/coach-answer-2026-07-08-123456-customer-loop-is-leaking.md"
+    );
+
+    flushSync(() => {
+      root.unmount();
+    });
+    vi.useRealTimers();
   });
 
   it("promotes a scanner synthesis into SIM Wiki when the wiki plugin is ready", async () => {

@@ -82,12 +82,19 @@ cross-engine tradeoffs, and model-spend policy changes.
 **SIM Coach**
 : The contextual explainer, reviewer, and guide. SIM Coach helps the user
 understand what a signal means, why a bottleneck matters, what is safe to
-delegate, and when to keep judgment. It can appear as cards, a panel, or chat.
+delegate, and when to keep judgment. It can retrieve from SIM Wiki and let the
+user save useful returned answers as durable synthesis. It can appear as cards,
+a panel, or chat.
 
 **SIM Wiki**
 : The inspectable memory/knowledge layer for SIM concepts, source material,
 venture context, durable decisions, synthesis, and provenance. The first alpha
 path is to reframe Paperclip's LLM Wiki plugin as SIM Wiki.
+
+**SIM Wiki Maintainer**
+: The bounded wiki agent role that retrieves, compiles, or writes SIM Wiki
+material. In SimOne, its work should stay inspectable through Paperclip tasks
+and only become durable memory through explicit promotion.
 
 **Customer Engine**
 : The relationship/customer-intelligence engine. For now, Han's Customer Engine
