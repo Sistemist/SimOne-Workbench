@@ -52,6 +52,12 @@ diagnostics/
 # Doc maintenance cursor
 .doc-review-cursor
 
+# Internal SimOne / inherited Paperclip research and planning docs
+ARCHITECTURE.md
+Paperclip AI License Verification.md
+doc/
+docs/
+
 # Playwright
 .playwright-cli/
 output/playwright/
