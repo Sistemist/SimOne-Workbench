@@ -140,8 +140,9 @@ If anything cannot be run, explicitly report what was not run and why.
 
 ## 7.1 SimOne Linear Operating Rules
 
-- Treat `/Users/sistemist/Desktop/SimOne-Workbench` as the active SimOne product repository. Do not make new product changes in `/Users/sistemist/Desktop/SimOne` unless the user explicitly approves a one-off exception.
-- If a live surface is still served from the old `/Users/sistemist/Desktop/SimOne` landing repo, prefer moving ownership into this Workbench repo before making more product changes there.
+- Treat `/Users/sistemist/Desktop/SimOne-Workbench` as the active SimOne product and app repository. This repo owns `/app`, `/scanner`, `/auth`, onboarding, SIM Coach, Customer Engine, share artifacts, model/routing surfaces, and product behavior.
+- The old `/Users/sistemist/Desktop/SimOne` repo is a temporary public landing container only. Do not edit it for product/app behavior. A landing-only patch there is allowed only when the user explicitly approves the exception, and the Linear update must call out that it touched the landing container.
+- Do not move the live public root (`https://sim.sysdom.org/`) into Workbench unless the full landing experience, assets, signup API, docker image, nginx routes, deploy path, and visual verification plan are migrated together.
 - Prefer finishing a milestone when the next task is self-contained.
 - Allow a cross-milestone slice only when it completes a visible first-user path or unblocks a real dependency.
 - Use parent/child issues for breakdown and related/blocking links for dependency clarity.

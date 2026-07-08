@@ -10,7 +10,6 @@ import { Dashboard } from "./pages/Dashboard";
 import { DashboardLive } from "./pages/DashboardLive";
 import { SimCoach } from "./pages/SimCoach";
 import { CustomerEngine } from "./pages/CustomerEngine";
-import { SimOnePublicLanding } from "./pages/SimOnePublicLanding";
 import { SystemsBottleneckScanner } from "./pages/SystemsBottleneckScanner";
 import { VentureShare } from "./pages/VentureShare";
 import { Companies } from "./pages/Companies";
@@ -461,7 +460,6 @@ export function App() {
           </Route>
           <Route path="*" element={<NotFoundPage scope="global" />} />
         </Route>
-        <Route index element={<SimOnePublicLanding />} />
       </Routes>
       <OnboardingWizardVariant />
     </>
