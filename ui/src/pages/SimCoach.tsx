@@ -147,6 +147,10 @@ const simWikiSeedMap = [
   },
 ];
 
+function buildWikiRetrievalQuestion(context: ScannerCoachContext): string {
+  return `What should SIM Coach check before assigning work on ${context.headline}?`;
+}
+
 type WikiPromotionState =
   | { status: "idle" }
   | { status: "saving" }
@@ -297,6 +301,7 @@ export function SimCoach() {
   const driverText = useMemo(() => drivers.join(" / "), []);
   const scannerContext = useMemo(loadScannerCoachContext, []);
   const methodologyContext = scannerContext ? methodologyForScannerContext(scannerContext) : null;
+  const wikiRetrievalQuestion = scannerContext ? buildWikiRetrievalQuestion(scannerContext) : null;
   const { data: plugins } = useQuery({
     queryKey: queryKeys.plugins.all,
     queryFn: () => pluginsApi.list(),
@@ -449,6 +454,22 @@ export function SimCoach() {
                   </li>
                 ))}
               </ul>
+            ) : null}
+            {simWikiReady && wikiRetrievalQuestion ? (
+              <div className="rounded-md border border-border bg-muted/30 p-3">
+                <div className="flex items-center gap-2">
+                  <BookOpenCheck className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  <h3 className="text-sm font-medium text-foreground">Retrieve from SIM Wiki</h3>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Before stronger advice, ask the wiki to check saved method pages, venture memory,
+                  and prior promoted syntheses.
+                </p>
+                <p className="mt-2 text-xs leading-5 text-muted-foreground">Ask: {wikiRetrievalQuestion}</p>
+                <Button asChild variant="link" size="sm" className="mt-1 h-auto px-0 text-xs">
+                  <Link to="/wiki/query">Ask SIM Wiki</Link>
+                </Button>
+              </div>
             ) : null}
             <div className="flex flex-wrap gap-2">
               <Button asChild size="sm" className="h-8">

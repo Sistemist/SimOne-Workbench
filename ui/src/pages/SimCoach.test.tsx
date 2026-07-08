@@ -205,6 +205,52 @@ describe("SimCoach", () => {
     });
   });
 
+  it("points scanner follow-up at SIM Wiki retrieval before stronger advice", async () => {
+    mockPluginsApi.list.mockResolvedValue([
+      {
+        id: "plugin-1",
+        packageName: "@paperclipai/plugin-llm-wiki",
+        status: "ready",
+        manifestJson: {
+          displayName: "SIM Wiki",
+          description: "SimOne wiki",
+          version: "0.1.0",
+        },
+      } as PluginRecord,
+    ]);
+    localStorage.setItem(
+      "simone:bottleneck-scan",
+      JSON.stringify({
+        result: {
+          headline: "Customer loop is leaking",
+          engine: "Customer Engine",
+          questions: ["Who should approve the next customer reply or offer?"],
+          mapPreview: {
+            artifact: "Venture Architecture Map",
+            firstSection: "Customer review loop",
+          },
+        },
+      })
+    );
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderSimCoach(container);
+    await flushReact();
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Retrieve from SIM Wiki");
+    expect(text).toContain("Before stronger advice, ask the wiki to check saved method pages, venture memory, and prior promoted syntheses.");
+    expect(text).toContain("Ask: What should SIM Coach check before assigning work on Customer loop is leaking?");
+
+    const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
+    expect(links.some((link) => link.getAttribute("href") === "/wiki/query")).toBe(true);
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
   it("promotes a scanner synthesis into SIM Wiki when the wiki plugin is ready", async () => {
     mockPluginsApi.list.mockResolvedValue([
       {

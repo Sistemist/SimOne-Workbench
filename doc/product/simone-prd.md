@@ -29,7 +29,7 @@ certifications.
 | Paperclip control-plane reuse | 55% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted |
 | PLG/Barnum layer | 52% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts |
 | Customer Engine bridge | 78% | Read-only Tissuu bridge live; Customer Engine page can promote a proof readout into SIM Wiki without mutating Tissuu |
-| SIM Coach and SIM Wiki | 45% | Product direction documented; contextual coach loop explains scanner results; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include SimOne product-language, PRD snapshot, glossary, and agent-flow pages |
+| SIM Coach and SIM Wiki | 47% | Product direction documented; contextual coach loop explains scanner results; Coach can point scanner follow-up into SIM Wiki retrieval; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include SimOne product-language, PRD snapshot, glossary, and agent-flow pages |
 | Model routing and auditability | 32% | Strategy documented; Workbench has an initial `model_route_decisions` ledger; route decisions can now attach a compressed context envelope; actual provider orchestration and evaluations remain |
 | Compression/headroom | 8% | External Headroom/SmartCrusher not integrated; SimOne now has a local audited JSON compression envelope for route-decision context payloads |
 | Full SIM operating system | 30% | Engines and governance are defined, but onboarding, memory, routing, evaluations, and product polish remain |
@@ -233,6 +233,8 @@ Current SIM Wiki template behavior:
   boundaries, and human-in-the-loop agent flow have durable first definitions.
 - Accepts the first Coach-driven promotion path: scanner syntheses can become
   durable pages while live bridge counts remain ephemeral.
+- Gives SIM Coach a first retrieval handoff from saved scanner context into the
+  SIM Wiki Ask surface before stronger advice or agent assignment.
 - Accepts the first Customer Engine promotion path: a live read-only Tissuu
   readout can become a dated SIM Wiki synthesis page when the human chooses to
   preserve it.
