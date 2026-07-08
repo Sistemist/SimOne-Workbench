@@ -236,6 +236,8 @@ Current small UI nudge:
 - The same task can create a reviewed Venture Architecture Map artifact record
   so the reviewed map becomes visible in Artifacts with source and approval
   metadata.
+- When SIM Wiki is ready, the same task can save the reviewed map as a durable
+  wiki synthesis with source-task provenance and the approval boundary intact.
 
 ## Model Strategy
 

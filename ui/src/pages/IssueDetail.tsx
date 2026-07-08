@@ -8,6 +8,7 @@ import { approvalsApi } from "../api/approvals";
 import { activityApi, type RunForIssue } from "../api/activity";
 import { heartbeatsApi, type ActiveRunForIssue, type LiveRunForIssue } from "../api/heartbeats";
 import { instanceSettingsApi } from "../api/instanceSettings";
+import { pluginsApi } from "../api/plugins";
 import { accessApi, type CurrentBoardAccess } from "../api/access";
 import { agentsApi } from "../api/agents";
 import { authApi } from "../api/auth";
@@ -216,6 +217,8 @@ type IssueDetailComment = (IssueComment | OptimisticIssueComment) & {
   queueReason?: "hold" | "active_run" | "other";
 };
 
+const SIM_WIKI_PACKAGE = "@paperclipai/plugin-llm-wiki";
+
 const sprintZeroBoundedTaskTemplates: Array<{
   title: string;
   workMode: IssueWorkMode;
@@ -290,6 +293,58 @@ function buildSprintZeroArtifactWorkProductPayload(issue: Issue): Record<string,
         "Do not treat this as public proof until customer, money, public-claim, and structure decisions are approved by the human.",
     },
   };
+}
+
+function slugifyForWikiPath(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 72) || "reviewed-venture-architecture-map";
+}
+
+function timestampForWikiPath(now: Date): string {
+  return now.toISOString().slice(0, 19).replace("T", "-").replace(/:/g, "");
+}
+
+function buildSprintZeroWikiPromotion(issue: Issue, now = new Date()) {
+  const sourceRef = issue.identifier ?? issue.id;
+  const title = "Reviewed Venture Architecture Map";
+  const updated = now.toISOString().slice(0, 10);
+  const path = `wiki/synthesis/sprint-zero-${timestampForWikiPath(now)}-${slugifyForWikiPath(title)}.md`;
+  const sourceDescription = issue.description?.trim() || "No reviewed map description was saved on the source task.";
+  const contents = [
+    "---",
+    `title: ${title}`,
+    "type: synthesis",
+    "tags: [simone, sprint-zero, venture-architecture-map]",
+    "sources: [simone-sprint-zero-first-map]",
+    `created: ${updated}`,
+    `updated: ${updated}`,
+    "---",
+    "",
+    `# ${title}`,
+    "",
+    "## Source",
+    "",
+    `- Source task: ${sourceRef}`,
+    `- Source title: ${issue.title}`,
+    "- promotion: human-reviewed Sprint Zero first map",
+    "",
+    "## Reviewed Map",
+    "",
+    sourceDescription,
+    "",
+    "## Approval Boundary",
+    "",
+    "Do not treat this as public proof until customer, money, public-claim, and structure decisions are approved by the human.",
+    "",
+    "## Next Move",
+    "",
+    "Use this page as durable SIM memory. Keep uncertain claims attached to proof-gathering tasks until evidence is reviewed.",
+  ].join("\n");
+
+  return { path, contents };
 }
 
 const FEEDBACK_TERMS_URL = import.meta.env.VITE_FEEDBACK_TERMS_URL?.trim() || "https://paperclip.ing/tos";
@@ -1633,6 +1688,12 @@ export function IssueDetail() {
     enabled: !!issueId,
     retry: false,
   });
+  const { data: plugins } = useQuery({
+    queryKey: queryKeys.plugins.all,
+    queryFn: () => pluginsApi.list(),
+  });
+  const simWikiPlugin = plugins?.find((plugin) => plugin.packageName === SIM_WIKI_PACKAGE);
+  const simWikiReady = simWikiPlugin?.status === "ready";
   const keyboardShortcutsEnabled = instanceGeneralSettings?.keyboardShortcuts === true;
   const feedbackDataSharingPreference = instanceGeneralSettings?.feedbackDataSharingPreference ?? "prompt";
   const showPlanDecompositionsSection =
@@ -1955,6 +2016,51 @@ export function IssueDetail() {
       pushToast({
         title: "Could not create artifact record",
         body: err instanceof Error ? err.message : "Unable to create the reviewed map artifact",
+        tone: "error",
+      });
+    },
+  });
+  const saveSprintZeroMapToWiki = useMutation({
+    mutationFn: async () => {
+      if (!issue) throw new Error("Task is still loading.");
+      const companyId = issue.companyId || resolvedCompanyId;
+      if (!companyId) throw new Error("Company context is missing.");
+      if (!simWikiPlugin || simWikiPlugin.status !== "ready") throw new Error("SIM Wiki is not ready.");
+      const page = buildSprintZeroWikiPromotion(issue);
+      const response = await pluginsApi.bridgePerformAction(
+        simWikiPlugin.id,
+        "write-page",
+        {
+          companyId,
+          wikiId: "default",
+          spaceSlug: "default",
+          path: page.path,
+          contents: page.contents,
+          summary: "Promoted reviewed Sprint Zero first map from SimOne",
+          sourceRefs: [
+            {
+              kind: "simone-sprint-zero-first-map",
+              issueId: issue.id,
+              issueIdentifier: issue.identifier ?? null,
+            },
+          ],
+        },
+        companyId,
+      );
+      const data = response.data as { path?: unknown } | undefined;
+      return { path: typeof data?.path === "string" ? data.path : page.path };
+    },
+    onSuccess: ({ path }) => {
+      pushToast({
+        title: "Saved to SIM Wiki",
+        body: `Reviewed Venture Architecture Map saved at ${path}.`,
+        tone: "success",
+      });
+    },
+    onError: (err) => {
+      pushToast({
+        title: "Could not save to SIM Wiki",
+        body: err instanceof Error ? err.message : "Unable to save the reviewed map to SIM Wiki",
         tone: "error",
       });
     },
@@ -4140,6 +4246,15 @@ export function IssueDetail() {
             createArtifactError={
               createSprintZeroArtifact.error instanceof Error
                 ? createSprintZeroArtifact.error.message
+                : null
+            }
+            simWikiReady={simWikiReady}
+            onSaveToWiki={() => saveSprintZeroMapToWiki.mutate()}
+            saveToWikiPending={saveSprintZeroMapToWiki.isPending}
+            wikiSavedPath={saveSprintZeroMapToWiki.data?.path ?? null}
+            saveToWikiError={
+              saveSprintZeroMapToWiki.error instanceof Error
+                ? saveSprintZeroMapToWiki.error.message
                 : null
             }
           />

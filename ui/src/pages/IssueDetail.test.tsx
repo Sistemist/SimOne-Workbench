@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { Agent, Issue, IssueAttachment, IssueComment, IssueTreeControlPreview, IssueTreeHold, IssueWorkProduct } from "@paperclipai/shared";
+import type { Agent, Issue, IssueAttachment, IssueComment, IssueTreeControlPreview, IssueTreeHold, IssueWorkProduct, PluginRecord } from "@paperclipai/shared";
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
 import { NavigationType } from "react-router-dom";
 import { flushSync } from "react-dom";
@@ -69,6 +69,11 @@ const mockInstanceSettingsApi = vi.hoisted(() => ({
   getExperimental: vi.fn(),
 }));
 
+const mockPluginsApi = vi.hoisted(() => ({
+  list: vi.fn(),
+  bridgePerformAction: vi.fn(),
+}));
+
 const mockNavigate = vi.hoisted(() => vi.fn());
 const mockOpenPanel = vi.hoisted(() => vi.fn());
 const mockClosePanel = vi.hoisted(() => vi.fn());
@@ -117,6 +122,10 @@ vi.mock("../api/projects", () => ({
 
 vi.mock("../api/instanceSettings", () => ({
   instanceSettingsApi: mockInstanceSettingsApi,
+}));
+
+vi.mock("../api/plugins", () => ({
+  pluginsApi: mockPluginsApi,
 }));
 
 vi.mock("@/lib/router", () => ({
@@ -996,6 +1005,10 @@ describe("IssueDetail", () => {
       enableExperimentalFileViewer: false,
       enableExternalObjects: false,
     });
+    mockPluginsApi.list.mockResolvedValue([]);
+    mockPluginsApi.bridgePerformAction.mockResolvedValue({
+      data: { path: "wiki/synthesis/sprint-zero-2026-07-08-reviewed-venture-architecture-map.md" },
+    });
     mockIssuesApi.listAcceptedPlanDecompositions.mockResolvedValue([]);
     mockIssuesListRender.mockClear();
     mockIssueChatThreadRender.mockClear();
@@ -1007,6 +1020,7 @@ describe("IssueDetail", () => {
     await act(async () => {
       root.unmount();
     });
+    vi.useRealTimers();
     queryClient.clear();
     container.remove();
     document.body.innerHTML = "";
@@ -1168,6 +1182,76 @@ describe("IssueDetail", () => {
       }),
     }));
     expect(container.textContent ?? "").toContain("Artifact record created");
+  });
+
+  it("saves the reviewed Sprint Zero map to SIM Wiki when the wiki plugin is ready", async () => {
+    mockPluginsApi.list.mockResolvedValue([
+      {
+        id: "plugin-1",
+        packageName: "@paperclipai/plugin-llm-wiki",
+        status: "ready",
+        manifestJson: {
+          displayName: "SIM Wiki",
+          description: "SimOne wiki",
+          version: "0.1.0",
+        },
+      } as PluginRecord,
+    ]);
+    mockIssuesApi.get.mockResolvedValue(createIssue({
+      title: "Draft the first SIM map",
+      description: sprintZeroFirstMapDescription,
+    }));
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <IssueDetail />
+        </QueryClientProvider>,
+      );
+    });
+    await flushReact();
+    await flushReact();
+
+    const wikiButton = Array.from(container.querySelectorAll("button"))
+      .find((button) => button.textContent?.includes("Save trusted decisions to SIM Wiki"));
+    expect(wikiButton).toBeTruthy();
+
+    await act(async () => {
+      wikiButton!.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+    await flushReact();
+
+    expect(mockPluginsApi.bridgePerformAction).toHaveBeenCalledWith(
+      "plugin-1",
+      "write-page",
+      expect.objectContaining({
+        companyId: "company-1",
+        wikiId: "default",
+        spaceSlug: "default",
+        path: expect.stringMatching(/^wiki\/synthesis\/sprint-zero-.+-reviewed-venture-architecture-map\.md$/),
+        summary: "Promoted reviewed Sprint Zero first map from SimOne",
+      }),
+      "company-1",
+    );
+    const params = mockPluginsApi.bridgePerformAction.mock.calls[0]?.[2];
+    expect(params.contents).toContain("# Reviewed Venture Architecture Map");
+    expect(params.contents).toContain("Source task: PAP-1");
+    expect(params.contents).toContain("We help nontechnical founders turn messy AI ideas into a real company.");
+    expect(params.contents).toContain("Bring decisions back to the human before agents act on customers.");
+    expect(params.contents).toContain("Do not treat this as public proof until customer, money, public-claim, and structure decisions are approved by the human.");
+    expect(params.sourceRefs).toEqual([
+      {
+        kind: "simone-sprint-zero-first-map",
+        issueId: "issue-1",
+        issueIdentifier: "PAP-1",
+      },
+    ]);
+    expect(container.textContent ?? "").toContain("Saved to SIM Wiki");
+    const savedPageLink = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"))
+      .find((link) => link.textContent?.includes("Open saved page"));
+    expect(savedPageLink?.getAttribute("href")).toBe(
+      "/wiki/page/wiki/synthesis/sprint-zero-2026-07-08-reviewed-venture-architecture-map.md",
+    );
   });
 
   it("does not mark the wake comment for the current live run as queued when active-run cache is stale", async () => {

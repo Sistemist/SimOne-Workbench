@@ -48,14 +48,6 @@ const reviewPrompts = [
   "What is the first move?",
 ];
 
-const promotionActions = [
-  {
-    icon: BookOpenCheck,
-    label: "Save trusted decisions to SIM Wiki",
-    href: "/wiki",
-  },
-];
-
 type SimOneSprintZeroGuideProps = {
   onCreateBoundedTasks?: () => void;
   createBoundedTasksPending?: boolean;
@@ -65,6 +57,11 @@ type SimOneSprintZeroGuideProps = {
   createArtifactPending?: boolean;
   artifactCreated?: boolean;
   createArtifactError?: string | null;
+  simWikiReady?: boolean;
+  onSaveToWiki?: () => void;
+  saveToWikiPending?: boolean;
+  wikiSavedPath?: string | null;
+  saveToWikiError?: string | null;
 };
 
 export function SimOneSprintZeroGuide({
@@ -76,6 +73,11 @@ export function SimOneSprintZeroGuide({
   createArtifactPending = false,
   artifactCreated = false,
   createArtifactError = null,
+  simWikiReady = false,
+  onSaveToWiki,
+  saveToWikiPending = false,
+  wikiSavedPath = null,
+  saveToWikiError = null,
 }: SimOneSprintZeroGuideProps = {}) {
   const createBoundedTasksLabel = boundedTasksCreated
     ? "Bounded tasks created"
@@ -87,6 +89,11 @@ export function SimOneSprintZeroGuide({
     : createArtifactPending
       ? "Creating artifact record..."
       : "Turn the reviewed map into a shareable artifact";
+  const saveToWikiLabel = wikiSavedPath
+    ? "Saved to SIM Wiki"
+    : saveToWikiPending
+      ? "Saving to SIM Wiki..."
+      : "Save trusted decisions to SIM Wiki";
 
   return (
     <section className="rounded-md border border-border bg-muted/20 p-4 text-sm">
@@ -161,17 +168,26 @@ export function SimOneSprintZeroGuide({
               <Share2 className="h-3.5 w-3.5" />
               {createArtifactLabel}
             </Button>
-            {promotionActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <Button key={action.href} asChild variant="outline" size="sm" className="h-8">
-                  <a href={action.href}>
-                    <Icon className="h-3.5 w-3.5" />
-                    {action.label}
-                  </a>
-                </Button>
-              );
-            })}
+            {simWikiReady && onSaveToWiki ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8"
+                onClick={onSaveToWiki}
+                disabled={saveToWikiPending || Boolean(wikiSavedPath)}
+              >
+                <BookOpenCheck className="h-3.5 w-3.5" />
+                {saveToWikiLabel}
+              </Button>
+            ) : (
+              <Button asChild variant="outline" size="sm" className="h-8">
+                <a href="/wiki">
+                  <BookOpenCheck className="h-3.5 w-3.5" />
+                  Save trusted decisions to SIM Wiki
+                </a>
+              </Button>
+            )}
           </div>
         </div>
         {createBoundedTasksError ? (
@@ -179,6 +195,17 @@ export function SimOneSprintZeroGuide({
         ) : null}
         {createArtifactError ? (
           <p className="mt-2 text-xs leading-5 text-destructive">{createArtifactError}</p>
+        ) : null}
+        {wikiSavedPath ? (
+          <p className="mt-2 flex flex-wrap items-center gap-2 text-xs leading-5 text-muted-foreground">
+            <span>Saved to SIM Wiki: {wikiSavedPath}</span>
+            <a className="font-medium text-primary underline underline-offset-2" href={`/wiki/page/${wikiSavedPath}`}>
+              Open saved page
+            </a>
+          </p>
+        ) : null}
+        {saveToWikiError ? (
+          <p className="mt-2 text-xs leading-5 text-destructive">{saveToWikiError}</p>
         ) : null}
       </div>
     </section>

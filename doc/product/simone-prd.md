@@ -29,13 +29,13 @@ certifications.
 | Paperclip control-plane reuse | 60% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted; PRD/glossary/field-guide/wiki seeds now translate inherited terms and screens into SimOne language |
 | PLG/Barnum layer | 65% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts with proof context and a plain public preview; scanner results now include lived example notes, signal strength, secondary engine watch, calibration status, diagnosis signals, a direct SIM Coach handoff, and a structured Sprint Zero brief that carries into SIM Starter |
 | Customer Engine bridge | 80% | Read-only Tissuu bridge live; Dashboard and Customer Engine frame it as a native Customer Signal loop; Customer Engine page can promote a proof readout into SIM Wiki without mutating Tissuu |
-| SIM Coach and SIM Wiki | 60% | Product direction documented; public scanner now offers a contextual Coach handoff before map creation; contextual coach loop explains scanner results; Coach can queue an auditable SIM Wiki maintainer retrieval from scanner context, stream the returned answer back into Coach, preserve structured wiki/raw answer source refs, and save useful answers as durable SIM Wiki syntheses; SIM Starter now stores source-note and first-map draft provenance in the first Sprint Zero work item; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include SimOne product-language, PRD snapshot, glossary, and agent-flow pages |
+| SIM Coach and SIM Wiki | 62% | Product direction documented; public scanner now offers a contextual Coach handoff before map creation; contextual coach loop explains scanner results; Coach can queue an auditable SIM Wiki maintainer retrieval from scanner context, stream the returned answer back into Coach, preserve structured wiki/raw answer source refs, and save useful answers as durable SIM Wiki syntheses; SIM Starter now stores source-note and first-map draft provenance in the first Sprint Zero work item and can save the reviewed first map as a durable SIM Wiki page; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include SimOne product-language, PRD snapshot, glossary, and agent-flow pages |
 | Model routing and auditability | 46% | Strategy documented; Workbench has an initial `model_route_decisions` ledger; route decisions can now attach a compressed context envelope, record post-run output confidence/review state, link heartbeat adapter execution to the route ledger before a run spends, link spend rows back to the route that caused them, link out to recorded runs and output artifacts when present, and be filtered/reviewed from an advanced settings audit surface; broader provider orchestration and evaluations remain |
 | Compression/headroom | 8% | External Headroom/SmartCrusher not integrated; SimOne now has a local audited JSON compression envelope for route-decision context payloads |
-| Full SIM operating system | 34% | Engines and governance are defined, SIM Starter now has a protected first-map review path, can seed bounded child tasks, and can create a reviewed map artifact record from that review, but durable operating loops, memory, routing, evaluations, and product polish remain |
+| Full SIM operating system | 35% | Engines and governance are defined, SIM Starter now has a protected first-map review path, can seed bounded child tasks, can create a reviewed map artifact record, and can save the reviewed map into SIM Wiki, but durable operating loops, routing, evaluations, and production polish remain |
 
 Overall: SimOne is roughly 45-55% complete as a coherent alpha product shell and
-25-35% complete as the full SIM operating system.
+about 35% complete as the full SIM operating system.
 
 ## 3. Target User
 
@@ -214,7 +214,9 @@ validation, human-judgment boundary confirmation, and a shareable Venture
 Architecture Map draft. Each child task keeps the Sprint Zero source and
 approval boundary visible. The shareable artifact path now writes a reviewed
 Venture Architecture Map work product on the task so it appears in the
-Artifacts surface with source and approval metadata.
+Artifacts surface with source and approval metadata. When SIM Wiki is ready,
+the same guide can save the reviewed first map as a durable wiki synthesis with
+source-task provenance and the approval boundary preserved.
 
 ### Tissuu Bridge
 
@@ -581,6 +583,7 @@ inspectable first map.
   tasks, and shareable artifacts.
 - Seed bounded child tasks directly from the reviewed first map.
 - Create a reviewed Venture Architecture Map artifact record from the first map.
+- Save the reviewed first map into SIM Wiki with source and approval metadata.
 - Install or wrap the LLM Wiki plugin as SIM Wiki.
 - Seed SIM Wiki structure and glossary. The plugin template already carries SIM
   pages plus SimOne product-language, PRD snapshot, glossary, and agent-flow
