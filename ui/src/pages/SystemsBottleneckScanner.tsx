@@ -150,7 +150,7 @@ const fallbackResult: ScannerResult = {
     title: "Turn this into a Product Engine map",
     summary:
       "SimOne will keep the product loop, proof question, and approval boundary together after sign-in.",
-    primaryCta: "Build my Product Engine map",
+    primaryCta: "Save the full Product Engine map",
     onboardingHref: `/auth?next=${encodeURIComponent("/onboarding?from=scanner&focus=product-engine")}`,
   },
   handoffPreview: {
@@ -357,7 +357,7 @@ function scanBottleneck(input: string): ScannerResult {
     conversionPath: {
       title: `Turn this into a ${result.engine} map`,
       summary: `SimOne will keep the ${engineLoopLabel(result.engine)}, proof question, and approval boundary together after sign-in.`,
-      primaryCta: `Build my ${result.engine} map`,
+      primaryCta: `Save the full ${result.engine} map`,
       onboardingHref: `/auth?next=${encodeURIComponent(`/onboarding?from=scanner&focus=${engineFocusSlug(result.engine)}`)}`,
     },
     handoffPreview: {
@@ -718,6 +718,15 @@ export function SystemsBottleneckScanner() {
                         </li>
                       ))}
                     </ul>
+                  </div>
+                  <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3">
+                    <div className="flex items-center gap-2 text-sm font-medium text-emerald-800 dark:text-emerald-100">
+                      <ClipboardCheck className="h-4 w-4" aria-hidden="true" />
+                      Saved in this browser
+                    </div>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      Sign up to keep this readout with your full SimOne map.
+                    </p>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Coach explains the method before you assign work.

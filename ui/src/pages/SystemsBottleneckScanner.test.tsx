@@ -189,8 +189,10 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("The share version leaves out raw notes and URLs.");
     expect(text).toContain("Ask SIM Coach why");
     expect(text).toContain("Coach explains the method before you assign work.");
+    expect(text).toContain("Saved in this browser");
+    expect(text).toContain("Sign up to keep this readout with your full SimOne map.");
     expect(text).toContain("Your scan will carry into SIM Starter after sign-in.");
-    expect(text).toContain("Build my Customer Engine map");
+    expect(text).toContain("Save the full Customer Engine map");
     const generatedSummary = text.slice(text.indexOf("Why this scan picked Customer Engine"));
     expect(generatedSummary).not.toContain("https://example.com");
     expect(generatedSummary).not.toContain("interested leads and waitlist replies");
@@ -396,17 +398,19 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Turn this into a Customer Engine map");
     expect(text).toContain("SimOne will keep the customer loop, proof question, and approval boundary together after sign-in.");
     expect(text).toContain("What happens after sign-in");
+    expect(text).toContain("Saved in this browser");
+    expect(text).toContain("Sign up to keep this readout with your full SimOne map.");
     expect(text).toContain("Prefill the starter map with this customer loop readout.");
     expect(text).toContain("Create the first setup task: Make one review queue for replies, prospects, and proof points.");
     expect(text).toContain("Keep any customer, money, public-claim, or structure decision behind your approval.");
-    expect(text).toContain("Build my Customer Engine map");
+    expect(text).toContain("Save the full Customer Engine map");
     expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
     expect(
       links.some(
         (link) =>
-          link.textContent?.includes("Build my Customer Engine map") &&
+          link.textContent?.includes("Save the full Customer Engine map") &&
           link.getAttribute("href") === "/auth?next=%2Fonboarding%3Ffrom%3Dscanner%26focus%3Dcustomer-engine",
       ),
     ).toBe(true);
@@ -417,7 +421,7 @@ describe("SystemsBottleneckScanner", () => {
       result: {
         conversionPath: {
           title: "Turn this into a Customer Engine map",
-          primaryCta: "Build my Customer Engine map",
+          primaryCta: "Save the full Customer Engine map",
           onboardingHref: "/auth?next=%2Fonboarding%3Ffrom%3Dscanner%26focus%3Dcustomer-engine",
         },
         handoffPreview: {
