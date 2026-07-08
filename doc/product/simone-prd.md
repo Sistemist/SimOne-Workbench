@@ -172,7 +172,9 @@ Current share artifact behavior:
   omits adapter/runtime/model setup details.
 - The public Systems Bottleneck Scanner produces a safe share summary containing
   the likely bottleneck, engine focus, and next move while excluding the raw
-  founder note and startup URL.
+  founder note and startup URL. After a scan, it tells the user the scan will
+  carry into SIM Starter after sign-in and routes them to onboarding with the
+  saved scan context in protected browser storage.
 
 ### SIM Coach
 
@@ -386,7 +388,8 @@ Goal: make the current live signals feel native to SimOne.
   for proof readouts while keeping Tissuu write-back deferred.
 - Make public scanner and share artifacts feel like coherent SimOne outputs.
   The Venture Architecture Map share page now has a first plain-language
-  interpretation layer, and the scanner now exposes a safe share summary.
+  interpretation layer, and the scanner now exposes a safe share summary plus a
+  scanner-to-SIM-Starter handoff after sign-in.
 - Make SIM Coach contextual explanations feel helpful, not academic. Scanner
   handoff now includes a "Method underneath" card instead of a generic course
   prompt, and the Coach page now shows the first SIM Wiki seed map.

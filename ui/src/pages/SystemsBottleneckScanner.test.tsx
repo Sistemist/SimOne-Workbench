@@ -71,6 +71,7 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Focus: Customer Engine");
     expect(text).toContain("Next move: Make one review queue for replies, prospects, and proof points.");
     expect(text).toContain("Founder note and startup URL are not included.");
+    expect(text).toContain("Your scan will carry into SIM Starter after sign-in.");
     expect(text).toContain("Create my map");
     expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
 
@@ -98,7 +99,7 @@ describe("SystemsBottleneckScanner", () => {
     });
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
-    expect(links.some((link) => link.getAttribute("href") === "/auth?next=%2Fonboarding")).toBe(true);
+    expect(links.some((link) => link.getAttribute("href") === "/auth?next=%2Fonboarding%3Ffrom%3Dscanner")).toBe(true);
 
     flushSync(() => {
       root.unmount();

@@ -19,6 +19,7 @@ type ScannerResult = {
 };
 
 const SCAN_STORAGE_KEY = "simone:bottleneck-scan";
+const SCANNER_ONBOARDING_HREF = `/auth?next=${encodeURIComponent("/onboarding?from=scanner")}`;
 
 const fallbackResult: ScannerResult = {
   headline: "Feedback loop is unclear",
@@ -317,13 +318,18 @@ export function SystemsBottleneckScanner() {
                     <p className="text-xs">Founder note and startup URL are not included.</p>
                   </div>
                 </div>
-                <a
-                  href="/auth?next=%2Fonboarding"
-                  className="inline-flex h-9 w-fit items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                >
-                  Create my map
-                  <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-                </a>
+                <div className="flex flex-col gap-2">
+                  <p className="text-xs text-muted-foreground">
+                    Your scan will carry into SIM Starter after sign-in.
+                  </p>
+                  <a
+                    href={SCANNER_ONBOARDING_HREF}
+                    className="inline-flex h-9 w-fit items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                  >
+                    Create my map
+                    <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+                  </a>
+                </div>
               </div>
             ) : (
               <div className="flex h-full min-h-64 flex-col justify-between gap-6">
