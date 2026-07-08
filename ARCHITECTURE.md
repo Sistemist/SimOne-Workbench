@@ -79,6 +79,7 @@ Current product source docs:
 - `doc/product/simone-alpha-flow-blueprint.html`
 - `doc/product/simone-milestone-tracker.md`
 - `doc/product/simone-workbench-field-guide.md`
+- `doc/product/simone-evidence-map.md`
 - `doc/product/simone-glossary.md`
 - `doc/product/simone-agent-flows.md`
 - `doc/product/simone-model-routing.md`

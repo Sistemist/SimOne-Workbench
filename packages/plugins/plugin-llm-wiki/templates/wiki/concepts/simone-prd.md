@@ -28,6 +28,7 @@ Current strongest pieces:
 - first SIM Coach and SIM Wiki promotion paths
 - first auditable model-route ledger and local JSON compression envelope
 - plain Workbench field guide for inherited Paperclip surfaces
+- evidence map connecting claims to docs, code, tests, deploy proof, and Linear
 - dedicated model-routing strategy page for Fable, Fusion, Fugu, and Headroom
 
 Current weakest pieces:

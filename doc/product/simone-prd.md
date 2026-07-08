@@ -116,6 +116,10 @@ how to read inherited Dashboard, Tasks, Projects, Agents, Teams, Skills,
 Adapters, Runs, Costs, Approvals, Recovery, Documents, Artifacts, Routines,
 Settings, and Secrets surfaces in SimOne language.
 
+The companion evidence map `doc/product/simone-evidence-map.md` links major PRD
+claims to their current docs, code, tests, deploy proof, Linear issues, and
+remaining proof gaps.
+
 SimOne adds:
 
 - SimOne branding and product direction
@@ -290,12 +294,14 @@ Current SIM Wiki template behavior:
   coaching guidance.
 - Bootstraps `wiki/concepts/simone-product-language.md`,
   `wiki/concepts/simone-workbench-field-guide.md`,
+  `wiki/concepts/simone-evidence-map.md`,
   `wiki/concepts/simone-prd.md`, `wiki/concepts/simone-glossary.md`,
   `wiki/concepts/simone-agent-flows.md`, and
   `wiki/concepts/simone-model-routing.md` so product direction, milestone
-  state, inherited Workbench screen translations, Thomasina-facing vocabulary,
-  hidden provider choices, Fusion/Fugu experiment boundaries, Headroom status,
-  and human-in-the-loop agent flow have durable first definitions.
+  state, inherited Workbench screen translations, traceability evidence,
+  Thomasina-facing vocabulary, hidden provider choices, Fusion/Fugu experiment
+  boundaries, Headroom status, and human-in-the-loop agent flow have durable
+  first definitions.
 - Accepts the first Coach-driven promotion path: scanner syntheses can become
   durable pages while live bridge counts remain ephemeral.
 - Lets SIM Coach queue a SIM Wiki Maintainer query from saved scanner context
@@ -570,6 +576,7 @@ auditable enough that Han can trust the system while building it.
 - `doc/product/simone-docs-index.md`
 - `doc/product/simone-milestone-tracker.md`
 - `doc/product/simone-workbench-field-guide.md`
+- `doc/product/simone-evidence-map.md`
 - `doc/product/simone-glossary.md`
 - `doc/product/simone-agent-flows.md`
 - `doc/product/simone-model-routing.md`

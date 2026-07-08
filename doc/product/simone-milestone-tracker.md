@@ -91,6 +91,8 @@ Done:
 - The Workbench field guide now explains inherited Paperclip dashboard, tasks,
   agents, runs, costs, approvals, recovery, settings, secrets, documents,
   artifacts, and routines in SimOne language.
+- The evidence map now links major PRD claims to docs, code paths, tests,
+  deploy proof, Linear issues, and remaining proof gaps.
 - The repo and SIM Wiki seeds now include a SimOne documentation index that
   tells Han, Coach, and future wiki maintainers what to read first and which
   document answers which kind of question.

@@ -18,6 +18,7 @@ _(none yet)_
 
 - [[wiki/concepts/simone-product-language]] — product-language definitions for SimOne, SIM Coach, SIM Wiki, share artifacts, and hidden model choices.
 - [[wiki/concepts/simone-workbench-field-guide]] — plain guide to inherited Paperclip dashboard, tasks, agents, runs, costs, approvals, and recovery surfaces.
+- [[wiki/concepts/simone-evidence-map]] — traceability map from product claims to docs, code, tests, deploy proof, and Linear issues.
 - [[wiki/concepts/simone-docs-index]] — start-here guide for reading SimOne architecture, PRD, glossary, milestone, and flow documents.
 - [[wiki/concepts/simone-prd]] — current product state, milestone shape, and routing posture for the alpha.
 - [[wiki/concepts/simone-glossary]] — short definitions for Thomasina-facing SimOne, SIM, bridge, wiki, and routing terms.
