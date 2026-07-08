@@ -138,6 +138,14 @@ pnpm build
 
 If anything cannot be run, explicitly report what was not run and why.
 
+## 7.1 SimOne Linear Operating Rules
+
+- Prefer finishing a milestone when the next task is self-contained.
+- Allow a cross-milestone slice only when it completes a visible first-user path or unblocks a real dependency.
+- Use parent/child issues for breakdown and related/blocking links for dependency clarity.
+- Avoid fake blockers; use blockers only when the next task truly cannot proceed without the prior one.
+- Keep Linear activity current: after meaningful code, deploy, or product-direction work, update the relevant issue or project with status, shipped evidence, and remaining gaps.
+
 ## 8. API and Auth Expectations
 
 - Base path: `/api`

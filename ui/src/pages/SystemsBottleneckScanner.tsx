@@ -42,10 +42,25 @@ type ScannerResult = {
     needsHumanYes: string;
     carryForward: string;
   };
+  shareSummary: {
+    title: string;
+    publicText: string;
+    excludes: Array<"founderNote" | "startupUrl">;
+  };
+  conversionPath: {
+    title: string;
+    summary: string;
+    primaryCta: string;
+    onboardingHref: string;
+  };
+  trustFrame: {
+    canSee: string;
+    cannotSee: string;
+    stillUseful: string;
+  };
 };
 
 const SCAN_STORAGE_KEY = "simone:bottleneck-scan";
-const SCANNER_ONBOARDING_HREF = `/auth?next=${encodeURIComponent("/onboarding?from=scanner")}`;
 const SCANNER_COACH_HREF = `/auth?next=${encodeURIComponent("/sim-coach?from=scanner")}`;
 
 const scannerExamples = [
@@ -120,6 +135,24 @@ const fallbackResult: ScannerResult = {
     doNow: "Write down the next customer decision and who approves it.",
     needsHumanYes: "Approve the next decision before agents act.",
     carryForward: "Save this scan as Sprint Zero context after sign-in.",
+  },
+  shareSummary: {
+    title: "Share this result",
+    publicText:
+      "Built with SimOne: Feedback loop is unclear. Focus: Product Engine. Next move: Write down the next customer decision and who approves it.",
+    excludes: ["founderNote", "startupUrl"],
+  },
+  conversionPath: {
+    title: "Turn this into a Product Engine map",
+    summary:
+      "SimOne will keep the product loop, proof question, and approval boundary together after sign-in.",
+    primaryCta: "Build my Product Engine map",
+    onboardingHref: `/auth?next=${encodeURIComponent("/onboarding?from=scanner&focus=product-engine")}`,
+  },
+  trustFrame: {
+    canSee: "It read patterns in the text you provided.",
+    cannotSee: "It did not crawl your site, inspect private tools, or verify the facts.",
+    stillUseful: "It gives you one focused next question instead of a full-company diagnosis.",
   },
 };
 
@@ -212,6 +245,17 @@ const patterns: Array<{
   },
 ];
 
+function engineFocusSlug(engine: ScannerResult["engine"]) {
+  return engine.toLowerCase().replace(/\s+/g, "-");
+}
+
+function engineLoopLabel(engine: ScannerResult["engine"]) {
+  if (engine === "Customer Engine") return "customer loop";
+  if (engine === "Cash Engine") return "money loop";
+  if (engine === "Skills Engine") return "capacity loop";
+  return "product loop";
+}
+
 function scanBottleneck(input: string): ScannerResult {
   const normalized = input.toLowerCase();
   const scored = patterns
@@ -231,7 +275,10 @@ function scanBottleneck(input: string): ScannerResult {
     (candidate) => candidate.score > 0 && candidate.pattern.engine !== best.pattern.engine,
   );
   const severity: ScannerResult["severity"] = best.score > 2 ? "high" : "medium";
-  const result: Omit<ScannerResult, "sprintZeroBrief" | "approvalPath"> = {
+  const result: Omit<
+    ScannerResult,
+    "sprintZeroBrief" | "approvalPath" | "shareSummary" | "conversionPath" | "trustFrame"
+  > = {
     headline: best.pattern.headline,
     engine: best.pattern.engine,
     severity,
@@ -289,6 +336,22 @@ function scanBottleneck(input: string): ScannerResult {
           ? "Approve the next customer-facing reply or offer before agents act."
           : "Approve the next judgment call before agents act.",
       carryForward: "Save this scan as Sprint Zero context after sign-in.",
+    },
+    shareSummary: {
+      title: "Share this result",
+      publicText: `Built with SimOne: ${result.headline}. Focus: ${result.engine}. Next move: ${result.nextAction}`,
+      excludes: ["founderNote", "startupUrl"],
+    },
+    conversionPath: {
+      title: `Turn this into a ${result.engine} map`,
+      summary: `SimOne will keep the ${engineLoopLabel(result.engine)}, proof question, and approval boundary together after sign-in.`,
+      primaryCta: `Build my ${result.engine} map`,
+      onboardingHref: `/auth?next=${encodeURIComponent(`/onboarding?from=scanner&focus=${engineFocusSlug(result.engine)}`)}`,
+    },
+    trustFrame: {
+      canSee: "It read patterns in the text you provided.",
+      cannotSee: "It did not crawl your site, inspect private tools, or verify the facts.",
+      stillUseful: "It gives you one focused next question instead of a full-company diagnosis.",
     },
   };
 }
@@ -452,6 +515,20 @@ export function SystemsBottleneckScanner() {
                     Public summary excludes raw notes and URLs.
                   </p>
                 </div>
+                <div className="rounded-md border border-border bg-background/60 p-3">
+                  <div className="text-xs font-medium uppercase text-muted-foreground">
+                    What this scan can see
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">{result.trustFrame.canSee}</p>
+                  <div className="mt-3 text-xs font-medium uppercase text-muted-foreground">
+                    What it cannot see yet
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">{result.trustFrame.cannotSee}</p>
+                  <div className="mt-3 text-xs font-medium uppercase text-muted-foreground">
+                    Why it is still useful
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">{result.trustFrame.stillUseful}</p>
+                </div>
                 <div className="border-l border-border pl-3">
                   <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
                     <ClipboardCheck className="h-3.5 w-3.5" aria-hidden="true" />
@@ -570,25 +647,34 @@ export function SystemsBottleneckScanner() {
                 </div>
                 <div className="rounded-md border border-border bg-background/60 p-3">
                   <div className="text-xs font-medium uppercase text-muted-foreground">
-                    Safe share summary
+                    {result.shareSummary.title}
                   </div>
-                  <div className="mt-2 grid gap-1 text-sm text-muted-foreground">
-                    <p>
-                      <span className="font-medium text-foreground">Likely bottleneck:</span> {result.headline}
-                    </p>
-                    <p>
-                      <span className="font-medium text-foreground">Focus:</span> {result.engine}
-                    </p>
-                    <p>
-                      <span className="font-medium text-foreground">Next move:</span> {result.nextAction}
-                    </p>
-                    <p>
-                      <span className="font-medium text-foreground">Confidence:</span> {result.calibration.label}
-                    </p>
-                    <p className="text-xs">Founder note and startup URL are not included.</p>
+                  <div className="mt-2 grid gap-3 text-sm text-muted-foreground">
+                    <p>{result.shareSummary.publicText}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          void navigator.clipboard?.writeText(result.shareSummary.publicText);
+                        }}
+                      >
+                        Copy share summary
+                      </Button>
+                      <span className="text-xs">
+                        The share version leaves out raw notes and URLs.
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
+                  <div className="rounded-md border border-primary/30 bg-primary/5 p-3">
+                    <h3 className="text-sm font-medium">{result.conversionPath.title}</h3>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      {result.conversionPath.summary}
+                    </p>
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     Coach explains the method before you assign work.
                   </p>
@@ -602,10 +688,10 @@ export function SystemsBottleneckScanner() {
                     Your scan will carry into SIM Starter after sign-in.
                   </p>
                   <a
-                    href={SCANNER_ONBOARDING_HREF}
+                    href={result.conversionPath.onboardingHref}
                     className="inline-flex h-9 w-fit items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                   >
-                    Create my map
+                    {result.conversionPath.primaryCta}
                     <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                   </a>
                 </div>

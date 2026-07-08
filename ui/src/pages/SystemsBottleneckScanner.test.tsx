@@ -176,15 +176,15 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Human review boundary");
     expect(text).toContain("Approve the next customer-facing reply or offer before agents act.");
     expect(text).toContain("First move");
-    expect(text).toContain("Safe share summary");
-    expect(text).toContain("Likely bottleneck: Customer loop is leaking");
-    expect(text).toContain("Focus: Customer Engine");
-    expect(text).toContain("Next move: Make one review queue for replies, prospects, and proof points.");
-    expect(text).toContain("Founder note and startup URL are not included.");
+    expect(text).toContain("Share this result");
+    expect(text).toContain(
+      "Built with SimOne: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points.",
+    );
+    expect(text).toContain("The share version leaves out raw notes and URLs.");
     expect(text).toContain("Ask SIM Coach why");
     expect(text).toContain("Coach explains the method before you assign work.");
     expect(text).toContain("Your scan will carry into SIM Starter after sign-in.");
-    expect(text).toContain("Create my map");
+    expect(text).toContain("Build my Customer Engine map");
     const generatedSummary = text.slice(text.indexOf("Why this scan picked Customer Engine"));
     expect(generatedSummary).not.toContain("https://example.com");
     expect(generatedSummary).not.toContain("interested leads and waitlist replies");
@@ -242,7 +242,9 @@ describe("SystemsBottleneckScanner", () => {
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
     expect(links.some((link) => link.getAttribute("href") === "/auth?next=%2Fsim-coach%3Ffrom%3Dscanner")).toBe(true);
-    expect(links.some((link) => link.getAttribute("href") === "/auth?next=%2Fonboarding%3Ffrom%3Dscanner")).toBe(true);
+    expect(
+      links.some((link) => link.getAttribute("href") === "/auth?next=%2Fonboarding%3Ffrom%3Dscanner%26focus%3Dcustomer-engine"),
+    ).toBe(true);
 
     flushSync(() => {
       root.unmount();
@@ -287,6 +289,155 @@ describe("SystemsBottleneckScanner", () => {
           doNow: "Make one review queue for replies, prospects, and proof points.",
           needsHumanYes: "Approve the next customer-facing reply or offer before agents act.",
           carryForward: "Save this scan as Sprint Zero context after sign-in.",
+        },
+      },
+    });
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
+  it("creates a safe share-ready summary without raw input", async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderScanner(container);
+
+    const urlInput = container.querySelector<HTMLInputElement>('input[name="startupUrl"]');
+    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
+    expect(urlInput).not.toBeNull();
+    expect(noteInput).not.toBeNull();
+
+    await updateField(urlInput!, "https://example.com/private");
+    await updateField(
+      noteInput!,
+      "We have interested leads and waitlist replies, but follow-up is scattered and approvals sit in my inbox.",
+    );
+
+    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Scan"),
+    );
+    expect(button).toBeTruthy();
+    await act(async () => {
+      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Share this result");
+    expect(text).toContain(
+      "Built with SimOne: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points.",
+    );
+    expect(text).toContain("Copy share summary");
+    expect(text).toContain("The share version leaves out raw notes and URLs.");
+    expect(text).not.toContain("https://example.com/private");
+
+    const storedScan = window.localStorage.getItem("simone:bottleneck-scan");
+    expect(storedScan).not.toBeNull();
+    expect(JSON.parse(storedScan!)).toMatchObject({
+      result: {
+        shareSummary: {
+          title: "Share this result",
+          publicText:
+            "Built with SimOne: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points.",
+          excludes: ["founderNote", "startupUrl"],
+        },
+      },
+    });
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
+  it("uses the scan focus in the conversion handoff", async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderScanner(container);
+
+    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
+    expect(noteInput).not.toBeNull();
+    await updateField(
+      noteInput!,
+      "We have interested leads and waitlist replies, but follow-up is scattered and approvals sit in my inbox.",
+    );
+
+    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Scan"),
+    );
+    expect(button).toBeTruthy();
+    await act(async () => {
+      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Turn this into a Customer Engine map");
+    expect(text).toContain("SimOne will keep the customer loop, proof question, and approval boundary together after sign-in.");
+    expect(text).toContain("Build my Customer Engine map");
+    expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
+
+    const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
+    expect(
+      links.some(
+        (link) =>
+          link.textContent?.includes("Build my Customer Engine map") &&
+          link.getAttribute("href") === "/auth?next=%2Fonboarding%3Ffrom%3Dscanner%26focus%3Dcustomer-engine",
+      ),
+    ).toBe(true);
+
+    const storedScan = window.localStorage.getItem("simone:bottleneck-scan");
+    expect(storedScan).not.toBeNull();
+    expect(JSON.parse(storedScan!)).toMatchObject({
+      result: {
+        conversionPath: {
+          title: "Turn this into a Customer Engine map",
+          primaryCta: "Build my Customer Engine map",
+          onboardingHref: "/auth?next=%2Fonboarding%3Ffrom%3Dscanner%26focus%3Dcustomer-engine",
+        },
+      },
+    });
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
+  it("explains what the public scan can and cannot see", async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderScanner(container);
+
+    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
+    expect(noteInput).not.toBeNull();
+    await updateField(
+      noteInput!,
+      "The roadmap has too many feature ideas, the prototype keeps expanding, and we need one promise we can prove before launch.",
+    );
+
+    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Scan"),
+    );
+    expect(button).toBeTruthy();
+    await act(async () => {
+      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("What this scan can see");
+    expect(text).toContain("It read patterns in the text you provided.");
+    expect(text).toContain("What it cannot see yet");
+    expect(text).toContain("It did not crawl your site, inspect private tools, or verify the facts.");
+    expect(text).toContain("Why it is still useful");
+    expect(text).toContain("It gives you one focused next question instead of a full-company diagnosis.");
+    expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
+
+    const storedScan = window.localStorage.getItem("simone:bottleneck-scan");
+    expect(storedScan).not.toBeNull();
+    expect(JSON.parse(storedScan!)).toMatchObject({
+      result: {
+        trustFrame: {
+          canSee: "It read patterns in the text you provided.",
+          cannotSee: "It did not crawl your site, inspect private tools, or verify the facts.",
+          stillUseful: "It gives you one focused next question instead of a full-company diagnosis.",
         },
       },
     });
