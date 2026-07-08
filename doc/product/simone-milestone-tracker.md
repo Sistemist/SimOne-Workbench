@@ -86,6 +86,9 @@ Done:
 - The PRD, glossary, and SIM Wiki seeds now translate inherited Paperclip
   concepts into SimOne/Thomasina language and define which surface owns which
   job.
+- The repo and SIM Wiki seeds now include a SimOne documentation index that
+  tells Han, Coach, and future wiki maintainers what to read first and which
+  document answers which kind of question.
 - The alpha product-flow blueprint now maps landing, sign-in, messy venture
   intake, guided draft, SIM map, Sprint Zero, diagnosis, next action, settings
   placement, and incomplete-data behavior.

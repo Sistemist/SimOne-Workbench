@@ -2795,6 +2795,7 @@ Duplicate headings receive stable suffixes.
       "wiki/entities/.gitkeep",
       "wiki/concepts/.gitkeep",
       "wiki/concepts/simone-product-language.md",
+      "wiki/concepts/simone-docs-index.md",
       "wiki/concepts/simone-prd.md",
       "wiki/concepts/simone-glossary.md",
       "wiki/concepts/simone-agent-flows.md",
@@ -2811,6 +2812,7 @@ Duplicate headings receive stable suffixes.
     expect(writes.find((write) => write.path === "AGENTS.md")?.contents).toContain("wiki/projects/<project-slug>/standup.md");
     expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/sim/coaching-guidance]]");
     expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-product-language]]");
+    expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-docs-index]]");
     expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-prd]]");
     expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-glossary]]");
     expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-agent-flows]]");
@@ -2819,6 +2821,8 @@ Duplicate headings receive stable suffixes.
     expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("Paperclip supplies the control plane");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("Issue or task means a protected work item");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("Model/provider choices belong in advanced settings, not first-run onboarding.");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-docs-index.md")?.contents).toContain("Read in this order");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-docs-index.md")?.contents).toContain("When you are confused by a Paperclip term");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-prd.md")?.contents).toContain("Overall SimOne alpha state");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-prd.md")?.contents).toContain("Paperclip concepts translated for SimOne");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-prd.md")?.contents).toContain("OpenRouter Fusion is reserved for high-risk deliberation");

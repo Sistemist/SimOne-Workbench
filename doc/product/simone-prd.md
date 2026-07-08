@@ -553,6 +553,7 @@ auditable enough that Han can trust the system while building it.
 
 - `ARCHITECTURE.md`
 - `doc/product/simone-alpha-flow-blueprint.html`
+- `doc/product/simone-docs-index.md`
 - `doc/product/simone-milestone-tracker.md`
 - `doc/product/simone-glossary.md`
 - `doc/product/simone-agent-flows.md`

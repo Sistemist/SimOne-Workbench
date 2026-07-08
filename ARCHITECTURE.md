@@ -75,6 +75,7 @@ Relevant Linear issues:
 Current product source docs:
 
 - `doc/product/simone-prd.md`
+- `doc/product/simone-docs-index.md`
 - `doc/product/simone-alpha-flow-blueprint.html`
 - `doc/product/simone-milestone-tracker.md`
 - `doc/product/simone-glossary.md`
