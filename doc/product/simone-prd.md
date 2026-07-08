@@ -245,6 +245,8 @@ Current Coach behavior:
   the explanation matters.
 - Shows a SIM Wiki Seed Map naming the first durable memory buckets: method
   pages, venture memory, and explicit promotion rules.
+- Shows a plain "Who does what" orientation strip so the user can distinguish
+  SIM Coach, SIM Wiki, and the control plane before delegating work.
 - When SIM Wiki is enabled, can promote a saved scanner/coach synthesis into a
   dated page under `wiki/synthesis/` through the existing SIM Wiki plugin
   `write-page` action.

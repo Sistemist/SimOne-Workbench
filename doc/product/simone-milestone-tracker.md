@@ -82,6 +82,8 @@ Done:
   brief with what is clear, what needs proof, human review boundaries, and the
   first move; that brief carries into SIM Starter after sign-in.
 - SIM Coach explains scanner results with contextual method language.
+- SIM Coach now explains in-app that Coach explains/protects judgment, SIM Wiki
+  preserves durable memory, and the control plane tracks delegated work.
 - The repo now has a PRD, glossary, agent-flow map, and milestone tracker.
 - The PRD, glossary, and SIM Wiki seeds now translate inherited Paperclip
   concepts into SimOne/Thomasina language and define which surface owns which

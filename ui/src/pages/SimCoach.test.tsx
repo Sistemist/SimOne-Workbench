@@ -153,6 +153,24 @@ describe("SimCoach", () => {
     });
   });
 
+  it("explains Coach, Wiki, and the control plane in plain product language", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderSimCoach(container);
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Who does what");
+    expect(text).toContain("SIM Coach explains the moment and protects judgment.");
+    expect(text).toContain("SIM Wiki preserves durable memory with provenance.");
+    expect(text).toContain("The control plane tracks work, agents, runs, costs, and recovery.");
+    expect(text).toContain("Use this page when you need to understand before delegating.");
+    expect(text).not.toContain("root execution engine");
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
   it("opens SIM Wiki directly once the wiki plugin is ready", async () => {
     mockPluginsApi.list.mockResolvedValue([
       {

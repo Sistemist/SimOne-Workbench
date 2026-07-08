@@ -147,6 +147,21 @@ const simWikiSeedMap = [
   },
 ];
 
+const surfaceRoles = [
+  {
+    title: "SIM Coach",
+    body: "SIM Coach explains the moment and protects judgment.",
+  },
+  {
+    title: "SIM Wiki",
+    body: "SIM Wiki preserves durable memory with provenance.",
+  },
+  {
+    title: "Control plane",
+    body: "The control plane tracks work, agents, runs, costs, and recovery.",
+  },
+];
+
 function buildWikiRetrievalQuestion(context: ScannerCoachContext): string {
   return `What should SIM Coach check before assigning work on ${context.headline}?`;
 }
@@ -742,6 +757,28 @@ export function SimCoach() {
               </Link>
             </Button>
           </div>
+        </div>
+      </section>
+
+      <section className="grid gap-4 border-b border-border pb-6 lg:grid-cols-[0.8fr_1.2fr]">
+        <div>
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <Scale className="h-4 w-4" aria-hidden="true" />
+            <span>Who does what</span>
+          </div>
+          <h2 className="mt-3 text-xl font-semibold text-foreground">Understand before delegating.</h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            Use this page when you need to understand before delegating. Coach explains, Wiki
+            remembers, and the control plane keeps delegated work inspectable.
+          </p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {surfaceRoles.map((role) => (
+            <div key={role.title} className="rounded-md border border-border bg-card p-4">
+              <div className="text-sm font-medium text-foreground">{role.title}</div>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">{role.body}</p>
+            </div>
+          ))}
         </div>
       </section>
 
