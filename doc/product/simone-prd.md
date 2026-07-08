@@ -130,7 +130,9 @@ venture map, Product/Customer/Cash/Skills assumptions, unknowns that need proof,
 the first Sprint Zero move, and approval before agents act on customers, money,
 public claims, or company structure. After setup, the user lands on that seeded
 Sprint Zero work item instead of a generic dashboard whenever the task can be
-resolved.
+resolved. That work item now shows a compact first-map guide above the editable
+description so the first workspace feels guided rather than like a standard
+task page.
 
 ### Tissuu Bridge
 

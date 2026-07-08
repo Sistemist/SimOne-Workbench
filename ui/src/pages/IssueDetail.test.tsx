@@ -452,6 +452,18 @@ function createIssue(overrides: Partial<Issue> = {}): Issue {
   } as Issue;
 }
 
+const sprintZeroFirstMapDescription = `## Messy venture context
+
+We help nontechnical founders turn messy AI ideas into a real company.
+
+## Draft the first SIM map
+
+Use the founder context above to draft a first Venture Architecture Map.
+
+## Approval boundary
+
+Bring decisions back to the human before agents act on customers.`;
+
 function createIssueComment(overrides: Partial<IssueComment> = {}): IssueComment {
   return {
     id: "comment-1",
@@ -999,6 +1011,29 @@ describe("IssueDetail", () => {
         String(call[0]).includes("React has detected a change in the order of Hooks"),
       ),
     ).toBe(false);
+  });
+
+  it("shows the Sprint Zero first-map guide on the seeded starter task", async () => {
+    mockIssuesApi.get.mockResolvedValue(createIssue({
+      title: "Draft the first SIM map",
+      description: sprintZeroFirstMapDescription,
+    }));
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <IssueDetail />
+        </QueryClientProvider>,
+      );
+    });
+    await flushReact();
+    await flushReact();
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Sprint Zero first map");
+    expect(text).toContain("Read the messy context");
+    expect(text).toContain("Draft Product, Customer, Cash, and Skills assumptions");
+    expect(text).toContain("Ask for approval before customers, money, public claims, or structure");
   });
 
   it("does not mark the wake comment for the current live run as queued when active-run cache is stale", async () => {

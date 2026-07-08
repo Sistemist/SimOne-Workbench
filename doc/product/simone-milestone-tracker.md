@@ -161,6 +161,8 @@ Owned by: `SYS-202`.
 Done:
 
 - OpenRouter Fusion is defined as the high-risk deliberation/audit lane.
+- Fusion is specifically reserved for critical, high-risk, or uncertain tasks
+  where disagreement and blind-spot detection are useful.
 - Fugu/Fugu Ultra is defined as an optional specialist execution adapter, not
   the root controller.
 - Fable 5 is defined as a possible boardroom brain/meta-review model.

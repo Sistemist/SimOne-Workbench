@@ -100,6 +100,10 @@ import { StatusIcon } from "../components/StatusIcon";
 import { PriorityIcon } from "../components/PriorityIcon";
 import { ProductivityReviewBadge } from "../components/ProductivityReviewBadge";
 import { Identity } from "../components/Identity";
+import {
+  isSimOneSprintZeroFirstMapIssue,
+  SimOneSprintZeroGuide,
+} from "../components/SimOneSprintZeroGuide";
 import { PluginSlotMount, PluginSlotOutlet, usePluginSlots } from "@/plugins/slots";
 import { PluginLauncherOutlet } from "@/plugins/launchers";
 import { Separator } from "@/components/ui/separator";
@@ -3986,6 +3990,8 @@ export function IssueDetail() {
           as="h2"
           className="text-xl font-bold"
         />
+
+        {isSimOneSprintZeroFirstMapIssue(issue) ? <SimOneSprintZeroGuide /> : null}
 
         <InlineEditor
           value={issue.description ?? ""}
