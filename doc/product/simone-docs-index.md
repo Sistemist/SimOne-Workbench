@@ -48,6 +48,7 @@ already knowing Paperclip, SIM Coach, SIM Wiki, or the agent-routing plan?"
 | What are Dashboard, Tasks, Agents, Runs, Costs, Approvals, and Recovery for? | Workbench field guide |
 | Which claims are shipped, tested, design-only, or deferred? | Evidence map |
 | What do SIM Coach and SIM Wiki mean? | PRD sections 6, glossary Product Surfaces, agent flows section 5 |
+| How do CEO/Fable/Fugu/engine leads fit together? | PRD "Operating Role Stack", glossary SIM Operating Terms, agent flows "Control Layers" |
 | Which surface owns which job? | PRD "Surface Ownership Map", PRD "State Ownership Contract", agent flows section 4 |
 | Where does state live: Coach, Wiki, Tissuu, Paperclip, or routing ledger? | PRD "State Ownership Contract", agent flows section 6, Workbench field guide |
 | Why are we not defaulting to Fugu/Fusion/black-box routing yet? | Model-routing strategy, PRD section 7, milestone tracker product stance, architecture model strategy |

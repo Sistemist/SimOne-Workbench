@@ -11,6 +11,10 @@ updated: 2026-07-02
 
 Engines are the value-producing parts of a company. In user-facing product language they can appear as familiar roles or work areas, but the SIM Wiki should keep their system meaning explicit.
 
+An engine steward is responsible for making one engine legible, translating its
+signals into bounded work, and naming where another engine or the human must be
+in the loop. The steward is a helper role, not an autonomous owner.
+
 ## Product Engine
 
 The Product Engine turns insight into an offer, roadmap, delivery system, and quality loop.

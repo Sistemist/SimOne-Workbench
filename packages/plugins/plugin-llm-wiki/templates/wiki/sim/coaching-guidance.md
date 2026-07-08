@@ -34,6 +34,12 @@ The recommended starter should install:
 
 The blank setup should remain available for advanced users.
 
+Role labels should make the product feel familiar, not loosen governance. CEO is a familiar role label, not permission to bypass Han or Thomasina. Product,
+Customer, Cash, and Skills leads are engine stewards: they make one engine
+legible and turn signals into bounded work. A boardroom brain can advise or
+review, but the human remains the meta-steward. Specialist adapters can execute
+hard bounded tasks, but their output still needs evidence, fallback, and review.
+
 ## Nudge Style
 
 Good nudges are short, contextual, and optional.

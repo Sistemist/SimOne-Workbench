@@ -52,6 +52,12 @@ Paperclip concepts translated for SimOne:
 - Run: the audit trail and receipt for one helper execution.
 - Recovery state: the visible place where stuck work asks for help instead of hiding failure.
 
+The operating role stack is: human owner, optional boardroom brain, engine
+stewards, specialist adapters, then task agents and runs. Fable 5 fits as a
+boardroom brain when access and cost policy allow it. Fugu/Fugu Ultra fits later
+as a specialist adapter for bounded hard execution. Neither replaces the human
+owner or the route ledger.
+
 SimOne should keep Paperclip's ledger, assignment, run, cost, and recovery
 machinery while translating first-run screens into maps, proof, decisions,
 review, and next moves.

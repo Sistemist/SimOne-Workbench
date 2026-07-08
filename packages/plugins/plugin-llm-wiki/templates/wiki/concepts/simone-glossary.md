@@ -47,6 +47,14 @@ likely bottleneck, engine focus, and safe next move.
 what is clear, what needs proof, the human review boundary, and the first move.
 Public scanner briefs carry into the protected SIM Starter task after sign-in.
 
+**Boardroom brain** is a high-context model or reviewer used for strategy, SIM
+Coach deep review, architecture review, or audits. It advises; it does not own
+the company.
+
+**Engine steward** is a bounded lead for one SIM engine, such as Product,
+Customer, Cash, or Skills. The steward turns signals into scoped work and keeps
+approval boundaries visible.
+
 ## Routing And Context
 
 **Sovereign routing** means SimOne records who routed work, why, what context was

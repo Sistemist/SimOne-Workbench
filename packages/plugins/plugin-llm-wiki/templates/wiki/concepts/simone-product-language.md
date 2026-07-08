@@ -52,6 +52,22 @@ autonomous executive.
 **Run** means the audit trail for one helper execution: what was attempted,
 what happened, and what it cost.
 
+## Operating Role Stack
+
+**Human owner** means the person with final judgment and values. Han holds this
+role in the current alpha; Thomasina or an account owner holds it later.
+
+**Boardroom brain** means a high-level reviewer or strategic synthesizer, such
+as Fable 5 when access and cost policy allow it. A boardroom brain is not the company owner.
+
+**Engine steward** means a bounded lead for one SIM engine. Engine stewards translate Product, Customer, Cash, and Skills signals into bounded work.
+
+**Specialist adapter** means a bounded execution helper, such as future
+Fugu/Fugu Ultra or a narrower Codex/Claude/process adapter. Specialist adapters are execution helpers, not supervisors.
+
+**Task agent** means a Paperclip agent working one protected task and leaving a
+run receipt, cost record, and review trail.
+
 ## State Ownership
 
 SIM Coach can explain a signal, but it is not the durable memory layer.

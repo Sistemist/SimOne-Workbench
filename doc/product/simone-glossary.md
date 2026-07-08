@@ -78,6 +78,22 @@ why a bottleneck exists and what change may unlock the system.
 claims, customer outreach, cash commitments, deletions, governance changes,
 cross-engine tradeoffs, and model-spend policy changes.
 
+**Boardroom Brain**
+: A high-context model or reviewer used for strategy, SIM Coach deep review,
+architecture review, or audits. It can help think, challenge, and synthesize,
+but it does not own the company or bypass the human meta-controller.
+
+**Engine Steward**
+: A bounded lead role for one SIM engine, such as Product, Customer, Cash, or
+Skills. An engine steward makes one engine legible, turns signals into scoped
+work, and keeps cross-engine approval boundaries visible.
+
+**Specialist Adapter**
+: A bounded execution helper for hard work. Fugu/Fugu Ultra may become this kind
+of adapter later; Codex, Claude, process, or HTTP adapters can play narrower
+specialist roles today. Specialist adapters return candidate output for SimOne
+to evaluate.
+
 ## Product Surfaces
 
 **SIM Coach**

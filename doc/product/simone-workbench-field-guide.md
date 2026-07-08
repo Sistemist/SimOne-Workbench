@@ -76,6 +76,18 @@ A good SimOne agent has:
 - cost records
 - approval gates for public, customer, cash, governance, or irreversible action
 
+When role names sound executive, keep the stack clear:
+
+- CEO is a familiar product label for orientation, not permission to bypass the
+  human owner.
+- A boardroom brain such as Fable 5 can review strategy or methodology, but it
+  does not own the company.
+- Engine stewards turn Product, Customer, Cash, or Skills signals into bounded
+  work.
+- Specialist adapters such as future Fugu/Fugu Ultra return candidate outputs
+  for review; they are not supervisors.
+- Paperclip task agents leave receipts in tasks, runs, costs, and approvals.
+
 ## 6. How To Read A Run
 
 A run is the receipt for one helper attempt.

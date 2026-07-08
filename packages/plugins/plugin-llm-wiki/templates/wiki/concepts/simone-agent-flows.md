@@ -30,7 +30,16 @@ approves public, financial, customer, governance, and cross-engine boundaries.
 
 **Fable 5 can act as a boardroom brain** for high-level planning, SIM Coach,
 strategy, architecture review, and audits when the API key and cost policy allow
-it. It should not run routine background ticks.
+it. It should not run routine background ticks and it does not replace the human
+owner.
+
+**Engine stewards** keep Product, Customer, Cash, and Skills signals legible and
+turn them into bounded work. They are useful role labels, not permission to skip
+approval boundaries.
+
+**Specialist adapters** such as future Fugu/Fugu Ultra, Codex, Claude, process,
+or HTTP execution lanes do bounded hard work and return candidate outputs for
+SimOne to evaluate.
 
 **SimOne route ledger** records the route decision before model execution where
 possible, then records output confidence and review status after execution.

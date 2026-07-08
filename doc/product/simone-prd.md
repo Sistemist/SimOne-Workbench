@@ -167,6 +167,25 @@ The main SimOne surfaces should have clean jobs:
 | SIM Wiki | Durable memory, source material, concepts, synthesis, provenance | Silently absorbing every ephemeral live signal |
 | Paperclip control plane | Tasks, agents, runs, approvals, costs, recovery | First-screen product language for nontechnical users |
 
+### Operating Role Stack
+
+SimOne can use familiar role names such as CEO, Product Lead, Customer Lead,
+Cash Lead, and Skills Lead, but those names should never imply unmanaged
+autonomy. The role stack is:
+
+| Layer | Plain meaning | Examples | Boundary |
+| --- | --- | --- | --- |
+| Human owner | Final judgment and values | Han now; Thomasina/account owner later | Cannot be replaced by a model or router |
+| Boardroom brain | High-level reviewer or strategic synthesizer | Fable 5 for planning, SIM Coach deep review, architecture/audit | Advises and reviews; does not own the company |
+| Engine steward | Keeps one SIM engine legible and connected to work | Product, Customer, Cash, Skills leads | Converts signals into bounded work; does not bypass cross-engine approval |
+| Specialist adapter | Bounded execution helper for hard work | Fugu/Fugu Ultra later, Codex/Claude/process adapters today | Returns candidate output with evidence, cost, fallback, and review state |
+| Task agent | Performs one protected work item | Paperclip agent running a task | Must leave a task/run receipt and obey approvals |
+
+This is the compromise behind the Fable/Fugu discussion: Fable 5 can be a
+boardroom brain or reviewer when access and cost policy allow it; Fugu/Fugu
+Ultra can later be an external specialist lane for bounded hard execution; the
+human still keeps meta-stewardship; and Paperclip remains the work ledger.
+
 ### State Ownership Contract
 
 When SimOne feels confusing, ask which layer owns the state. A surface can
@@ -428,7 +447,9 @@ lane-boundary discussion.
 Fable 5 is a candidate "boardroom brain" or meta-controller for high-level SIM
 Coach, strategy, architecture review, and audits when an API key is available
 and current model access is verified. It should not run routine background agent
-ticks.
+ticks. A boardroom brain is not the company owner; it is a high-context advisor
+whose recommendations still pass through route logging, evidence, and human
+review.
 
 ### OpenRouter Fusion
 
@@ -462,7 +483,8 @@ provider/model opt-out controls.
 This is useful, but it is still not a full SimOne audit ledger. SimOne should
 use Fugu/Fugu Ultra later for bounded experiments such as deep coding,
 multi-step research, or hard execution/verification, with outputs judged by
-SimOne's own controller/evaluation layer.
+SimOne's own controller/evaluation layer. Specialist adapters are execution
+helpers, not supervisors.
 
 Fusion and Fugu solve different problems. Fusion is best treated as a
 deliberation/audit lane when disagreement and blind spots matter. Fugu is best

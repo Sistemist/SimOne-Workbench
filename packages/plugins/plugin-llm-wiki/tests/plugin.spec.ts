@@ -2829,6 +2829,9 @@ Duplicate headings receive stable suffixes.
     expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("SIM Wiki owns saved knowledge");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("The model routing audit owns provider/model/adapter route decisions");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("Model/provider choices belong in advanced settings, not first-run onboarding.");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("A boardroom brain is not the company owner.");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("Engine stewards translate Product, Customer, Cash, and Skills signals into bounded work.");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("Specialist adapters are execution helpers, not supervisors.");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-workbench-field-guide.md")?.contents).toContain("Dashboard is the daily triage surface");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-workbench-field-guide.md")?.contents).toContain("Tasks are protected work items");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-workbench-field-guide.md")?.contents).toContain("Agents are bounded helper roles");
@@ -2861,6 +2864,8 @@ Duplicate headings receive stable suffixes.
     expect(writes.find((write) => write.path === "wiki/concepts/simone-model-routing.md")?.contents).toContain("Fugu/Fugu Ultra is an external specialist lane");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-model-routing.md")?.contents).toContain("External Headroom/SmartCrusher is not wired yet");
     expect(writes.find((write) => write.path === "wiki/sim/engines.md")?.contents).toContain("Product Engine");
+    expect(writes.find((write) => write.path === "wiki/sim/engines.md")?.contents).toContain("An engine steward is responsible for making one engine legible");
+    expect(writes.find((write) => write.path === "wiki/sim/coaching-guidance.md")?.contents).toContain("CEO is a familiar role label, not permission to bypass Han or Thomasina");
   });
 
   it("creates a managed space with an immediately readable baseline skeleton", async () => {

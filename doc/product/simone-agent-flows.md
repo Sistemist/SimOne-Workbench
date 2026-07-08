@@ -23,6 +23,22 @@ flowchart TD
 Principle: the human keeps judgment, SimOne supervises and explains, Paperclip
 coordinates work, agents execute bounded tasks.
 
+## 1A. Operating Role Stack
+
+```mermaid
+flowchart TD
+  H["Human owner\nfinal judgment and values"] --> B["Boardroom brain\nFable 5-style strategy/review"]
+  B --> E["Engine stewards\nProduct, Customer, Cash, Skills"]
+  E --> X["Specialist adapters\nFugu/Fugu Ultra, Codex, Claude, process"]
+  X --> T["Task agents and runs\nPaperclip work items and receipts"]
+```
+
+Use CEO, Product Lead, Customer Lead, Cash Lead, and Skills Lead as familiar
+labels when they help. The control rule is stricter than the label: the human
+keeps meta-stewardship, a boardroom brain advises, engine stewards translate
+signals into bounded work, specialist adapters execute candidate work, and
+Paperclip stores the task/run receipts.
+
 ## 2. SIM Starter Flow
 
 ```mermaid
