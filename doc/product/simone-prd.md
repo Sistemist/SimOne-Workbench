@@ -120,6 +120,16 @@ SimOne adds:
 - Tissuu Customer Engine bridge
 - SIM Coach methodology loop beginnings
 
+### SIM Starter
+
+The authenticated starter path now begins with a company name and messy venture
+context rather than model/provider setup. On creation, SimOne installs the
+bundled SIM Starter team and Sprint Zero project, then attaches the messy input
+to the first "Draft the first SIM map" work item. That task asks for a plain
+venture map, Product/Customer/Cash/Skills assumptions, unknowns that need proof,
+the first Sprint Zero move, and approval before agents act on customers, money,
+public claims, or company structure.
+
 ### Tissuu Bridge
 
 Bridge v1 is live and read-only. SimOne reads:

@@ -20,6 +20,10 @@ const mockGoalsApi = vi.hoisted(() => ({
 const mockTeamCatalogApi = vi.hoisted(() => ({
   install: vi.fn(),
 }));
+const mockIssuesApi = vi.hoisted(() => ({
+  list: vi.fn(),
+  update: vi.fn(),
+}));
 
 vi.mock("@/lib/router", () => ({
   useLocation: () => ({ pathname: "/onboarding" }),
@@ -56,6 +60,10 @@ vi.mock("../api/goals", () => ({
 
 vi.mock("../api/teamCatalog", () => ({
   teamCatalogApi: mockTeamCatalogApi,
+}));
+
+vi.mock("../api/issues", () => ({
+  issuesApi: mockIssuesApi,
 }));
 
 vi.mock("./AsciiArtAnimation", () => ({
@@ -122,9 +130,19 @@ describe("OnboardingWizard SIM Starter path", () => {
     mockGoalsApi.create.mockResolvedValue({ id: "goal-1" });
     mockTeamCatalogApi.install.mockResolvedValue({
       portabilityImport: {
-        agents: [{ action: "created" }],
-        projects: [{ action: "created" }],
+        agents: [{ slug: "ceo", id: "agent-ceo", action: "created" }],
+        projects: [{ slug: "sprint-zero", id: "project-sprint-zero", action: "created" }],
       },
+    });
+    mockIssuesApi.list.mockResolvedValue([
+      {
+        id: "issue-1",
+        title: "Draft the first SIM map",
+      },
+    ]);
+    mockIssuesApi.update.mockResolvedValue({
+      id: "issue-1",
+      title: "Draft the first SIM map",
     });
   });
 
@@ -196,6 +214,24 @@ describe("OnboardingWizard SIM Starter path", () => {
           allowLocalPathSources: false,
         },
       }
+    );
+    expect(mockIssuesApi.list).toHaveBeenCalledWith("company-1", {
+      q: "Draft the first SIM map",
+      limit: 10,
+    });
+    expect(mockIssuesApi.update).toHaveBeenCalledWith(
+      "issue-1",
+      expect.objectContaining({
+        description: expect.stringContaining(
+          "Teach nontechnical founders how to run an AI-first company."
+        ),
+      })
+    );
+    expect(mockIssuesApi.update).toHaveBeenCalledWith(
+      "issue-1",
+      expect.objectContaining({
+        description: expect.stringContaining("Approval boundary"),
+      })
     );
     expect(mockSetSelectedCompanyId).toHaveBeenCalledWith("company-1");
     expect(mockCloseOnboarding).toHaveBeenCalled();

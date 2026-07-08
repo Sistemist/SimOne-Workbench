@@ -99,11 +99,13 @@ Done:
 - Scanner/Coach and Customer Engine readouts can be deliberately promoted into
   durable wiki synthesis pages.
 - Product definitions now exist in repo docs and in future wiki root templates.
+- SIM Starter now carries messy venture context into the first Sprint Zero
+  "Draft the first SIM map" work item before opening the dashboard.
 
 Remaining:
 
-- Replace manual engine/driver setup with messy-input SIM Starter as the first
-  useful authenticated workflow.
+- Turn the context-seeded Sprint Zero task into a richer guided first-map
+  workspace instead of a standard issue detail alone.
 - Store founder source notes and first map drafts with provenance.
 - Make SIM Coach retrieve from SIM Wiki instead of only using browser/local
   handoff context.

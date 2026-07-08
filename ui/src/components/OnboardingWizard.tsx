@@ -95,6 +95,25 @@ const DEFAULT_TASK_DESCRIPTION = `You are the CEO. You set the direction for the
 const INCOMPLETE_ONBOARDING_STATE_MESSAGE =
   "Onboarding state is incomplete. Please restart onboarding and try again.";
 
+function buildSimStarterFirstMapDescription(founderContext: string): string {
+  return `## Messy venture context
+
+${founderContext.trim()}
+
+## Draft the first SIM map
+
+Use the founder context above to draft a first Venture Architecture Map:
+
+- summarize the company intent in plain language
+- identify Product, Customer, Cash, and Skills assumptions
+- mark the unknowns that need research or customer proof
+- propose the first Sprint Zero next move
+
+## Approval boundary
+
+Bring decisions back to the human before agents act on customers, money, public claims, or company structure.`;
+}
+
 function loadSavedState(): Record<string, unknown> | null {
   try {
     const raw = localStorage.getItem(ONBOARDING_STORAGE_KEY);
@@ -479,7 +498,7 @@ export function OnboardingWizard() {
     setLoading(true);
     setError(null);
     try {
-      const { companyId, companyPrefix } = await ensureCompanyAndGoal();
+      const { companyId, companyPrefix, goalId } = await ensureCompanyAndGoal();
       const result = await teamCatalogApi.install(companyId, SIMONE_STARTER_CATALOG_REF, {
         targetManagerAgentId: null,
         collisionStrategy: "rename",
@@ -489,6 +508,37 @@ export function OnboardingWizard() {
           allowLocalPathSources: false,
         },
       });
+
+      const description = buildSimStarterFirstMapDescription(companyGoal);
+      const sprintZeroProjectId =
+        result.portabilityImport.projects.find((project) => project.slug === "sprint-zero" && project.id)?.id ?? null;
+      const ceoAgentId =
+        result.portabilityImport.agents.find((agent) => agent.slug === "ceo" && agent.id)?.id ?? null;
+
+      try {
+        const firstMapIssues = await issuesApi.list(companyId, {
+          q: "Draft the first SIM map",
+          limit: 10,
+        });
+        const importedFirstMapIssue =
+          firstMapIssues.find((issue) => issue.title === "Draft the first SIM map") ?? firstMapIssues[0] ?? null;
+
+        if (importedFirstMapIssue) {
+          await issuesApi.update(importedFirstMapIssue.id, { description });
+        } else {
+          await issuesApi.create(companyId, {
+            title: "Draft the first SIM map from messy context",
+            description,
+            projectId: sprintZeroProjectId,
+            goalId,
+            assigneeAgentId: ceoAgentId,
+            status: "todo",
+            priority: "high",
+          });
+        }
+      } catch (err) {
+        console.warn("Failed to attach SIM Starter context to Sprint Zero issue:", err);
+      }
 
       queryClient.invalidateQueries({ queryKey: queryKeys.agents.list(companyId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.list(companyId) });
