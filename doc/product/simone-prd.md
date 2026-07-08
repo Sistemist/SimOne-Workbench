@@ -364,6 +364,8 @@ Remaining:
 
 Goal: make the current live signals feel native to SimOne.
 
+- Reviewable artifact: `doc/product/simone-alpha-flow-blueprint.html`.
+
 - Improve Dashboard and Customer Engine surfaces around the Tissuu bridge.
   The Customer Engine page now includes a deliberate SIM Wiki promotion action
   for proof readouts while keeping Tissuu write-back deferred.
@@ -374,6 +376,10 @@ Goal: make the current live signals feel native to SimOne.
   handoff now includes a "Method underneath" card instead of a generic course
   prompt, and the Coach page now shows the first SIM Wiki seed map.
 - Add a first useful PRD/glossary/docs bundle for human and future wiki use.
+- Map the first alpha product flow from landing through next action. The first
+  reviewable HTML blueprint now covers landing, sign-in, venture intake, guided
+  draft, SIM map, Sprint Zero, diagnosis, settings placement, and incomplete
+  data behavior.
 
 Related Linear:
 
@@ -464,6 +470,7 @@ auditable enough that Han can trust the system while building it.
 ## 11. Source Documents
 
 - `ARCHITECTURE.md`
+- `doc/product/simone-alpha-flow-blueprint.html`
 - `doc/product/simone-milestone-tracker.md`
 - `doc/product/simone-glossary.md`
 - `doc/product/simone-agent-flows.md`

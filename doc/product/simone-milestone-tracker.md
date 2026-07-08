@@ -68,16 +68,21 @@ Status: in progress.
 
 Owned by: `SYS-181`, `SYS-199`, `SYS-200`, `SYS-201`.
 
+Review artifact: `doc/product/simone-alpha-flow-blueprint.html`.
+
 Done:
 
 - Dashboard and Customer Engine surfaces have native bridge readouts.
 - Public scanner and share artifacts have safer public summaries.
 - SIM Coach explains scanner results with contextual method language.
 - The repo now has a PRD, glossary, agent-flow map, and milestone tracker.
+- The alpha product-flow blueprint now maps landing, sign-in, messy venture
+  intake, guided draft, SIM map, Sprint Zero, diagnosis, next action, settings
+  placement, and incomplete-data behavior.
 
 Remaining:
 
-- Finish the first reviewable product-flow/wireframe artifact for `SYS-181`.
+- Review and adjust the first product-flow/wireframe artifact for `SYS-181`.
 - Make the shareable Venture Architecture Map feel more complete.
 - Make the Systems Bottleneck Scanner more useful as a public lead-in.
 - Build a first strong Sprint Zero Brief.
