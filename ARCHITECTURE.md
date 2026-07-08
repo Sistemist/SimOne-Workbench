@@ -40,6 +40,39 @@ Current product boundary:
 Do not migrate Tissuu into SimOne yet. Do not rebuild Tissuu pipelines inside
 Paperclip unless the bridge proves insufficient.
 
+## Paperclip License And IP Boundary
+
+Paperclip's core repository is currently treated as commercially usable MIT
+software. SimOne may keep building on the Paperclip control-plane code as long
+as the original copyright and MIT permission notice remain preserved in copies
+or substantial portions of the software.
+
+Tracked research note:
+
+- `Paperclip AI License Verification.md`
+
+Working boundary:
+
+- Core Paperclip code: usable as the base/reference control plane under MIT,
+  with attribution/copyright notices preserved.
+- Paperclip name/brand: do not present SimOne as endorsed by or identical to
+  Paperclip. Paperclip can be named as the base/reference control plane where
+  accurate.
+- Paperclip official docs/site/manual text: do not copy, adapt, or repurpose for
+  SimOne product docs, onboarding, help center, marketing, or public pages. Write
+  SimOne explanations from scratch in SimOne language.
+- Paperclip examples/templates/skills: audit any copied or bundled material
+  before productizing it, because individual sources can carry licenses or terms
+  beyond the core MIT license.
+- Model/API providers: use formal commercial API paths or user-supplied keys;
+  do not rely on consumer subscriptions as a hidden multi-agent backend.
+
+This should not block current product development. The near-term product should
+continue replacing raw Paperclip-facing concepts with original SimOne/Thomasina
+language inside the app. A deeper documentation-site IP cleanup can wait until
+the product surfaces settle, unless a public docs page starts copying upstream
+Paperclip wording, diagrams, or manuals.
+
 ## PLG And Barnum Layer
 
 The current growth direction is product-led growth with a Barnum-style
@@ -88,6 +121,10 @@ Current product source docs:
 - `doc/product/simone-glossary.md`
 - `doc/product/simone-agent-flows.md`
 - `doc/product/simone-model-routing.md`
+
+Completion tracking lives in `doc/product/simone-milestone-tracker.md` and the
+Current Completion Snapshot in `doc/product/simone-prd.md`. Do not maintain a
+second percentage table in this architecture file.
 
 ## Main Runtime
 
@@ -404,11 +441,14 @@ Known build warnings:
 
 These were already present and are not blockers for the bridge work.
 
-## Recent Commits
+## Recent Product Slices
 
+- `be3e53ba7`: Explain Workbench terms in SIM Coach
+- `8ea92765f`: Show role stack in SIM Coach
+- `285027319`: Add model routing boundary evals
+- `e7f7fb7ca`: Explain model routing experiment lanes
+- `649484e98`: Add venture share review package
 - `57ea1ca91`: Wire Tissuu customer engine bridge
-- `069ff08c8`: Expose Tissuu bridge env in KVM compose
-- `80f300a27`: Make Customer Engine bridge feel native
 
 ## Guardrails
 
@@ -416,6 +456,8 @@ These were already present and are not blockers for the bridge work.
 - Do not print bridge token values in docs or final answers.
 - Do not mutate Tissuu from SimOne in bridge v1.
 - Do not break Dify; it is used by Tissuu.
+- Do not copy or adapt Paperclip official docs/site/manual content into SimOne
+  product docs or public pages.
 - Do not make model/provider setup the default first-run experience.
 - Do not rebuild Tissuu inside SimOne until there is evidence the bridge is not
   enough.
