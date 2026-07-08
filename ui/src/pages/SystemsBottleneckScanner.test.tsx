@@ -36,6 +36,12 @@ describe("SystemsBottleneckScanner", () => {
     const root = renderScanner(container);
 
     const text = container.textContent ?? "";
+    expect(text).toContain("Free first readout, protected full map after sign-in.");
+    expect(text).toContain("Use it when you can describe what feels stuck, but you are not ready to set up the whole company yet.");
+    expect(text).toContain("Public first read");
+    expect(text).toContain("No account needed. Get one bottleneck and one next move from the note you provide.");
+    expect(text).toContain("Protected full map");
+    expect(text).toContain("Sign in when you want SimOne to save the scan, draft the starter map, and keep decisions behind approval.");
     expect(text).toContain("Customer follow-up");
     expect(text).toContain("Cash runway");
     expect(text).toContain("Skills capacity");

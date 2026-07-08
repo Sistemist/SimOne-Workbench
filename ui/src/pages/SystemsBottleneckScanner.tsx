@@ -423,6 +423,12 @@ export function SystemsBottleneckScanner() {
               Paste a startup URL, a messy founder note, or both. SimOne will return one likely bottleneck and
               one next move.
             </p>
+            <p className="mt-2 max-w-2xl text-sm font-medium text-foreground">
+              Free first readout, protected full map after sign-in.
+            </p>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Use it when you can describe what feels stuck, but you are not ready to set up the whole company yet.
+            </p>
           </div>
           <a
             href="/auth?next=%2Fonboarding"
@@ -741,6 +747,20 @@ export function SystemsBottleneckScanner() {
                     The full SimOne map comes after sign-in, when the work can be protected and turned into a
                     starter operating system.
                   </p>
+                </div>
+                <div className="grid gap-3 text-sm text-muted-foreground">
+                  <div className="rounded-md border border-border bg-background/60 p-3">
+                    <h3 className="font-medium text-foreground">Public first read</h3>
+                    <p className="mt-1">
+                      No account needed. Get one bottleneck and one next move from the note you provide.
+                    </p>
+                  </div>
+                  <div className="rounded-md border border-border bg-background/60 p-3">
+                    <h3 className="font-medium text-foreground">Protected full map</h3>
+                    <p className="mt-1">
+                      Sign in when you want SimOne to save the scan, draft the starter map, and keep decisions behind approval.
+                    </p>
+                  </div>
                 </div>
                 <div className="grid gap-2 text-sm text-muted-foreground">
                   <span className="inline-flex items-center gap-2">
