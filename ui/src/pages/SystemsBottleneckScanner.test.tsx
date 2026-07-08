@@ -248,4 +248,51 @@ describe("SystemsBottleneckScanner", () => {
       root.unmount();
     });
   });
+
+  it("turns the scan result into a plain decision path", async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderScanner(container);
+
+    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
+    expect(noteInput).not.toBeNull();
+    await updateField(
+      noteInput!,
+      "We have interested leads and waitlist replies, but follow-up is scattered and approvals sit in my inbox.",
+    );
+
+    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Scan"),
+    );
+    expect(button).toBeTruthy();
+    await act(async () => {
+      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Decision path");
+    expect(text).toContain("Do now");
+    expect(text).toContain("Make one review queue for replies, prospects, and proof points.");
+    expect(text).toContain("Needs your yes");
+    expect(text).toContain("Approve the next customer-facing reply or offer before agents act.");
+    expect(text).toContain("Carry into SimOne");
+    expect(text).toContain("Save this scan as Sprint Zero context after sign-in.");
+    expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
+
+    const storedScan = window.localStorage.getItem("simone:bottleneck-scan");
+    expect(storedScan).not.toBeNull();
+    expect(JSON.parse(storedScan!)).toMatchObject({
+      result: {
+        approvalPath: {
+          doNow: "Make one review queue for replies, prospects, and proof points.",
+          needsHumanYes: "Approve the next customer-facing reply or offer before agents act.",
+          carryForward: "Save this scan as Sprint Zero context after sign-in.",
+        },
+      },
+    });
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
 });

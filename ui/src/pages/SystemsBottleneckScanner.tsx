@@ -37,6 +37,11 @@ type ScannerResult = {
     humanReview: string[];
     firstMove: string;
   };
+  approvalPath: {
+    doNow: string;
+    needsHumanYes: string;
+    carryForward: string;
+  };
 };
 
 const SCAN_STORAGE_KEY = "simone:bottleneck-scan";
@@ -110,6 +115,11 @@ const fallbackResult: ScannerResult = {
       "Keep customers, money, public claims, and company structure behind human review.",
     ],
     firstMove: "Write down the next customer decision and who approves it.",
+  },
+  approvalPath: {
+    doNow: "Write down the next customer decision and who approves it.",
+    needsHumanYes: "Approve the next decision before agents act.",
+    carryForward: "Save this scan as Sprint Zero context after sign-in.",
   },
 };
 
@@ -221,7 +231,7 @@ function scanBottleneck(input: string): ScannerResult {
     (candidate) => candidate.score > 0 && candidate.pattern.engine !== best.pattern.engine,
   );
   const severity: ScannerResult["severity"] = best.score > 2 ? "high" : "medium";
-  const result: Omit<ScannerResult, "sprintZeroBrief"> = {
+  const result: Omit<ScannerResult, "sprintZeroBrief" | "approvalPath"> = {
     headline: best.pattern.headline,
     engine: best.pattern.engine,
     severity,
@@ -271,6 +281,14 @@ function scanBottleneck(input: string): ScannerResult {
         "Keep customers, money, public claims, and company structure behind human review.",
       ],
       firstMove: result.nextAction,
+    },
+    approvalPath: {
+      doNow: result.nextAction,
+      needsHumanYes:
+        result.engine === "Customer Engine"
+          ? "Approve the next customer-facing reply or offer before agents act."
+          : "Approve the next judgment call before agents act.",
+      carryForward: "Save this scan as Sprint Zero context after sign-in.",
     },
   };
 }
@@ -440,6 +458,25 @@ export function SystemsBottleneckScanner() {
                     Next action
                   </div>
                   <p className="mt-1 text-sm font-medium">{result.nextAction}</p>
+                </div>
+                <div className="rounded-md border border-border bg-background/60 p-3">
+                  <div className="text-xs font-medium uppercase text-muted-foreground">
+                    Decision path
+                  </div>
+                  <div className="mt-3 grid gap-3 text-sm text-muted-foreground">
+                    <div>
+                      <h3 className="font-medium text-foreground">Do now</h3>
+                      <p className="mt-1">{result.approvalPath.doNow}</p>
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-foreground">Needs your yes</h3>
+                      <p className="mt-1">{result.approvalPath.needsHumanYes}</p>
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-foreground">Carry into SimOne</h3>
+                      <p className="mt-1">{result.approvalPath.carryForward}</p>
+                    </div>
+                  </div>
                 </div>
                 <div className="border-l border-border pl-3">
                   <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
