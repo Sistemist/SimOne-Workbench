@@ -74,6 +74,8 @@ Done:
 
 - Dashboard and Customer Engine surfaces have native bridge readouts.
 - Public scanner and share artifacts have safer public summaries.
+- Shareable Venture Architecture Maps now include a public Sprint Zero brief
+  for what is clear, what needs proof, and what requires human review.
 - SIM Coach explains scanner results with contextual method language.
 - The repo now has a PRD, glossary, agent-flow map, and milestone tracker.
 - The alpha product-flow blueprint now maps landing, sign-in, messy venture
@@ -83,7 +85,7 @@ Done:
 Remaining:
 
 - Review and adjust the first product-flow/wireframe artifact for `SYS-181`.
-- Make the shareable Venture Architecture Map feel more complete.
+- Keep improving share previews with richer proof and next-action context.
 - Make the Systems Bottleneck Scanner more useful as a public lead-in.
 - Build a first strong Sprint Zero Brief.
 
@@ -101,11 +103,11 @@ Done:
 - Product definitions now exist in repo docs and in future wiki root templates.
 - SIM Starter now carries messy venture context into the first Sprint Zero
   "Draft the first SIM map" work item before opening the dashboard.
+- The seeded first-map task now shows a compact guide above the editable
+  description.
 
 Remaining:
 
-- Turn the context-seeded Sprint Zero task into a richer guided first-map
-  workspace instead of a standard issue detail alone.
 - Store founder source notes and first map drafts with provenance.
 - Make SIM Coach retrieve from SIM Wiki instead of only using browser/local
   handoff context.

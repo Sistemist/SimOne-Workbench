@@ -33,6 +33,7 @@ export function VentureShare() {
   }, [shareId]);
 
   const snapshot = share?.snapshot ?? null;
+  const firstNextMove = snapshot?.nextMoves[0] ?? null;
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -79,6 +80,36 @@ export function VentureShare() {
                 <div>
                   <div className="font-medium">{countLabel(snapshot.nextMoves.length, "next move", "next moves")}</div>
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">What needs judgment next.</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-lg border bg-card p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
+                <ClipboardCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                Sprint Zero brief
+              </div>
+              <div className="mt-3 grid gap-4 text-sm md:grid-cols-3">
+                <div>
+                  <h2 className="font-medium text-foreground">What is clear</h2>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    {snapshot.company.name} has {countLabel(snapshot.agents.length, "operating role", "operating roles")}{" "}
+                    and {countLabel(snapshot.projects.length, "work stream", "work streams")} in motion.
+                  </p>
+                </div>
+                <div>
+                  <h2 className="font-medium text-foreground">What needs proof</h2>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    {firstNextMove
+                      ? `${firstNextMove.title} is the next move to test.`
+                      : "The next proof move is not listed yet."}
+                  </p>
+                </div>
+                <div>
+                  <h2 className="font-medium text-foreground">Human review boundary</h2>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    Review the next move before customers, money, public claims, or structure change.
+                  </p>
                 </div>
               </div>
             </section>

@@ -167,8 +167,9 @@ Current share artifact behavior:
 - The generated link uses the current public origin so it can be handed to
   another person directly.
 - The public page explains what the map means in plain language, summarizes
-  operating roles, work streams, and next moves, and omits adapter/runtime/model
-  setup details.
+  operating roles, work streams, and next moves, includes a public Sprint Zero
+  brief for what is clear, what needs proof, and what requires human review, and
+  omits adapter/runtime/model setup details.
 - The public Systems Bottleneck Scanner produces a safe share summary containing
   the likely bottleneck, engine focus, and next move while excluding the raw
   founder note and startup URL.
