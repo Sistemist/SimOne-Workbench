@@ -153,7 +153,10 @@ product experience is useful.
 ## 10. Implementation Sequence
 
 1. Keep improving the route decision ledger.
-2. Link route decisions to real model/provider execution.
+2. Link route decisions to real model/provider execution. The first heartbeat
+   adapter execution hook is now in place: it records the route decision before
+   the adapter runs, updates output review state after completion, and links
+   automatic spend back to that decision.
 3. Link route decisions to run records and output artifacts. Cost links, output
    confidence, review status, run-detail links, output artifact links, and the
    first settings audit/review page are now in place.

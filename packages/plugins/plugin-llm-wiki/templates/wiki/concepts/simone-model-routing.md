@@ -20,6 +20,9 @@ Route decisions should also capture post-run output confidence and review state
 so later routers can be compared, rejected, or approved from evidence.
 Cost events can now link back to the route decision that caused the spend, which
 turns model cost from a loose metric into route-level evidence.
+Heartbeat adapter execution now records that route decision before the adapter
+runs, updates it with the output review state, and links automatic spend back to
+the decision when usage or cost is reported.
 The first operator-facing audit page lives in instance settings and shows recent
 decisions, review state, approval boundary, context/output summaries, linked
 cost evidence, run links, output artifact links, and review filters/actions.

@@ -66,7 +66,7 @@ SimOne auditable while we build it.
 | Shareable venture artifacts | `SYS-199` | Shareable Venture Architecture Map exists with public preview and proof context; stronger visual previews and lived public feedback remain |
 | Public Systems Bottleneck Scanner | `SYS-200` | Scanner, lived examples, signal strength, secondary engine watch, calibration status, safe diagnosis signals, and Sprint Zero handoff exist; real-submission score tuning remains |
 | SIM Coach methodology loop | `SYS-201` | Scanner-to-Coach handoff, Coach/Wiki definitions, retrieval, answer promotion, wiki seeds |
-| Auditable model routing and escalation lanes | `SYS-202` | Route ledger, local compression, routing strategy, run links, artifact links, audit filters/actions; provider execution remains |
+| Auditable model routing and escalation lanes | `SYS-202` | Route ledger, local compression, routing strategy, heartbeat adapter execution hook, run links, artifact links, audit filters/actions; broader provider orchestration remains |
 
 ## 6. How To Use This Map
 

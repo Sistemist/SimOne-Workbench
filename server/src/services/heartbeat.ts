@@ -69,6 +69,7 @@ import type {
 import { createLocalAgentJwt } from "../agent-auth-jwt.js";
 import { parseObject, asBoolean, asNumber, appendWithByteCap, MAX_EXCERPT_BYTES } from "../adapters/utils.js";
 import { costService } from "./costs.js";
+import { modelRouteDecisionService } from "./model-route-decisions.js";
 import { trackAgentFirstHeartbeat } from "@paperclipai/shared/telemetry";
 import { getTelemetryClient } from "../telemetry.js";
 import { companySkillService } from "./company-skills.js";
@@ -8301,6 +8302,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
     result: AdapterExecutionResult,
     session: { legacySessionId: string | null },
     normalizedUsage?: UsageTotals | null,
+    modelRouteDecisionId?: string | null,
   ) {
     await ensureRuntimeState(agent);
     const usage = normalizedUsage ?? normalizeUsageTotals(result.usage);
@@ -8341,6 +8343,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         biller,
         billingType,
         model: result.model ?? "unknown",
+        modelRouteDecisionId: modelRouteDecisionId ?? null,
         inputTokens,
         cachedInputTokens,
         outputTokens,
@@ -8443,6 +8446,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
     }
 
     activeRunExecutions.add(run.id);
+    let heartbeatRouteDecisionId: string | null = null;
 
     try {
     const agent = await getAgent(run.agentId);
@@ -9717,6 +9721,43 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
       };
 
       let adapterResult: Awaited<ReturnType<typeof adapter.execute>>;
+      const routeDecisionModel =
+        readConfiguredModelFromAdapterConfig(runtimeConfig)
+        ?? configuredModel
+        ?? modelProfileApplication.applied
+        ?? "adapter-default";
+      const routeDecisionModelProfile = modelProfileRunMetadata(modelProfileApplication);
+      const routeDecision = await modelRouteDecisionService(db).create(agent.companyId, {
+        agentId: agent.id,
+        issueId: issueRef?.id ?? null,
+        projectId: issueRef?.projectId ?? projectContext?.id ?? null,
+        heartbeatRunId: run.id,
+        lane: "workhorse",
+        provider: agent.adapterType,
+        model: routeDecisionModel,
+        reason: "Heartbeat execution dispatched through the configured agent adapter.",
+        riskLevel: "medium",
+        taskIntent: issueRef
+          ? `Work on ${issueRef.identifier ?? "assigned issue"}: ${issueRef.title}`
+          : "Run the configured agent heartbeat.",
+        contextSummary: issueRef
+          ? `Issue ${issueRef.identifier ?? issueRef.id}: ${issueRef.title}`
+          : `Heartbeat ${run.invocationSource} wake for ${agent.name}.`,
+        approvalGate: "operator_review_after_run",
+        metadata: {
+          source: "heartbeat_adapter_execution",
+          adapterType: agent.adapterType,
+          invocationSource: run.invocationSource,
+          triggerDetail: run.triggerDetail,
+          wakeReason: readNonEmptyString(context.wakeReason) ?? null,
+          ...(routeDecisionModelProfile ? { modelProfile: routeDecisionModelProfile } : {}),
+          contextKeys: Object.keys(context).sort().slice(0, 50),
+        },
+        createdByRunId: run.id,
+      }, {
+        createdByAgentId: agent.id,
+      });
+      heartbeatRouteDecisionId = routeDecision.id;
       try {
         adapterResult = await adapter.execute({
           runId: run.id,
@@ -10082,9 +10123,20 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
       }
 
       if (finalizedRun) {
+        if (heartbeatRouteDecisionId) {
+          await modelRouteDecisionService(db).updateReview(agent.companyId, heartbeatRouteDecisionId, {
+            outputSummary: adapterResult.summary
+              ?? (outcome === "succeeded" ? "Adapter execution completed." : runErrorMessage ?? "Adapter execution did not complete."),
+            outputConfidence: outcome === "succeeded" ? "medium" : "low",
+            reviewStatus: outcome === "succeeded" ? "pending" : "needs_revision",
+            reviewNote: outcome === "succeeded" ? null : runErrorMessage ?? "Execution did not complete successfully.",
+          }, {
+            agentId: agent.id,
+          });
+        }
         await updateRuntimeState(agent, finalizedRun, adapterResult, {
           legacySessionId: nextSessionState.legacySessionId,
-        }, normalizedUsage);
+        }, normalizedUsage, heartbeatRouteDecisionId);
         if (taskKey) {
           if (adapterResult.clearSession || (!nextSessionState.params && !nextSessionState.displayId)) {
             await clearTaskSessions(agent.companyId, agent.id, {
@@ -10184,6 +10236,16 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         }
         await releaseIssueExecutionAndPromote(livenessRun);
 
+        if (heartbeatRouteDecisionId) {
+          await modelRouteDecisionService(db).updateReview(agent.companyId, heartbeatRouteDecisionId, {
+            outputSummary: message,
+            outputConfidence: "low",
+            reviewStatus: "needs_revision",
+            reviewNote: message,
+          }, {
+            agentId: agent.id,
+          });
+        }
         await updateRuntimeState(agent, livenessRun, {
           exitCode: null,
           signal: null,
@@ -10191,7 +10253,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
           errorMessage: message,
         }, {
           legacySessionId: runtimeForAdapter.sessionId,
-        });
+        }, undefined, heartbeatRouteDecisionId);
 
         if (taskKey && (previousSessionParams || previousSessionDisplayId || taskSession)) {
           await upsertTaskSession({

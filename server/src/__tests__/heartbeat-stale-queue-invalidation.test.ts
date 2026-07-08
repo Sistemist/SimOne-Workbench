@@ -13,6 +13,7 @@ import {
   issueComments,
   issueDocuments,
   issues,
+  modelRouteDecisions,
 } from "@paperclipai/db";
 import { ISSUE_CONTINUATION_SUMMARY_DOCUMENT_KEY } from "@paperclipai/shared";
 import {
@@ -98,6 +99,7 @@ async function cleanupHeartbeatInvalidationFixture(db: ReturnType<typeof createD
           "issues",
           "heartbeat_run_events",
           "cost_events",
+          "model_route_decisions",
           "activity_log",
           "heartbeat_runs",
           "agent_wakeup_requests",
@@ -410,6 +412,83 @@ describeEmbeddedPostgres("heartbeat stale queued-run invalidation", () => {
 
     expect(countExecuteCallsForRun(run!.id)).toBe(1);
   });
+
+  it("records a route decision for live adapter execution and links automatic spend to it", async () => {
+    mockAdapterExecute.mockImplementationOnce(async () => ({
+      exitCode: 0,
+      signal: null,
+      timedOut: false,
+      errorMessage: null,
+      summary: "Route ledger test run.",
+      provider: "anthropic",
+      biller: "anthropic",
+      model: "claude-fable-5",
+      billingType: "metered_api",
+      usage: {
+        inputTokens: 120,
+        cachedInputTokens: 12,
+        outputTokens: 34,
+      },
+      costUsd: 0.01,
+    }));
+    const { companyId, agentId } = await seedCompanyAndAgent({
+      heartbeatConfig: {
+        enabled: true,
+      },
+    });
+
+    const run = await heartbeat.wakeup(agentId, {
+      source: "timer",
+      triggerDetail: "schedule",
+    });
+
+    expect(run).not.toBeNull();
+    const linked = await waitForCondition(async () => {
+      const rows = await db
+        .select({ modelRouteDecisionId: costEvents.modelRouteDecisionId })
+        .from(costEvents)
+        .where(eq(costEvents.heartbeatRunId, run!.id));
+      return rows.some((row) => row.modelRouteDecisionId != null);
+    }, 5_000);
+    expect(linked).toBe(true);
+
+    const decisions = await db
+      .select()
+      .from(modelRouteDecisions)
+      .where(eq(modelRouteDecisions.heartbeatRunId, run!.id));
+    expect(decisions).toHaveLength(1);
+    expect(decisions[0]).toMatchObject({
+      companyId,
+      agentId,
+      heartbeatRunId: run!.id,
+      createdByRunId: run!.id,
+      createdByAgentId: agentId,
+      lane: "workhorse",
+      provider: "codex_local",
+      reason: "Heartbeat execution dispatched through the configured agent adapter.",
+      reviewStatus: "pending",
+      outputConfidence: "medium",
+      outputSummary: "Route ledger test run.",
+    });
+
+    const costs = await db
+      .select()
+      .from(costEvents)
+      .where(eq(costEvents.heartbeatRunId, run!.id));
+    expect(costs).toHaveLength(1);
+    expect(costs[0]).toMatchObject({
+      companyId,
+      agentId,
+      provider: "anthropic",
+      biller: "anthropic",
+      model: "claude-fable-5",
+      inputTokens: 120,
+      cachedInputTokens: 12,
+      outputTokens: 34,
+      costCents: 1,
+      modelRouteDecisionId: decisions[0]!.id,
+    });
+  }, 10_000);
 
   it("skips wakes before queueing when per-agent daily run cap is reached", async () => {
     const { companyId, agentId } = await seedCompanyAndAgent({
