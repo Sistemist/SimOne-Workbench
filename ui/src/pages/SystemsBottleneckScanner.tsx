@@ -10,6 +10,10 @@ type ScannerResult = {
   reason: string;
   nextAction: string;
   watches: string;
+  quickWin: {
+    title: string;
+    steps: string[];
+  };
   signalStrength: {
     primaryMatches: number;
     summary: string;
@@ -97,6 +101,14 @@ const fallbackResult: ScannerResult = {
   reason: "The note has a goal, but the system that turns feedback into a decision is not visible yet.",
   nextAction: "Write down the next customer decision and who approves it.",
   watches: "SimOne would watch for missing feedback, ownership, and approval boundaries.",
+  quickWin: {
+    title: "Try this in 10 minutes",
+    steps: [
+      "Write the decision as one sentence.",
+      "Name the person who can say yes.",
+      "Save the answer in one place you will check tomorrow.",
+    ],
+  },
   signalStrength: {
     primaryMatches: 0,
     summary: "A first signal was visible, but not enough signs pointed to one engine yet.",
@@ -182,6 +194,7 @@ const patterns: Array<{
   diagnosisSignals: string[];
   questions: string[];
   firstSection: string;
+  quickWinSteps: string[];
 }> = [
   {
     engine: "Customer Engine",
@@ -201,6 +214,11 @@ const patterns: Array<{
       "Where should the answer be saved so it is not lost?",
     ],
     firstSection: "Customer review loop",
+    quickWinSteps: [
+      "Open one place where replies or prospects currently land.",
+      "Move three waiting items into one short review list.",
+      "Mark the next reply that needs your yes before anyone sends it.",
+    ],
   },
   {
     engine: "Cash Engine",
@@ -220,6 +238,11 @@ const patterns: Array<{
       "What number should SimOne keep visible each week?",
     ],
     firstSection: "Money decision loop",
+    quickWinSteps: [
+      "Write the next pricing or revenue decision as one sentence.",
+      "Name the number that would make the choice safer.",
+      "Decide who must approve it before it changes in public.",
+    ],
   },
   {
     engine: "Skills Engine",
@@ -239,6 +262,11 @@ const patterns: Array<{
       "What proof would show this role is working?",
     ],
     firstSection: "Ownership loop",
+    quickWinSteps: [
+      "Name one recurring task that keeps returning to you.",
+      "Pick one person or role to own it for a week.",
+      "Write what finished looks like before assigning it.",
+    ],
   },
   {
     engine: "Product Engine",
@@ -258,6 +286,11 @@ const patterns: Array<{
       "Who should approve the next product move?",
     ],
     firstSection: "Product proof loop",
+    quickWinSteps: [
+      "Write one promise a user should believe.",
+      "Name one proof point that would make it credible.",
+      "Pause the next build decision until that proof is visible.",
+    ],
   },
 ];
 
@@ -301,6 +334,10 @@ function scanBottleneck(input: string): ScannerResult {
     reason: best.pattern.reason,
     nextAction: best.pattern.nextAction,
     watches: best.pattern.watches,
+    quickWin: {
+      title: "Try this in 10 minutes",
+      steps: best.pattern.quickWinSteps,
+    },
     signalStrength: {
       primaryMatches: best.score,
       summary: `${best.score} ${best.score === 1 ? "sign" : "signs"} pointed to ${best.pattern.engine}.`,
@@ -585,6 +622,19 @@ export function SystemsBottleneckScanner() {
                     Next action
                   </div>
                   <p className="mt-1 text-sm font-medium">{result.nextAction}</p>
+                </div>
+                <div className="rounded-md border border-border bg-background/60 p-3">
+                  <div className="text-xs font-medium uppercase text-muted-foreground">
+                    {result.quickWin.title}
+                  </div>
+                  <ol className="mt-2 grid gap-2 text-sm text-muted-foreground">
+                    {result.quickWin.steps.map((step, index) => (
+                      <li key={step} className="flex gap-2">
+                        <span className="font-medium text-foreground">{index + 1}.</span>
+                        <span>{step}</span>
+                      </li>
+                    ))}
+                  </ol>
                 </div>
                 <div className="rounded-md border border-border bg-background/60 p-3">
                   <div className="text-xs font-medium uppercase text-muted-foreground">

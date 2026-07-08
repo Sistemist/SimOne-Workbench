@@ -174,6 +174,10 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Customer loop is leaking");
     expect(text).toContain("Customer Engine");
     expect(text).toContain("Make one review queue for replies, prospects, and proof points.");
+    expect(text).toContain("Try this in 10 minutes");
+    expect(text).toContain("Open one place where replies or prospects currently land.");
+    expect(text).toContain("Move three waiting items into one short review list.");
+    expect(text).toContain("Mark the next reply that needs your yes before anyone sends it.");
     expect(text).toContain("Why this scan picked Customer Engine");
     expect(text).toContain("Customer signal was present.");
     expect(text).toContain("Follow-up or inbox work looked scattered.");
@@ -222,6 +226,14 @@ describe("SystemsBottleneckScanner", () => {
         result: {
           headline: "Customer loop is leaking",
           engine: "Customer Engine",
+          quickWin: {
+            title: "Try this in 10 minutes",
+            steps: [
+              "Open one place where replies or prospects currently land.",
+              "Move three waiting items into one short review list.",
+              "Mark the next reply that needs your yes before anyone sends it.",
+            ],
+          },
           calibration: {
             status: "early_pattern_match",
             summary: "Early pattern match. Real submission review still needed.",
