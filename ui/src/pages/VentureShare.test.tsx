@@ -99,6 +99,13 @@ describe("VentureShare", () => {
       expect(text).toContain("Review customer replies is the next move to test.");
       expect(text).toContain("Human review boundary");
       expect(text).toContain("Review the next move before customers, money, public claims, or structure change.");
+      expect(text).toContain("Proof context");
+      expect(text).toContain("Ready for Sprint Zero, not proof of market fit.");
+      expect(text).toContain("Use this map to decide what to test next; do not treat it as customer validation.");
+      expect(text).toContain("Public-safe by design");
+      expect(text).toContain("Raw notes, customer queues, internal costs, run logs, and technical setup details are not included.");
+      expect(text).toContain("What to ask next");
+      expect(text).toContain("Which assumption should be proven before this venture changes offer, pricing, or public claims?");
       expect(text).toContain("Thomasina");
       expect(text).toContain("Customer Engine");
       expect(text).toContain("Review customer replies");

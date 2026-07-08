@@ -114,6 +114,36 @@ export function VentureShare() {
               </div>
             </section>
 
+            <section className="rounded-lg border bg-card p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
+                <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                Proof context
+              </div>
+              <div className="mt-3 grid gap-4 text-sm md:grid-cols-3">
+                <div>
+                  <h2 className="font-medium text-foreground">Evidence strength</h2>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    Ready for Sprint Zero, not proof of market fit.
+                  </p>
+                </div>
+                <div>
+                  <h2 className="font-medium text-foreground">Public-safe by design</h2>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    Raw notes, customer queues, internal costs, run logs, and technical setup details are not included.
+                  </p>
+                </div>
+                <div>
+                  <h2 className="font-medium text-foreground">What to ask next</h2>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    Which assumption should be proven before this venture changes offer, pricing, or public claims?
+                  </p>
+                </div>
+              </div>
+              <p className="mt-3 max-w-3xl text-xs leading-5 text-muted-foreground">
+                Use this map to decide what to test next; do not treat it as customer validation.
+              </p>
+            </section>
+
             <section className="grid gap-4 md:grid-cols-3">
               <div className="rounded-lg border bg-card p-4 shadow-sm">
                 <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">

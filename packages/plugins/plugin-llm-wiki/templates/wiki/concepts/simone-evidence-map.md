@@ -34,6 +34,8 @@ tested implementation, documented direction, and deferred experiments.
   focused UI tests.
 - The Systems Bottleneck Scanner and Sprint Zero handoff are productized enough
   to carry scanner context into SIM Starter, but richer diagnosis remains.
+- Shareable Venture Architecture Maps include public proof context for evidence
+  strength, public-safe omissions, and the next assumption to test.
 - SIM Coach and SIM Wiki have first retrieval and promotion loops, with source
   refs and maintainer-task provenance.
 - `model_route_decisions` is the first auditable route ledger. Provider
