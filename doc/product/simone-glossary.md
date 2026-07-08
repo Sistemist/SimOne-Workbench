@@ -130,7 +130,8 @@ adapters, costs, and recovery from scratch.
 
 **Company**
 : The top-level Paperclip workspace boundary. Most runtime entities are scoped to
-a company.
+a company. In SimOne language, this is the protected workspace where a venture
+lives.
 
 **Agent**
 : A Paperclip actor with instructions, adapter configuration, skills, and task
@@ -142,12 +143,14 @@ company packages.
 
 **Project**
 : A workspace area or package unit that contains tasks, context, source material,
-and work product.
+and work product. In SimOne language, this is usually a workstream, sprint, or
+operating area.
 
 **Task / Issue**
 : A unit of work that can be assigned, checked out, worked, reviewed, blocked,
-or completed. Paperclip's single-assignee mechanics protect tasks from
-conflicting agent work.
+or completed. In SimOne language, an issue or task means a protected work item
+that can be drafted, reviewed, approved, or delegated. Paperclip's
+single-assignee mechanics protect tasks from conflicting agent work.
 
 **Skill**
 : A reusable instruction/tooling package, usually centered on `SKILL.md`.
@@ -158,7 +161,8 @@ shell process, HTTP webhook, or future specialist endpoints.
 
 **Run**
 : One execution attempt by an agent/adapter. Runs should preserve transcript,
-status, cost/usage, and recoverability.
+status, cost/usage, and recoverability. In SimOne language, this is the receipt
+for what the helper did.
 
 **Run Ledger**
 : The audit trail of what ran, why, under which model/adapter, with which

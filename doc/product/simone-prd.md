@@ -26,7 +26,7 @@ certifications.
 | Layer | Completion | Evidence |
 | --- | ---: | --- |
 | Hosted alpha shell | 65% | KVM deployment, auth-gated app, health checks, SimOne routes, deploy script |
-| Paperclip control-plane reuse | 55% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted |
+| Paperclip control-plane reuse | 58% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted; PRD/glossary/wiki seeds now translate inherited terms into SimOne language |
 | PLG/Barnum layer | 56% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts; scanner results now include a structured Sprint Zero brief that carries into SIM Starter |
 | Customer Engine bridge | 78% | Read-only Tissuu bridge live; Customer Engine page can promote a proof readout into SIM Wiki without mutating Tissuu |
 | SIM Coach and SIM Wiki | 58% | Product direction documented; contextual coach loop explains scanner results; Coach can queue an auditable SIM Wiki maintainer retrieval from scanner context, stream the returned answer back into Coach, preserve structured wiki/raw answer source refs, and save useful answers as durable SIM Wiki syntheses; SIM Starter now stores source-note and first-map draft provenance in the first Sprint Zero work item; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include SimOne product-language, PRD snapshot, glossary, and agent-flow pages |
@@ -119,6 +119,44 @@ SimOne adds:
 - PLG surfaces
 - Tissuu Customer Engine bridge
 - SIM Coach methodology loop beginnings
+
+### Paperclip Concepts Translated For SimOne
+
+Paperclip is the control plane. SimOne is the product experience on top of that
+control plane. When an inherited Paperclip term appears in the Workbench, read
+it through this SimOne translation:
+
+| Paperclip term | What it means in SimOne | Thomasina-facing meaning |
+| --- | --- | --- |
+| Company | Tenant/workspace boundary | The protected place where my venture lives |
+| Project | A scoped body of work | A workstream, sprint, or operating area |
+| Task / issue | Assignable unit of work with review state | A protected work item that can be drafted, reviewed, approved, or delegated |
+| Agent | Bounded actor with instructions and tools | A role that can help, not an autonomous executive |
+| Team | Reusable group of agents/roles | A small operating team for a workflow |
+| Skill | Reusable instruction/tool package | A capability the system can use when asked |
+| Adapter | Runtime bridge to an agent/model/tool | The execution pipe, hidden from first-run users |
+| Run | One execution attempt | The audit trail of what the helper did |
+| Cost/usage record | Spend and token/accounting event | The receipt for delegated work |
+| Recovery state | Blocked/failed/stalled execution state | A visible place where the system asks for help instead of hiding failure |
+
+The product goal is not to erase Paperclip's terms everywhere immediately. The
+goal is to make first-run SimOne screens speak in ventures, maps, decisions,
+proof, review, and next moves, while keeping Paperclip's stronger work ledger
+available underneath.
+
+### Surface Ownership Map
+
+The main SimOne surfaces should have clean jobs:
+
+| Surface | Owns | Does not own |
+| --- | --- | --- |
+| SIM Starter | First protected map, source note, Sprint Zero task, provenance | Ongoing chat, hidden model setup, unapproved execution |
+| Venture Architecture Map | Operating picture of engines, roles, assumptions, risks, and decisions | Live customer queues or private raw notes in public views |
+| Systems Bottleneck Scanner | One bounded diagnosis, one next move, safe public handoff | Full company crawl or uncontrolled agent research |
+| Customer Engine Readout | Read-only live Tissuu signal and deliberate proof promotion | Mutating Tissuu or inventing bridge health |
+| SIM Coach | Contextual explanation, review, and "what does this mean?" support | Becoming the root execution engine |
+| SIM Wiki | Durable memory, source material, concepts, synthesis, provenance | Silently absorbing every ephemeral live signal |
+| Paperclip control plane | Tasks, agents, runs, approvals, costs, recovery | First-screen product language for nontechnical users |
 
 ### SIM Starter
 

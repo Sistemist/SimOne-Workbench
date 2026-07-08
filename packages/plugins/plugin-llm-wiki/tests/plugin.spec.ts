@@ -2816,13 +2816,17 @@ Duplicate headings receive stable suffixes.
     expect(writes.find((write) => write.path === "wiki/index.md")?.contents).toContain("[[wiki/concepts/simone-agent-flows]]");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("SIM Coach");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("SIM Wiki");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("Paperclip supplies the control plane");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("Issue or task means a protected work item");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-product-language.md")?.contents).toContain("Model/provider choices belong in advanced settings, not first-run onboarding.");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-prd.md")?.contents).toContain("Overall SimOne alpha state");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-prd.md")?.contents).toContain("Paperclip concepts translated for SimOne");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-prd.md")?.contents).toContain("OpenRouter Fusion is reserved for high-risk deliberation");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-glossary.md")?.contents).toContain("Thomasina");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-glossary.md")?.contents).toContain("Context compression");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-agent-flows.md")?.contents).toContain("Fable 5 can act as a boardroom brain");
     expect(writes.find((write) => write.path === "wiki/concepts/simone-agent-flows.md")?.contents).toContain("Fugu/Fugu Ultra should start as optional specialist adapters");
+    expect(writes.find((write) => write.path === "wiki/concepts/simone-agent-flows.md")?.contents).toContain("Surface ownership");
     expect(writes.find((write) => write.path === "wiki/sim/engines.md")?.contents).toContain("Product Engine");
   });
 

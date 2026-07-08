@@ -41,6 +41,21 @@ summaries, and bounded maintenance.
 **Human approval gates** keep irreversible or trust-sensitive actions from
 becoming invisible automation.
 
+## Surface ownership
+
+- SIM Starter owns the first protected map, Sprint Zero work item, and source
+  provenance.
+- Venture Architecture Map owns the operating picture of engines, roles,
+  assumptions, risks, and decisions.
+- Systems Bottleneck Scanner owns one bounded diagnosis, one next move, and a
+  safe handoff into Starter.
+- Customer Engine Readout owns read-only Tissuu signal and deliberate proof
+  promotion.
+- SIM Coach owns contextual explanation and review, not root execution.
+- SIM Wiki owns durable memory, source material, synthesis, and provenance.
+- Paperclip control plane owns tasks, agents, runs, approvals, costs, and
+  recovery underneath the SimOne product language.
+
 ## Experiment Lanes
 
 OpenRouter Fusion should be reserved for critical, high-risk, uncertain tasks

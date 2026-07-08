@@ -34,7 +34,7 @@ enough to evaluate them.
 | Layer | State | What Is Done | Remaining Work |
 | --- | ---: | --- | --- |
 | Hosted alpha shell | 65% | Authenticated KVM app, one-origin app/API, deploy smoke path | More authenticated visual QA, release checklist |
-| Paperclip control-plane reuse | 55% | Companies, agents, tasks, skills, adapters, runs, costs, recovery inherited | Better Thomasina-facing labels, fewer raw control-plane concepts in first run |
+| Paperclip control-plane reuse | 58% | Companies, agents, tasks, skills, adapters, runs, costs, recovery inherited; PRD/glossary now translate Paperclip terms into SimOne language | Keep reducing raw control-plane concepts in first run |
 | PLG/Barnum layer | 56% | Public scanner, safer share summaries, shareable map interpretation, scanner-to-starter handoff, structured Sprint Zero brief | Richer share previews, less generic public copy |
 | Customer Engine bridge | 78% | Read-only Tissuu bridge live, native dashboard/page card, SIM Wiki proof promotion | More visual QA, lived use, defer write-back v2 |
 | SIM Coach and SIM Wiki | 58% | Coach scanner explanations, scanner-to-wiki maintainer retrieval with streamed answer return, structured answer source refs, returned-answer promotion to wiki, SIM Starter source-note provenance, SIM method/product seed pages | Better wiki navigation, broader review promotion |
@@ -83,6 +83,9 @@ Done:
   first move; that brief carries into SIM Starter after sign-in.
 - SIM Coach explains scanner results with contextual method language.
 - The repo now has a PRD, glossary, agent-flow map, and milestone tracker.
+- The PRD, glossary, and SIM Wiki seeds now translate inherited Paperclip
+  concepts into SimOne/Thomasina language and define which surface owns which
+  job.
 - The alpha product-flow blueprint now maps landing, sign-in, messy venture
   intake, guided draft, SIM map, Sprint Zero, diagnosis, next action, settings
   placement, and incomplete-data behavior.

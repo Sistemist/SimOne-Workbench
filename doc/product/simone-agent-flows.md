@@ -71,7 +71,19 @@ Product rule: live counts and pending queues are ephemeral. Durable proof,
 positioning, or relationship decisions may be promoted to SIM Wiki by an
 explicit user action.
 
-## 4. SIM Coach And SIM Wiki Interaction
+## 4. Surface Ownership Map
+
+| Surface | Owns | Does not own |
+| --- | --- | --- |
+| SIM Starter | First protected map, source note, Sprint Zero work item, provenance | Hidden model setup or unapproved execution |
+| Venture Architecture Map | Operating picture of engines, roles, assumptions, risks, decisions | Private raw notes in public views |
+| Systems Bottleneck Scanner | One bounded diagnosis, one next move, safe handoff | Full company crawl or uncontrolled agent research |
+| Customer Engine Readout | Read-only Tissuu signal, deliberate proof promotion | Tissuu mutation or invented bridge status |
+| SIM Coach | Contextual explanation and review | Root execution authority |
+| SIM Wiki | Durable memory, source material, synthesis, provenance | Silent capture of every live signal |
+| Paperclip control plane | Tasks, agents, runs, approvals, costs, recovery | Thomasina-facing first-screen language |
+
+## 5. SIM Coach And SIM Wiki Interaction
 
 ```mermaid
 flowchart LR
@@ -95,7 +107,7 @@ rendering uses structured `wiki/...` and `raw/...` answer refs when the SIM Wiki
 stream provides them, with answer-text path extraction as a fallback. The
 maintainer task remains the stronger audit trail.
 
-## 5. Sovereign Model Routing Flow
+## 6. Sovereign Model Routing Flow
 
 ```mermaid
 sequenceDiagram
@@ -121,7 +133,7 @@ sequenceDiagram
 Dev-mode rule: every important route should be inspectable before SimOne depends
 on black-box orchestration.
 
-## 6. Optional OpenRouter Fusion Deliberation Flow
+## 7. Optional OpenRouter Fusion Deliberation Flow
 
 ```mermaid
 sequenceDiagram
@@ -143,7 +155,7 @@ sequenceDiagram
 Escalation rule: use Fusion when disagreement is informative and the cost of
 being wrong is higher than the extra cost/latency of multiple model calls.
 
-## 7. Optional Fugu Experiment Flow
+## 8. Optional Fugu Experiment Flow
 
 ```mermaid
 sequenceDiagram
@@ -163,7 +175,7 @@ sequenceDiagram
 Experiment rule: Fugu can be useful without becoming the root of trust. It must
 sit behind SimOne's logs, evaluations, fallback rules, and human approval gates.
 
-## 8. Paperclip Control-Plane Flow
+## 9. Paperclip Control-Plane Flow
 
 ```mermaid
 sequenceDiagram
@@ -184,7 +196,7 @@ sequenceDiagram
 SimOne product rule: keep this proven control-plane machinery where it works;
 adapt the user's conceptual experience around it.
 
-## 9. Approval Gates
+## 10. Approval Gates
 
 Require human approval before:
 

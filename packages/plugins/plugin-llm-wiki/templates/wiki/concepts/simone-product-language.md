@@ -33,6 +33,25 @@ delegate, and when human judgment should stay in the loop.
 method pages, venture context, durable decisions, synthesis, provenance, and
 change history.
 
+## Paperclip Translation
+
+Paperclip supplies the control plane underneath SimOne. SimOne should translate
+that machinery into founder-friendly language instead of forcing it onto the
+first screen.
+
+**Company** means the protected workspace where the venture lives.
+
+**Project** means a scoped workstream, sprint, or operating area.
+
+**Issue or task means a protected work item** that can be drafted, reviewed,
+approved, blocked, completed, or delegated.
+
+**Agent** means a bounded helper role with instructions and tools. It is not an
+autonomous executive.
+
+**Run** means the audit trail for one helper execution: what was attempted,
+what happened, and what it cost.
+
 ## Product Artifacts
 
 **Venture Architecture Map** is the map of engines, roles, constraints, risks,

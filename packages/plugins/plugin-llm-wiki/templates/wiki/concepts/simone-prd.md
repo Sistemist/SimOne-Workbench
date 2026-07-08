@@ -36,6 +36,23 @@ Current weakest pieces:
 - durable cost and routing review surfaces
 - product polish for nontechnical recurring use
 
+## Paperclip concepts translated for SimOne
+
+Paperclip concepts translated for SimOne:
+
+- Company: the protected workspace where a venture lives.
+- Project: a workstream, sprint, or operating area.
+- Issue/task: a protected work item that can be drafted, reviewed, approved, or delegated.
+- Agent: a bounded helper role with instructions and tools.
+- Skill: a reusable capability the system can use when asked.
+- Adapter: the hidden execution pipe to a model, tool, or agent runtime.
+- Run: the audit trail and receipt for one helper execution.
+- Recovery state: the visible place where stuck work asks for help instead of hiding failure.
+
+SimOne should keep Paperclip's ledger, assignment, run, cost, and recovery
+machinery while translating first-run screens into maps, proof, decisions,
+review, and next moves.
+
 ## Milestone Shape
 
 **M0 Foundation and Bridge** is mostly complete: SimOne is deployed, authenticated,
