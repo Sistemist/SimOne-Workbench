@@ -384,7 +384,7 @@ export function SystemsBottleneckScanner() {
   const [startupUrl, setStartupUrl] = useState("");
   const [founderNote, setFounderNote] = useState("");
   const [result, setResult] = useState<ScannerResult | null>(null);
-  const [shareSummaryCopied, setShareSummaryCopied] = useState(false);
+  const [shareSummaryStatus, setShareSummaryStatus] = useState<"idle" | "copied" | "manual">("idle");
   const canScan = useMemo(
     () => startupUrl.trim().length > 0 || founderNote.trim().length > 0,
     [startupUrl, founderNote],
@@ -395,7 +395,7 @@ export function SystemsBottleneckScanner() {
     if (!canScan) return;
     const nextResult = scanBottleneck(`${startupUrl}\n${founderNote}`);
     setResult(nextResult);
-    setShareSummaryCopied(false);
+    setShareSummaryStatus("idle");
     try {
       window.localStorage.setItem(
         SCAN_STORAGE_KEY,
@@ -700,15 +700,21 @@ export function SystemsBottleneckScanner() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          void navigator.clipboard?.writeText(result.shareSummary.publicText);
-                          setShareSummaryCopied(true);
+                          if (navigator.clipboard?.writeText) {
+                            void navigator.clipboard.writeText(result.shareSummary.publicText);
+                            setShareSummaryStatus("copied");
+                          } else {
+                            setShareSummaryStatus("manual");
+                          }
                         }}
                       >
                         Copy share summary
                       </Button>
                       <span className="text-xs">
-                        {shareSummaryCopied
+                        {shareSummaryStatus === "copied"
                           ? "Copied. Safe to share: raw notes and URLs stay out."
+                          : shareSummaryStatus === "manual"
+                            ? "Summary ready to copy. Select the text above."
                           : "The share version leaves out raw notes and URLs."}
                       </span>
                     </div>

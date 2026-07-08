@@ -389,6 +389,46 @@ describe("SystemsBottleneckScanner", () => {
     });
   });
 
+  it("does not claim the share summary was copied when clipboard is unavailable", async () => {
+    Object.defineProperty(window.navigator, "clipboard", {
+      value: undefined,
+      configurable: true,
+    });
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderScanner(container);
+
+    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
+    expect(noteInput).not.toBeNull();
+    await updateField(
+      noteInput!,
+      "We have interested leads and waitlist replies, but follow-up is scattered and approvals sit in my inbox.",
+    );
+
+    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Scan"),
+    );
+    expect(button).toBeTruthy();
+    await act(async () => {
+      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const copyButton = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Copy share summary"),
+    );
+    expect(copyButton).toBeTruthy();
+    await act(async () => {
+      copyButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("Summary ready to copy. Select the text above.");
+    expect(container.textContent).not.toContain("Copied. Safe to share: raw notes and URLs stay out.");
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
   it("uses the scan focus in the conversion handoff", async () => {
     const container = document.createElement("div");
     document.body.appendChild(container);
