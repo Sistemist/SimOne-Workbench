@@ -26,10 +26,12 @@ tested implementation, documented direction, and deferred experiments.
 
 ## Current anchors
 
-- The Tissuu bridge is live read-only v1. Code lives in
+- The Tissuu bridge is live read-only v1 and is framed as native Customer
+  Signal in SimOne. Code lives in
   `server/src/services/customer-engine-bridge.ts`,
   `server/src/routes/customer-engine-bridge.ts`,
-  `ui/src/api/customerEngine.ts`, and the Customer Engine/Dashboard UI.
+  `ui/src/api/customerEngine.ts`, the Customer Engine/Dashboard UI, and their
+  focused UI tests.
 - The Systems Bottleneck Scanner and Sprint Zero handoff are productized enough
   to carry scanner context into SIM Starter, but richer diagnosis remains.
 - SIM Coach and SIM Wiki have first retrieval and promotion loops, with source
@@ -48,4 +50,3 @@ tested implementation, documented direction, and deferred experiments.
 If a claim cannot point to a source doc, code path, test or smoke check, deploy
 state, and Linear trail when appropriate, treat it as incomplete or design-only
 until evidence is added.
-

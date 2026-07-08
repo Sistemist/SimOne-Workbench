@@ -36,7 +36,7 @@ enough to evaluate them.
 | Hosted alpha shell | 65% | Authenticated KVM app, one-origin app/API, deploy smoke path | More authenticated visual QA, release checklist |
 | Paperclip control-plane reuse | 60% | Companies, agents, tasks, skills, adapters, runs, costs, recovery inherited; PRD/glossary/field guide now translate Paperclip terms and screens into SimOne language | Keep reducing raw control-plane concepts in first run |
 | PLG/Barnum layer | 56% | Public scanner, safer share summaries, shareable map interpretation, scanner-to-starter handoff, structured Sprint Zero brief | Richer share previews, less generic public copy |
-| Customer Engine bridge | 78% | Read-only Tissuu bridge live, native dashboard/page card, SIM Wiki proof promotion | More visual QA, lived use, defer write-back v2 |
+| Customer Engine bridge | 80% | Read-only Tissuu bridge live, native Customer Signal framing on dashboard/page, SIM Wiki proof promotion | More authenticated visual QA, lived use, defer write-back v2 |
 | SIM Coach and SIM Wiki | 58% | Coach scanner explanations, scanner-to-wiki maintainer retrieval with streamed answer return, structured answer source refs, returned-answer promotion to wiki, SIM Starter source-note provenance, SIM method/product seed pages | Better wiki navigation, broader review promotion |
 | Model routing and auditability | 32% | `model_route_decisions` ledger, lane vocabulary, local context compression envelope | Real provider execution, route/run linking, cost review UI, evaluations |
 | Compression/headroom | 8% | Local `simone_json_headroom_v0` envelope for bulky JSON route context | Evaluate Headroom/SmartCrusher, compare quality, support RAG/log/transcript payloads |
@@ -72,7 +72,8 @@ Review artifact: `doc/product/simone-alpha-flow-blueprint.html`.
 
 Done:
 
-- Dashboard and Customer Engine surfaces have native bridge readouts.
+- Dashboard and Customer Engine surfaces frame the bridge as native Customer
+  Signal: live customer signal, next human judgment, and company memory.
 - Public scanner and share artifacts have safer public summaries.
 - The public scanner now tells users the scan will carry into SIM Starter after
   sign-in and routes them into onboarding with the saved scan context.

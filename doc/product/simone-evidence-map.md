@@ -36,7 +36,7 @@ SimOne auditable while we build it.
 | --- | --- | --- | --- |
 | KVM deployment is the current production path | `scripts/deploy-simone-kvm.sh`, `ARCHITECTURE.md` | Confirmed live | Keep release checklist and rollback notes current |
 | Authenticated app mode is expected | Production health response in deploy smoke; `ARCHITECTURE.md` | Confirmed live | Authenticated visual QA inside the app |
-| Tissuu bridge is live read-only v1 | `server/src/services/customer-engine-bridge.ts`, `server/src/routes/customer-engine-bridge.ts`, `ui/src/api/customerEngine.ts`, `ui/src/components/CustomerEngineBridgeCard.tsx`, `ui/src/pages/CustomerEngine.tsx`, `ui/src/pages/Dashboard.tsx` | Confirmed live | More authenticated visual QA and lived use |
+| Tissuu bridge is live read-only v1 and framed as native Customer Signal | `server/src/services/customer-engine-bridge.ts`, `server/src/routes/customer-engine-bridge.ts`, `ui/src/api/customerEngine.ts`, `ui/src/components/CustomerEngineBridgeCard.tsx`, `ui/src/pages/CustomerEngine.tsx`, `ui/src/pages/Dashboard.tsx`, `ui/src/pages/CustomerEngine.test.tsx`, `ui/src/pages/Dashboard.test.tsx` | Confirmed live / implemented and tested | More authenticated visual QA and lived use |
 | Tissuu bridge write-back is deferred | `ARCHITECTURE.md`, PRD, milestone tracker | Deferred | Revisit only after Han has lived with read-only v1 |
 | Public Systems Bottleneck Scanner exists and hands off to Starter | `ui/src/components/FrontDoor.tsx`, `ui/src/components/OnboardingWizard.tsx`, scanner-related tests, PRD | Implemented and tested | Improve diagnosis richness without exposing private notes |
 | Sprint Zero Brief carries into SIM Starter | `ui/src/components/OnboardingWizard.tsx`, `ui/src/components/OnboardingWizard.simone-starter.test.tsx`, `ui/src/components/SimOneSprintZeroGuide.tsx` | Implemented and tested | Better first-map review workflow |
@@ -81,4 +81,3 @@ When a future PRD claim feels fuzzy, do not ask "does this sound right?" Ask:
 
 If the answer is missing or indirect, treat the claim as incomplete until the
 evidence is added.
-

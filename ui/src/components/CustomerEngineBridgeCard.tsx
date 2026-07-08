@@ -35,8 +35,8 @@ export type CustomerEngineBridgeState = {
 
 const defaultState: CustomerEngineBridgeState = {
   status: "pending",
-  statusLabel: "Live signal pending",
-  headline: "Customer Review Loop",
+  statusLabel: "Signal pending",
+  headline: "Customer Signal",
   summary: "Customer discovery can keep running in Tissuu while SimOne turns the signal into review prompts, assumptions, and durable SIM memory.",
   signals: [
     { label: "Digest", value: "Waiting for readout", tone: "muted" },
@@ -71,7 +71,7 @@ export function bridgeSnapshotToCardState(
     return {
       status: "attention",
       statusLabel: "Bridge unavailable",
-      headline: "Customer Review Loop",
+      headline: "Customer Signal",
       summary: snapshot.message,
       signals: [
         { label: "Digest", value: "Unavailable", tone: "attention" },
@@ -92,8 +92,8 @@ export function bridgeSnapshotToCardState(
 
   return {
     status: snapshot.ops.overall === "healthy" ? "connected" : "attention",
-    statusLabel: "Live Tissuu signal",
-    headline: "Customer Review Loop",
+    statusLabel: "Live signal from Tissuu",
+    headline: "Customer Signal",
     summary: `${snapshot.digest.headline}. ${snapshot.digest.summary}`,
     signals: [
       { label: "Needs review", value: `${snapshot.actions.count} items`, tone: snapshot.actions.count > 0 ? "attention" : "default" },
@@ -158,11 +158,11 @@ export function CustomerEngineBridgeCard({ state = defaultState }: { state?: Cus
 
         <div className="grid gap-3 border-y border-border py-3 md:grid-cols-3">
           <div>
-            <div className="text-[11px] font-medium uppercase text-muted-foreground">What changed</div>
+            <div className="text-[11px] font-medium uppercase text-muted-foreground">Customer signal</div>
             <p className="mt-1 text-sm font-medium text-foreground">{state.reviewLoop.changed}</p>
           </div>
           <div className="border-t border-border pt-3 md:border-l md:border-t-0 md:pl-3 md:pt-0">
-            <div className="text-[11px] font-medium uppercase text-muted-foreground">Ready for your judgment</div>
+            <div className="text-[11px] font-medium uppercase text-muted-foreground">Next judgment</div>
             <p className="mt-1 text-sm font-medium text-foreground">{state.judgmentPrompt}</p>
             <p className="mt-1 text-sm text-muted-foreground">{state.reviewLoop.needsHuman}</p>
             {state.nextReview?.reason ? (
@@ -170,7 +170,7 @@ export function CustomerEngineBridgeCard({ state = defaultState }: { state?: Cus
             ) : null}
           </div>
           <div className="border-t border-border pt-3 md:border-l md:border-t-0 md:pl-3 md:pt-0">
-            <div className="text-[11px] font-medium uppercase text-muted-foreground">Becomes SIM memory</div>
+            <div className="text-[11px] font-medium uppercase text-muted-foreground">Company memory</div>
             <p className="mt-1 text-sm text-muted-foreground">{state.reviewLoop.memory}</p>
           </div>
         </div>
@@ -179,7 +179,7 @@ export function CustomerEngineBridgeCard({ state = defaultState }: { state?: Cus
           <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1">
               <Radio className="h-3.5 w-3.5" aria-hidden="true" />
-              Customer signal
+              Live in Tissuu
             </span>
             <span className="inline-flex items-center gap-1">
               <MessageCircleWarning className="h-3.5 w-3.5" aria-hidden="true" />
@@ -187,16 +187,16 @@ export function CustomerEngineBridgeCard({ state = defaultState }: { state?: Cus
             </span>
             <span className="inline-flex items-center gap-1">
               <BookOpenCheck className="h-3.5 w-3.5" aria-hidden="true" />
-              SIM memory
+              SIM Wiki memory
             </span>
             <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-200">
               <MessageCircleWarning className="h-3.5 w-3.5" aria-hidden="true" />
-              Approval stays in Tissuu
+              Read-only bridge
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline" size="sm" className="h-8">
-              <Link to="/sim-coach">Ask why this stays human</Link>
+              <Link to="/sim-coach">Ask SIM Coach why</Link>
             </Button>
             {state.reviewHref ? (
               <Button asChild variant="outline" size="sm" className="h-8">

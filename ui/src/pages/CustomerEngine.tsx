@@ -14,25 +14,25 @@ const SIM_WIKI_PACKAGE = "@paperclipai/plugin-llm-wiki";
 
 const bridgeSurfaces = [
   {
-    title: "Daily Readout",
+    title: "Today's Signal",
     status: "Waiting for digest",
     body: "A short executive summary of wins, risks, and next customer moves.",
     icon: Inbox,
   },
   {
-    title: "Human Review Queue",
+    title: "Next Judgment",
     status: "Approval stays here",
     body: "Public language, relationship choices, and offer changes remain judgment calls.",
     icon: ClipboardCheck,
   },
   {
-    title: "Funnel Signals",
+    title: "Demand Proof",
     status: "Metrics pending",
     body: "Waitlist, qualified leads, reply quality, source mix, and proof events.",
     icon: BarChart3,
   },
   {
-    title: "SIM Memory",
+    title: "Company Memory",
     status: "Promotion only",
     body: "Proof, positioning, and relationship decisions can become durable knowledge when the human promotes them.",
     icon: BookOpenCheck,
@@ -209,23 +209,23 @@ export function CustomerEngine() {
         {bridgeSurfaces.map((surface) => {
           const Icon = surface.icon;
           const status =
-            liveSnapshot && surface.title === "Daily Readout"
+            liveSnapshot && surface.title === "Today's Signal"
               ? "Live digest"
-              : liveSnapshot && surface.title === "Human Review Queue"
+              : liveSnapshot && surface.title === "Next Judgment"
                 ? `${liveSnapshot.actions.count} items`
-                : liveSnapshot && surface.title === "Funnel Signals"
+                : liveSnapshot && surface.title === "Demand Proof"
                   ? `${liveSnapshot.metrics.waitlistTotal} people`
-                  : liveSnapshot && surface.title === "SIM Memory"
+                  : liveSnapshot && surface.title === "Company Memory"
                     ? "Human-promoted"
                     : surface.status;
           const body =
-            liveSnapshot && surface.title === "Daily Readout"
+            liveSnapshot && surface.title === "Today's Signal"
               ? liveSnapshot.digest.summary
-              : liveSnapshot && surface.title === "Human Review Queue"
+              : liveSnapshot && surface.title === "Next Judgment"
                 ? liveSnapshot.actions.items[0]?.title ?? "No review items waiting."
-                : liveSnapshot && surface.title === "Funnel Signals"
+                : liveSnapshot && surface.title === "Demand Proof"
                   ? `${liveSnapshot.metrics.qualifiedLeads} qualified leads, ${liveSnapshot.metrics.proofEvents} proof events.`
-                  : liveSnapshot && surface.title === "SIM Memory"
+                  : liveSnapshot && surface.title === "Company Memory"
                     ? `Keep ${liveSnapshot.actions.count} live review items ephemeral unless a proof point or decision should be remembered.`
                     : surface.body;
           return (

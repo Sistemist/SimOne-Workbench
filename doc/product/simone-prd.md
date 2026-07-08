@@ -28,7 +28,7 @@ certifications.
 | Hosted alpha shell | 65% | KVM deployment, auth-gated app, health checks, SimOne routes, deploy script |
 | Paperclip control-plane reuse | 60% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted; PRD/glossary/field-guide/wiki seeds now translate inherited terms and screens into SimOne language |
 | PLG/Barnum layer | 56% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts; scanner results now include a structured Sprint Zero brief that carries into SIM Starter |
-| Customer Engine bridge | 78% | Read-only Tissuu bridge live; Customer Engine page can promote a proof readout into SIM Wiki without mutating Tissuu |
+| Customer Engine bridge | 80% | Read-only Tissuu bridge live; Dashboard and Customer Engine frame it as a native Customer Signal loop; Customer Engine page can promote a proof readout into SIM Wiki without mutating Tissuu |
 | SIM Coach and SIM Wiki | 58% | Product direction documented; contextual coach loop explains scanner results; Coach can queue an auditable SIM Wiki maintainer retrieval from scanner context, stream the returned answer back into Coach, preserve structured wiki/raw answer source refs, and save useful answers as durable SIM Wiki syntheses; SIM Starter now stores source-note and first-map draft provenance in the first Sprint Zero work item; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include SimOne product-language, PRD snapshot, glossary, and agent-flow pages |
 | Model routing and auditability | 32% | Strategy documented; Workbench has an initial `model_route_decisions` ledger; route decisions can now attach a compressed context envelope; actual provider orchestration and evaluations remain |
 | Compression/headroom | 8% | External Headroom/SmartCrusher not integrated; SimOne now has a local audited JSON compression envelope for route-decision context payloads |
@@ -197,6 +197,10 @@ Bridge v1 is live and read-only. SimOne reads:
 
 SimOne must not invent bridge status. If the bridge is unavailable, the UI shows
 an unavailable state. All action still happens in Tissuu through deep links.
+The Dashboard and Customer Engine page frame the bridge as a SimOne Customer
+Signal loop: live customer signal, next human judgment, and company memory.
+Tissuu remains visible as the live source and review destination rather than
+the product headline.
 When the SIM Wiki plugin is ready, the Customer Engine page can promote a
 deliberate proof/readout page into `wiki/synthesis/`; this records the
 review-worthy pattern and provenance while leaving live counts and Tissuu
@@ -465,8 +469,9 @@ Goal: make the current live signals feel native to SimOne.
 - Reviewable artifact: `doc/product/simone-alpha-flow-blueprint.html`.
 
 - Improve Dashboard and Customer Engine surfaces around the Tissuu bridge.
-  The Customer Engine page now includes a deliberate SIM Wiki promotion action
-  for proof readouts while keeping Tissuu write-back deferred.
+  The Dashboard card and Customer Engine page now use a native Customer Signal
+  framing and the Customer Engine page includes a deliberate SIM Wiki promotion
+  action for proof readouts while keeping Tissuu write-back deferred.
 - Make public scanner and share artifacts feel like coherent SimOne outputs.
   The Venture Architecture Map share page now has a first plain-language
   interpretation layer, and the scanner now exposes a safe share summary plus a
