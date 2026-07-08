@@ -27,7 +27,7 @@ certifications.
 | --- | ---: | --- |
 | Hosted alpha shell | 65% | KVM deployment, auth-gated app, health checks, SimOne routes, deploy script |
 | Paperclip control-plane reuse | 55% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted |
-| PLG/Barnum layer | 52% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts |
+| PLG/Barnum layer | 56% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts; scanner results now include a structured Sprint Zero brief that carries into SIM Starter |
 | Customer Engine bridge | 78% | Read-only Tissuu bridge live; Customer Engine page can promote a proof readout into SIM Wiki without mutating Tissuu |
 | SIM Coach and SIM Wiki | 58% | Product direction documented; contextual coach loop explains scanner results; Coach can queue an auditable SIM Wiki maintainer retrieval from scanner context, stream the returned answer back into Coach, preserve structured wiki/raw answer source refs, and save useful answers as durable SIM Wiki syntheses; SIM Starter now stores source-note and first-map draft provenance in the first Sprint Zero work item; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include SimOne product-language, PRD snapshot, glossary, and agent-flow pages |
 | Model routing and auditability | 32% | Strategy documented; Workbench has an initial `model_route_decisions` ledger; route decisions can now attach a compressed context envelope; actual provider orchestration and evaluations remain |
@@ -135,7 +135,9 @@ description so the first workspace feels guided rather than like a standard
 task page. The same work item stores where the founder note came from, when it
 was captured, whether it came from a public scanner handoff, and the initial
 first-map draft status so the first map has provenance before stronger agents
-or model routes act on it.
+or model routes act on it. When the user arrives from the public scanner, the
+starter task also carries the scanner's Sprint Zero brief: what is clear, what
+needs proof, the human review boundary, and the first move.
 
 ### Tissuu Bridge
 
@@ -177,7 +179,10 @@ Current share artifact behavior:
   the likely bottleneck, engine focus, and next move while excluding the raw
   founder note and startup URL. After a scan, it tells the user the scan will
   carry into SIM Starter after sign-in and routes them to onboarding with the
-  saved scan context in protected browser storage.
+  saved scan context in protected browser storage. The scan now also generates
+  a structured Sprint Zero Brief with what is clear, what needs proof, human
+  review boundaries, and the first move, then passes that brief into the
+  protected starter map task.
 
 ### SIM Coach
 
@@ -407,7 +412,9 @@ Goal: make the current live signals feel native to SimOne.
 - Make public scanner and share artifacts feel like coherent SimOne outputs.
   The Venture Architecture Map share page now has a first plain-language
   interpretation layer, and the scanner now exposes a safe share summary plus a
-  scanner-to-SIM-Starter handoff after sign-in.
+  scanner-to-SIM-Starter handoff after sign-in. The scanner also produces the
+  first structured Sprint Zero Brief and carries it into the protected Starter
+  task.
 - Make SIM Coach contextual explanations feel helpful, not academic. Scanner
   handoff now includes a "Method underneath" card instead of a generic course
   prompt, and the Coach page now shows the first SIM Wiki seed map.

@@ -16,6 +16,12 @@ type ScannerResult = {
     primaryEngine: ScannerResult["engine"];
     firstSection: string;
   };
+  sprintZeroBrief: {
+    clear: string[];
+    needsProof: string[];
+    humanReview: string[];
+    firstMove: string;
+  };
 };
 
 const SCAN_STORAGE_KEY = "simone:bottleneck-scan";
@@ -37,6 +43,22 @@ const fallbackResult: ScannerResult = {
     artifact: "Venture Architecture Map",
     primaryEngine: "Product Engine",
     firstSection: "Decision loop",
+  },
+  sprintZeroBrief: {
+    clear: [
+      "Likely bottleneck: Feedback loop is unclear.",
+      "Primary engine: Product Engine.",
+      "The note has a goal, but the system that turns feedback into a decision is not visible yet.",
+    ],
+    needsProof: [
+      "What proof would make this worth doing now?",
+      "Show the next decision and one place where the answer will be saved.",
+    ],
+    humanReview: [
+      "Approve the next decision before agents act.",
+      "Keep customers, money, public claims, and company structure behind human review.",
+    ],
+    firstMove: "Write down the next customer decision and who approves it.",
   },
 };
 
@@ -123,10 +145,11 @@ function scanBottleneck(input: string): ScannerResult {
 
   if (!best || best.score === 0) return fallbackResult;
 
-  return {
+  const severity: ScannerResult["severity"] = best.score > 2 ? "high" : "medium";
+  const result: Omit<ScannerResult, "sprintZeroBrief"> = {
     headline: best.pattern.headline,
     engine: best.pattern.engine,
-    severity: best.score > 2 ? "high" : "medium",
+    severity,
     reason: best.pattern.reason,
     nextAction: best.pattern.nextAction,
     watches: best.pattern.watches,
@@ -135,6 +158,27 @@ function scanBottleneck(input: string): ScannerResult {
       artifact: "Venture Architecture Map",
       primaryEngine: best.pattern.engine,
       firstSection: best.pattern.firstSection,
+    },
+  };
+  return {
+    ...result,
+    sprintZeroBrief: {
+      clear: [
+        `Likely bottleneck: ${result.headline}.`,
+        `Primary engine: ${result.engine}.`,
+        result.reason,
+      ],
+      needsProof: [
+        result.questions.find((question) => /proof/i.test(question)) ?? "What proof would make this worth doing now?",
+        `Show the next signal in one review queue before scaling ${result.engine === "Customer Engine" ? "follow-up" : "the work"}.`,
+      ],
+      humanReview: [
+        result.engine === "Customer Engine"
+          ? "Approve the next customer-facing reply or offer before agents act."
+          : "Approve the next judgment call before agents act.",
+        "Keep customers, money, public claims, and company structure behind human review.",
+      ],
+      firstMove: result.nextAction,
     },
   };
 }
@@ -298,6 +342,41 @@ export function SystemsBottleneckScanner() {
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-muted-foreground">Opening section</span>
                       <span className="text-right font-medium">{result.mapPreview.firstSection}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="rounded-md border border-border bg-background/60 p-3">
+                  <div className="text-xs font-medium uppercase text-muted-foreground">
+                    Sprint Zero brief
+                  </div>
+                  <div className="mt-3 grid gap-3 text-sm text-muted-foreground">
+                    <div>
+                      <h3 className="font-medium text-foreground">What is clear</h3>
+                      <ul className="mt-1 grid gap-1">
+                        {result.sprintZeroBrief.clear.map((item) => (
+                          <li key={item}>- {item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-foreground">What needs proof</h3>
+                      <ul className="mt-1 grid gap-1">
+                        {result.sprintZeroBrief.needsProof.map((item) => (
+                          <li key={item}>- {item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-foreground">Human review boundary</h3>
+                      <ul className="mt-1 grid gap-1">
+                        {result.sprintZeroBrief.humanReview.map((item) => (
+                          <li key={item}>- {item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-foreground">First move</h3>
+                      <p className="mt-1">- {result.sprintZeroBrief.firstMove}</p>
                     </div>
                   </div>
                 </div>

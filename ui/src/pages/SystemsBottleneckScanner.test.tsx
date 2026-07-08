@@ -66,6 +66,14 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("What proof would make this worth doing now?");
     expect(text).toContain("Starter map preview");
     expect(text).toContain("Venture Architecture Map");
+    expect(text).toContain("Sprint Zero brief");
+    expect(text).toContain("What is clear");
+    expect(text).toContain("Customer signal exists, but it is not moving through one trusted review loop.");
+    expect(text).toContain("What needs proof");
+    expect(text).toContain("What proof would make this worth doing now?");
+    expect(text).toContain("Human review boundary");
+    expect(text).toContain("Approve the next customer-facing reply or offer before agents act.");
+    expect(text).toContain("First move");
     expect(text).toContain("Safe share summary");
     expect(text).toContain("Likely bottleneck: Customer loop is leaking");
     expect(text).toContain("Focus: Customer Engine");
@@ -94,6 +102,22 @@ describe("SystemsBottleneckScanner", () => {
         mapPreview: {
           artifact: "Venture Architecture Map",
           primaryEngine: "Customer Engine",
+        },
+        sprintZeroBrief: {
+          clear: [
+            "Likely bottleneck: Customer loop is leaking.",
+            "Primary engine: Customer Engine.",
+            "Customer signal exists, but it is not moving through one trusted review loop.",
+          ],
+          needsProof: [
+            "What proof would make this worth doing now?",
+            "Show the next signal in one review queue before scaling follow-up.",
+          ],
+          humanReview: [
+            "Approve the next customer-facing reply or offer before agents act.",
+            "Keep customers, money, public claims, and company structure behind human review.",
+          ],
+          firstMove: "Make one review queue for replies, prospects, and proof points.",
         },
       },
     });

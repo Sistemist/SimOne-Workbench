@@ -305,7 +305,7 @@ describe("OnboardingWizard SIM Starter path", () => {
     expect(document.body.textContent ?? "").not.toContain("MissionBuild a SaaS product");
   });
 
-  it("starts the SIM Starter path from a saved public bottleneck scan", () => {
+  it("starts the SIM Starter path from a saved public bottleneck scan", async () => {
     localStorage.setItem(
       "simone:bottleneck-scan",
       JSON.stringify({
@@ -317,6 +317,21 @@ describe("OnboardingWizard SIM Starter path", () => {
           headline: "Customer loop is leaking",
           engine: "Customer Engine",
           nextAction: "Make one review queue for replies, prospects, and proof points.",
+          sprintZeroBrief: {
+            clear: [
+              "Likely bottleneck: Customer loop is leaking.",
+              "Primary engine: Customer Engine.",
+            ],
+            needsProof: [
+              "What proof would make this worth doing now?",
+              "Show the next signal in one review queue before scaling follow-up.",
+            ],
+            humanReview: [
+              "Approve the next customer-facing reply or offer before agents act.",
+              "Keep customers, money, public claims, and company structure behind human review.",
+            ],
+            firstMove: "Make one review queue for replies, prospects, and proof points.",
+          },
         },
       }),
     );
@@ -341,5 +356,31 @@ describe("OnboardingWizard SIM Starter path", () => {
     );
     expect(missionInput?.value).toContain("Customer loop is leaking");
     expect(missionInput?.value).toContain("Make one review queue for replies, prospects, and proof points.");
+
+    flushSync(() => {
+      findButton(document.body, "Create SIM Starter").dispatchEvent(
+        new MouseEvent("click", { bubbles: true })
+      );
+    });
+    await flushReact();
+
+    expect(mockIssuesApi.update).toHaveBeenCalledWith(
+      "issue-1",
+      expect.objectContaining({
+        description: expect.stringContaining("## Sprint Zero brief"),
+      })
+    );
+    expect(mockIssuesApi.update).toHaveBeenCalledWith(
+      "issue-1",
+      expect.objectContaining({
+        description: expect.stringContaining("- What proof would make this worth doing now?"),
+      })
+    );
+    expect(mockIssuesApi.update).toHaveBeenCalledWith(
+      "issue-1",
+      expect.objectContaining({
+        description: expect.stringContaining("- Approve the next customer-facing reply or offer before agents act."),
+      })
+    );
   });
 });

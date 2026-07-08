@@ -102,6 +102,12 @@ type SimStarterSourceProvenance = {
   scannerHeadline?: string | null;
   scannerEngine?: string | null;
   scannerNextAction?: string | null;
+  sprintZeroBrief?: {
+    clear: string[];
+    needsProof: string[];
+    humanReview: string[];
+    firstMove?: string | null;
+  } | null;
 };
 
 function loadSimStarterSourceProvenance(now = new Date()): SimStarterSourceProvenance {
@@ -114,11 +120,32 @@ function loadSimStarterSourceProvenance(now = new Date()): SimStarterSourceProve
     const scanRaw = localStorage.getItem(BOTTLENECK_SCAN_STORAGE_KEY);
     if (!scanRaw) return base;
     const scan = JSON.parse(scanRaw) as {
-      result?: { headline?: unknown; engine?: unknown; nextAction?: unknown };
+      result?: {
+        headline?: unknown;
+        engine?: unknown;
+        nextAction?: unknown;
+        sprintZeroBrief?: unknown;
+      };
     };
     const scannerHeadline = typeof scan.result?.headline === "string" ? scan.result.headline.trim() : "";
     const scannerEngine = typeof scan.result?.engine === "string" ? scan.result.engine.trim() : "";
     const scannerNextAction = typeof scan.result?.nextAction === "string" ? scan.result.nextAction.trim() : "";
+    const rawBrief =
+      typeof scan.result?.sprintZeroBrief === "object" && scan.result.sprintZeroBrief != null && !Array.isArray(scan.result.sprintZeroBrief)
+        ? scan.result.sprintZeroBrief as Record<string, unknown>
+        : null;
+    const normalizeBriefList = (value: unknown) =>
+      Array.isArray(value)
+        ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0).map((item) => item.trim()).slice(0, 4)
+        : [];
+    const sprintZeroBrief = rawBrief
+      ? {
+          clear: normalizeBriefList(rawBrief.clear),
+          needsProof: normalizeBriefList(rawBrief.needsProof),
+          humanReview: normalizeBriefList(rawBrief.humanReview),
+          firstMove: typeof rawBrief.firstMove === "string" && rawBrief.firstMove.trim() ? rawBrief.firstMove.trim() : null,
+        }
+      : null;
     if (!scannerHeadline && !scannerEngine && !scannerNextAction) return base;
     return {
       ...base,
@@ -126,6 +153,7 @@ function loadSimStarterSourceProvenance(now = new Date()): SimStarterSourceProve
       scannerHeadline: scannerHeadline || null,
       scannerEngine: scannerEngine || null,
       scannerNextAction: scannerNextAction || null,
+      sprintZeroBrief,
     };
   } catch {
     return base;
@@ -141,6 +169,30 @@ function buildSimStarterFirstMapDescription(
     provenance.scannerEngine ? `- scanner engine focus: ${provenance.scannerEngine}` : null,
     provenance.scannerNextAction ? `- scanner next move: ${provenance.scannerNextAction}` : null,
   ].filter((line): line is string => Boolean(line));
+  const sprintZeroBrief = provenance.sprintZeroBrief;
+  const formatBriefList = (items: string[]) =>
+    items.length > 0 ? items.map((item) => `- ${item}`).join("\n") : "- Not captured yet.";
+  const sprintZeroBriefSection = sprintZeroBrief
+    ? `## Sprint Zero brief
+
+### What is clear
+
+${formatBriefList(sprintZeroBrief.clear)}
+
+### What needs proof
+
+${formatBriefList(sprintZeroBrief.needsProof)}
+
+### Human review boundary
+
+${formatBriefList(sprintZeroBrief.humanReview)}
+
+### First move
+
+- ${sprintZeroBrief.firstMove ?? provenance.scannerNextAction ?? "Not captured yet."}
+
+`
+    : "";
 
   return `## Messy venture context
 
@@ -153,6 +205,7 @@ ${founderContext.trim()}
 - source note status: ${provenance.noteStatus}
 ${scannerProvenance.length > 0 ? `${scannerProvenance.join("\n")}\n` : ""}
 
+${sprintZeroBriefSection}
 ## Draft the first SIM map
 
 Use the founder context above to draft a first Venture Architecture Map:

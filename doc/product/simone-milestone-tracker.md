@@ -35,7 +35,7 @@ enough to evaluate them.
 | --- | ---: | --- | --- |
 | Hosted alpha shell | 65% | Authenticated KVM app, one-origin app/API, deploy smoke path | More authenticated visual QA, release checklist |
 | Paperclip control-plane reuse | 55% | Companies, agents, tasks, skills, adapters, runs, costs, recovery inherited | Better Thomasina-facing labels, fewer raw control-plane concepts in first run |
-| PLG/Barnum layer | 53% | Public scanner, safer share summaries, shareable map interpretation, scanner-to-starter handoff | Stronger Sprint Zero brief, richer share previews, less generic public copy |
+| PLG/Barnum layer | 56% | Public scanner, safer share summaries, shareable map interpretation, scanner-to-starter handoff, structured Sprint Zero brief | Richer share previews, less generic public copy |
 | Customer Engine bridge | 78% | Read-only Tissuu bridge live, native dashboard/page card, SIM Wiki proof promotion | More visual QA, lived use, defer write-back v2 |
 | SIM Coach and SIM Wiki | 58% | Coach scanner explanations, scanner-to-wiki maintainer retrieval with streamed answer return, structured answer source refs, returned-answer promotion to wiki, SIM Starter source-note provenance, SIM method/product seed pages | Better wiki navigation, broader review promotion |
 | Model routing and auditability | 32% | `model_route_decisions` ledger, lane vocabulary, local context compression envelope | Real provider execution, route/run linking, cost review UI, evaluations |
@@ -78,6 +78,9 @@ Done:
   sign-in and routes them into onboarding with the saved scan context.
 - Shareable Venture Architecture Maps now include a public Sprint Zero brief
   for what is clear, what needs proof, and what requires human review.
+- The public Systems Bottleneck Scanner now produces a structured Sprint Zero
+  brief with what is clear, what needs proof, human review boundaries, and the
+  first move; that brief carries into SIM Starter after sign-in.
 - SIM Coach explains scanner results with contextual method language.
 - The repo now has a PRD, glossary, agent-flow map, and milestone tracker.
 - The alpha product-flow blueprint now maps landing, sign-in, messy venture
@@ -90,7 +93,6 @@ Remaining:
 - Keep improving share previews with richer proof and next-action context.
 - Make the Systems Bottleneck Scanner diagnosis richer without exposing private
   notes in public summaries.
-- Build a first strong Sprint Zero Brief.
 
 ### M2: SIM Starter And SIM Wiki
 

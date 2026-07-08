@@ -41,8 +41,9 @@ and next decisions for a venture.
 **Systems Bottleneck Scanner** is the lightweight diagnostic that identifies
 the likely bottleneck, the affected engine, and a safe next move.
 
-**Sprint Zero Brief** is the first useful operating brief: messy input,
-initial map, assumptions, open questions, approval boundaries, and next steps.
+**Sprint Zero Brief** is the first useful operating brief: what is clear, what
+needs proof, the human review boundary, and the first move. Public scanner
+briefs carry into the protected SIM Starter task after sign-in.
 
 ## Boundaries
 

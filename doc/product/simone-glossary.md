@@ -37,8 +37,9 @@ map, assumptions, decision gates, and first useful actions before heavy agent
 execution.
 
 **Sprint Zero Brief**
-: A concise artifact summarizing the first map, bottleneck, assumptions, open
-questions, and recommended next move.
+: A concise first operating artifact with four sections: what is clear, what
+needs proof, the human review boundary, and the first move. Public scanner
+briefs carry into the protected SIM Starter task after sign-in.
 
 **Barnum Layer**
 : The translation layer that makes deep SIM concepts feel simple, personally

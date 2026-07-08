@@ -44,7 +44,8 @@ risks, and next decisions for a venture.
 likely bottleneck, engine focus, and safe next move.
 
 **Sprint Zero Brief** is the first operating brief produced from messy input:
-initial map, assumptions, open questions, approval boundaries, and next steps.
+what is clear, what needs proof, the human review boundary, and the first move.
+Public scanner briefs carry into the protected SIM Starter task after sign-in.
 
 ## Routing And Context
 
