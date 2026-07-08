@@ -380,6 +380,7 @@ export function SystemsBottleneckScanner() {
   const [startupUrl, setStartupUrl] = useState("");
   const [founderNote, setFounderNote] = useState("");
   const [result, setResult] = useState<ScannerResult | null>(null);
+  const [shareSummaryCopied, setShareSummaryCopied] = useState(false);
   const canScan = useMemo(
     () => startupUrl.trim().length > 0 || founderNote.trim().length > 0,
     [startupUrl, founderNote],
@@ -390,6 +391,7 @@ export function SystemsBottleneckScanner() {
     if (!canScan) return;
     const nextResult = scanBottleneck(`${startupUrl}\n${founderNote}`);
     setResult(nextResult);
+    setShareSummaryCopied(false);
     try {
       window.localStorage.setItem(
         SCAN_STORAGE_KEY,
@@ -684,12 +686,15 @@ export function SystemsBottleneckScanner() {
                         size="sm"
                         onClick={() => {
                           void navigator.clipboard?.writeText(result.shareSummary.publicText);
+                          setShareSummaryCopied(true);
                         }}
                       >
                         Copy share summary
                       </Button>
                       <span className="text-xs">
-                        The share version leaves out raw notes and URLs.
+                        {shareSummaryCopied
+                          ? "Copied. Safe to share: raw notes and URLs stay out."
+                          : "The share version leaves out raw notes and URLs."}
                       </span>
                     </div>
                   </div>

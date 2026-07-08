@@ -3,7 +3,7 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { flushSync } from "react-dom";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { SystemsBottleneckScanner } from "./SystemsBottleneckScanner";
 
 function renderScanner(container: HTMLElement) {
@@ -305,6 +305,11 @@ describe("SystemsBottleneckScanner", () => {
   });
 
   it("creates a safe share-ready summary without raw input", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(window.navigator, "clipboard", {
+      value: { writeText },
+      configurable: true,
+    });
     const container = document.createElement("div");
     document.body.appendChild(container);
     const root = renderScanner(container);
@@ -336,6 +341,18 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Copy share summary");
     expect(text).toContain("The share version leaves out raw notes and URLs.");
     expect(text).not.toContain("https://example.com/private");
+
+    const copyButton = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Copy share summary"),
+    );
+    expect(copyButton).toBeTruthy();
+    await act(async () => {
+      copyButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(writeText).toHaveBeenCalledWith(
+      "Built with SimOne: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points.",
+    );
+    expect(container.textContent).toContain("Copied. Safe to share: raw notes and URLs stay out.");
 
     const storedScan = window.localStorage.getItem("simone:bottleneck-scan");
     expect(storedScan).not.toBeNull();
