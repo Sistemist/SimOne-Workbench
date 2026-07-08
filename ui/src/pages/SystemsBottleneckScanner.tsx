@@ -61,6 +61,10 @@ type ScannerResult = {
     title: string;
     items: string[];
   };
+  signupAssurance: {
+    title: string;
+    items: string[];
+  };
   trustFrame: {
     canSee: string;
     cannotSee: string;
@@ -175,6 +179,14 @@ const fallbackResult: ScannerResult = {
       "Prefill the starter map with this product loop readout.",
       "Create the first setup task: Write down the next customer decision and who approves it.",
       "Keep any customer, money, public-claim, or structure decision behind your approval.",
+    ],
+  },
+  signupAssurance: {
+    title: "What will not happen",
+    items: [
+      "No technical setup before you see the map.",
+      "Nothing posts publicly.",
+      "Agents wait for your approval before they act.",
     ],
   },
   trustFrame: {
@@ -326,7 +338,13 @@ function scanBottleneck(input: string): ScannerResult {
   const severity: ScannerResult["severity"] = best.score > 2 ? "high" : "medium";
   const result: Omit<
     ScannerResult,
-    "sprintZeroBrief" | "approvalPath" | "shareSummary" | "conversionPath" | "handoffPreview" | "trustFrame"
+    | "sprintZeroBrief"
+    | "approvalPath"
+    | "shareSummary"
+    | "conversionPath"
+    | "handoffPreview"
+    | "signupAssurance"
+    | "trustFrame"
   > = {
     headline: best.pattern.headline,
     engine: best.pattern.engine,
@@ -407,6 +425,14 @@ function scanBottleneck(input: string): ScannerResult {
         `Prefill the starter map with this ${engineLoopLabel(result.engine)} readout.`,
         `Create the first setup task: ${result.nextAction}`,
         "Keep any customer, money, public-claim, or structure decision behind your approval.",
+      ],
+    },
+    signupAssurance: {
+      title: "What will not happen",
+      items: [
+        "No technical setup before you see the map.",
+        "Nothing posts publicly.",
+        "Agents wait for your approval before they act.",
       ],
     },
     trustFrame: {
@@ -790,6 +816,19 @@ export function SystemsBottleneckScanner() {
                     </h3>
                     <ul className="mt-2 grid gap-2 text-sm text-muted-foreground">
                       {result.handoffPreview.items.map((item) => (
+                        <li key={item} className="flex gap-2">
+                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="rounded-md border border-border bg-background/60 p-3">
+                    <h3 className="text-xs font-medium uppercase text-muted-foreground">
+                      {result.signupAssurance.title}
+                    </h3>
+                    <ul className="mt-2 grid gap-2 text-sm text-muted-foreground">
+                      {result.signupAssurance.items.map((item) => (
                         <li key={item} className="flex gap-2">
                           <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
                           <span>{item}</span>

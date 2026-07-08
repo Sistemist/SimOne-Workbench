@@ -510,6 +510,10 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Prefill the starter map with this customer loop readout.");
     expect(text).toContain("Create the first setup task: Make one review queue for replies, prospects, and proof points.");
     expect(text).toContain("Keep any customer, money, public-claim, or structure decision behind your approval.");
+    expect(text).toContain("What will not happen");
+    expect(text).toContain("No technical setup before you see the map.");
+    expect(text).toContain("Nothing posts publicly.");
+    expect(text).toContain("Agents wait for your approval before they act.");
     expect(text).toContain("Save the full Customer Engine map");
     expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
 
@@ -537,6 +541,14 @@ describe("SystemsBottleneckScanner", () => {
             "Prefill the starter map with this customer loop readout.",
             "Create the first setup task: Make one review queue for replies, prospects, and proof points.",
             "Keep any customer, money, public-claim, or structure decision behind your approval.",
+          ],
+        },
+        signupAssurance: {
+          title: "What will not happen",
+          items: [
+            "No technical setup before you see the map.",
+            "Nothing posts publicly.",
+            "Agents wait for your approval before they act.",
           ],
         },
       },
