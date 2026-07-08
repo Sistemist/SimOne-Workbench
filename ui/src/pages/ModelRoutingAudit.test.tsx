@@ -10,6 +10,7 @@ import { ModelRoutingAudit } from "./ModelRoutingAudit";
 const mockSetBreadcrumbs = vi.hoisted(() => vi.fn());
 const mockModelRoutingApi = vi.hoisted(() => ({
   listDecisions: vi.fn(),
+  updateReview: vi.fn(),
 }));
 
 vi.mock("../context/BreadcrumbContext", () => ({
@@ -48,6 +49,63 @@ async function waitForText(container: HTMLElement, text: string) {
   expect(container.textContent).toContain(text);
 }
 
+function renderAuditPage() {
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+  flushSync(() => {
+    root.render(
+      <QueryClientProvider client={queryClient}>
+        <ModelRoutingAudit />
+      </QueryClientProvider>,
+    );
+  });
+
+  return { container, root };
+}
+
+function modelRouteDecision(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "decision-1",
+    companyId: "company-1",
+    agentId: "agent-1",
+    issueId: null,
+    projectId: null,
+    goalId: null,
+    heartbeatRunId: "run-1",
+    lane: "external_specialist",
+    provider: "sakana",
+    model: "fugu-ultra",
+    reason: "Delegate a complex execution task while preserving an auditable spend trail.",
+    riskLevel: "medium",
+    taskIntent: "Run specialist execution for a Skills Engine task.",
+    contextSummary: "Compressed task brief and acceptance criteria.",
+    approvalGate: "human_after_draft",
+    outputSummary: "Returned a draft implementation plan.",
+    outputConfidence: "medium",
+    reviewStatus: "needs_revision",
+    reviewNote: "Review before using this in a customer-facing output.",
+    metadata: { source: "SYS-202" },
+    createdByAgentId: null,
+    createdByUserId: "user-1",
+    createdByRunId: null,
+    createdAt: "2026-07-08T10:00:00.000Z",
+    costEventCount: 1,
+    costCents: 87,
+    ...overrides,
+  };
+}
+
+async function setTextareaValue(textarea: HTMLTextAreaElement, value: string) {
+  await act(async () => {
+    const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
+    setter?.call(textarea, value);
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
 describe("ModelRoutingAudit", () => {
   afterEach(() => {
     document.body.innerHTML = "";
@@ -56,50 +114,10 @@ describe("ModelRoutingAudit", () => {
 
   it("renders recent route decisions with review and cost evidence", async () => {
     mockModelRoutingApi.listDecisions.mockResolvedValue({
-      items: [
-        {
-          id: "decision-1",
-          companyId: "company-1",
-          agentId: "agent-1",
-          issueId: null,
-          projectId: null,
-          goalId: null,
-          heartbeatRunId: "run-1",
-          lane: "external_specialist",
-          provider: "sakana",
-          model: "fugu-ultra",
-          reason: "Delegate a complex execution task while preserving an auditable spend trail.",
-          riskLevel: "medium",
-          taskIntent: "Run specialist execution for a Skills Engine task.",
-          contextSummary: "Compressed task brief and acceptance criteria.",
-          approvalGate: "human_after_draft",
-          outputSummary: "Returned a draft implementation plan.",
-          outputConfidence: "medium",
-          reviewStatus: "needs_revision",
-          reviewNote: "Review before using this in a customer-facing output.",
-          metadata: { source: "SYS-202" },
-          createdByAgentId: null,
-          createdByUserId: "user-1",
-          createdByRunId: null,
-          createdAt: "2026-07-08T10:00:00.000Z",
-          costEventCount: 1,
-          costCents: 87,
-        },
-      ],
+      items: [modelRouteDecision()],
     });
 
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = createRoot(container);
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-
-    flushSync(() => {
-      root.render(
-        <QueryClientProvider client={queryClient}>
-          <ModelRoutingAudit />
-        </QueryClientProvider>,
-      );
-    });
+    const { container, root } = renderAuditPage();
     await waitForText(container, "Model routing audit");
 
     const text = container.textContent ?? "";
@@ -120,6 +138,44 @@ describe("ModelRoutingAudit", () => {
       { label: "Instance settings", href: "/company/settings/instance/general" },
       { label: "Model routing" },
     ]);
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
+  it("marks a route decision approved with a review note", async () => {
+    const approvedDecision = modelRouteDecision({
+      reviewStatus: "approved",
+      reviewNote: "Approved for internal use after checking cost and context.",
+    });
+    mockModelRoutingApi.listDecisions.mockResolvedValue({
+      items: [modelRouteDecision({ reviewNote: null })],
+    });
+    mockModelRoutingApi.updateReview.mockResolvedValue(approvedDecision);
+
+    const { container, root } = renderAuditPage();
+    await waitForText(container, "sakana / fugu-ultra");
+
+    const textarea = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Review note for sakana / fugu-ultra"]');
+    expect(textarea).toBeTruthy();
+    await setTextareaValue(textarea!, "Approved for internal use after checking cost and context.");
+
+    const approveButton = Array.from(container.querySelectorAll("button"))
+      .find((button) => button.textContent?.includes("Approve"));
+    expect(approveButton).toBeTruthy();
+
+    await act(async () => {
+      approveButton!.click();
+    });
+    await flushReact();
+
+    expect(mockModelRoutingApi.updateReview).toHaveBeenCalledWith("company-1", "decision-1", {
+      outputSummary: "Returned a draft implementation plan.",
+      outputConfidence: "medium",
+      reviewStatus: "approved",
+      reviewNote: "Approved for internal use after checking cost and context.",
+    });
 
     flushSync(() => {
       root.unmount();

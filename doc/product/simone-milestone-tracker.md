@@ -38,7 +38,7 @@ enough to evaluate them.
 | PLG/Barnum layer | 65% | Public scanner, lived example notes, signal strength, secondary engine watch, calibration status, safer share summaries, diagnosis signals, shareable map interpretation, public preview, public proof context, scanner-to-coach and scanner-to-starter handoffs, structured Sprint Zero brief | Visual share polish, score tuning against real submissions |
 | Customer Engine bridge | 80% | Read-only Tissuu bridge live, native Customer Signal framing on dashboard/page, SIM Wiki proof promotion | More authenticated visual QA, lived use, defer write-back v2 |
 | SIM Coach and SIM Wiki | 60% | Scanner-to-Coach handoff, Coach scanner explanations, scanner-to-wiki maintainer retrieval with streamed answer return, structured answer source refs, returned-answer promotion to wiki, SIM Starter source-note provenance, SIM method/product seed pages | Better wiki navigation, broader review promotion |
-| Model routing and auditability | 40% | `model_route_decisions` ledger, lane vocabulary, local context compression envelope, output confidence/review fields, cost-event route links, read-only settings audit page | Real provider execution, run/output artifact linking, review actions/filters, evaluations |
+| Model routing and auditability | 42% | `model_route_decisions` ledger, lane vocabulary, local context compression envelope, output confidence/review fields, cost-event route links, settings audit page with review actions | Real provider execution, run/output artifact linking, review filters, evaluations |
 | Compression/headroom | 8% | Local `simone_json_headroom_v0` envelope for bulky JSON route context | Evaluate Headroom/SmartCrusher, compare quality, support RAG/log/transcript payloads |
 | Full SIM operating system | 30% | Engines, drivers, governance, bridge, coach/wiki beginnings | SIM Starter, durable operating loops, production hardening |
 
@@ -178,12 +178,14 @@ Done:
 - Route decisions can attach compressed JSON context envelopes.
 - Route decisions can be updated after execution with output summary,
   confidence, review status, and review note.
+- Operators can review recent route decisions from instance settings and mark
+  them approved, rejected, or in need of revision with a note.
 
 Remaining:
 
 - Connect route decisions to actual model/provider execution.
 - Link route decisions to run records, costs, and output artifacts.
-- Add advanced routing/cost review surfaces.
+- Add review filters and richer routing/cost review surfaces.
 - Add evaluation cases before relying on any router.
 
 ### M4: Compression And Context Infrastructure

@@ -33,6 +33,13 @@ export interface ModelRouteDecisionListResponse {
   items: ModelRouteDecisionAuditRow[];
 }
 
+export interface UpdateModelRouteDecisionReviewInput {
+  outputSummary?: string | null;
+  outputConfidence: string;
+  reviewStatus: "pending" | "approved" | "needs_revision" | "rejected";
+  reviewNote?: string | null;
+}
+
 export const modelRoutingApi = {
   listDecisions: (companyId: string, options: { limit?: number } = {}) => {
     const params = new URLSearchParams();
@@ -42,4 +49,12 @@ export const modelRoutingApi = {
       `/companies/${companyId}/model-route-decisions${qs ? `?${qs}` : ""}`,
     );
   },
+  updateReview: (
+    companyId: string,
+    decisionId: string,
+    input: UpdateModelRouteDecisionReviewInput,
+  ) => api.patch<ModelRouteDecisionAuditRow>(
+    `/companies/${companyId}/model-route-decisions/${decisionId}/review`,
+    input,
+  ),
 };

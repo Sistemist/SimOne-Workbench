@@ -1,17 +1,21 @@
-import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { BrainCircuit, CheckCircle2, Clock3, Coins, ShieldCheck, TriangleAlert } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { BrainCircuit, CheckCircle2, Clock3, Coins, ShieldCheck, TriangleAlert, XCircle } from "lucide-react";
 import { modelRoutingApi, type ModelRouteDecisionAuditRow } from "../api/modelRouting";
 import { EmptyState } from "../components/EmptyState";
 import { PageSkeleton } from "../components/PageSkeleton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { useBreadcrumbs } from "../context/BreadcrumbContext";
 import { useCompany } from "../context/CompanyContext";
 import { queryKeys } from "../lib/queryKeys";
 import { formatCents } from "../lib/utils";
 
 const NO_COMPANY = "__none__";
+const DECISION_LIMIT = 50;
+type ReviewStatus = "approved" | "needs_revision" | "rejected";
 
 function humanize(value: string | null | undefined) {
   if (!value) return "Not set";
@@ -43,7 +47,20 @@ function CostEvidence({ decision }: { decision: ModelRouteDecisionAuditRow }) {
   );
 }
 
-function DecisionCard({ decision }: { decision: ModelRouteDecisionAuditRow }) {
+function DecisionCard({
+  decision,
+  isReviewing,
+  reviewError,
+  onReview,
+}: {
+  decision: ModelRouteDecisionAuditRow;
+  isReviewing: boolean;
+  reviewError: string | null;
+  onReview: (decision: ModelRouteDecisionAuditRow, reviewStatus: ReviewStatus, reviewNote: string) => void;
+}) {
+  const [reviewNote, setReviewNote] = useState(decision.reviewNote ?? "");
+  const modelLabel = `${decision.provider} / ${decision.model}`;
+
   return (
     <Card>
       <CardHeader className="space-y-3 px-5 pb-3 pt-5">
@@ -108,6 +125,60 @@ function DecisionCard({ decision }: { decision: ModelRouteDecisionAuditRow }) {
           <span>Confidence: {humanize(decision.outputConfidence)}</span>
           {decision.heartbeatRunId ? <span>Run linked</span> : <span>No run link yet</span>}
         </div>
+
+        <div className="rounded-md border border-border bg-muted/20 px-3 py-3">
+          <label
+            className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+            htmlFor={`model-route-review-${decision.id}`}
+          >
+            Review note
+          </label>
+          <Textarea
+            id={`model-route-review-${decision.id}`}
+            aria-label={`Review note for ${modelLabel}`}
+            className="mt-2 min-h-20 resize-y bg-background text-sm"
+            placeholder="Add what changed, what passed review, or why this needs another pass."
+            value={reviewNote}
+            onChange={(event) => setReviewNote(event.target.value)}
+            disabled={isReviewing}
+          />
+          {reviewError ? (
+            <div className="mt-2 flex items-start gap-2 text-xs text-destructive">
+              <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span>{reviewError}</span>
+            </div>
+          ) : null}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => onReview(decision, "approved", reviewNote)}
+              disabled={isReviewing}
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              Approve
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => onReview(decision, "needs_revision", reviewNote)}
+              disabled={isReviewing}
+            >
+              Needs revision
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => onReview(decision, "rejected", reviewNote)}
+              disabled={isReviewing}
+            >
+              <XCircle className="h-4 w-4" />
+              Reject
+            </Button>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
@@ -116,6 +187,7 @@ function DecisionCard({ decision }: { decision: ModelRouteDecisionAuditRow }) {
 export function ModelRoutingAudit() {
   const { selectedCompanyId } = useCompany();
   const { setBreadcrumbs } = useBreadcrumbs();
+  const queryClient = useQueryClient();
   const companyId = selectedCompanyId ?? NO_COMPANY;
 
   useEffect(() => {
@@ -127,10 +199,32 @@ export function ModelRoutingAudit() {
   }, [setBreadcrumbs]);
 
   const decisionsQuery = useQuery({
-    queryKey: queryKeys.modelRouteDecisions(companyId, 50),
-    queryFn: () => modelRoutingApi.listDecisions(companyId, { limit: 50 }),
+    queryKey: queryKeys.modelRouteDecisions(companyId, DECISION_LIMIT),
+    queryFn: () => modelRoutingApi.listDecisions(companyId, { limit: DECISION_LIMIT }),
     enabled: !!selectedCompanyId,
     refetchInterval: 30_000,
+  });
+
+  const reviewMutation = useMutation({
+    mutationFn: ({
+      decision,
+      reviewStatus,
+      reviewNote,
+    }: {
+      decision: ModelRouteDecisionAuditRow;
+      reviewStatus: ReviewStatus;
+      reviewNote: string;
+    }) => modelRoutingApi.updateReview(companyId, decision.id, {
+      outputSummary: decision.outputSummary,
+      outputConfidence: decision.outputConfidence,
+      reviewStatus,
+      reviewNote: reviewNote.trim() || null,
+    }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.modelRouteDecisions(companyId, DECISION_LIMIT),
+      });
+    },
   });
 
   if (!selectedCompanyId) {
@@ -177,7 +271,23 @@ export function ModelRoutingAudit() {
       ) : (
         <div className="space-y-4">
           {decisions.map((decision) => (
-            <DecisionCard key={decision.id} decision={decision} />
+            <DecisionCard
+              key={decision.id}
+              decision={decision}
+              isReviewing={reviewMutation.isPending && reviewMutation.variables?.decision.id === decision.id}
+              reviewError={
+                reviewMutation.isError && reviewMutation.variables?.decision.id === decision.id
+                  ? reviewMutation.error instanceof Error
+                    ? reviewMutation.error.message
+                    : "Failed to update review."
+                  : null
+              }
+              onReview={(targetDecision, reviewStatus, reviewNote) => reviewMutation.mutate({
+                decision: targetDecision,
+                reviewStatus,
+                reviewNote,
+              })}
+            />
           ))}
         </div>
       )}

@@ -30,7 +30,7 @@ certifications.
 | PLG/Barnum layer | 65% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts with proof context and a plain public preview; scanner results now include lived example notes, signal strength, secondary engine watch, calibration status, diagnosis signals, a direct SIM Coach handoff, and a structured Sprint Zero brief that carries into SIM Starter |
 | Customer Engine bridge | 80% | Read-only Tissuu bridge live; Dashboard and Customer Engine frame it as a native Customer Signal loop; Customer Engine page can promote a proof readout into SIM Wiki without mutating Tissuu |
 | SIM Coach and SIM Wiki | 60% | Product direction documented; public scanner now offers a contextual Coach handoff before map creation; contextual coach loop explains scanner results; Coach can queue an auditable SIM Wiki maintainer retrieval from scanner context, stream the returned answer back into Coach, preserve structured wiki/raw answer source refs, and save useful answers as durable SIM Wiki syntheses; SIM Starter now stores source-note and first-map draft provenance in the first Sprint Zero work item; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include SimOne product-language, PRD snapshot, glossary, and agent-flow pages |
-| Model routing and auditability | 40% | Strategy documented; Workbench has an initial `model_route_decisions` ledger; route decisions can now attach a compressed context envelope, record post-run output confidence/review state, link spend rows back to the route that caused them, and appear in a read-only settings audit surface; actual provider orchestration and evaluations remain |
+| Model routing and auditability | 42% | Strategy documented; Workbench has an initial `model_route_decisions` ledger; route decisions can now attach a compressed context envelope, record post-run output confidence/review state, link spend rows back to the route that caused them, and be reviewed from an advanced settings audit surface; actual provider orchestration and evaluations remain |
 | Compression/headroom | 8% | External Headroom/SmartCrusher not integrated; SimOne now has a local audited JSON compression envelope for route-decision context payloads |
 | Full SIM operating system | 30% | Engines and governance are defined, but onboarding, memory, routing, evaluations, and product polish remain |
 
@@ -366,8 +366,9 @@ first route-to-cost link without making a black-box router the root of trust.
 Operators can now inspect recent route decisions in `Company Settings >
 Instance settings > Model routing`. This first review surface shows the chosen
 lane, provider/model, risk level, approval boundary, context summary, output
-summary, review state, and linked cost count/cents. It is intentionally an
-advanced audit surface, not first-run onboarding.
+summary, review state, linked cost count/cents, and lets an operator mark the
+result approved, rejected, or in need of revision with a review note. It is
+intentionally an advanced audit surface, not first-run onboarding.
 
 Route decisions can also accept an optional bulky JSON `contextPayload`. SimOne
 compresses that payload into `metadata.contextCompression` using the local
@@ -556,7 +557,7 @@ delegation.
 - Log model/provider/adapter/context summaries, output confidence, and review
   state.
 - Link cost events to the route decision that caused the spend.
-- Add an initial read-only routing audit page in instance settings.
+- Add an initial routing audit page in instance settings with review actions.
 - Add human approval gates for risky boundaries.
 - Add evaluation cases for routing quality.
 - Keep provider/model settings out of first-run onboarding.
