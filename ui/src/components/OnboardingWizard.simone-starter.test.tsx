@@ -199,6 +199,33 @@ describe("OnboardingWizard SIM Starter path", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/SYS/dashboard");
   });
 
+  it("frames the starter input as messy venture context before setup", () => {
+    root = renderWizard(container);
+
+    flushSync(() => {
+      findButton(document.body, "Start with SIM Starter").dispatchEvent(
+        new MouseEvent("click", { bubbles: true })
+      );
+    });
+
+    const companyInput = document.body.querySelector<HTMLInputElement>(
+      'input[placeholder="Acme Corp"]'
+    );
+    expect(companyInput).not.toBeNull();
+    updateTextField(companyInput!, "Sysdom");
+
+    flushSync(() => {
+      findButton(document.body, "Next").dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(document.body.textContent ?? "").toContain("Paste the messy version");
+    expect(document.body.textContent ?? "").toContain("SimOne will draft a first map from it");
+    expect(document.body.textContent ?? "").toContain("Product, Customer, Cash, and Skills");
+    expect(document.body.textContent ?? "").toContain("approval boundary");
+    expect(document.body.textContent ?? "").not.toContain("Choose a model");
+    expect(document.body.textContent ?? "").not.toContain("Provider");
+  });
+
   it("starts the SIM Starter path from a saved public bottleneck scan", () => {
     localStorage.setItem(
       "simone:bottleneck-scan",

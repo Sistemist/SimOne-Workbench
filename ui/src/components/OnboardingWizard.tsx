@@ -1113,17 +1113,38 @@ export function OnboardingWizard() {
                       <Building2 className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <div>
-                      <h3 className="font-medium">Define your mission</h3>
+                      <h3 className="font-medium">
+                        {onboardingPath === "starter" ? "Describe the messy version" : "Define your mission"}
+                      </h3>
                       <p className="text-xs text-muted-foreground">
-                        Your mission guides everything — your lead agent, who you bring on, and the work <strong>{companyName}</strong> takes on.
+                        {onboardingPath === "starter" ? (
+                          <>
+                            Paste the messy version of what <strong>{companyName}</strong> is trying to build, sell, teach, or fix. SimOne will draft a first map from it before any agents run.
+                          </>
+                        ) : (
+                          <>
+                            Your mission guides everything — your lead agent, who you bring on, and the work <strong>{companyName}</strong> takes on.
+                          </>
+                        )}
                       </p>
                     </div>
                   </div>
 
+                  {onboardingPath === "starter" && (
+                    <div className="rounded-md border border-border bg-muted/20 p-3 text-xs text-muted-foreground">
+                      <p className="font-medium text-foreground">SimOne will look for:</p>
+                      <ul className="mt-2 space-y-1">
+                        <li>Product, Customer, Cash, and Skills signals hiding in the note</li>
+                        <li>one likely bottleneck or missing proof point</li>
+                        <li>the first approval boundary before delegation</li>
+                      </ul>
+                    </div>
+                  )}
+
                   {/* Mission path selector */}
                   <div className="space-y-3">
                     <label className="text-xs text-foreground block">
-                      How would you like to define your mission?
+                      {onboardingPath === "starter" ? "How would you like to give SimOne context?" : "How would you like to define your mission?"}
                     </label>
                     <div className="grid grid-cols-2 gap-2">
                       <button
@@ -1136,9 +1157,9 @@ export function OnboardingWizard() {
                         onClick={() => setMissionPath("direct")}
                       >
                         <Sparkles className="h-4 w-4" />
-                        <span className="font-medium">I know my mission</span>
+                        <span className="font-medium">{onboardingPath === "starter" ? "Paste my context" : "I know my mission"}</span>
                         <span className="text-muted-foreground text-[10px]">
-                          Type it directly
+                          {onboardingPath === "starter" ? "Messy notes are fine" : "Type it directly"}
                         </span>
                       </button>
                       <button
