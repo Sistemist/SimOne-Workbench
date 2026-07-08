@@ -1192,33 +1192,39 @@ export function OnboardingWizard() {
                               : "text-muted-foreground group-focus-within:text-foreground"
                           )}
                         >
-                          Mission
+                          {onboardingPath === "starter" ? "Messy venture context" : "Mission"}
                         </label>
                         <textarea
                           className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none min-h-[60px]"
-                          placeholder="What is your team trying to achieve?"
+                          placeholder={
+                            onboardingPath === "starter"
+                              ? "Paste the messy version: what are you building, selling, teaching, or trying to fix?"
+                              : "What is your team trying to achieve?"
+                          }
                           value={companyGoal}
                           onChange={(e) => setCompanyGoal(e.target.value)}
                           autoFocus
                         />
                       </div>
                       {/* Prompt chips for inspiration */}
-                      <div className="flex flex-wrap gap-1.5">
-                        {MISSION_PROMPT_CHIPS.map((chip) => (
-                          <button
-                            key={chip}
-                            className={cn(
-                              "rounded-full border px-2.5 py-1 text-[11px] transition-colors",
-                              companyGoal === chip
-                                ? "border-foreground bg-accent text-foreground"
-                                : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/50"
-                            )}
-                            onClick={() => setCompanyGoal(chip)}
-                          >
-                            {chip}
-                          </button>
-                        ))}
-                      </div>
+                      {onboardingPath !== "starter" && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {MISSION_PROMPT_CHIPS.map((chip) => (
+                            <button
+                              key={chip}
+                              className={cn(
+                                "rounded-full border px-2.5 py-1 text-[11px] transition-colors",
+                                companyGoal === chip
+                                  ? "border-foreground bg-accent text-foreground"
+                                  : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/50"
+                              )}
+                              onClick={() => setCompanyGoal(chip)}
+                            >
+                              {chip}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
 

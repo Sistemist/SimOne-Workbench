@@ -158,7 +158,7 @@ describe("OnboardingWizard SIM Starter path", () => {
     });
 
     const missionInput = document.body.querySelector<HTMLTextAreaElement>(
-      'textarea[placeholder="What is your team trying to achieve?"]'
+      'textarea[placeholder="Paste the messy version: what are you building, selling, teaching, or trying to fix?"]'
     );
     expect(missionInput).not.toBeNull();
     updateTextField(missionInput!, "Teach nontechnical founders how to run an AI-first company.");
@@ -224,6 +224,13 @@ describe("OnboardingWizard SIM Starter path", () => {
     expect(document.body.textContent ?? "").toContain("approval boundary");
     expect(document.body.textContent ?? "").not.toContain("Choose a model");
     expect(document.body.textContent ?? "").not.toContain("Provider");
+
+    const messyContextInput = document.body.querySelector<HTMLTextAreaElement>(
+      'textarea[placeholder="Paste the messy version: what are you building, selling, teaching, or trying to fix?"]'
+    );
+    expect(messyContextInput).not.toBeNull();
+    expect(document.body.textContent ?? "").toContain("Messy venture context");
+    expect(document.body.textContent ?? "").not.toContain("MissionBuild a SaaS product");
   });
 
   it("starts the SIM Starter path from a saved public bottleneck scan", () => {
@@ -258,7 +265,7 @@ describe("OnboardingWizard SIM Starter path", () => {
     });
 
     const missionInput = document.body.querySelector<HTMLTextAreaElement>(
-      'textarea[placeholder="What is your team trying to achieve?"]'
+      'textarea[placeholder="Paste the messy version: what are you building, selling, teaching, or trying to fix?"]'
     );
     expect(missionInput?.value).toContain("Customer loop is leaking");
     expect(missionInput?.value).toContain("Make one review queue for replies, prospects, and proof points.");
