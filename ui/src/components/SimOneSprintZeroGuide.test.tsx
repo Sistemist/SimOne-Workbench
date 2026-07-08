@@ -64,6 +64,7 @@ describe("SimOneSprintZeroGuide", () => {
     const text = container.textContent ?? "";
     expect(text).toContain("Sprint Zero first map");
     expect(text).toContain("Read the messy context");
+    expect(text).toContain("Check source provenance");
     expect(text).toContain("Draft Product, Customer, Cash, and Skills assumptions");
     expect(text).toContain("Ask for approval before customers, money, public claims, or structure");
   });

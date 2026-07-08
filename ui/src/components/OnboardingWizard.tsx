@@ -95,10 +95,63 @@ const DEFAULT_TASK_DESCRIPTION = `You are the CEO. You set the direction for the
 const INCOMPLETE_ONBOARDING_STATE_MESSAGE =
   "Onboarding state is incomplete. Please restart onboarding and try again.";
 
-function buildSimStarterFirstMapDescription(founderContext: string): string {
+type SimStarterSourceProvenance = {
+  source: string;
+  capturedAt: string;
+  noteStatus: string;
+  scannerHeadline?: string | null;
+  scannerEngine?: string | null;
+  scannerNextAction?: string | null;
+};
+
+function loadSimStarterSourceProvenance(now = new Date()): SimStarterSourceProvenance {
+  const base: SimStarterSourceProvenance = {
+    source: "SIM Starter messy venture input",
+    capturedAt: now.toISOString(),
+    noteStatus: "founder-supplied draft, not yet verified",
+  };
+  try {
+    const scanRaw = localStorage.getItem(BOTTLENECK_SCAN_STORAGE_KEY);
+    if (!scanRaw) return base;
+    const scan = JSON.parse(scanRaw) as {
+      result?: { headline?: unknown; engine?: unknown; nextAction?: unknown };
+    };
+    const scannerHeadline = typeof scan.result?.headline === "string" ? scan.result.headline.trim() : "";
+    const scannerEngine = typeof scan.result?.engine === "string" ? scan.result.engine.trim() : "";
+    const scannerNextAction = typeof scan.result?.nextAction === "string" ? scan.result.nextAction.trim() : "";
+    if (!scannerHeadline && !scannerEngine && !scannerNextAction) return base;
+    return {
+      ...base,
+      source: "Public Systems Bottleneck Scanner handoff",
+      scannerHeadline: scannerHeadline || null,
+      scannerEngine: scannerEngine || null,
+      scannerNextAction: scannerNextAction || null,
+    };
+  } catch {
+    return base;
+  }
+}
+
+function buildSimStarterFirstMapDescription(
+  founderContext: string,
+  provenance: SimStarterSourceProvenance,
+): string {
+  const scannerProvenance = [
+    provenance.scannerHeadline ? `- scanner headline: ${provenance.scannerHeadline}` : null,
+    provenance.scannerEngine ? `- scanner engine focus: ${provenance.scannerEngine}` : null,
+    provenance.scannerNextAction ? `- scanner next move: ${provenance.scannerNextAction}` : null,
+  ].filter((line): line is string => Boolean(line));
+
   return `## Messy venture context
 
 ${founderContext.trim()}
+
+## Source provenance
+
+- source: ${provenance.source}
+- captured at: ${provenance.capturedAt}
+- source note status: ${provenance.noteStatus}
+${scannerProvenance.length > 0 ? `${scannerProvenance.join("\n")}\n` : ""}
 
 ## Draft the first SIM map
 
@@ -108,6 +161,13 @@ Use the founder context above to draft a first Venture Architecture Map:
 - identify Product, Customer, Cash, and Skills assumptions
 - mark the unknowns that need research or customer proof
 - propose the first Sprint Zero next move
+
+## First map draft provenance
+
+- draft status: not started
+- draft source of truth: this Sprint Zero work item
+- source note: founder context above
+- review owner: human operator
 
 ## Approval boundary
 
@@ -509,7 +569,7 @@ export function OnboardingWizard() {
         },
       });
 
-      const description = buildSimStarterFirstMapDescription(companyGoal);
+      const description = buildSimStarterFirstMapDescription(companyGoal, loadSimStarterSourceProvenance());
       const sprintZeroProjectId =
         result.portabilityImport.projects.find((project) => project.slug === "sprint-zero" && project.id)?.id ?? null;
       const ceoAgentId =

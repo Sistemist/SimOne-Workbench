@@ -35,12 +35,13 @@ sequenceDiagram
 
   U->>S: Signs in and describes the venture messily
   S->>S: Drafts first venture map
-  S->>W: Stores source note and draft context with provenance
+  S->>P: Stores source note and first-map draft context with provenance
   S->>C: Requests contextual review
   C-->>S: Explains one bottleneck and one judgment boundary
   S-->>U: Shows map, brief, next action, and approval choice
   U->>S: Approves or edits
-  S->>P: Creates bounded tasks only after approval
+  S->>W: Promotes durable synthesis when worth preserving
+  S->>P: Creates bounded execution tasks only after approval
 ```
 
 Product rule: do not start by asking the user to manually fill all engines,

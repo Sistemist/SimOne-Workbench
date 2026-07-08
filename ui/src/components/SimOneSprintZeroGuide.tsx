@@ -1,4 +1,4 @@
-import { CheckCircle2, Map, Search, ShieldCheck } from "lucide-react";
+import { CheckCircle2, FileSearch, Map, Search, ShieldCheck } from "lucide-react";
 
 type SimOneSprintZeroIssueLike = {
   title?: string | null;
@@ -21,6 +21,11 @@ const guideSteps = [
     icon: Search,
     title: "Read the messy context",
     body: "Use the founder note as source material. Do not ask the user to fill out engines by hand.",
+  },
+  {
+    icon: FileSearch,
+    title: "Check source provenance",
+    body: "Confirm where the founder note came from and keep the first-map draft tied to this task.",
   },
   {
     icon: Map,

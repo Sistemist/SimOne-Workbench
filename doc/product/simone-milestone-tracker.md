@@ -37,7 +37,7 @@ enough to evaluate them.
 | Paperclip control-plane reuse | 55% | Companies, agents, tasks, skills, adapters, runs, costs, recovery inherited | Better Thomasina-facing labels, fewer raw control-plane concepts in first run |
 | PLG/Barnum layer | 53% | Public scanner, safer share summaries, shareable map interpretation, scanner-to-starter handoff | Stronger Sprint Zero brief, richer share previews, less generic public copy |
 | Customer Engine bridge | 78% | Read-only Tissuu bridge live, native dashboard/page card, SIM Wiki proof promotion | More visual QA, lived use, defer write-back v2 |
-| SIM Coach and SIM Wiki | 56% | Coach scanner explanations, scanner-to-wiki maintainer retrieval with streamed answer return, structured answer source refs, returned-answer promotion to wiki, SIM method seed pages, product glossary/flow seed pages | Better wiki navigation, broader review promotion |
+| SIM Coach and SIM Wiki | 58% | Coach scanner explanations, scanner-to-wiki maintainer retrieval with streamed answer return, structured answer source refs, returned-answer promotion to wiki, SIM Starter source-note provenance, SIM method/product seed pages | Better wiki navigation, broader review promotion |
 | Model routing and auditability | 32% | `model_route_decisions` ledger, lane vocabulary, local context compression envelope | Real provider execution, route/run linking, cost review UI, evaluations |
 | Compression/headroom | 8% | Local `simone_json_headroom_v0` envelope for bulky JSON route context | Evaluate Headroom/SmartCrusher, compare quality, support RAG/log/transcript payloads |
 | Full SIM operating system | 30% | Engines, drivers, governance, bridge, coach/wiki beginnings | SIM Starter, durable operating loops, production hardening |
@@ -117,12 +117,14 @@ Done:
 - Product definitions now exist in repo docs and in future wiki root templates.
 - SIM Starter now carries messy venture context into the first Sprint Zero
   "Draft the first SIM map" work item before opening the dashboard.
+- SIM Starter first-map work items now store source-note provenance, capture
+  time, optional scanner handoff context, and first-map draft provenance in the
+  task itself.
 - The seeded first-map task now shows a compact guide above the editable
-  description.
+  description, including a reminder to check source provenance.
 
 Remaining:
 
-- Store founder source notes and first map drafts with provenance.
 - Add broader review/decision promotion paths beyond scanner-derived answers.
 
 ### M3: Sovereign Model Routing

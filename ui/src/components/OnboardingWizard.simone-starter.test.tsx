@@ -158,6 +158,8 @@ describe("OnboardingWizard SIM Starter path", () => {
   });
 
   it("creates a company and installs the SimOne starter without model setup", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-07-08T12:34:56.000Z"));
     root = renderWizard(container);
 
     flushSync(() => {
@@ -232,6 +234,36 @@ describe("OnboardingWizard SIM Starter path", () => {
       "issue-1",
       expect.objectContaining({
         description: expect.stringContaining("Approval boundary"),
+      })
+    );
+    expect(mockIssuesApi.update).toHaveBeenCalledWith(
+      "issue-1",
+      expect.objectContaining({
+        description: expect.stringContaining("## Source provenance"),
+      })
+    );
+    expect(mockIssuesApi.update).toHaveBeenCalledWith(
+      "issue-1",
+      expect.objectContaining({
+        description: expect.stringContaining("- source: SIM Starter messy venture input"),
+      })
+    );
+    expect(mockIssuesApi.update).toHaveBeenCalledWith(
+      "issue-1",
+      expect.objectContaining({
+        description: expect.stringContaining("- captured at: 2026-07-08T12:34:56.000Z"),
+      })
+    );
+    expect(mockIssuesApi.update).toHaveBeenCalledWith(
+      "issue-1",
+      expect.objectContaining({
+        description: expect.stringContaining("## First map draft provenance"),
+      })
+    );
+    expect(mockIssuesApi.update).toHaveBeenCalledWith(
+      "issue-1",
+      expect.objectContaining({
+        description: expect.stringContaining("- draft status: not started"),
       })
     );
     expect(mockSetSelectedCompanyId).toHaveBeenCalledWith("company-1");
