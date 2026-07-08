@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BrainCircuit, CheckCircle2, Clock3, Coins, ListFilter, ShieldCheck, TriangleAlert, XCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import { modelRoutingApi, type ModelRouteDecisionAuditRow } from "../api/modelRouting";
 import { EmptyState } from "../components/EmptyState";
 import { PageSkeleton } from "../components/PageSkeleton";
@@ -132,7 +133,14 @@ function DecisionCard({
             {new Date(decision.createdAt).toLocaleString()}
           </span>
           <span>Confidence: {humanize(decision.outputConfidence)}</span>
-          {decision.heartbeatRunId ? <span>Run linked</span> : <span>No run link yet</span>}
+          {decision.heartbeatRunId ? (
+            <Link
+              className="font-medium text-foreground underline-offset-4 hover:underline"
+              to={`/agents/${decision.agentId}/runs/${decision.heartbeatRunId}`}
+            >
+              Run linked
+            </Link>
+          ) : <span>No run link yet</span>}
         </div>
 
         <div className="rounded-md border border-border bg-muted/20 px-3 py-3">

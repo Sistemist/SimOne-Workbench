@@ -3,6 +3,7 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { flushSync } from "react-dom";
+import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ModelRoutingAudit } from "./ModelRoutingAudit";
@@ -58,7 +59,9 @@ function renderAuditPage() {
   flushSync(() => {
     root.render(
       <QueryClientProvider client={queryClient}>
-        <ModelRoutingAudit />
+        <MemoryRouter>
+          <ModelRoutingAudit />
+        </MemoryRouter>
       </QueryClientProvider>,
     );
   });
@@ -133,6 +136,9 @@ describe("ModelRoutingAudit", () => {
     expect(text).toContain("Returned a draft implementation plan.");
     expect(text).toContain("Review before using this in a customer-facing output.");
     expect(mockModelRoutingApi.listDecisions).toHaveBeenCalledWith("company-1", { limit: 50 });
+    const runLink = container.querySelector<HTMLAnchorElement>('a[href="/agents/agent-1/runs/run-1"]');
+    expect(runLink).toBeTruthy();
+    expect(runLink?.textContent).toContain("Run linked");
     expect(mockSetBreadcrumbs).toHaveBeenCalledWith([
       { label: "Settings", href: "/company/settings" },
       { label: "Instance settings", href: "/company/settings/instance/general" },

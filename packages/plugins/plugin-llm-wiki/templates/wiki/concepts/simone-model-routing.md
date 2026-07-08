@@ -22,7 +22,7 @@ Cost events can now link back to the route decision that caused the spend, which
 turns model cost from a loose metric into route-level evidence.
 The first operator-facing audit page lives in instance settings and shows recent
 decisions, review state, approval boundary, context/output summaries, linked
-cost evidence, and review filters/actions.
+cost evidence, run links, and review filters/actions.
 
 The default order is:
 

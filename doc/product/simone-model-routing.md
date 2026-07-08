@@ -28,7 +28,8 @@ the model route decision that caused the spend.
 The first operator-facing audit view also exists in instance settings, showing
 recent decisions, review state, approval boundary, context/output summaries,
 linked cost evidence, and review filters/actions for approved, needs-revision,
-or rejected outcomes.
+or rejected outcomes. When a route decision has a recorded run id, the audit row
+links to that run detail.
 
 ## 2. Why This Matters
 
@@ -153,8 +154,8 @@ product experience is useful.
 1. Keep improving the route decision ledger.
 2. Link route decisions to real model/provider execution.
 3. Link route decisions to run records and output artifacts. Cost links, output
-   confidence, review status, and the first settings audit/review page are now
-   in place.
+   confidence, review status, run-detail links, and the first settings
+   audit/review page are now in place.
 4. Add evaluation cases before relying on routers.
 5. Evaluate Headroom/SmartCrusher against local compression output.
 6. Add Fusion as a high-risk deliberation/audit lane.

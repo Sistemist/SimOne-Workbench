@@ -258,7 +258,8 @@ Routing audit spine:
 - `Company Settings > Instance settings > Model routing` gives operators an
   advanced audit surface for recent route decisions, review state, approval
   boundary, context summary, output summary, linked cost evidence, and review
-  filters/actions for approved/needs-revision/rejected outcomes.
+  filters/actions for approved/needs-revision/rejected outcomes. When a route
+  decision has a `heartbeatRunId`, the audit surface links to the run detail.
 - Use `deliberation_audit` for OpenRouter Fusion-style high-risk review where
   disagreement and blind spots are valuable.
 - Use `external_specialist` for future Fugu/Fugu Ultra-style specialist

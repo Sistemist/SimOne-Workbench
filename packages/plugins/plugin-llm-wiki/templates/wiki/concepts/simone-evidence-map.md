@@ -44,9 +44,9 @@ tested implementation, documented direction, and deferred experiments.
   loops, with source refs and maintainer-task provenance.
 - `model_route_decisions` is the first auditable route ledger. It now records
   post-run output confidence and review status, and cost events can link back to
-  the route decision that caused the spend. Operators also have a read-only
-  Model routing audit page in instance settings; provider execution,
-  run/output artifact linking and evals remain.
+  the route decision that caused the spend. Operators also have Model routing
+  audit filters/actions and run links in instance settings; provider execution,
+  output artifact linking and evals remain.
 - `simone_json_headroom_v0` is the local compression baseline. External
   Headroom/SmartCrusher is not wired yet.
 - OpenRouter Fusion and Fugu/Fugu Ultra are design lanes, not production roots.
