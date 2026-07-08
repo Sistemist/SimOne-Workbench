@@ -55,18 +55,31 @@ const promotionActions = [
     href: "/wiki",
   },
   {
-    icon: ListChecks,
-    label: "Create bounded next tasks",
-    href: "/issues/all",
-  },
-  {
     icon: Share2,
     label: "Turn the reviewed map into a shareable artifact",
     href: "/artifacts",
   },
 ];
 
-export function SimOneSprintZeroGuide() {
+type SimOneSprintZeroGuideProps = {
+  onCreateBoundedTasks?: () => void;
+  createBoundedTasksPending?: boolean;
+  boundedTasksCreated?: boolean;
+  createBoundedTasksError?: string | null;
+};
+
+export function SimOneSprintZeroGuide({
+  onCreateBoundedTasks,
+  createBoundedTasksPending = false,
+  boundedTasksCreated = false,
+  createBoundedTasksError = null,
+}: SimOneSprintZeroGuideProps = {}) {
+  const createBoundedTasksLabel = boundedTasksCreated
+    ? "Bounded tasks created"
+    : createBoundedTasksPending
+      ? "Creating bounded tasks..."
+      : "Create bounded next tasks";
+
   return (
     <section className="rounded-md border border-border bg-muted/20 p-4 text-sm">
       <div className="flex items-start gap-3">
@@ -118,6 +131,17 @@ export function SimOneSprintZeroGuide() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={onCreateBoundedTasks}
+              disabled={!onCreateBoundedTasks || createBoundedTasksPending || boundedTasksCreated}
+            >
+              <ListChecks className="h-3.5 w-3.5" />
+              {createBoundedTasksLabel}
+            </Button>
             {promotionActions.map((action) => {
               const Icon = action.icon;
               return (
@@ -131,6 +155,9 @@ export function SimOneSprintZeroGuide() {
             })}
           </div>
         </div>
+        {createBoundedTasksError ? (
+          <p className="mt-2 text-xs leading-5 text-destructive">{createBoundedTasksError}</p>
+        ) : null}
       </div>
     </section>
   );

@@ -216,6 +216,53 @@ type IssueDetailComment = (IssueComment | OptimisticIssueComment) & {
   queueReason?: "hold" | "active_run" | "other";
 };
 
+const sprintZeroBoundedTaskTemplates: Array<{
+  title: string;
+  workMode: IssueWorkMode;
+  body: string;
+}> = [
+  {
+    title: "Validate the first-map proof gaps",
+    workMode: "planning",
+    body: "List the claims in the first map that still need proof. Keep customer, money, and public-facing claims in review until evidence is attached.",
+  },
+  {
+    title: "Confirm first-map human judgment boundaries",
+    workMode: "ask",
+    body: "Decide what the human must approve before agents act: customers, pricing, public claims, team structure, or durable memory.",
+  },
+  {
+    title: "Draft the shareable Venture Architecture Map",
+    workMode: "planning",
+    body: "Turn only the reviewed and trusted parts of the first map into a plain-language artifact draft with proof gaps still visible.",
+  },
+];
+
+function buildSprintZeroBoundedTaskPayloads(issue: Issue, currentUserId?: string | null): Array<Record<string, unknown>> {
+  const defaults = buildSubIssueDefaultsForViewer(issue, currentUserId);
+  const sourceRef = issue.identifier ?? issue.id;
+
+  return sprintZeroBoundedTaskTemplates.map((template) => ({
+    ...defaults,
+    title: template.title,
+    status: "todo",
+    workMode: template.workMode,
+    description: `## Sprint Zero review source
+
+Created from the reviewed Sprint Zero first map.
+
+Source task: ${sourceRef}
+
+## Bounded task
+
+${template.body}
+
+## Approval boundary
+
+Do not contact customers, publish claims, change company structure, or save durable SIM memory without explicit human approval.`,
+  }));
+}
+
 const FEEDBACK_TERMS_URL = import.meta.env.VITE_FEEDBACK_TERMS_URL?.trim() || "https://paperclip.ing/tos";
 const ISSUE_COMMENT_PAGE_SIZE = 50;
 const ISSUE_COMMENT_AUTOLOAD_LIMIT = ISSUE_COMMENT_PAGE_SIZE * 3;
@@ -1826,6 +1873,35 @@ export function IssueDetail() {
       queryClient.invalidateQueries({ queryKey: queryKeys.sidebarBadges(selectedCompanyId) });
     }
   }, [queryClient, selectedCompanyId]);
+  const createSprintZeroBoundedTasks = useMutation({
+    mutationFn: async () => {
+      if (!issue) throw new Error("Task is still loading.");
+      const companyId = issue.companyId || resolvedCompanyId;
+      if (!companyId) throw new Error("Company context is missing.");
+      const payloads = buildSprintZeroBoundedTaskPayloads(issue, currentUserId);
+      return Promise.all(payloads.map((payload) => issuesApi.create(companyId, payload)));
+    },
+    onSuccess: (createdIssues) => {
+      if (issue?.companyId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.issues.listByDescendantRoot(issue.companyId, issue.id),
+        });
+      }
+      invalidateIssueCollections();
+      pushToast({
+        title: "Bounded tasks created",
+        body: `${createdIssues.length} Sprint Zero follow-up tasks were added under this map.`,
+        tone: "success",
+      });
+    },
+    onError: (err) => {
+      pushToast({
+        title: "Could not create bounded tasks",
+        body: err instanceof Error ? err.message : "Unable to create Sprint Zero follow-up tasks",
+        tone: "error",
+      });
+    },
+  });
   const upsertInteractionInCache = useCallback((interaction: IssueThreadInteraction) => {
     queryClient.setQueryData<IssueThreadInteraction[] | undefined>(
       queryKeys.issues.interactions(issueId!),
@@ -3991,7 +4067,18 @@ export function IssueDetail() {
           className="text-xl font-bold"
         />
 
-        {isSimOneSprintZeroFirstMapIssue(issue) ? <SimOneSprintZeroGuide /> : null}
+        {isSimOneSprintZeroFirstMapIssue(issue) ? (
+          <SimOneSprintZeroGuide
+            onCreateBoundedTasks={() => createSprintZeroBoundedTasks.mutate()}
+            createBoundedTasksPending={createSprintZeroBoundedTasks.isPending}
+            boundedTasksCreated={createSprintZeroBoundedTasks.isSuccess}
+            createBoundedTasksError={
+              createSprintZeroBoundedTasks.error instanceof Error
+                ? createSprintZeroBoundedTasks.error.message
+                : null
+            }
+          />
+        ) : null}
 
         <InlineEditor
           value={issue.description ?? ""}

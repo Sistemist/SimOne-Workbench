@@ -230,6 +230,9 @@ Current small UI nudge:
 
 - Empty operating-team dashboard state points users to SIM Starter instead of
   manual agent setup.
+- The protected Sprint Zero first-map task can seed bounded child tasks after
+  human review, keeping proof gaps and approval boundaries visible before
+  delegation.
 
 ## Model Strategy
 

@@ -32,7 +32,7 @@ certifications.
 | SIM Coach and SIM Wiki | 60% | Product direction documented; public scanner now offers a contextual Coach handoff before map creation; contextual coach loop explains scanner results; Coach can queue an auditable SIM Wiki maintainer retrieval from scanner context, stream the returned answer back into Coach, preserve structured wiki/raw answer source refs, and save useful answers as durable SIM Wiki syntheses; SIM Starter now stores source-note and first-map draft provenance in the first Sprint Zero work item; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include SimOne product-language, PRD snapshot, glossary, and agent-flow pages |
 | Model routing and auditability | 46% | Strategy documented; Workbench has an initial `model_route_decisions` ledger; route decisions can now attach a compressed context envelope, record post-run output confidence/review state, link heartbeat adapter execution to the route ledger before a run spends, link spend rows back to the route that caused them, link out to recorded runs and output artifacts when present, and be filtered/reviewed from an advanced settings audit surface; broader provider orchestration and evaluations remain |
 | Compression/headroom | 8% | External Headroom/SmartCrusher not integrated; SimOne now has a local audited JSON compression envelope for route-decision context payloads |
-| Full SIM operating system | 32% | Engines and governance are defined, SIM Starter now has a protected first-map review and promotion path, but durable operating loops, memory, routing, evaluations, and product polish remain |
+| Full SIM operating system | 33% | Engines and governance are defined, SIM Starter now has a protected first-map review path and can seed bounded child tasks from that review, but durable operating loops, memory, routing, evaluations, and product polish remain |
 
 Overall: SimOne is roughly 45-55% complete as a coherent alpha product shell and
 25-35% complete as the full SIM operating system.
@@ -208,7 +208,11 @@ now includes a review checklist so the user can distinguish what is clear
 enough to act on, what still needs proof, what requires human judgment, and what
 the first move should be before delegation. After review, the task offers clear
 promotion exits for saving trusted decisions to SIM Wiki, creating bounded next
-tasks, or turning the reviewed map into a shareable artifact.
+tasks, or turning the reviewed map into a shareable artifact. The bounded-task
+path now writes three child tasks directly under the first-map task: proof-gap
+validation, human-judgment boundary confirmation, and a shareable Venture
+Architecture Map draft. Each child task keeps the Sprint Zero source and
+approval boundary visible.
 
 ### Tissuu Bridge
 
@@ -573,6 +577,7 @@ inspectable first map.
 - Give the first-map task a review workflow before delegation.
 - Give the reviewed first map clear promotion exits into SIM Wiki, bounded next
   tasks, and shareable artifacts.
+- Seed bounded child tasks directly from the reviewed first map.
 - Install or wrap the LLM Wiki plugin as SIM Wiki.
 - Seed SIM Wiki structure and glossary. The plugin template already carries SIM
   pages plus SimOne product-language, PRD snapshot, glossary, and agent-flow

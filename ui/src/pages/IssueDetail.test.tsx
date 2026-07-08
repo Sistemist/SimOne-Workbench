@@ -19,6 +19,7 @@ const mockIssuesApi = vi.hoisted(() => ({
   listWorkProducts: vi.fn(),
   listFeedbackVotes: vi.fn(),
   markRead: vi.fn(),
+  create: vi.fn(),
   update: vi.fn(),
   previewTreeControl: vi.fn(),
   getTreeControlState: vi.fn(),
@@ -944,6 +945,7 @@ describe("IssueDetail", () => {
     mockIssuesApi.listWorkProducts.mockResolvedValue([]);
     mockIssuesApi.listFeedbackVotes.mockResolvedValue([]);
     mockIssuesApi.markRead.mockResolvedValue({ id: "issue-1", lastReadAt: new Date().toISOString() });
+    mockIssuesApi.create.mockResolvedValue(createIssue({ id: "created-child", parentId: "issue-1" }));
     mockIssuesApi.getTreeControlState.mockResolvedValue({ activePauseHold: null });
     mockIssuesApi.listTreeHolds.mockResolvedValue([]);
     mockActivityApi.forIssue.mockResolvedValue([]);
@@ -1043,6 +1045,61 @@ describe("IssueDetail", () => {
     expect(text).toContain("Save trusted decisions to SIM Wiki");
     expect(text).toContain("Create bounded next tasks");
     expect(text).toContain("Turn the reviewed map into a shareable artifact");
+  });
+
+  it("creates bounded child tasks from the reviewed Sprint Zero map", async () => {
+    mockIssuesApi.get.mockResolvedValue(createIssue({
+      title: "Draft the first SIM map",
+      description: sprintZeroFirstMapDescription,
+      projectId: "project-1",
+      goalId: "goal-1",
+      assigneeUserId: "reviewer-1",
+    }));
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <IssueDetail />
+        </QueryClientProvider>,
+      );
+    });
+    await flushReact();
+    await flushReact();
+
+    const createTasksButton = Array.from(container.querySelectorAll("button"))
+      .find((button) => button.textContent?.includes("Create bounded next tasks"));
+    expect(createTasksButton).toBeTruthy();
+
+    await act(async () => {
+      createTasksButton!.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+    await flushReact();
+
+    expect(mockIssuesApi.create).toHaveBeenCalledTimes(3);
+    expect(mockIssuesApi.create).toHaveBeenCalledWith("company-1", expect.objectContaining({
+      parentId: "issue-1",
+      projectId: "project-1",
+      goalId: "goal-1",
+      title: "Validate the first-map proof gaps",
+      workMode: "planning",
+    }));
+    expect(mockIssuesApi.create).toHaveBeenCalledWith("company-1", expect.objectContaining({
+      parentId: "issue-1",
+      title: "Confirm first-map human judgment boundaries",
+      workMode: "ask",
+    }));
+    expect(mockIssuesApi.create).toHaveBeenCalledWith("company-1", expect.objectContaining({
+      parentId: "issue-1",
+      title: "Draft the shareable Venture Architecture Map",
+      workMode: "planning",
+    }));
+    expect(mockIssuesApi.create.mock.calls[0]?.[1]).toMatchObject({
+      description: expect.stringContaining("Created from the reviewed Sprint Zero first map."),
+    });
+    expect(mockIssuesApi.create.mock.calls[0]?.[1]).toMatchObject({
+      description: expect.stringContaining("Source task: PAP-1"),
+    });
+    expect(container.textContent ?? "").toContain("Bounded tasks created");
   });
 
   it("does not mark the wake comment for the current live run as queued when active-run cache is stale", async () => {
