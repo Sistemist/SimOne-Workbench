@@ -464,6 +464,9 @@ auditable enough that Han can trust the system while building it.
 ## 11. Source Documents
 
 - `ARCHITECTURE.md`
+- `doc/product/simone-milestone-tracker.md`
+- `doc/product/simone-glossary.md`
+- `doc/product/simone-agent-flows.md`
 - `doc/plans/2026-07-07-simone-plg-barnum-layer.md`
 - `doc/plans/2026-07-02-simone-memory-coach-layer.md`
 - `doc/plans/2026-07-07-tissuu-bridge-response.md`

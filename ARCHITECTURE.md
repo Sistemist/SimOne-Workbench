@@ -1,6 +1,6 @@
 # SimOne Architecture
 
-Last updated: 2026-07-07
+Last updated: 2026-07-08
 
 ## North Star
 
@@ -71,6 +71,13 @@ Relevant Linear issues:
 - SYS-200: Public Systems Bottleneck Scanner
 - SYS-201: Contextual methodology loop from SIM Coach to book/course
 - SYS-202: Auditable SimOne model routing and escalation lanes
+
+Current product source docs:
+
+- `doc/product/simone-prd.md`
+- `doc/product/simone-milestone-tracker.md`
+- `doc/product/simone-glossary.md`
+- `doc/product/simone-agent-flows.md`
 
 ## Main Runtime
 
