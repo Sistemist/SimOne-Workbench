@@ -67,5 +67,10 @@ describe("SimOneSprintZeroGuide", () => {
     expect(text).toContain("Check source provenance");
     expect(text).toContain("Draft Product, Customer, Cash, and Skills assumptions");
     expect(text).toContain("Ask for approval before customers, money, public claims, or structure");
+    expect(text).toContain("Review the draft before delegation");
+    expect(text).toContain("What is clear enough to act on?");
+    expect(text).toContain("What still needs proof?");
+    expect(text).toContain("What requires human judgment?");
+    expect(text).toContain("What is the first move?");
   });
 });

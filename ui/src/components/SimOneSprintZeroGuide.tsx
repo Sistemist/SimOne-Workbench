@@ -39,6 +39,13 @@ const guideSteps = [
   },
 ];
 
+const reviewPrompts = [
+  "What is clear enough to act on?",
+  "What still needs proof?",
+  "What requires human judgment?",
+  "What is the first move?",
+];
+
 export function SimOneSprintZeroGuide() {
   return (
     <section className="rounded-md border border-border bg-muted/20 p-4 text-sm">
@@ -68,6 +75,18 @@ export function SimOneSprintZeroGuide() {
             </div>
           );
         })}
+      </div>
+
+      <div className="mt-4 rounded-md border border-border bg-background/70 p-3">
+        <p className="text-xs font-semibold text-foreground">Review the draft before delegation</p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {reviewPrompts.map((prompt) => (
+            <div key={prompt} className="flex items-start gap-2">
+              <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              <p className="text-xs leading-5 text-muted-foreground">{prompt}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
