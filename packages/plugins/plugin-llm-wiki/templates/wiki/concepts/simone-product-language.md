@@ -62,6 +62,8 @@ the likely bottleneck, the affected engine, and a safe next move. Scanner
 example notes let a user try customer, cash, skills, or product situations
 without writing a perfect first prompt. Results show signal strength and a
 secondary engine to watch when the note points in more than one direction.
+Results also label themselves as early pattern matches while real submissions
+are still being tuned.
 Scanner results can hand off to SIM Coach for a contextual method explanation
 before the user creates a protected map.
 

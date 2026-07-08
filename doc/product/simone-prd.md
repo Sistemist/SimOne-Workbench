@@ -27,7 +27,7 @@ certifications.
 | --- | ---: | --- |
 | Hosted alpha shell | 65% | KVM deployment, auth-gated app, health checks, SimOne routes, deploy script |
 | Paperclip control-plane reuse | 60% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted; PRD/glossary/field-guide/wiki seeds now translate inherited terms and screens into SimOne language |
-| PLG/Barnum layer | 63% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts with proof context; scanner results now include lived example notes, signal strength, secondary engine watch, diagnosis signals, a direct SIM Coach handoff, and a structured Sprint Zero brief that carries into SIM Starter |
+| PLG/Barnum layer | 64% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts with proof context; scanner results now include lived example notes, signal strength, secondary engine watch, calibration status, diagnosis signals, a direct SIM Coach handoff, and a structured Sprint Zero brief that carries into SIM Starter |
 | Customer Engine bridge | 80% | Read-only Tissuu bridge live; Dashboard and Customer Engine frame it as a native Customer Signal loop; Customer Engine page can promote a proof readout into SIM Wiki without mutating Tissuu |
 | SIM Coach and SIM Wiki | 60% | Product direction documented; public scanner now offers a contextual Coach handoff before map creation; contextual coach loop explains scanner results; Coach can queue an auditable SIM Wiki maintainer retrieval from scanner context, stream the returned answer back into Coach, preserve structured wiki/raw answer source refs, and save useful answers as durable SIM Wiki syntheses; SIM Starter now stores source-note and first-map draft provenance in the first Sprint Zero work item; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include SimOne product-language, PRD snapshot, glossary, and agent-flow pages |
 | Model routing and auditability | 32% | Strategy documented; Workbench has an initial `model_route_decisions` ledger; route decisions can now attach a compressed context envelope; actual provider orchestration and evaluations remain |
@@ -234,14 +234,16 @@ Current share artifact behavior:
   customer follow-up, cash runway, skills capacity, and product proof so a
   curious user can try the tool without inventing a perfect prompt. The result
   now shows signal strength and, when a messy note points to more than one
-  engine, a secondary engine to watch next. After a scan, it offers a direct
-  "Ask SIM Coach why" handoff through sign-in so the saved scan context can
-  become a method explanation before work is assigned. It also tells the user
-  the scan will carry into SIM Starter after sign-in and routes them to
-  onboarding with the saved scan context in protected browser storage. The scan
-  now also generates a structured Sprint Zero Brief with what is clear, what
-  needs proof, human review boundaries, and the first move, then passes that
-  brief into the protected starter map task.
+  engine, a secondary engine to watch next. It also labels the result as an
+  early pattern match, states that real submission review is still needed, and
+  records that raw notes and URLs are excluded from public summaries. After a
+  scan, it offers a direct "Ask SIM Coach why" handoff through sign-in so the
+  saved scan context can become a method explanation before work is assigned.
+  It also tells the user the scan will carry into SIM Starter after sign-in and
+  routes them to onboarding with the saved scan context in protected browser
+  storage. The scan now also generates a structured Sprint Zero Brief with what
+  is clear, what needs proof, human review boundaries, and the first move, then
+  passes that brief into the protected starter map task.
 
 ### SIM Coach
 

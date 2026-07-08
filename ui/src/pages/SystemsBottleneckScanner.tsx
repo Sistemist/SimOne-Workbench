@@ -17,6 +17,13 @@ type ScannerResult = {
     secondaryMatches?: number;
     secondarySummary?: string;
   };
+  calibration: {
+    status: "early_pattern_match";
+    label: string;
+    summary: string;
+    reviewNeeded: boolean;
+    publicSummaryExcludes: Array<"founderNote" | "startupUrl">;
+  };
   diagnosisSignals: string[];
   questions: string[];
   mapPreview: {
@@ -65,6 +72,13 @@ const fallbackResult: ScannerResult = {
   signalStrength: {
     primaryMatches: 0,
     summary: "A first signal was visible, but not enough signs pointed to one engine yet.",
+  },
+  calibration: {
+    status: "early_pattern_match",
+    label: "Early pattern match",
+    summary: "Early pattern match. Real submission review still needed.",
+    reviewNeeded: true,
+    publicSummaryExcludes: ["founderNote", "startupUrl"],
   },
   diagnosisSignals: [
     "A goal or stuck point was present.",
@@ -222,6 +236,13 @@ function scanBottleneck(input: string): ScannerResult {
       secondarySummary: secondary
         ? `${secondary.score} ${secondary.score === 1 ? "sign" : "signs"} pointed there.`
         : undefined,
+    },
+    calibration: {
+      status: "early_pattern_match",
+      label: "Early pattern match",
+      summary: "Early pattern match. Real submission review still needed.",
+      reviewNeeded: true,
+      publicSummaryExcludes: ["founderNote", "startupUrl"],
     },
     diagnosisSignals: best.pattern.diagnosisSignals,
     questions: best.pattern.questions,
@@ -401,6 +422,18 @@ export function SystemsBottleneckScanner() {
                     </p>
                   ) : null}
                 </div>
+                <div className="rounded-md border border-border bg-background/60 p-3">
+                  <div className="text-xs font-medium uppercase text-muted-foreground">
+                    Calibration status
+                  </div>
+                  <p className="mt-1 text-sm font-medium">{result.calibration.label}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Real submission review still needed.
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    Public summary excludes raw notes and URLs.
+                  </p>
+                </div>
                 <div className="border-l border-border pl-3">
                   <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
                     <ClipboardCheck className="h-3.5 w-3.5" aria-hidden="true" />
@@ -511,6 +544,9 @@ export function SystemsBottleneckScanner() {
                     </p>
                     <p>
                       <span className="font-medium text-foreground">Next move:</span> {result.nextAction}
+                    </p>
+                    <p>
+                      <span className="font-medium text-foreground">Confidence:</span> {result.calibration.label}
                     </p>
                     <p className="text-xs">Founder note and startup URL are not included.</p>
                   </div>

@@ -35,8 +35,8 @@ tested implementation, documented direction, and deferred experiments.
 - The Systems Bottleneck Scanner, Coach handoff, and Sprint Zero handoff are
   productized enough to carry scanner context into SIM Coach and SIM Starter.
   Scanner results include lived example notes, signal strength, secondary
-  engine watch, and public-safe diagnosis signals; real-submission calibration
-  remains.
+  engine watch, calibration status, and public-safe diagnosis signals;
+  real-submission score tuning remains.
 - Shareable Venture Architecture Maps include public proof context for evidence
   strength, public-safe omissions, and the next assumption to test.
 - SIM Coach and SIM Wiki have first scanner handoff, retrieval, and promotion

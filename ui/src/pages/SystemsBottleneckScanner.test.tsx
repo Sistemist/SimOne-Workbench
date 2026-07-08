@@ -95,6 +95,10 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("4 signs pointed to Customer Engine.");
     expect(text).toContain("Also watch Cash Engine");
     expect(text).toContain("2 signs pointed there.");
+    expect(text).toContain("Calibration status");
+    expect(text).toContain("Early pattern match");
+    expect(text).toContain("Real submission review still needed.");
+    expect(text).toContain("Public summary excludes raw notes and URLs.");
     expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
 
     const storedScan = window.localStorage.getItem("simone:bottleneck-scan");
@@ -106,6 +110,11 @@ describe("SystemsBottleneckScanner", () => {
           primaryMatches: 4,
           secondaryEngine: "Cash Engine",
           secondaryMatches: 2,
+        },
+        calibration: {
+          status: "early_pattern_match",
+          reviewNeeded: true,
+          publicSummaryExcludes: ["founderNote", "startupUrl"],
         },
       },
     });
@@ -151,6 +160,9 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Follow-up or inbox work looked scattered.");
     expect(text).toContain("Approval was part of the bottleneck.");
     expect(text).toContain("This is a bounded first read, not a private-data audit.");
+    expect(text).toContain("Calibration status");
+    expect(text).toContain("Early pattern match");
+    expect(text).toContain("Real submission review still needed.");
     expect(text).toContain("Questions SimOne would ask next");
     expect(text).toContain("Who should approve the next customer reply or offer?");
     expect(text).toContain("What proof would make this worth doing now?");
@@ -189,6 +201,12 @@ describe("SystemsBottleneckScanner", () => {
         result: {
           headline: "Customer loop is leaking",
           engine: "Customer Engine",
+          calibration: {
+            status: "early_pattern_match",
+            summary: "Early pattern match. Real submission review still needed.",
+            reviewNeeded: true,
+            publicSummaryExcludes: ["founderNote", "startupUrl"],
+          },
           diagnosisSignals: [
             "Customer signal was present.",
             "Follow-up or inbox work looked scattered.",
