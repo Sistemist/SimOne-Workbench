@@ -897,6 +897,13 @@
       "when": 1782440300000,
       "tag": "0127_model_route_decision_review_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 128,
+      "version": "7",
+      "when": 1782440400000,
+      "tag": "0128_cost_event_model_route_decision",
+      "breakpoints": true
     }
   ]
 }

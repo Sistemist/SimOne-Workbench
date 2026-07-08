@@ -5,6 +5,7 @@ import { issues } from "./issues.js";
 import { projects } from "./projects.js";
 import { goals } from "./goals.js";
 import { heartbeatRuns } from "./heartbeat_runs.js";
+import { modelRouteDecisions } from "./model_route_decisions.js";
 
 export const costEvents = pgTable(
   "cost_events",
@@ -16,6 +17,9 @@ export const costEvents = pgTable(
     projectId: uuid("project_id").references(() => projects.id),
     goalId: uuid("goal_id").references(() => goals.id),
     heartbeatRunId: uuid("heartbeat_run_id").references(() => heartbeatRuns.id),
+    modelRouteDecisionId: uuid("model_route_decision_id").references(() => modelRouteDecisions.id, {
+      onDelete: "set null",
+    }),
     billingCode: text("billing_code"),
     provider: text("provider").notNull(),
     biller: text("biller").notNull().default("unknown"),
@@ -48,6 +52,10 @@ export const costEvents = pgTable(
     companyHeartbeatRunIdx: index("cost_events_company_heartbeat_run_idx").on(
       table.companyId,
       table.heartbeatRunId,
+    ),
+    companyModelRouteDecisionIdx: index("cost_events_company_model_route_decision_idx").on(
+      table.companyId,
+      table.modelRouteDecisionId,
     ),
   }),
 );

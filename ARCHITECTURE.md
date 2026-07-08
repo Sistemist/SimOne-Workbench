@@ -253,6 +253,8 @@ Routing audit spine:
 - Route decisions can be updated after execution with output summary, output
   confidence, review status, and review note so the ledger records whether the
   result was accepted, rejected, or needs revision.
+- Cost events can link back to the route decision that caused the spend, giving
+  the audit ledger its first route-to-cost evidence trail.
 - Use `deliberation_audit` for OpenRouter Fusion-style high-risk review where
   disagreement and blind spots are valuable.
 - Use `external_specialist` for future Fugu/Fugu Ultra-style specialist

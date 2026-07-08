@@ -1,7 +1,16 @@
 import { and, desc, eq, gte, isNotNull, isNull, lt, lte, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { Db } from "@paperclipai/db";
-import { activityLog, agents, companies, costEvents, heartbeatRuns, issues, projects } from "@paperclipai/db";
+import {
+  activityLog,
+  agents,
+  companies,
+  costEvents,
+  heartbeatRuns,
+  issues,
+  modelRouteDecisions,
+  projects,
+} from "@paperclipai/db";
 import { notFound, unprocessable } from "../errors.js";
 import { budgetService, type BudgetServiceHooks } from "./budgets.js";
 
@@ -61,6 +70,23 @@ export function costService(db: Db, budgetHooks: BudgetServiceHooks = {}) {
       if (!agent) throw notFound("Agent not found");
       if (agent.companyId !== companyId) {
         throw unprocessable("Agent does not belong to company");
+      }
+
+      if (data.modelRouteDecisionId) {
+        const routeDecision = await db
+          .select({
+            id: modelRouteDecisions.id,
+            companyId: modelRouteDecisions.companyId,
+            agentId: modelRouteDecisions.agentId,
+          })
+          .from(modelRouteDecisions)
+          .where(and(eq(modelRouteDecisions.id, data.modelRouteDecisionId), eq(modelRouteDecisions.companyId, companyId)))
+          .then((rows) => rows[0] ?? null);
+
+        if (!routeDecision) throw notFound("Model route decision not found");
+        if (routeDecision.agentId !== data.agentId) {
+          throw unprocessable("Model route decision does not belong to agent");
+        }
       }
 
       const event = await db

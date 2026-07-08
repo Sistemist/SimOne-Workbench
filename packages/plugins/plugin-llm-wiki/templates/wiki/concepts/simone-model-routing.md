@@ -18,6 +18,8 @@ Dev mode favors sovereignty and auditability over orchestration cleverness.
 SimOne should record route decisions before depending on black-box routing.
 Route decisions should also capture post-run output confidence and review state
 so later routers can be compared, rejected, or approved from evidence.
+Cost events can now link back to the route decision that caused the spend, which
+turns model cost from a loose metric into route-level evidence.
 
 The default order is:
 

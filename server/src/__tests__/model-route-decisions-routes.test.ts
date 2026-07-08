@@ -6,6 +6,7 @@ import {
   activityLog,
   agents,
   companies,
+  costEvents,
   createDb,
   modelRouteDecisions,
 } from "@paperclipai/db";
@@ -61,6 +62,7 @@ describeEmbeddedPostgres("model route decision routes", () => {
 
   afterEach(async () => {
     await db.delete(activityLog);
+    await db.delete(costEvents);
     await db.delete(modelRouteDecisions);
     await db.delete(agents);
     await db.delete(companies);
@@ -197,6 +199,54 @@ describeEmbeddedPostgres("model route decision routes", () => {
       outputConfidence: "medium",
       reviewStatus: "needs_revision",
       reviewNote: "Human review required before this becomes public copy.",
+    });
+  });
+
+  it("links reported model costs back to the route decision that caused them", async () => {
+    const { companyId, agentId } = await seed();
+    const app = createApp(db, boardActor(companyId));
+
+    const decisionRes = await request(app)
+      .post(`/api/companies/${companyId}/model-route-decisions`)
+      .send({
+        agentId,
+        lane: "external_specialist",
+        provider: "sakana",
+        model: "fugu-ultra",
+        reason: "Delegate a complex execution task while preserving an auditable spend trail.",
+        riskLevel: "medium",
+        taskIntent: "Run specialist execution for a Skills Engine task.",
+        contextSummary: "Compressed task brief and acceptance criteria.",
+        approvalGate: "human_after_draft",
+        metadata: { source: "SYS-202" },
+      });
+
+    expect(decisionRes.status).toBe(201);
+
+    const costRes = await request(app)
+      .post(`/api/companies/${companyId}/cost-events`)
+      .send({
+        agentId,
+        modelRouteDecisionId: decisionRes.body.id,
+        provider: "sakana",
+        biller: "sakana",
+        billingType: "metered_api",
+        model: "fugu-ultra",
+        inputTokens: 1200,
+        cachedInputTokens: 100,
+        outputTokens: 450,
+        costCents: 87,
+        occurredAt: "2026-07-08T10:00:00.000Z",
+      });
+
+    expect(costRes.status).toBe(201);
+    expect(costRes.body).toMatchObject({
+      companyId,
+      agentId,
+      modelRouteDecisionId: decisionRes.body.id,
+      provider: "sakana",
+      model: "fugu-ultra",
+      costCents: 87,
     });
   });
 

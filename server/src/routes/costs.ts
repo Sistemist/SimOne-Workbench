@@ -166,7 +166,11 @@ export function costRoutes(
       action: "cost.reported",
       entityType: "cost_event",
       entityId: event.id,
-      details: { costCents: event.costCents, model: event.model },
+      details: {
+        costCents: event.costCents,
+        model: event.model,
+        modelRouteDecisionId: event.modelRouteDecisionId,
+      },
     });
 
     res.status(201).json(event);
