@@ -171,6 +171,25 @@ describe("SimCoach", () => {
     });
   });
 
+  it("explains the operating role stack without making providers first-run setup", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderSimCoach(container);
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Operating role stack");
+    expect(text).toContain("Human owner keeps final judgment.");
+    expect(text).toContain("Boardroom brain advises; it does not own the company.");
+    expect(text).toContain("Engine stewards turn Product, Customer, Cash, and Skills signals into bounded work.");
+    expect(text).toContain("Specialist adapters return candidate output for review.");
+    expect(text).toContain("Task agents leave task, run, cost, and approval receipts.");
+    expect(text).not.toMatch(/choose a provider|paste an api key|adapter setup/i);
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
   it("opens SIM Wiki directly once the wiki plugin is ready", async () => {
     mockPluginsApi.list.mockResolvedValue([
       {

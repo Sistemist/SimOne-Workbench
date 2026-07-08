@@ -162,6 +162,29 @@ const surfaceRoles = [
   },
 ];
 
+const operatingRoleStack = [
+  {
+    title: "Human owner",
+    body: "Human owner keeps final judgment.",
+  },
+  {
+    title: "Boardroom brain",
+    body: "Boardroom brain advises; it does not own the company.",
+  },
+  {
+    title: "Engine stewards",
+    body: "Engine stewards turn Product, Customer, Cash, and Skills signals into bounded work.",
+  },
+  {
+    title: "Specialist adapters",
+    body: "Specialist adapters return candidate output for review.",
+  },
+  {
+    title: "Task agents",
+    body: "Task agents leave task, run, cost, and approval receipts.",
+  },
+];
+
 function buildWikiRetrievalQuestion(context: ScannerCoachContext): string {
   return `What should SIM Coach check before assigning work on ${context.headline}?`;
 }
@@ -779,6 +802,19 @@ export function SimCoach() {
               <p className="mt-2 text-sm leading-6 text-muted-foreground">{role.body}</p>
             </div>
           ))}
+        </div>
+        <div className="lg:col-span-2">
+          <div className="mt-2 rounded-md border border-border bg-muted/20 p-4">
+            <div className="text-sm font-medium text-foreground">Operating role stack</div>
+            <div className="mt-3 grid gap-3 md:grid-cols-5">
+              {operatingRoleStack.map((role) => (
+                <div key={role.title} className="border-b border-border pb-3 md:border-b-0 md:border-r md:pr-3 md:last:border-r-0">
+                  <div className="text-xs font-medium uppercase text-muted-foreground">{role.title}</div>
+                  <p className="mt-1 text-sm leading-5 text-muted-foreground">{role.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
