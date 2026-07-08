@@ -57,6 +57,22 @@ function CostEvidence({ decision }: { decision: ModelRouteDecisionAuditRow }) {
   );
 }
 
+function routeDecisionOutputArtifacts(decision: ModelRouteDecisionAuditRow) {
+  const raw = decision.metadata?.outputArtifacts;
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((item): item is { id: string; title: string; href: string } => {
+    if (!item || typeof item !== "object") return false;
+    const artifact = item as Record<string, unknown>;
+    return (
+      typeof artifact.id === "string" &&
+      typeof artifact.title === "string" &&
+      artifact.title.trim().length > 0 &&
+      typeof artifact.href === "string" &&
+      (artifact.href === "/artifacts" || artifact.href.startsWith("/artifacts?") || artifact.href.startsWith("/artifacts#"))
+    );
+  });
+}
+
 function DecisionCard({
   decision,
   isReviewing,
@@ -70,6 +86,7 @@ function DecisionCard({
 }) {
   const [reviewNote, setReviewNote] = useState(decision.reviewNote ?? "");
   const modelLabel = `${decision.provider} / ${decision.model}`;
+  const outputArtifacts = routeDecisionOutputArtifacts(decision);
 
   return (
     <Card>
@@ -121,6 +138,21 @@ function DecisionCard({
           <div className="rounded-md border border-border px-3 py-3">
             <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Output review</div>
             <p className="mt-1 text-sm leading-6">{decision.outputSummary ?? "No output summary recorded yet."}</p>
+            {outputArtifacts.length > 0 ? (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {outputArtifacts.map((artifact) => (
+                  <Link
+                    key={artifact.id}
+                    className="rounded-md border border-border bg-background px-2 py-1 text-xs font-medium text-foreground underline-offset-4 hover:underline"
+                    to={artifact.href}
+                  >
+                    {artifact.title}
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">No output artifact linked yet.</p>
+            )}
             {decision.reviewNote ? (
               <p className="mt-2 text-xs leading-5 text-muted-foreground">{decision.reviewNote}</p>
             ) : null}

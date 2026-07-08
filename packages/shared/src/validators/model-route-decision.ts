@@ -30,6 +30,13 @@ export const modelRouteDecisionReviewStatusSchema = z.enum([
   "rejected",
 ]);
 
+export const modelRouteDecisionOutputArtifactSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  href: z.string().regex(/^\/artifacts(?:$|[?#])/, "Artifact links must stay inside the company artifacts surface"),
+  source: z.enum(["document", "attachment", "work_product"]).optional(),
+});
+
 export const createModelRouteDecisionSchema = z.object({
   agentId: z.string().uuid(),
   issueId: z.string().uuid().optional().nullable(),
@@ -54,6 +61,7 @@ export const updateModelRouteDecisionReviewSchema = z.object({
   outputConfidence: modelRouteDecisionOutputConfidenceSchema.optional().default("unknown"),
   reviewStatus: modelRouteDecisionReviewStatusSchema.optional().default("pending"),
   reviewNote: z.string().min(1).optional().nullable(),
+  outputArtifacts: z.array(modelRouteDecisionOutputArtifactSchema).max(10).optional(),
 });
 
 export type CreateModelRouteDecision = z.infer<typeof createModelRouteDecisionSchema>;
@@ -62,3 +70,4 @@ export type ModelRouteDecisionLane = z.infer<typeof modelRouteDecisionLaneSchema
 export type ModelRouteDecisionRiskLevel = z.infer<typeof modelRouteDecisionRiskLevelSchema>;
 export type ModelRouteDecisionOutputConfidence = z.infer<typeof modelRouteDecisionOutputConfidenceSchema>;
 export type ModelRouteDecisionReviewStatus = z.infer<typeof modelRouteDecisionReviewStatusSchema>;
+export type ModelRouteDecisionOutputArtifact = z.infer<typeof modelRouteDecisionOutputArtifactSchema>;

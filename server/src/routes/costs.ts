@@ -265,6 +265,7 @@ export function costRoutes(
         details: {
           outputConfidence: updated.outputConfidence,
           reviewStatus: updated.reviewStatus,
+          outputArtifactCount: req.body.outputArtifacts?.length ?? 0,
         },
       });
 

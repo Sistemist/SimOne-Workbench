@@ -90,7 +90,17 @@ function modelRouteDecision(overrides: Record<string, unknown> = {}) {
     outputConfidence: "medium",
     reviewStatus: "needs_revision",
     reviewNote: "Review before using this in a customer-facing output.",
-    metadata: { source: "SYS-202" },
+    metadata: {
+      source: "SYS-202",
+      outputArtifacts: [
+        {
+          id: "artifact-brief-1",
+          title: "Sprint Zero Brief",
+          href: "/artifacts?groupIssueId=11111111-1111-4111-8111-111111111111",
+          source: "work_product",
+        },
+      ],
+    },
     createdByAgentId: null,
     createdByUserId: "user-1",
     createdByRunId: null,
@@ -139,6 +149,11 @@ describe("ModelRoutingAudit", () => {
     const runLink = container.querySelector<HTMLAnchorElement>('a[href="/agents/agent-1/runs/run-1"]');
     expect(runLink).toBeTruthy();
     expect(runLink?.textContent).toContain("Run linked");
+    const artifactLink = container.querySelector<HTMLAnchorElement>(
+      'a[href="/artifacts?groupIssueId=11111111-1111-4111-8111-111111111111"]',
+    );
+    expect(artifactLink).toBeTruthy();
+    expect(artifactLink?.textContent).toContain("Sprint Zero Brief");
     expect(mockSetBreadcrumbs).toHaveBeenCalledWith([
       { label: "Settings", href: "/company/settings" },
       { label: "Instance settings", href: "/company/settings/instance/general" },

@@ -108,6 +108,13 @@ export function modelRouteDecisionService(db: Db) {
           outputConfidence: data.outputConfidence,
           reviewStatus: data.reviewStatus,
           reviewNote: data.reviewNote ?? null,
+          ...(data.outputArtifacts === undefined
+            ? {}
+            : {
+                metadata: sql`${modelRouteDecisions.metadata} || ${JSON.stringify({
+                  outputArtifacts: data.outputArtifacts,
+                })}::jsonb`,
+              }),
         })
         .where(and(...conditions))
         .returning()

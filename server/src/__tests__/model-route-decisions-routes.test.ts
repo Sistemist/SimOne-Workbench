@@ -202,6 +202,70 @@ describeEmbeddedPostgres("model route decision routes", () => {
     });
   });
 
+  it("records output artifact evidence on a reviewed route decision", async () => {
+    const { companyId, agentId } = await seed();
+    const app = createApp(db, boardActor(companyId));
+
+    const createRes = await request(app)
+      .post(`/api/companies/${companyId}/model-route-decisions`)
+      .send({
+        agentId,
+        lane: "frontier",
+        provider: "anthropic",
+        model: "claude-fable-5",
+        reason: "Public-facing Sprint Zero brief needs a high-trust final review.",
+        riskLevel: "high",
+        taskIntent: "Review the Sprint Zero brief before it becomes a shareable artifact.",
+        contextSummary: "Founder intake, scanner result, and draft Sprint Zero recommendations.",
+        approvalGate: "human_before_publish",
+        metadata: { source: "SYS-202" },
+      });
+
+    expect(createRes.status).toBe(201);
+
+    const updateRes = await request(app)
+      .patch(`/api/companies/${companyId}/model-route-decisions/${createRes.body.id}/review`)
+      .send({
+        outputSummary: "Fable review produced a shareable Sprint Zero brief with two cautions.",
+        outputConfidence: "high",
+        reviewStatus: "approved",
+        reviewNote: "Approved after linking the generated work product.",
+        outputArtifacts: [
+          {
+            id: "artifact-brief-1",
+            title: "Sprint Zero Brief",
+            href: "/artifacts?groupIssueId=11111111-1111-4111-8111-111111111111",
+            source: "work_product",
+          },
+        ],
+      });
+
+    expect(updateRes.status).toBe(200);
+    expect(updateRes.body.metadata).toMatchObject({
+      source: "SYS-202",
+      outputArtifacts: [
+        {
+          id: "artifact-brief-1",
+          title: "Sprint Zero Brief",
+          href: "/artifacts?groupIssueId=11111111-1111-4111-8111-111111111111",
+          source: "work_product",
+        },
+      ],
+    });
+
+    const listRes = await request(app).get(`/api/companies/${companyId}/model-route-decisions?limit=10`);
+
+    expect(listRes.status).toBe(200);
+    expect(listRes.body.items[0].metadata.outputArtifacts).toEqual([
+      {
+        id: "artifact-brief-1",
+        title: "Sprint Zero Brief",
+        href: "/artifacts?groupIssueId=11111111-1111-4111-8111-111111111111",
+        source: "work_product",
+      },
+    ]);
+  });
+
   it("links reported model costs back to the route decision that caused them", async () => {
     const { companyId, agentId } = await seed();
     const app = createApp(db, boardActor(companyId));

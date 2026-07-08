@@ -29,6 +29,13 @@ export interface ModelRouteDecisionAuditRow {
   costCents: number;
 }
 
+export interface ModelRouteDecisionOutputArtifact {
+  id: string;
+  title: string;
+  href: string;
+  source?: "document" | "attachment" | "work_product";
+}
+
 export interface ModelRouteDecisionListResponse {
   items: ModelRouteDecisionAuditRow[];
 }
@@ -38,6 +45,7 @@ export interface UpdateModelRouteDecisionReviewInput {
   outputConfidence: string;
   reviewStatus: "pending" | "approved" | "needs_revision" | "rejected";
   reviewNote?: string | null;
+  outputArtifacts?: ModelRouteDecisionOutputArtifact[];
 }
 
 export const modelRoutingApi = {

@@ -38,7 +38,7 @@ enough to evaluate them.
 | PLG/Barnum layer | 65% | Public scanner, lived example notes, signal strength, secondary engine watch, calibration status, safer share summaries, diagnosis signals, shareable map interpretation, public preview, public proof context, scanner-to-coach and scanner-to-starter handoffs, structured Sprint Zero brief | Visual share polish, score tuning against real submissions |
 | Customer Engine bridge | 80% | Read-only Tissuu bridge live, native Customer Signal framing on dashboard/page, SIM Wiki proof promotion | More authenticated visual QA, lived use, defer write-back v2 |
 | SIM Coach and SIM Wiki | 60% | Scanner-to-Coach handoff, Coach scanner explanations, scanner-to-wiki maintainer retrieval with streamed answer return, structured answer source refs, returned-answer promotion to wiki, SIM Starter source-note provenance, SIM method/product seed pages | Better wiki navigation, broader review promotion |
-| Model routing and auditability | 44% | `model_route_decisions` ledger, lane vocabulary, local context compression envelope, output confidence/review fields, cost-event route links, run-detail links, settings audit page with review filters/actions | Real provider execution, output artifact linking, evaluations |
+| Model routing and auditability | 45% | `model_route_decisions` ledger, lane vocabulary, local context compression envelope, output confidence/review fields, cost-event route links, run-detail links, output artifact links, settings audit page with review filters/actions | Real provider execution, richer artifact/eval evidence |
 | Compression/headroom | 8% | Local `simone_json_headroom_v0` envelope for bulky JSON route context | Evaluate Headroom/SmartCrusher, compare quality, support RAG/log/transcript payloads |
 | Full SIM operating system | 30% | Engines, drivers, governance, bridge, coach/wiki beginnings | SIM Starter, durable operating loops, production hardening |
 
@@ -182,11 +182,13 @@ Done:
   them approved, rejected, or in need of revision with a note.
 - Operators can filter the audit surface by review status.
 - Route decisions with a recorded heartbeat run now link to that run detail.
+- Route decision reviews can record bounded output artifact references, and the
+  audit surface links to those generated work products.
 
 Remaining:
 
 - Connect route decisions to actual model/provider execution.
-- Deepen route decisions into provider/run output artifacts.
+- Deepen route decisions into provider/run output evidence.
 - Add richer routing/cost review surfaces.
 - Add evaluation cases before relying on any router.
 
