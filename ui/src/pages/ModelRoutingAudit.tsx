@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BrainCircuit, CheckCircle2, Clock3, Coins, ShieldCheck, TriangleAlert, XCircle } from "lucide-react";
+import { BrainCircuit, CheckCircle2, Clock3, Coins, ListFilter, ShieldCheck, TriangleAlert, XCircle } from "lucide-react";
 import { modelRoutingApi, type ModelRouteDecisionAuditRow } from "../api/modelRouting";
 import { EmptyState } from "../components/EmptyState";
 import { PageSkeleton } from "../components/PageSkeleton";
@@ -16,6 +16,15 @@ import { formatCents } from "../lib/utils";
 const NO_COMPANY = "__none__";
 const DECISION_LIMIT = 50;
 type ReviewStatus = "approved" | "needs_revision" | "rejected";
+type ReviewFilter = "all" | "pending" | ReviewStatus;
+
+const REVIEW_FILTERS: Array<{ value: ReviewFilter; label: string }> = [
+  { value: "all", label: "All" },
+  { value: "pending", label: "Pending" },
+  { value: "needs_revision", label: "Needs revision" },
+  { value: "approved", label: "Approved" },
+  { value: "rejected", label: "Rejected" },
+];
 
 function humanize(value: string | null | undefined) {
   if (!value) return "Not set";
@@ -188,6 +197,7 @@ export function ModelRoutingAudit() {
   const { selectedCompanyId } = useCompany();
   const { setBreadcrumbs } = useBreadcrumbs();
   const queryClient = useQueryClient();
+  const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("all");
   const companyId = selectedCompanyId ?? NO_COMPANY;
 
   useEffect(() => {
@@ -249,6 +259,23 @@ export function ModelRoutingAudit() {
   }
 
   const decisions = decisionsQuery.data?.items ?? [];
+  const reviewCounts = decisions.reduce<Record<ReviewFilter, number>>((counts, decision) => {
+    counts.all += 1;
+    if (decision.reviewStatus === "pending") counts.pending += 1;
+    if (decision.reviewStatus === "needs_revision") counts.needs_revision += 1;
+    if (decision.reviewStatus === "approved") counts.approved += 1;
+    if (decision.reviewStatus === "rejected") counts.rejected += 1;
+    return counts;
+  }, {
+    all: 0,
+    pending: 0,
+    needs_revision: 0,
+    approved: 0,
+    rejected: 0,
+  });
+  const filteredDecisions = reviewFilter === "all"
+    ? decisions
+    : decisions.filter((decision) => decision.reviewStatus === reviewFilter);
 
   return (
     <div className="max-w-6xl space-y-6">
@@ -270,7 +297,35 @@ export function ModelRoutingAudit() {
         />
       ) : (
         <div className="space-y-4">
-          {decisions.map((decision) => (
+          <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-background px-3 py-2">
+            <div className="mr-1 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <ListFilter className="h-3.5 w-3.5" />
+              Review
+            </div>
+            {REVIEW_FILTERS.map((filter) => (
+              <Button
+                key={filter.value}
+                type="button"
+                size="xs"
+                variant={reviewFilter === filter.value ? "secondary" : "ghost"}
+                onClick={() => setReviewFilter(filter.value)}
+              >
+                {filter.label}
+                <span className="rounded bg-background/80 px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                  {reviewCounts[filter.value]}
+                </span>
+              </Button>
+            ))}
+          </div>
+
+          {filteredDecisions.length === 0 ? (
+            <EmptyState
+              icon={ListFilter}
+              message={`No ${humanize(reviewFilter)} route decisions in this view.`}
+            />
+          ) : null}
+
+          {filteredDecisions.map((decision) => (
             <DecisionCard
               key={decision.id}
               decision={decision}

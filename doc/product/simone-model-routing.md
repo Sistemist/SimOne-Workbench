@@ -27,8 +27,8 @@ The first route-to-cost evidence link now exists: cost events can point back to
 the model route decision that caused the spend.
 The first operator-facing audit view also exists in instance settings, showing
 recent decisions, review state, approval boundary, context/output summaries,
-linked cost evidence, and review actions for approved, needs-revision, or
-rejected outcomes.
+linked cost evidence, and review filters/actions for approved, needs-revision,
+or rejected outcomes.
 
 ## 2. Why This Matters
 

@@ -162,7 +162,7 @@ describe("ModelRoutingAudit", () => {
     await setTextareaValue(textarea!, "Approved for internal use after checking cost and context.");
 
     const approveButton = Array.from(container.querySelectorAll("button"))
-      .find((button) => button.textContent?.includes("Approve"));
+      .find((button) => button.textContent?.trim() === "Approve");
     expect(approveButton).toBeTruthy();
 
     await act(async () => {
@@ -176,6 +176,49 @@ describe("ModelRoutingAudit", () => {
       reviewStatus: "approved",
       reviewNote: "Approved for internal use after checking cost and context.",
     });
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
+  it("filters route decisions by review status", async () => {
+    mockModelRoutingApi.listDecisions.mockResolvedValue({
+      items: [
+        modelRouteDecision({
+          id: "decision-needs-revision",
+          provider: "sakana",
+          model: "fugu-ultra",
+          reviewStatus: "needs_revision",
+          reason: "Specialist output needs a second look before use.",
+        }),
+        modelRouteDecision({
+          id: "decision-approved",
+          provider: "anthropic",
+          model: "claude-fable-5",
+          reviewStatus: "approved",
+          reason: "Boardroom audit accepted the narrowed recommendation.",
+        }),
+      ],
+    });
+
+    const { container, root } = renderAuditPage();
+    await waitForText(container, "claude-fable-5");
+
+    expect(container.textContent).toContain("fugu-ultra");
+    expect(container.textContent).toContain("claude-fable-5");
+
+    const needsRevisionButton = Array.from(container.querySelectorAll("button"))
+      .find((button) => button.textContent?.includes("Needs revision"));
+    expect(needsRevisionButton).toBeTruthy();
+
+    await act(async () => {
+      needsRevisionButton!.click();
+    });
+    await flushReact();
+
+    expect(container.textContent).toContain("fugu-ultra");
+    expect(container.textContent).not.toContain("claude-fable-5");
 
     flushSync(() => {
       root.unmount();
