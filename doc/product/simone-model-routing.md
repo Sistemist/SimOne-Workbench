@@ -30,7 +30,10 @@ recent decisions, review state, approval boundary, context/output summaries,
 linked cost evidence, and review filters/actions for approved, needs-revision,
 or rejected outcomes. When a route decision has a recorded run id, the audit row
 links to that run detail. When review metadata includes generated output
-artifacts, the audit row links to those Artifacts work products.
+artifacts, the audit row links to those Artifacts work products. For
+deliberation/audit and external-specialist decisions, the audit row now also
+names the evidence SimOne expects before treating a Fusion-style or Fugu/Fugu
+Ultra-style output as trusted.
 
 ## 2. Why This Matters
 
@@ -160,8 +163,10 @@ product experience is useful.
 3. Link route decisions to run records and output artifacts. Cost links, output
    confidence, review status, run-detail links, output artifact links, and the
    first settings audit/review page are now in place.
-4. Add evaluation cases before relying on routers.
-5. Evaluate Headroom/SmartCrusher against local compression output.
-6. Add Fusion as a high-risk deliberation/audit lane.
-7. Add Fugu/Fugu Ultra as optional external specialist lanes.
-8. Compare all experiment lanes against explicit frontier routes.
+4. Show lane-specific evidence requirements for high-risk deliberation/audit and
+   external-specialist decisions. This is now present on the audit cards.
+5. Add evaluation cases before relying on routers.
+6. Evaluate Headroom/SmartCrusher against local compression output.
+7. Add Fusion as a high-risk deliberation/audit lane.
+8. Add Fugu/Fugu Ultra as optional external specialist lanes.
+9. Compare all experiment lanes against explicit frontier routes.

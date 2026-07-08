@@ -136,6 +136,8 @@ describe("ModelRoutingAudit", () => {
     const text = container.textContent ?? "";
     expect(text).toContain("Inspect why a model lane was chosen");
     expect(text).toContain("External specialist");
+    expect(text).toContain("External specialist review");
+    expect(text).toContain("Task boundary, returned result, evaluation, fallback, and human review must be inspectable before this output becomes trusted.");
     expect(text).toContain("sakana / fugu-ultra");
     expect(text).toContain("medium risk");
     expect(text).toContain("needs revision");
@@ -159,6 +161,38 @@ describe("ModelRoutingAudit", () => {
       { label: "Instance settings", href: "/company/settings/instance/general" },
       { label: "Model routing" },
     ]);
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
+  it("explains deliberation audit evidence for Fusion-style route decisions", async () => {
+    mockModelRoutingApi.listDecisions.mockResolvedValue({
+      items: [
+        modelRouteDecision({
+          id: "decision-fusion",
+          lane: "deliberation_audit",
+          provider: "openrouter",
+          model: "fusion",
+          reason: "Use multiple model views before approving a high-risk public claim.",
+          riskLevel: "high",
+          taskIntent: "Review public positioning before publishing.",
+          approvalGate: "human_before_external",
+          outputSummary: "Synthesis found disagreement on the strongest claim.",
+        }),
+      ],
+    });
+
+    const { container, root } = renderAuditPage();
+    await waitForText(container, "openrouter / fusion");
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Deliberation audit");
+    expect(text).toContain("Deliberation audit evidence");
+    expect(text).toContain("Prompt, disagreement, blind spots, synthesis, and approval gate should be captured for this high-risk review.");
+    expect(text).toContain("high risk");
+    expect(text).toContain("human before external");
 
     flushSync(() => {
       root.unmount();

@@ -73,6 +73,22 @@ function routeDecisionOutputArtifacts(decision: ModelRouteDecisionAuditRow) {
   });
 }
 
+function routeLaneEvidence(decision: ModelRouteDecisionAuditRow): { title: string; body: string } | null {
+  if (decision.lane === "deliberation_audit") {
+    return {
+      title: "Deliberation audit evidence",
+      body: "Prompt, disagreement, blind spots, synthesis, and approval gate should be captured for this high-risk review.",
+    };
+  }
+  if (decision.lane === "external_specialist") {
+    return {
+      title: "External specialist review",
+      body: "Task boundary, returned result, evaluation, fallback, and human review must be inspectable before this output becomes trusted.",
+    };
+  }
+  return null;
+}
+
 function DecisionCard({
   decision,
   isReviewing,
@@ -87,6 +103,7 @@ function DecisionCard({
   const [reviewNote, setReviewNote] = useState(decision.reviewNote ?? "");
   const modelLabel = `${decision.provider} / ${decision.model}`;
   const outputArtifacts = routeDecisionOutputArtifacts(decision);
+  const laneEvidence = routeLaneEvidence(decision);
 
   return (
     <Card>
@@ -158,6 +175,15 @@ function DecisionCard({
             ) : null}
           </div>
         </div>
+
+        {laneEvidence ? (
+          <div className="rounded-md border border-border bg-muted/20 px-3 py-3">
+            <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {laneEvidence.title}
+            </div>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">{laneEvidence.body}</p>
+          </div>
+        ) : null}
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">

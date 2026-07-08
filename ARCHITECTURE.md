@@ -274,7 +274,10 @@ Routing audit spine:
   filters/actions for approved/needs-revision/rejected outcomes. When a route
   decision has a `heartbeatRunId`, the audit surface links to the run detail.
   When review metadata includes output artifacts, the audit surface links to
-  those Artifacts work products too.
+  those Artifacts work products too. The same surface now calls out special
+  evidence requirements for deliberation/audit and external-specialist lanes so
+  Fusion-style and Fugu/Fugu Ultra-style experiments are visible as review
+  boundaries, not hidden provider magic.
 - Use `deliberation_audit` for OpenRouter Fusion-style high-risk review where
   disagreement and blind spots are valuable.
 - Use `external_specialist` for future Fugu/Fugu Ultra-style specialist
