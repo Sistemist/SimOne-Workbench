@@ -448,6 +448,7 @@ export function SystemsBottleneckScanner() {
   const [founderNote, setFounderNote] = useState("");
   const [result, setResult] = useState<ScannerResult | null>(null);
   const [shareSummaryStatus, setShareSummaryStatus] = useState<"idle" | "copied" | "manual">("idle");
+  const [scanStorageStatus, setScanStorageStatus] = useState<"idle" | "saved" | "blocked">("idle");
   const canScan = useMemo(
     () => startupUrl.trim().length > 0 || founderNote.trim().length > 0,
     [startupUrl, founderNote],
@@ -471,7 +472,9 @@ export function SystemsBottleneckScanner() {
           savedAt: new Date().toISOString(),
         }),
       );
+      setScanStorageStatus("saved");
     } catch {
+      setScanStorageStatus("blocked");
       // The scan remains useful even when private browsing or storage policy blocks persistence.
     }
   }
@@ -481,6 +484,7 @@ export function SystemsBottleneckScanner() {
     setFounderNote("");
     setResult(null);
     setShareSummaryStatus("idle");
+    setScanStorageStatus("idle");
   }
 
   return (
@@ -839,10 +843,12 @@ export function SystemsBottleneckScanner() {
                   <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3">
                     <div className="flex items-center gap-2 text-sm font-medium text-emerald-800 dark:text-emerald-100">
                       <ClipboardCheck className="h-4 w-4" aria-hidden="true" />
-                      Saved in this browser
+                      {scanStorageStatus === "blocked" ? "Ready to continue" : "Saved in this browser"}
                     </div>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                      Sign up to keep this readout with your full SimOne map.
+                      {scanStorageStatus === "blocked"
+                        ? "Sign up now to keep this readout with your full SimOne map."
+                        : "Sign up to keep this readout with your full SimOne map."}
                     </p>
                   </div>
                   <p className="text-xs text-muted-foreground">

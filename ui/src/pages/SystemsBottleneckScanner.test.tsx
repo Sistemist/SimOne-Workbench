@@ -481,6 +481,49 @@ describe("SystemsBottleneckScanner", () => {
     });
   });
 
+  it("does not claim the scan was saved when browser storage is blocked", async () => {
+    const originalLocalStorage = window.localStorage;
+    Object.defineProperty(window, "localStorage", {
+      value: {
+        setItem: vi.fn(() => {
+          throw new Error("storage blocked");
+        }),
+      },
+      configurable: true,
+    });
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderScanner(container);
+
+    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
+    expect(noteInput).not.toBeNull();
+    await updateField(
+      noteInput!,
+      "We have interested leads and waitlist replies, but follow-up is scattered and approvals sit in my inbox.",
+    );
+
+    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Scan"),
+    );
+    expect(button).toBeTruthy();
+    await act(async () => {
+      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Ready to continue");
+    expect(text).toContain("Sign up now to keep this readout with your full SimOne map.");
+    expect(text).not.toContain("Saved in this browser");
+
+    flushSync(() => {
+      root.unmount();
+    });
+    Object.defineProperty(window, "localStorage", {
+      value: originalLocalStorage,
+      configurable: true,
+    });
+  });
+
   it("uses the scan focus in the conversion handoff", async () => {
     const container = document.createElement("div");
     document.body.appendChild(container);
