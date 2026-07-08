@@ -29,6 +29,25 @@ const SCAN_STORAGE_KEY = "simone:bottleneck-scan";
 const SCANNER_ONBOARDING_HREF = `/auth?next=${encodeURIComponent("/onboarding?from=scanner")}`;
 const SCANNER_COACH_HREF = `/auth?next=${encodeURIComponent("/sim-coach?from=scanner")}`;
 
+const scannerExamples = [
+  {
+    label: "Customer follow-up",
+    note: "We have interested leads and waitlist replies, but follow-up is scattered and approvals sit in my inbox.",
+  },
+  {
+    label: "Cash runway",
+    note: "Our runway is getting tight, pricing keeps changing, and I am not sure which paid offer needs approval next.",
+  },
+  {
+    label: "Skills capacity",
+    note: "The same manual ops work keeps coming back to me, the team is overwhelmed, and I do not know who should own it.",
+  },
+  {
+    label: "Product proof",
+    note: "The roadmap has too many feature ideas, the prototype keeps expanding, and we need one promise we can prove before launch.",
+  },
+];
+
 const fallbackResult: ScannerResult = {
   headline: "Feedback loop is unclear",
   engine: "Product Engine",
@@ -293,6 +312,23 @@ export function SystemsBottleneckScanner() {
                   className="min-h-36 rounded-md border border-input bg-background px-3 py-2 text-sm leading-6 outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </label>
+
+              <div className="grid gap-2">
+                <div className="text-xs font-medium uppercase text-muted-foreground">Example notes</div>
+                <div className="flex flex-wrap gap-2">
+                  {scannerExamples.map((example) => (
+                    <Button
+                      key={example.label}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFounderNote(example.note)}
+                    >
+                      {example.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">

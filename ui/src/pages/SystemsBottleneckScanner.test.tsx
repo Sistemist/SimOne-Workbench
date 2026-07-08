@@ -30,6 +30,45 @@ describe("SystemsBottleneckScanner", () => {
     document.body.innerHTML = "";
   });
 
+  it("offers lived example notes that can seed a scan", async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderScanner(container);
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Customer follow-up");
+    expect(text).toContain("Cash runway");
+    expect(text).toContain("Skills capacity");
+    expect(text).toContain("Product proof");
+    expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
+
+    const cashExample = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Cash runway"),
+    );
+    expect(cashExample).toBeTruthy();
+    await act(async () => {
+      cashExample?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
+    expect(noteInput?.value).toContain("runway");
+    expect(noteInput?.value).toContain("pricing");
+
+    const scanButton = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Scan"),
+    );
+    await act(async () => {
+      scanButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("Cash pressure is steering the system");
+    expect(container.textContent).toContain("Cash Engine");
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
   it("turns a messy founder note into a bottleneck, next action, and starter map preview", async () => {
     const container = document.createElement("div");
     document.body.appendChild(container);
