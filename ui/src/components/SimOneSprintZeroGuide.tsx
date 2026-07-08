@@ -1,4 +1,6 @@
-import { CheckCircle2, FileSearch, Map, Search, ShieldCheck } from "lucide-react";
+import { BookOpenCheck, CheckCircle2, FileSearch, ListChecks, Map, Search, Share2, ShieldCheck } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 
 type SimOneSprintZeroIssueLike = {
   title?: string | null;
@@ -46,6 +48,24 @@ const reviewPrompts = [
   "What is the first move?",
 ];
 
+const promotionActions = [
+  {
+    icon: BookOpenCheck,
+    label: "Save trusted decisions to SIM Wiki",
+    href: "/wiki",
+  },
+  {
+    icon: ListChecks,
+    label: "Create bounded next tasks",
+    href: "/issues/all",
+  },
+  {
+    icon: Share2,
+    label: "Turn the reviewed map into a shareable artifact",
+    href: "/artifacts",
+  },
+];
+
 export function SimOneSprintZeroGuide() {
   return (
     <section className="rounded-md border border-border bg-muted/20 p-4 text-sm">
@@ -86,6 +106,30 @@ export function SimOneSprintZeroGuide() {
               <p className="text-xs leading-5 text-muted-foreground">{prompt}</p>
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="mt-4 border-t border-border pt-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold text-foreground">Approve what becomes durable</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Promote only the parts you trust. Keep uncertain claims in this task until they have proof.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {promotionActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <Button key={action.href} asChild variant="outline" size="sm" className="h-8">
+                  <a href={action.href}>
+                    <Icon className="h-3.5 w-3.5" />
+                    {action.label}
+                  </a>
+                </Button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>

@@ -40,7 +40,7 @@ enough to evaluate them.
 | SIM Coach and SIM Wiki | 60% | Scanner-to-Coach handoff, Coach scanner explanations, scanner-to-wiki maintainer retrieval with streamed answer return, structured answer source refs, returned-answer promotion to wiki, SIM Starter source-note provenance, SIM method/product seed pages | Better wiki navigation, broader review promotion |
 | Model routing and auditability | 46% | `model_route_decisions` ledger, lane vocabulary, local context compression envelope, heartbeat adapter execution route decisions, output confidence/review fields, cost-event route links, run-detail links, output artifact links, settings audit page with review filters/actions | Broader provider orchestration, richer artifact/eval evidence |
 | Compression/headroom | 8% | Local `simone_json_headroom_v0` envelope for bulky JSON route context | Evaluate Headroom/SmartCrusher, compare quality, support RAG/log/transcript payloads |
-| Full SIM operating system | 31% | Engines, drivers, governance, bridge, coach/wiki beginnings, SIM Starter review workflow | Durable operating loops, production hardening |
+| Full SIM operating system | 32% | Engines, drivers, governance, bridge, coach/wiki beginnings, SIM Starter review and promotion path | Durable operating loops, production hardening |
 
 ## Milestone Board
 
@@ -165,11 +165,15 @@ Done:
 - The seeded first-map task now includes a review checklist for what is clear,
   what needs proof, what requires human judgment, and the first move before
   delegation.
+- The reviewed first-map guide now has promotion exits for saving trusted
+  decisions to SIM Wiki, creating bounded next tasks, and turning the map into a
+  shareable artifact.
 
 Remaining:
 
-- Add explicit approval/promotion actions from the reviewed first map into
-  durable artifacts, SIM Wiki, or bounded delegated tasks.
+- Persist selected reviewed map content directly into durable artifacts, SIM
+  Wiki pages, or bounded delegated tasks instead of routing the user to the
+  destination surfaces.
 - Add broader review/decision promotion paths beyond scanner-derived answers.
 
 ### M3: Sovereign Model Routing
@@ -267,7 +271,7 @@ Remaining:
 
 1. Finish `SYS-181`: product-flow blueprint and first-screen behavior map.
 2. Push M1 polish: share artifacts, scanner, Customer Engine, Coach handoffs.
-3. Turn the reviewed SIM Starter first map into approval/promotion actions.
+3. Make reviewed SIM Starter map promotions write durable records directly.
 4. Expand SIM Wiki/SIM Coach retrieval and answer promotion.
 5. Build M3 provider execution behind the sovereign route ledger.
 6. Evaluate Headroom/SmartCrusher against the local compression baseline.

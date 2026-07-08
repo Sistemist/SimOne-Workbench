@@ -1039,6 +1039,10 @@ describe("IssueDetail", () => {
     expect(text).toContain("What still needs proof?");
     expect(text).toContain("What requires human judgment?");
     expect(text).toContain("What is the first move?");
+    expect(text).toContain("Approve what becomes durable");
+    expect(text).toContain("Save trusted decisions to SIM Wiki");
+    expect(text).toContain("Create bounded next tasks");
+    expect(text).toContain("Turn the reviewed map into a shareable artifact");
   });
 
   it("does not mark the wake comment for the current live run as queued when active-run cache is stale", async () => {
