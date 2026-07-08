@@ -44,6 +44,12 @@ approved, then SimOne is not ready to hide the routing layer behind automation.
 The goal is not to avoid experimentation. The goal is to run experiments from a
 position where SimOne can compare, reject, fallback, and explain.
 
+The first routing eval cases now live in `evals/promptfoo/tests/model-routing.yaml`.
+They test that a candidate router chooses the deliberation/audit lane for
+critical uncertain public claims, uses the external-specialist lane only for
+bounded hard execution, and refuses hidden black-box root routing without a route
+ledger or human gate.
+
 ## 3. Routing Lanes
 
 | Lane | Use For | Not For | Audit Requirement |
@@ -165,7 +171,9 @@ product experience is useful.
    first settings audit/review page are now in place.
 4. Show lane-specific evidence requirements for high-risk deliberation/audit and
    external-specialist decisions. This is now present on the audit cards.
-5. Add evaluation cases before relying on routers.
+5. Add evaluation cases before relying on routers. Initial promptfoo boundary
+   cases now exist for Fusion-style deliberation, Fugu/Fugu Ultra-style bounded
+   specialist execution, and rejection of hidden root routing.
 6. Evaluate Headroom/SmartCrusher against local compression output.
 7. Add Fusion as a high-risk deliberation/audit lane.
 8. Add Fugu/Fugu Ultra as optional external specialist lanes.

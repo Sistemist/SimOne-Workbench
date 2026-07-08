@@ -8,8 +8,8 @@
 #   cd evals/promptfoo && promptfoo eval
 #   promptfoo view  # open results in browser
 #
-# Validate config before committing:
-#   promptfoo validate
+# Structural YAML check before committing:
+#   ruby -e 'require "yaml"; Dir["evals/promptfoo/**/*.yaml"].each { |f| YAML.load_file(f); puts "ok #{f}" }'
 #
 # Requires OPENROUTER_API_KEY or individual provider keys.
 

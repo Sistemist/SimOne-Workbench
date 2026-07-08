@@ -32,6 +32,9 @@ promptfoo eval
 
 # View results in browser
 promptfoo view
+
+# Structural YAML check without calling models
+ruby -e 'require "yaml"; Dir["evals/promptfoo/**/*.yaml"].each { |f| YAML.load_file(f); puts "ok #{f}" }'
 ```
 
 ### What's tested
@@ -48,6 +51,9 @@ Phase 0 covers narrow behavior evals for the Paperclip heartbeat skill:
 | No work exit | `core` | Agent exits cleanly with no assignments |
 | Checkout before work | `core` | Agent always checks out before modifying |
 | 409 conflict handling | `core` | Agent stops on 409, picks different task |
+| Fusion high-risk routing | `model_routing` | Router chooses deliberation/audit for critical uncertain public claims |
+| Fugu bounded specialist routing | `model_routing` | Router chooses external specialist only for bounded hard execution |
+| Hidden root router rejection | `model_routing` | Router preserves the route ledger and human approval gates |
 
 ### Adding new cases
 
@@ -57,7 +63,7 @@ Phase 0 covers narrow behavior evals for the Paperclip heartbeat skill:
 
 ### Phases
 
-- **Phase 0 (current):** Promptfoo bootstrap - narrow behavior evals with deterministic assertions
+- **Phase 0 (current):** Promptfoo bootstrap - narrow behavior evals with deterministic assertions, now including initial SimOne model-routing boundary cases
 - **Phase 1:** TypeScript eval harness with seeded scenarios and hard checks
 - **Phase 2:** Pairwise and rubric scoring layer
 - **Phase 3:** Efficiency metrics integration
