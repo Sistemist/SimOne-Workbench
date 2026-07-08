@@ -1319,14 +1319,31 @@ export function OnboardingWizard() {
                     onboardingPath === "starter" ? (
                       <div className="rounded-md border border-border bg-muted/20 p-3 text-xs">
                         <p className="font-medium text-foreground">SIM Starter will create:</p>
-                        <ul className="mt-2 space-y-1 text-muted-foreground">
-                          <li>CEO/controller plus Product, Customer, Cash, and Skills engine leads</li>
-                          <li>SIM Wiki-ready Sprint Zero project structure</li>
-                          <li>A first work item to draft the initial SIM map from messy founder input</li>
-                        </ul>
-                        <p className="mt-2 text-[11px] text-muted-foreground">
-                          You can edit the structure later. SimOne will warn you when a change weakens a core feedback or approval boundary.
-                        </p>
+                        <div className="mt-3 space-y-3 text-muted-foreground">
+                          <div>
+                            <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-foreground">
+                              First draft preview
+                            </p>
+                            <ul className="mt-1 space-y-1">
+                              <li>CEO/controller plus Product, Customer, Cash, and Skills engine leads</li>
+                              <li>SIM Wiki-ready Sprint Zero project structure</li>
+                              <li>A first work item to draft the initial SIM map from messy founder input</li>
+                            </ul>
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-foreground">
+                              Assumptions SimOne will check
+                            </p>
+                            <ul className="mt-1 space-y-1">
+                              <li>who the work is for</li>
+                              <li>which promise or proof point matters first</li>
+                              <li>where the first bottleneck is likely to appear</li>
+                            </ul>
+                          </div>
+                          <p className="border-t border-border pt-2 text-[11px]">
+                            You approve before agents act on customers, money, public claims, or company structure.
+                          </p>
+                        </div>
                       </div>
                     ) : (
                       <p className="text-[11px] text-muted-foreground italic">

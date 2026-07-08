@@ -164,6 +164,9 @@ describe("OnboardingWizard SIM Starter path", () => {
     updateTextField(missionInput!, "Teach nontechnical founders how to run an AI-first company.");
 
     expect(document.body.textContent ?? "").toContain("SIM Starter will create:");
+    expect(document.body.textContent ?? "").toContain("First draft preview");
+    expect(document.body.textContent ?? "").toContain("Assumptions SimOne will check");
+    expect(document.body.textContent ?? "").toContain("You approve before agents act on customers, money, public claims, or company structure");
     expect(document.body.textContent ?? "").toContain(
       "CEO/controller plus Product, Customer, Cash, and Skills engine leads"
     );
