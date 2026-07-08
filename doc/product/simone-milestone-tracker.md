@@ -35,7 +35,7 @@ enough to evaluate them.
 | --- | ---: | --- | --- |
 | Hosted alpha shell | 65% | Authenticated KVM app, one-origin app/API, deploy smoke path | More authenticated visual QA, release checklist |
 | Paperclip control-plane reuse | 60% | Companies, agents, tasks, skills, adapters, runs, costs, recovery inherited; PRD/glossary/field guide now translate Paperclip terms and screens into SimOne language | Keep reducing raw control-plane concepts in first run |
-| PLG/Barnum layer | 64% | Public scanner, lived example notes, signal strength, secondary engine watch, calibration status, safer share summaries, diagnosis signals, shareable map interpretation, public proof context, scanner-to-coach and scanner-to-starter handoffs, structured Sprint Zero brief | Richer share previews, score tuning against real submissions |
+| PLG/Barnum layer | 65% | Public scanner, lived example notes, signal strength, secondary engine watch, calibration status, safer share summaries, diagnosis signals, shareable map interpretation, public preview, public proof context, scanner-to-coach and scanner-to-starter handoffs, structured Sprint Zero brief | Visual share polish, score tuning against real submissions |
 | Customer Engine bridge | 80% | Read-only Tissuu bridge live, native Customer Signal framing on dashboard/page, SIM Wiki proof promotion | More authenticated visual QA, lived use, defer write-back v2 |
 | SIM Coach and SIM Wiki | 60% | Scanner-to-Coach handoff, Coach scanner explanations, scanner-to-wiki maintainer retrieval with streamed answer return, structured answer source refs, returned-answer promotion to wiki, SIM Starter source-note provenance, SIM method/product seed pages | Better wiki navigation, broader review promotion |
 | Model routing and auditability | 32% | `model_route_decisions` ledger, lane vocabulary, local context compression envelope | Real provider execution, route/run linking, cost review UI, evaluations |
@@ -94,6 +94,8 @@ Done:
   for what is clear, what needs proof, and what requires human review.
 - Shareable Venture Architecture Maps now include proof context: evidence
   strength, public-safe omissions, and the next assumption to test.
+- Shareable Venture Architecture Maps now include a public preview with an
+  opening line, the first thing to notice, and the suggested follow-up ask.
 - The public Systems Bottleneck Scanner now produces a structured Sprint Zero
   brief with what is clear, what needs proof, human review boundaries, and the
   first move; that brief carries into SIM Starter after sign-in.
@@ -122,7 +124,8 @@ Done:
 Remaining:
 
 - Review and adjust the first product-flow/wireframe artifact for `SYS-181`.
-- Keep improving share previews with richer proof and next-action context.
+- Keep improving share previews with stronger visual treatment and lived public
+  feedback.
 - Tune Systems Bottleneck Scanner scoring against real submissions without
   exposing private notes in public summaries.
 

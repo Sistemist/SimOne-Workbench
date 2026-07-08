@@ -37,8 +37,9 @@ tested implementation, documented direction, and deferred experiments.
   Scanner results include lived example notes, signal strength, secondary
   engine watch, calibration status, and public-safe diagnosis signals;
   real-submission score tuning remains.
-- Shareable Venture Architecture Maps include public proof context for evidence
-  strength, public-safe omissions, and the next assumption to test.
+- Shareable Venture Architecture Maps include public preview and proof context
+  for the opening line, first thing to notice, suggested follow-up ask,
+  evidence strength, public-safe omissions, and the next assumption to test.
 - SIM Coach and SIM Wiki have first scanner handoff, retrieval, and promotion
   loops, with source refs and maintainer-task provenance.
 - `model_route_decisions` is the first auditable route ledger. Provider

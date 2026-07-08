@@ -34,6 +34,18 @@ export function VentureShare() {
 
   const snapshot = share?.snapshot ?? null;
   const firstNextMove = snapshot?.nextMoves[0] ?? null;
+  const firstWorkStream = firstNextMove?.projectName ?? snapshot?.projects[0]?.name ?? "the first work stream";
+  const publicPreview = snapshot
+    ? {
+        openingLine: `${snapshot.company.name} is organizing ${countLabel(snapshot.agents.length, "operating role", "operating roles")} and ${countLabel(snapshot.projects.length, "work stream", "work streams")} around ${firstWorkStream}.`,
+        firstNotice: firstNextMove
+          ? `The next judgment is ${firstNextMove.title}.`
+          : "The next judgment is not named yet.",
+        suggestedFollowUp: firstNextMove
+          ? `Which proof would make ${firstNextMove.title} worth doing next?`
+          : "Which proof would make the next move worth doing?",
+      }
+    : null;
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -83,6 +95,35 @@ export function VentureShare() {
                 </div>
               </div>
             </section>
+
+            {publicPreview ? (
+              <section className="rounded-lg border bg-card p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
+                  <Compass className="h-3.5 w-3.5" aria-hidden="true" />
+                  Public preview
+                </div>
+                <div className="mt-3 grid gap-4 text-sm md:grid-cols-3">
+                  <div>
+                    <h2 className="font-medium text-foreground">Opening line</h2>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      {publicPreview.openingLine}
+                    </p>
+                  </div>
+                  <div>
+                    <h2 className="font-medium text-foreground">What to notice first</h2>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      {publicPreview.firstNotice}
+                    </p>
+                  </div>
+                  <div>
+                    <h2 className="font-medium text-foreground">Suggested follow-up</h2>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      {publicPreview.suggestedFollowUp}
+                    </p>
+                  </div>
+                </div>
+              </section>
+            ) : null}
 
             <section className="rounded-lg border bg-card p-4 shadow-sm">
               <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">

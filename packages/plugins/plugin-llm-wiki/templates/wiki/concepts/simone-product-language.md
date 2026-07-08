@@ -55,7 +55,8 @@ what happened, and what it cost.
 ## Product Artifacts
 
 **Venture Architecture Map** is the map of engines, roles, constraints, risks,
-and next decisions for a venture.
+and next decisions for a venture. Public shares should include a preview that
+gives an opening line, what to notice first, and a suggested follow-up ask.
 
 **Systems Bottleneck Scanner** is the lightweight diagnostic that identifies
 the likely bottleneck, the affected engine, and a safe next move. Scanner

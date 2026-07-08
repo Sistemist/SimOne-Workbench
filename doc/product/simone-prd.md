@@ -27,7 +27,7 @@ certifications.
 | --- | ---: | --- |
 | Hosted alpha shell | 65% | KVM deployment, auth-gated app, health checks, SimOne routes, deploy script |
 | Paperclip control-plane reuse | 60% | Paperclip app deployed as SimOne Workbench; starter direction and UI copy partially adapted; PRD/glossary/field-guide/wiki seeds now translate inherited terms and screens into SimOne language |
-| PLG/Barnum layer | 64% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts with proof context; scanner results now include lived example notes, signal strength, secondary engine watch, calibration status, diagnosis signals, a direct SIM Coach handoff, and a structured Sprint Zero brief that carries into SIM Starter |
+| PLG/Barnum layer | 65% | Public scanner, shareable venture maps, methodology loop beginnings; share artifacts now have safer public readouts with proof context and a plain public preview; scanner results now include lived example notes, signal strength, secondary engine watch, calibration status, diagnosis signals, a direct SIM Coach handoff, and a structured Sprint Zero brief that carries into SIM Starter |
 | Customer Engine bridge | 80% | Read-only Tissuu bridge live; Dashboard and Customer Engine frame it as a native Customer Signal loop; Customer Engine page can promote a proof readout into SIM Wiki without mutating Tissuu |
 | SIM Coach and SIM Wiki | 60% | Product direction documented; public scanner now offers a contextual Coach handoff before map creation; contextual coach loop explains scanner results; Coach can queue an auditable SIM Wiki maintainer retrieval from scanner context, stream the returned answer back into Coach, preserve structured wiki/raw answer source refs, and save useful answers as durable SIM Wiki syntheses; SIM Starter now stores source-note and first-map draft provenance in the first Sprint Zero work item; Coach and Customer Engine can save and reopen promoted syntheses in SIM Wiki; new wiki roots include SimOne product-language, PRD snapshot, glossary, and agent-flow pages |
 | Model routing and auditability | 32% | Strategy documented; Workbench has an initial `model_route_decisions` ledger; route decisions can now attach a compressed context envelope; actual provider orchestration and evaluations remain |
@@ -225,8 +225,10 @@ Current share artifact behavior:
 - The public page explains what the map means in plain language, summarizes
   operating roles, work streams, and next moves, includes a public Sprint Zero
   brief for what is clear, what needs proof, and what requires human review,
-  adds proof context for evidence strength, what was withheld, and the next
-  question to ask, and omits adapter/runtime/model setup details.
+  adds a public preview with an opening line, first thing to notice, and
+  suggested follow-up ask, adds proof context for evidence strength, what was
+  withheld, and the next question to ask, and omits adapter/runtime/model setup
+  details.
 - The public Systems Bottleneck Scanner produces a safe share summary containing
   the likely bottleneck, engine focus, next move, and public-safe diagnosis
   signals explaining why that engine was selected while excluding the raw
@@ -486,8 +488,9 @@ Goal: make the current live signals feel native to SimOne.
   action for proof readouts while keeping Tissuu write-back deferred.
 - Make public scanner and share artifacts feel like coherent SimOne outputs.
   The Venture Architecture Map share page now has a plain-language
-  interpretation layer, a public Sprint Zero brief, and proof-context guidance
-  for evidence strength, privacy boundaries, and the next assumption to test.
+  interpretation layer, a public preview, a public Sprint Zero brief, and
+  proof-context guidance for evidence strength, privacy boundaries, and the
+  next assumption to test.
   The scanner now exposes lived example notes, signal strength, secondary
   engine watch, safe diagnosis signals, a safe share summary, and a
   scanner-to-SIM-Coach and scanner-to-SIM-Starter handoff after sign-in. The

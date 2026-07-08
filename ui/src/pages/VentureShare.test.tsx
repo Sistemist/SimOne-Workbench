@@ -92,6 +92,13 @@ describe("VentureShare", () => {
       expect(text).toContain("1 operating role");
       expect(text).toContain("1 work stream");
       expect(text).toContain("1 next move");
+      expect(text).toContain("Public preview");
+      expect(text).toContain("Opening line");
+      expect(text).toContain("Acme Systems is organizing 1 operating role and 1 work stream around Customer Engine.");
+      expect(text).toContain("What to notice first");
+      expect(text).toContain("The next judgment is Review customer replies.");
+      expect(text).toContain("Suggested follow-up");
+      expect(text).toContain("Which proof would make Review customer replies worth doing next?");
       expect(text).toContain("Sprint Zero brief");
       expect(text).toContain("What is clear");
       expect(text).toContain("Acme Systems has 1 operating role and 1 work stream in motion.");

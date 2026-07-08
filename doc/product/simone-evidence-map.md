@@ -40,7 +40,7 @@ SimOne auditable while we build it.
 | Tissuu bridge write-back is deferred | `ARCHITECTURE.md`, PRD, milestone tracker | Deferred | Revisit only after Han has lived with read-only v1 |
 | Public Systems Bottleneck Scanner includes lived examples, signal strength, calibration status, safe diagnosis signals, and handoffs to Coach and Starter | `ui/src/components/FrontDoor.tsx`, `ui/src/pages/SystemsBottleneckScanner.tsx`, `ui/src/pages/SystemsBottleneckScanner.test.tsx`, `ui/src/pages/SimCoach.tsx`, `ui/src/components/OnboardingWizard.tsx`, scanner-related tests, PRD | Implemented and tested | Tune scoring against real submissions without exposing private notes |
 | Sprint Zero Brief carries into SIM Starter | `ui/src/components/OnboardingWizard.tsx`, `ui/src/components/OnboardingWizard.simone-starter.test.tsx`, `ui/src/components/SimOneSprintZeroGuide.tsx` | Implemented and tested | Better first-map review workflow |
-| Shareable Venture Architecture Map includes public proof context | `ui/src/pages/Artifacts.tsx`, `ui/src/pages/VentureShare.tsx`, `ui/src/pages/VentureShare.test.tsx`, PRD | Implemented and tested | Richer visual previews and lived public feedback |
+| Shareable Venture Architecture Map includes public preview and proof context | `ui/src/pages/Artifacts.tsx`, `ui/src/pages/VentureShare.tsx`, `ui/src/pages/VentureShare.test.tsx`, PRD | Implemented and tested | Stronger visual previews and lived public feedback |
 | Customer Engine proof/readout can be promoted into SIM Wiki | `ui/src/pages/CustomerEngine.tsx`, SIM Wiki plugin actions, PRD | Implemented and tested in product path | Broader review/decision promotion paths |
 | SIM Coach explains scanner results and distinguishes Coach/Wiki/control plane | `ui/src/pages/SimCoach.tsx`, `ui/src/pages/SimCoach.test.tsx`, scanner handoff in `ui/src/pages/SystemsBottleneckScanner.tsx`, PRD | Implemented and tested | More contextual Coach entry points beyond scanner |
 | SIM Coach can retrieve from SIM Wiki and save returned answers | `ui/src/pages/SimCoach.tsx`, `ui/src/pages/SimCoach.test.tsx`, plugin query/write actions | Implemented and tested | Stronger source graph and broader answer promotion |
@@ -63,7 +63,7 @@ SimOne auditable while we build it.
 | --- | --- | --- |
 | Product-flow blueprint, docs, first-screen behavior | `SYS-181` | PRD, docs index, field guide, evidence map, alpha-flow blueprint |
 | Tissuu Customer Engine bridge | `SYS-198` | Bridge live/read-only; write-back deferred |
-| Shareable venture artifacts | `SYS-199` | Shareable Venture Architecture Map exists with public proof context; richer previews remain |
+| Shareable venture artifacts | `SYS-199` | Shareable Venture Architecture Map exists with public preview and proof context; stronger visual previews and lived public feedback remain |
 | Public Systems Bottleneck Scanner | `SYS-200` | Scanner, lived examples, signal strength, secondary engine watch, calibration status, safe diagnosis signals, and Sprint Zero handoff exist; real-submission score tuning remains |
 | SIM Coach methodology loop | `SYS-201` | Scanner-to-Coach handoff, Coach/Wiki definitions, retrieval, answer promotion, wiki seeds |
 | Auditable model routing and escalation lanes | `SYS-202` | Route ledger, local compression, routing strategy; provider execution remains |
