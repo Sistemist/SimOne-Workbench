@@ -1240,6 +1240,26 @@ export function OnboardingWizard() {
                       </p>
                     </div>
                   </div>
+                  {onboardingPath ? (
+                    <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/20 px-3 py-2 text-xs">
+                      <span className="text-muted-foreground">
+                        Setup choice: <span className="font-medium text-foreground">
+                          {onboardingPath === "starter"
+                            ? "SIM Starter"
+                            : onboardingPath === "create"
+                              ? "Blank setup"
+                              : "Add agents to your org"}
+                        </span>
+                      </span>
+                      <button
+                        type="button"
+                        className="font-medium text-foreground underline-offset-4 hover:underline"
+                        onClick={() => { setOnboardingPath(null); setStep(0); }}
+                      >
+                        Change
+                      </button>
+                    </div>
+                  ) : null}
                   <div className="mt-3 group">
                     <label
                       className={cn(

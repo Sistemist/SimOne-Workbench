@@ -339,7 +339,20 @@ describe("OnboardingWizard SIM Starter path", () => {
     root = renderWizard(container);
 
     expect(document.body.textContent ?? "").toContain("Name your company");
+    expect(document.body.textContent ?? "").toContain("Setup choice: SIM Starter");
     expect(document.body.textContent ?? "").not.toContain("Welcome to SimOne");
+
+    flushSync(() => {
+      findButton(document.body, "Change").dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(document.body.textContent ?? "").toContain("Welcome to SimOne");
+    expect(document.body.textContent ?? "").toContain("Blank setup");
+
+    flushSync(() => {
+      findButton(document.body, "Start with SIM Starter").dispatchEvent(
+        new MouseEvent("click", { bubbles: true })
+      );
+    });
 
     const companyInput = document.body.querySelector<HTMLInputElement>(
       'input[placeholder="Acme Corp"]'
