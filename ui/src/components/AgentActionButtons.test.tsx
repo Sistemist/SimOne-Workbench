@@ -108,6 +108,7 @@ describe("AgentActionButtons", () => {
     mockAgentsApi.pause.mockResolvedValue(makeAgent({ status: "paused" }));
     mockAgentsApi.resume.mockResolvedValue(makeAgent({ status: "idle" }));
     mockAgentsApi.invoke.mockResolvedValue({ id: "run-1" });
+    mockAgentsApi.terminate.mockResolvedValue(makeAgent({ status: "terminated" }));
     mockAgentsApi.resetSession.mockResolvedValue(undefined);
   });
 
@@ -174,5 +175,66 @@ describe("AgentActionButtons", () => {
 
     expect(container.textContent).toContain("Pause");
     expect(container.textContent).not.toContain("Clear error");
+  });
+
+  it("warns before terminating a core SIM Starter role", async () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(makeAgent({
+      name: "Customer Lead",
+      urlKey: "customer-lead",
+      metadata: {
+        paperclip: {
+          catalogTeam: {
+            catalogSlug: "simone-starter",
+          },
+        },
+      },
+    }));
+    await flushReact();
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[aria-label="Open actions for Customer Lead"]')?.click();
+    });
+    await flushReact();
+
+    await act(async () => {
+      Array.from(document.body.querySelectorAll<HTMLButtonElement>("button"))
+        .find((button) => button.textContent?.includes("Terminate"))
+        ?.click();
+    });
+
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining("weakens the core SIM boundary"));
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining("another role will own that signal"));
+    expect(mockAgentsApi.terminate).not.toHaveBeenCalled();
+  });
+
+  it("terminates a core SIM Starter role after explicit confirmation", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    render(makeAgent({
+      name: "Skills Lead",
+      urlKey: "skills-lead",
+      metadata: {
+        paperclip: {
+          catalogTeam: {
+            catalogSlug: "simone-starter",
+          },
+        },
+      },
+    }));
+    await flushReact();
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[aria-label="Open actions for Skills Lead"]')?.click();
+    });
+    await flushReact();
+
+    await act(async () => {
+      Array.from(document.body.querySelectorAll<HTMLButtonElement>("button"))
+        .find((button) => button.textContent?.includes("Terminate"))
+        ?.click();
+    });
+    await flushReact();
+
+    expect(mockAgentsApi.terminate).toHaveBeenCalledWith("agent-1", "company-1");
   });
 });

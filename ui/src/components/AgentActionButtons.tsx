@@ -37,6 +37,32 @@ import type {
   HeartbeatRun,
 } from "@paperclipai/shared";
 
+const SIMONE_STARTER_CORE_ROLES = new Map([
+  ["ceo", "company-wide judgment and coordination"],
+  ["product-lead", "Product signal and delivery ownership"],
+  ["customer-lead", "Customer signal and relationship ownership"],
+  ["cash-lead", "Cash signal and economic ownership"],
+  ["skills-lead", "Skills signal and capability ownership"],
+]);
+
+function simoneStarterCoreBoundary(agent: Agent): string | null {
+  const paperclip = agent.metadata?.paperclip;
+  if (!paperclip || typeof paperclip !== "object" || Array.isArray(paperclip)) return null;
+  const catalogTeam = (paperclip as Record<string, unknown>).catalogTeam;
+  if (!catalogTeam || typeof catalogTeam !== "object" || Array.isArray(catalogTeam)) return null;
+  const provenance = catalogTeam as Record<string, unknown>;
+  if (provenance.catalogSlug !== "simone-starter") return null;
+  return SIMONE_STARTER_CORE_ROLES.get(agent.urlKey) ?? null;
+}
+
+export function terminateAgentPrompt(agent: Agent): string {
+  const boundary = simoneStarterCoreBoundary(agent);
+  if (boundary) {
+    return `Terminate ${agent.name}? This removes ${boundary} and weakens the core SIM boundary. Continue only if another role will own that signal.`;
+  }
+  return `Terminate ${agent.name}? This stops the agent and cannot be undone from this screen.`;
+}
+
 export function RunButton({
   onClick,
   disabled,
@@ -375,8 +401,9 @@ export function AgentActionButtons({
           <button
             className="flex items-center gap-2 w-full px-2 py-1.5 text-xs rounded hover:bg-accent/50 text-destructive"
             onClick={() => {
-              agentAction.mutate("terminate");
               setMoreOpen(false);
+              if (!window.confirm(terminateAgentPrompt(agent))) return;
+              agentAction.mutate("terminate");
             }}
           >
             <Trash2 className="h-3 w-3" />
