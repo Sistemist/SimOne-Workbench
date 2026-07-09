@@ -23,6 +23,7 @@ const apiPrefixes: Record<string, string> = {
   "companies.ts": "/api/companies",
   "company-skills.ts": "/api",
   "costs.ts": "/api",
+  "customer-engine-bridge.ts": "/api",
   "dashboard.ts": "/api",
   "environments.ts": "/api",
   "execution-workspaces.ts": "/api",
@@ -46,6 +47,7 @@ const apiPrefixes: Record<string, string> = {
   "sidebar-preferences.ts": "/api",
   "teams-catalog.ts": "/api",
   "user-profiles.ts": "/api",
+  "venture-shares.ts": "/api",
 };
 
 const ROUTE_LITERAL_PATTERN = /router\.(get|post|put|patch|delete)\(\s*["'`]([^"'`]+)["'`]/g;

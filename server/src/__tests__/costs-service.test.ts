@@ -92,6 +92,11 @@ const mockFinanceService = vi.hoisted(() => ({
   byKind: vi.fn().mockResolvedValue([]),
   list: vi.fn().mockResolvedValue([]),
 }));
+const mockModelRouteDecisionService = vi.hoisted(() => ({
+  create: vi.fn(),
+  list: vi.fn().mockResolvedValue([]),
+  updateReview: vi.fn(),
+}));
 const mockBudgetService = vi.hoisted(() => ({
   overview: vi.fn().mockResolvedValue({
     companyId: "company-1",
@@ -114,6 +119,7 @@ function registerModuleMocks() {
     budgetService: () => mockBudgetService,
     costService: () => mockCostService,
     financeService: () => mockFinanceService,
+    modelRouteDecisionService: () => mockModelRouteDecisionService,
     companyService: () => mockCompanyService,
     agentService: () => mockAgentService,
     issueService: () => mockIssueService,

@@ -10,8 +10,8 @@ export const modelRouteDecisions = pgTable(
   "model_route_decisions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    companyId: uuid("company_id").notNull().references(() => companies.id),
-    agentId: uuid("agent_id").notNull().references(() => agents.id),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    agentId: uuid("agent_id").references(() => agents.id, { onDelete: "set null" }),
     issueId: uuid("issue_id").references(() => issues.id, { onDelete: "set null" }),
     projectId: uuid("project_id").references(() => projects.id, { onDelete: "set null" }),
     goalId: uuid("goal_id").references(() => goals.id, { onDelete: "set null" }),

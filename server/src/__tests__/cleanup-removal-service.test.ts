@@ -16,6 +16,7 @@ import {
   issueExecutionDecisions,
   issueReadStates,
   issues,
+  modelRouteDecisions,
 } from "@paperclipai/db";
 import {
   getEmbeddedPostgresTestSupport,
@@ -48,6 +49,7 @@ describeEmbeddedPostgres("cleanup removal services", () => {
     await db.delete(issueReadStates);
     await db.delete(issueComments);
     await db.delete(issueExecutionDecisions);
+    await db.delete(modelRouteDecisions);
     await db.delete(documentRevisions);
     await db.delete(documents);
     await db.delete(companySkills);
@@ -153,10 +155,83 @@ describeEmbeddedPostgres("cleanup removal services", () => {
     await expect(db.select().from(activityLog).where(eq(activityLog.companyId, companyId))).resolves.toHaveLength(0);
   });
 
+  it("preserves route audit history while clearing references to a deleted agent", async () => {
+    const { agentId, companyId, issueId, runId } = await seedFixture();
+    const decisionId = randomUUID();
+
+    await db.insert(modelRouteDecisions).values({
+      id: decisionId,
+      companyId,
+      agentId,
+      issueId,
+      heartbeatRunId: runId,
+      lane: "workhorse",
+      provider: "anthropic",
+      model: "claude-sonnet",
+      reason: "Keep the routing rationale available after team changes.",
+      createdByAgentId: agentId,
+      createdByRunId: runId,
+    });
+
+    const removed = await agentService(db).remove(agentId);
+
+    expect(removed?.id).toBe(agentId);
+    await expect(db.select().from(modelRouteDecisions).where(eq(modelRouteDecisions.id, decisionId))).resolves.toEqual([
+      expect.objectContaining({
+        id: decisionId,
+        companyId,
+        agentId: null,
+        issueId,
+        heartbeatRunId: null,
+        createdByAgentId: null,
+        createdByRunId: null,
+      }),
+    ]);
+  });
+
+  it("removes company-owned route audit history at the database boundary", async () => {
+    const companyId = randomUUID();
+    const agentId = randomUUID();
+    const decisionId = randomUUID();
+
+    await db.insert(companies).values({
+      id: companyId,
+      name: "Route Audit Lifecycle",
+      issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
+      requireBoardApprovalForNewAgents: false,
+    });
+    await db.insert(agents).values({
+      id: agentId,
+      companyId,
+      name: "Routing Agent",
+      role: "engineer",
+      status: "idle",
+      adapterType: "codex_local",
+      adapterConfig: {},
+      runtimeConfig: {},
+      permissions: {},
+    });
+    await db.insert(modelRouteDecisions).values({
+      id: decisionId,
+      companyId,
+      agentId,
+      lane: "workhorse",
+      provider: "anthropic",
+      model: "claude-sonnet",
+      reason: "Company-scoped audit history must not outlive its company.",
+    });
+
+    await db.delete(agents).where(eq(agents.id, agentId));
+    await db.delete(companies).where(eq(companies.id, companyId));
+
+    await expect(db.select().from(modelRouteDecisions).where(eq(modelRouteDecisions.id, decisionId))).resolves.toHaveLength(0);
+  });
+
   it("removes issue read states and activity rows before deleting the company", async () => {
     const { companyId, issueId, runId } = await seedFixture();
     const documentId = randomUUID();
     const revisionId = randomUUID();
+    const decisionId = randomUUID();
 
     await db.insert(issueReadStates).values({
       id: randomUUID(),
@@ -220,6 +295,18 @@ describeEmbeddedPostgres("cleanup removal services", () => {
       createdByRunId: runId,
     });
 
+    await db.insert(modelRouteDecisions).values({
+      id: decisionId,
+      companyId,
+      agentId: (await db.select({ id: agents.id }).from(agents).where(eq(agents.companyId, companyId)))[0]!.id,
+      issueId,
+      heartbeatRunId: runId,
+      lane: "workhorse",
+      provider: "anthropic",
+      model: "claude-sonnet",
+      reason: "Company-scoped route audit fixture.",
+    });
+
     const removed = await companyService(db).remove(companyId);
 
     expect(removed?.id).toBe(companyId);
@@ -229,6 +316,7 @@ describeEmbeddedPostgres("cleanup removal services", () => {
     await expect(db.select().from(documentRevisions).where(eq(documentRevisions.id, revisionId))).resolves.toHaveLength(0);
     await expect(db.select().from(issueReadStates).where(eq(issueReadStates.companyId, companyId))).resolves.toHaveLength(0);
     await expect(db.select().from(activityLog).where(eq(activityLog.companyId, companyId))).resolves.toHaveLength(0);
+    await expect(db.select().from(modelRouteDecisions).where(eq(modelRouteDecisions.id, decisionId))).resolves.toHaveLength(0);
   });
 
   it("removes heartbeat events by run id before deleting company-owned runs", async () => {

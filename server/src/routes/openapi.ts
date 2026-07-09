@@ -60,7 +60,9 @@ import {
   addApprovalCommentSchema,
   // Cost / budget
   createCostEventSchema,
+  createModelRouteDecisionSchema,
   createFinanceEventSchema,
+  updateModelRouteDecisionReviewSchema,
   updateBudgetSchema,
   upsertBudgetPolicySchema,
   resolveBudgetIncidentSchema,
@@ -532,6 +534,7 @@ const PUBLIC_OPERATIONS = new Set([
   "GET /api/invites/{token}/skills/{skillName}",
   "GET /api/invites/{token}/test-resolution",
   "POST /api/invites/{token}/accept",
+  "GET /api/venture-shares/{shareId}",
   "POST /api/join-requests/{requestId}/claim-api-key",
 ]);
 
@@ -615,6 +618,8 @@ const CREATED_OPERATIONS = new Set([
   "POST /api/companies/{companyId}/invites",
   "POST /api/companies/{companyId}/openclaw/invite-prompt",
   "POST /api/companies/{companyId}/cost-events",
+  "POST /api/companies/{companyId}/model-route-decisions",
+  "POST /api/companies/{companyId}/venture-shares",
   "POST /api/companies/{companyId}/finance-events",
   "POST /api/companies/{companyId}/secret-provider-configs",
   "POST /api/companies/{companyId}/environments",
@@ -2270,6 +2275,62 @@ registry.registerPath({
     body: jsonBody(createCostEventSchema),
   },
   responses: { 200: r.ok(), 400: r.badRequest, 401: r.unauthorized },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/companies/{companyId}/model-route-decisions",
+  tags: ["costs"],
+  summary: "Record an auditable model route decision",
+  request: {
+    params: z.object({ companyId: z.string() }),
+    body: jsonBody(createModelRouteDecisionSchema),
+  },
+  responses: { 200: r.ok(), 400: r.badRequest, 401: r.unauthorized, 404: r.notFound, 422: r.unprocessable },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/companies/{companyId}/model-route-decisions",
+  tags: ["costs"],
+  summary: "List auditable model route decisions",
+  request: { params: z.object({ companyId: z.string() }) },
+  responses: { 200: r.ok(), 401: r.unauthorized },
+});
+
+registry.registerPath({
+  method: "patch",
+  path: "/api/companies/{companyId}/model-route-decisions/{decisionId}/review",
+  tags: ["costs"],
+  summary: "Update model route decision review evidence",
+  request: {
+    params: z.object({ companyId: z.string(), decisionId: z.string() }),
+    body: jsonBody(updateModelRouteDecisionReviewSchema),
+  },
+  responses: { 200: r.ok(), 400: r.badRequest, 401: r.unauthorized, 404: r.notFound },
+});
+
+registerCurrentRoute({
+  method: "get",
+  path: "/api/companies/{companyId}/customer-engine/bridge",
+  tags: ["companies"],
+  summary: "Get the read-only Customer Engine bridge snapshot",
+});
+
+registerCurrentRoute({
+  method: "post",
+  path: "/api/companies/{companyId}/venture-shares",
+  tags: ["companies"],
+  summary: "Create a shareable venture snapshot",
+  responses: { 201: r.ok(), 401: r.unauthorized, 403: r.forbidden, 404: r.notFound },
+});
+
+registerCurrentRoute({
+  method: "get",
+  path: "/api/venture-shares/{shareId}",
+  tags: ["companies"],
+  summary: "Get a public venture snapshot",
+  responses: { 200: r.ok(), 404: r.notFound },
 });
 
 registry.registerPath({
