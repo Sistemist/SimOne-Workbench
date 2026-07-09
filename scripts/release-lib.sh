@@ -350,11 +350,12 @@ require_clean_worktree() {
   fi
 }
 
-require_on_master_branch() {
-  local current_branch
+require_on_release_branch() {
+  local current_branch release_branch
   current_branch="$(git_current_branch)"
-  if [ "$current_branch" != "master" ]; then
-    release_fail "this release step must run from branch master, but current branch is ${current_branch:-<detached>}."
+  release_branch="${PAPERCLIP_RELEASE_BRANCH:-simone-main}"
+  if [ "$current_branch" != "$release_branch" ]; then
+    release_fail "this release step must run from branch $release_branch, but current branch is ${current_branch:-<detached>}."
   fi
 }
 

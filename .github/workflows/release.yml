@@ -3,14 +3,14 @@ name: Release
 on:
   push:
     branches:
-      - master
+      - simone-main
   workflow_dispatch:
     inputs:
       source_ref:
         description: Commit SHA, branch, or tag to publish as stable
         required: true
         type: string
-        default: master
+        default: simone-main
       stable_date:
         description: Enter a UTC date in YYYY-MM-DD format, for example 2026-03-18. Do not enter a version string. The workflow will resolve that date to a stable version such as 2026.318.0, then 2026.318.1 for the next same-day stable.
         required: false
@@ -47,7 +47,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 24.18.0
           cache: pnpm
 
       - name: Validate release package manifest
@@ -89,7 +89,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 24.18.0
           cache: pnpm
 
       - name: Validate release package manifest
@@ -142,7 +142,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 24.18.0
           cache: pnpm
 
       - name: Validate release package manifest
@@ -183,7 +183,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 24.18.0
           cache: pnpm
 
       - name: Validate release package manifest
@@ -227,7 +227,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 24.18.0
           cache: pnpm
 
       - name: Install dependencies

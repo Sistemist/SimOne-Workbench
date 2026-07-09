@@ -1,4 +1,4 @@
-FROM node:lts-trixie-slim
+FROM node:24.18.0-trixie-slim
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
@@ -17,7 +17,7 @@ RUN apt-get update \
 
 RUN ln -sf /usr/bin/fdfind /usr/local/bin/fd
 
-RUN corepack enable \
+RUN npm install --global pnpm@9.15.4 \
   && npm install --global --omit=dev @anthropic-ai/claude-code@latest @openai/codex@latest
 
 RUN useradd --create-home --shell /bin/bash reviewer

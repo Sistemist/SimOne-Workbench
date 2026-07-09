@@ -3,11 +3,11 @@ name: Refresh Lockfile
 on:
   push:
     branches:
-      - master
+      - simone-main
   workflow_dispatch:
 
 concurrency:
-  group: refresh-lockfile-master
+  group: refresh-lockfile-simone-main
   cancel-in-progress: false
 
 jobs:
@@ -31,7 +31,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24.18.0
           cache: pnpm
 
       - name: Refresh pnpm lockfile
@@ -81,7 +81,7 @@ jobs:
             pr_url="$(gh pr create \
               --head "$BRANCH" \
               --title "chore(lockfile): refresh pnpm-lock.yaml" \
-              --body "Auto-generated lockfile refresh after dependencies changed on master. This PR only updates pnpm-lock.yaml.")"
+              --body "Auto-generated lockfile refresh after dependencies changed on simone-main. This PR only updates pnpm-lock.yaml.")"
             echo "Created new PR: $pr_url"
           else
             echo "PR already exists: $pr_url"
