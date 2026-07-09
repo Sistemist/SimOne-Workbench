@@ -795,6 +795,14 @@ export function SimCoach() {
             >
               {simWikiReady ? "SIM Wiki ready" : "SIM Wiki not enabled"}
             </span>
+            {simWikiReady ? (
+              <Button asChild size="sm" className="h-8">
+                <Link to="/wiki/query">
+                  Ask SIM Wiki
+                  <MessageCircleQuestion className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            ) : null}
             <Button asChild size="sm" className="h-8">
               <Link to="/teams-catalog/paperclipai%3Abundled%3Asimone%3Asimone-starter">
                 Starter

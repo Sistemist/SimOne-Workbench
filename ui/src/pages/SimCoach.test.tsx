@@ -153,6 +153,35 @@ describe("SimCoach", () => {
     });
   });
 
+  it("keeps an always-visible path to ask the ready SIM Wiki", async () => {
+    mockPluginsApi.list.mockResolvedValue([
+      {
+        id: "plugin-1",
+        packageName: "@paperclipai/plugin-llm-wiki",
+        status: "ready",
+        manifestJson: {
+          displayName: "SIM Wiki",
+          description: "SimOne wiki",
+          version: "0.1.0",
+        },
+      } as PluginRecord,
+    ]);
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderSimCoach(container);
+    await flushReact();
+
+    const askLink = Array.from(container.querySelectorAll<HTMLAnchorElement>("a")).find(
+      (link) => link.textContent?.includes("Ask SIM Wiki")
+    );
+    expect(askLink?.getAttribute("href")).toBe("/wiki/query");
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
   it("explains Coach, Wiki, and the control plane in plain product language", () => {
     const container = document.createElement("div");
     document.body.appendChild(container);
