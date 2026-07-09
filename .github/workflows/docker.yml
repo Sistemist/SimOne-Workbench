@@ -1,9 +1,8 @@
 name: Docker
 
 on:
+  workflow_dispatch:
   push:
-    branches:
-      - "simone-main"
     tags:
       - "v*"
 
