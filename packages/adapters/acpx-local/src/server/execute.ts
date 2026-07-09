@@ -160,6 +160,18 @@ async function ensureParentDir(target: string): Promise<void> {
   await fs.mkdir(path.dirname(target), { recursive: true });
 }
 
+async function createSymlinkRaceSafe(target: string, resolvedSource: string): Promise<void> {
+  try {
+    await fs.symlink(resolvedSource, target);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
+
+    const linkedPath = await fs.readlink(target).catch(() => null);
+    if (linkedPath && path.resolve(path.dirname(target), linkedPath) === resolvedSource) return;
+    throw err;
+  }
+}
+
 async function writeFileAtomically(input: {
   target: string;
   contents: string;
@@ -185,13 +197,13 @@ async function ensureSymlink(target: string, source: string): Promise<void> {
   const existing = await fs.lstat(target).catch(() => null);
   if (!existing) {
     await ensureParentDir(target);
-    await fs.symlink(resolvedSource, target);
+    await createSymlinkRaceSafe(target, resolvedSource);
     return;
   }
 
   if (!existing.isSymbolicLink()) {
     await fs.rm(target, { recursive: true, force: true });
-    await fs.symlink(resolvedSource, target);
+    await createSymlinkRaceSafe(target, resolvedSource);
     return;
   }
 
@@ -202,7 +214,7 @@ async function ensureSymlink(target: string, source: string): Promise<void> {
   if (resolvedLinkedPath === resolvedSource) return;
 
   await fs.unlink(target);
-  await fs.symlink(resolvedSource, target);
+  await createSymlinkRaceSafe(target, resolvedSource);
 }
 
 async function ensureCopiedFile(target: string, source: string): Promise<void> {
