@@ -1,10 +1,17 @@
 .git
 .github
 .paperclip
+.obsidian
+.playwright-cli
 .pnpm-store
 node_modules
 **/node_modules
 coverage
 data
+doc
+docs
+output
 tmp
 *.log
+ARCHITECTURE.md
+Paperclip AI License Verification.md
