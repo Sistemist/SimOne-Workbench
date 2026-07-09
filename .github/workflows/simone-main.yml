@@ -1,20 +1,13 @@
-name: Lockfile Check
+name: SimOne Main Gate
 
 on:
   push:
     branches:
       - simone-main
-    paths:
-      - package.json
-      - "**/package.json"
-      - pnpm-lock.yaml
-      - pnpm-workspace.yaml
-      - .npmrc
-      - .github/workflows/refresh-lockfile.yml
   workflow_dispatch:
 
 concurrency:
-  group: lockfile-check-simone-main
+  group: simone-main-gate
   cancel-in-progress: true
 
 permissions:
@@ -23,7 +16,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 45
 
     steps:
       - name: Checkout repository
@@ -41,8 +34,17 @@ jobs:
           node-version: 24.18.0
           cache: pnpm
 
-      - name: Verify committed lockfile
-        run: pnpm install --lockfile-only --ignore-scripts --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      - name: Confirm lockfile stayed clean
-        run: git diff --exit-code -- pnpm-lock.yaml
+      - name: Validate deployment hygiene
+        run: pnpm run test:simone-deploy
+
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+      - name: Test
+        run: pnpm test:run
+
+      - name: Build
+        run: pnpm build
