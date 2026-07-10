@@ -87,6 +87,40 @@ When you are creating a plan file in the repository itself, new plan documents b
 6. Attach inspectable generated artifacts.
 When your task produces a user-inspectable deliverable file, follow the Paperclip skill's "Generated Artifacts and Work Products" workflow before final disposition. In this repo, prefer the self-contained skill helper at `skills/paperclip/scripts/paperclip-upload-artifact.sh` so the file is available through the Paperclip API, create/update an artifact work product when the file is the deliverable, link the uploaded artifact in the final issue comment, and then set status. Do not rely on local filesystem paths as the only access path. If an important file intentionally remains workspace-only, create/update a work product with `metadata.resourceRef.kind: "workspace_file"` and a workspace-relative path, then name that work product and path in the final comment. Treat browse/search as a fallback for recovering workspace files, not the preferred deliverable path. See `doc/AGENT-ARTIFACTS.md` for details and `.mp4`/`.webm` examples.
 
+## 5.1 AI Spend Safety (Mandatory)
+
+These rules apply to every contributor and every SimOne/Paperclip agent. They cover paid model calls, live provider probes, agent heartbeats, evaluation runs, browser tests that invoke a model, and multi-agent workflows. Normal deterministic unit, type, lint, and build checks do not count as paid-model tests.
+
+1. Default to no paid model calls.
+Use deterministic mocks, recorded fixtures, local models, subscription-included tools with no metered overage, or a currently verified free/next-to-free OpenRouter route. Model availability and pricing must be rechecked at the time of use.
+
+2. Anthropic API usage is forbidden by default.
+Do not run a paid Anthropic API test or agent unless the user explicitly approves it in the current conversation after seeing the exact model, purpose, and maximum dollar exposure. Prior approval, an existing key, or available account credit is not authorization. Never enable automatic credit reload.
+
+3. Never rely on an adapter or provider's default model.
+Pin the exact provider and model before any live model call. An omitted model is a failed safety check, especially for Claude adapters whose default may be Opus.
+
+4. No paid run starts without independent hard limits.
+Before execution, establish and verify all applicable limits: provider/account hard cap, per-run dollar or token cap, maximum turns, timeout, heartbeat/run limit, and concurrency of one. A Paperclip monthly budget alone is insufficient because it is evaluated from Paperclip's own cost ledger and may only react after a run completes.
+
+5. Treat zero, missing, delayed, or unpriced cost as unknown and unsafe.
+Do not interpret `$0`, `cost_cents = 0`, absent pricing, subscription billing, or missing usage as free. Stop further runs until the provider's actual usage is reconciled and cost accounting is proven. A configured budget of `0` means unlimited and is not acceptable for a paid agent.
+
+6. Paid multi-agent fan-out and autonomous feedback loops are prohibited.
+Use one agent and one bounded run at a time. A second paid run requires reconciliation of the first. Do not allow paid agents to hire, delegate to, wake, retry, or review one another autonomously.
+
+7. Prove safeguards without spending first.
+Exercise cap, timeout, cancellation, retry, and pause behavior with mocks or a free route before attaching a paid key. The proof must show fail-closed behavior when price or usage telemetry is absent.
+
+8. Reconcile after every authorized paid run.
+Compare Paperclip's ledger with the provider dashboard or response-level usage before continuing. Stop immediately on any discrepancy, unexpected retry, repeated heartbeat, token spike, or no-progress loop. Record the model, run count, observed usage, actual cost, and stop reason without recording secrets.
+
+9. Keep paid keys out of automation by default.
+Do not add paid provider keys to GitHub Actions, scheduled jobs, fixtures, committed files, logs, docs, or memory. LLM-enabled CI must remain manual, skip live models by default, use a dedicated capped key, and require explicit approval for each run.
+
+10. Secrets are never evidence.
+Do not print, quote, commit, document, or save API keys or passwords in memory. Report only whether a secret is configured and where its lifecycle is controlled.
+
 ## 6. Database Change Workflow
 
 When changing data model:
