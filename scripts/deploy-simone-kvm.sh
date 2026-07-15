@@ -14,6 +14,8 @@ deploy_short_sha="$(git -C "$repo_root" rev-parse --short=12 HEAD)"
 deploy_branch="$(git -C "$repo_root" branch --show-current)"
 deploy_timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
+node "$repo_root/scripts/check-docker-runtime-pins.mjs"
+
 if [ -n "$(git -C "$repo_root" status --porcelain --untracked-files=normal)" ]; then
   echo "Refusing to deploy a dirty worktree. Commit or remove local changes first." >&2
   exit 1

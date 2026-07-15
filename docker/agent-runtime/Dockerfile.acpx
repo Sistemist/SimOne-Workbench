@@ -5,7 +5,7 @@ FROM paperclipai/agent-runtime-base:${BASE_TAG}
 USER root
 # acpx is the ACPX wrapper that bridges to claude / codex backends.
 # Verified npm package name: "acpx" (bin 'acpx' → dist/cli.js).
-RUN npm install -g acpx@latest \
+RUN npm install -g acpx@0.12.0 \
     && { chown -R 1000:1000 /usr/lib/node_modules || true; }
 
 USER 1000:1000

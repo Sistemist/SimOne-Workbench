@@ -49,6 +49,9 @@ jobs:
       - name: Validate Dockerfile deps stage
         run: node ./scripts/check-docker-deps-stage.mjs
 
+      - name: Validate Docker runtime package pins
+        run: pnpm run test:docker-runtime-pins
+
       - name: Validate SimOne deploy hygiene
         run: pnpm run test:simone-deploy
 

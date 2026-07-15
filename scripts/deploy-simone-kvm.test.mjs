@@ -22,6 +22,7 @@ test("keeps internal-only material out of deploy sync and Docker context", () =>
 });
 
 test("requires clean pushed release evidence and records rollback metadata", () => {
+  assert.match(script, /check-docker-runtime-pins\.mjs/);
   assert.match(script, /status --porcelain --untracked-files=normal/);
   assert.match(script, /rev-parse '@\{upstream\}'/);
   assert.match(script, /DEPLOY_SHA=/);

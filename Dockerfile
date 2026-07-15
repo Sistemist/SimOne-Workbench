@@ -62,7 +62,7 @@ ARG USER_UID=1000
 ARG USER_GID=1000
 WORKDIR /app
 COPY --chown=node:node --from=build /app /app
-RUN npm install --global --omit=dev @anthropic-ai/claude-code@latest @openai/codex@latest opencode-ai @google/gemini-cli@latest \
+RUN npm install --global --omit=dev @anthropic-ai/claude-code@2.1.210 @openai/codex@0.144.4 opencode-ai@1.18.2 @google/gemini-cli@0.50.0 \
   && apt-get update \
   && apt-get install -y --no-install-recommends openssh-client jq \
   && rm -rf /var/lib/apt/lists/* \

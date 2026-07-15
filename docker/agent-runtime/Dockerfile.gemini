@@ -3,7 +3,7 @@ ARG BASE_TAG=dev
 FROM paperclipai/agent-runtime-base:${BASE_TAG}
 
 USER root
-RUN npm install -g @google/gemini-cli@latest \
+RUN npm install -g @google/gemini-cli@0.50.0 \
     && { chown -R 1000:1000 /usr/lib/node_modules || true; }
 
 USER 1000:1000

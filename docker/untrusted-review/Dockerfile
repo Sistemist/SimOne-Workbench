@@ -18,7 +18,7 @@ RUN apt-get update \
 RUN ln -sf /usr/bin/fdfind /usr/local/bin/fd
 
 RUN npm install --global pnpm@9.15.4 \
-  && npm install --global --omit=dev @anthropic-ai/claude-code@latest @openai/codex@latest
+  && npm install --global --omit=dev @anthropic-ai/claude-code@2.1.210 @openai/codex@0.144.4
 
 RUN useradd --create-home --shell /bin/bash reviewer
 

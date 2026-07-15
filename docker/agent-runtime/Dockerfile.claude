@@ -3,7 +3,7 @@ ARG BASE_TAG=dev
 FROM paperclipai/agent-runtime-base:${BASE_TAG}
 
 USER root
-RUN npm install -g @anthropic-ai/claude-code@latest \
+RUN npm install -g @anthropic-ai/claude-code@2.1.210 \
     && { chown -R 1000:1000 /usr/lib/node_modules || true; }
 
 # @anthropic-ai/claude-code installs as 'claude', but the shim expects 'claude-code'.
