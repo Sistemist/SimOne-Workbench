@@ -144,6 +144,19 @@ describe("CloudAccessGate", () => {
     unmountRoot(root);
   });
 
+  it("sends signed-out users to sign in before loading a hosted workspace", async () => {
+    mockAuthApi.getSession.mockResolvedValue(null);
+
+    const root = renderGate(container);
+    await waitForText(container, "Navigate:/auth?next=%2Finstance%2Fsettings%2Fgeneral");
+
+    expect(container.textContent).toContain("Navigate:/auth?next=%2Finstance%2Fsettings%2Fgeneral");
+    expect(container.textContent).not.toContain("Outlet content");
+    expect(mockAccessApi.getCurrentBoardAccess).not.toHaveBeenCalled();
+
+    unmountRoot(root);
+  });
+
   it("shows browser sign-in setup for signed-out private bootstrap-pending instances", async () => {
     mockHealthApi.get.mockResolvedValue({
       status: "ok",

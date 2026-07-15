@@ -539,6 +539,7 @@ export function Layout() {
             <SidebarAccountMenu
               deploymentMode={health?.deploymentMode}
               version={health?.version}
+              workspaceName={selectedCompany?.name}
             />
           </div>
         ) : (
@@ -558,6 +559,7 @@ export function Layout() {
             <SidebarAccountMenu
               deploymentMode={health?.deploymentMode}
               version={health?.version}
+              workspaceName={selectedCompany?.name}
             />
           </SidebarShell>
         )}

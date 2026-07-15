@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BookOpen,
+  Cloud,
+  HardDrive,
   LogOut,
-  Megaphone,
   type LucideIcon,
   UserRound,
   UserRoundPen,
@@ -20,14 +21,12 @@ import { ThemeToggle } from "./ThemeToggle";
 import { SidebarServerInfo } from "./SidebarServerInfo";
 
 const PROFILE_SETTINGS_PATH = "/company/settings/instance/profile";
-const DOCS_URL = "https://docs.paperclip.ing/";
-const FEEDBACK_URL = "https://paperclip.ing/feedback";
-
 interface SidebarAccountMenuProps {
   deploymentMode?: DeploymentMode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   version?: string | null;
+  workspaceName?: string | null;
 }
 
 interface MenuActionProps {
@@ -105,6 +104,7 @@ export function SidebarAccountMenu({
   open: controlledOpen,
   onOpenChange,
   version,
+  workspaceName,
 }: SidebarAccountMenuProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -130,6 +130,11 @@ export function SidebarAccountMenu({
   const secondaryLabel =
     session?.user.email?.trim() || (deploymentMode === "authenticated" ? "Signed in" : "Local workspace board");
   const accountBadge = deploymentMode === "authenticated" ? "Account" : "Local";
+  const workspaceLabel = workspaceName?.trim() || "SimOne workspace";
+  const workspaceStatus = deploymentMode === "authenticated"
+    ? "Signed in · changes are saved to this hosted workspace"
+    : "Local mode · changes stay on this instance";
+  const WorkspaceIcon = deploymentMode === "authenticated" ? Cloud : HardDrive;
   const initials = deriveInitials(displayName);
   const profileHref = `/u/${deriveUserSlug(session?.user.name, session?.user.email, session?.user.id)}`;
 
@@ -178,9 +183,19 @@ export function SidebarAccountMenu({
                 </div>
                 <p className="truncate text-sm text-muted-foreground">{secondaryLabel}</p>
                 {version ? (
-                  <p className="mt-1 text-xs text-muted-foreground">Paperclip v{version}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">SimOne v{version}</p>
                 ) : null}
               </div>
+            </div>
+
+            <div className="mt-4 flex items-start gap-3 rounded-xl border border-border bg-background/60 px-3 py-3">
+              <span className="mt-0.5 rounded-lg border border-border bg-background p-2 text-muted-foreground">
+                <WorkspaceIcon className="size-4" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium text-foreground">{workspaceLabel}</span>
+                <span className="block text-xs text-muted-foreground">{workspaceStatus}</span>
+              </span>
             </div>
 
             <div className="mt-4 space-y-1">
@@ -199,20 +214,11 @@ export function SidebarAccountMenu({
                 onClick={closeNavigationChrome}
               />
               <MenuAction
-                label="Documentation"
-                description="Open Paperclip docs in a new tab."
+                label="SIM Coach"
+                description="Ask for guidance before assigning work."
                 icon={BookOpen}
-                href={DOCS_URL}
-                external
-                onClick={() => setOpen(false)}
-              />
-              <MenuAction
-                label="Feedback"
-                description="Share feedback or report an issue."
-                icon={Megaphone}
-                href={FEEDBACK_URL}
-                external
-                onClick={() => setOpen(false)}
+                href="/sim-coach"
+                onClick={closeNavigationChrome}
               />
               <ThemeToggle variant="menu-action" onAfterToggle={() => setOpen(false)} />
               {deploymentMode === "authenticated" ? (
