@@ -181,7 +181,13 @@ If anything cannot be run, explicitly report what was not run and why.
 - Allow a cross-milestone slice only when it completes a visible first-user path or unblocks a real dependency.
 - Use parent/child issues for breakdown and related/blocking links for dependency clarity.
 - Avoid fake blockers; use blockers only when the next task truly cannot proceed without the prior one.
-- Keep Linear activity current: after meaningful code, deploy, or product-direction work, update the relevant issue or project with status, shipped evidence, and remaining gaps.
+- Treat Linear reconciliation as part of the work, not optional reporting after it.
+- At the start of every SimOne work session, read the live SimOne project, milestones, and relevant issues before selecting the next slice. Reconcile them with the current branch and recent commits instead of trusting an older tracker or recreating existing work.
+- When a meaningful bug, reliability gap, product decision, or follow-up is identified, create or update the relevant Linear issue in the same slice. Do not leave discoveries only in chat, local notes, or commit messages.
+- Move the active issue to In Progress when implementation begins. After every meaningful code, deploy, or product-direction slice, comment with the commit SHA when applicable, verification evidence, deploy evidence when applicable, and specific remaining gaps.
+- Before ending a session, perform a final Linear reconciliation: issue statuses must match the repository, completed work must have evidence, new findings must be captured, duplicate or superseded issues must be linked or closed, and the project status update must describe the current next slice.
+- If milestone completion or sequencing materially changed, update `doc/product/simone-milestone-tracker.md` in the same slice so it and Linear tell the same story.
+- A Linear connector failure is an explicit hand-off blocker for reporting, not permission to forget the update. Record what remains to be synchronized and make that reconciliation the first task after access returns.
 
 ## 8. API and Auth Expectations
 
@@ -223,6 +229,7 @@ A change is done when all are true:
 3. Contracts are synced across db/shared/server/ui
 4. Docs updated when behavior or commands change
 5. PR description follows the [PR template](.github/PULL_REQUEST_TEMPLATE.md) with all sections filled in (including Model Used)
+6. Linear is reconciled: issue state, evidence comment, newly discovered follow-ups, project status, and milestone tracker all match the shipped repository state
 
 ## 11. Fork-Specific: HenkDz/paperclip
 
