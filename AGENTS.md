@@ -121,6 +121,14 @@ Do not add paid provider keys to GitHub Actions, scheduled jobs, fixtures, commi
 10. Secrets are never evidence.
 Do not print, quote, commit, document, or save API keys or passwords in memory. Report only whether a secret is configured and where its lifecycle is controlled.
 
+Temporary SimOne development-login exception: when the user explicitly asks in
+the current conversation, an agent may generate or rotate a SimOne-owned,
+development-only login password and show it to that user once for immediate
+testing. The exception does not apply to provider API keys, access tokens,
+database/SSH/deployment credentials, shared accounts, or production passwords.
+The temporary password must not be committed, written to files, logs, Linear,
+CI, docs, or memory, and it must be rotated before production access expands.
+
 ## 6. Database Change Workflow
 
 When changing data model:
