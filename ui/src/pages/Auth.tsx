@@ -22,6 +22,7 @@ export function AuthPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const errorId = "auth-error";
+  const passwordResetComplete = searchParams.get("passwordReset") === "success";
 
   const nextPath = useMemo(
     () => searchParams.get("next") || getRememberedInvitePath() || "/",
@@ -97,6 +98,12 @@ export function AuthPage() {
               : "Create an account for this workspace. Email confirmation is not required yet."}
           </p>
 
+          {passwordResetComplete && (
+            <p role="status" className="mt-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+              Your password has been reset. Sign in with your new password.
+            </p>
+          )}
+
           <form
             className="mt-6 space-y-4"
             method="post"
@@ -147,7 +154,17 @@ export function AuthPage() {
               />
             </div>
             <div>
-              <label htmlFor="password" className="text-xs text-muted-foreground mb-1 block">Password</label>
+              <div className="mb-1 flex items-center justify-between gap-3">
+                <label htmlFor="password" className="text-xs text-muted-foreground">Password</label>
+                {mode === "sign_in" && (
+                  <a
+                    href="/auth/forgot-password"
+                    className="text-xs font-medium text-foreground underline underline-offset-2"
+                  >
+                    Forgot password?
+                  </a>
+                )}
+              </div>
               <input
                 id="password"
                 name="password"

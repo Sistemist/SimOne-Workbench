@@ -140,6 +140,17 @@ describe("AuthPage", () => {
     // Programmatic labels.
     expect(container.querySelector('label[for="email"]')).not.toBeNull();
     expect(container.querySelector('label[for="password"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/auth/forgot-password"]')?.textContent).toBe("Forgot password?");
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
+
+  it("confirms a completed password reset", async () => {
+    const root = await mount("/auth?passwordReset=success");
+
+    expect(container.querySelector('[role="status"]')?.textContent).toContain("password has been reset");
 
     await act(async () => {
       root.unmount();

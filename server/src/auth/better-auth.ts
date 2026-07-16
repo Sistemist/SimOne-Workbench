@@ -12,6 +12,11 @@ import {
 } from "@paperclipai/db";
 import type { Config } from "../config.js";
 import { resolvePaperclipInstanceId } from "../home-paths.js";
+import { logger } from "../middleware/logger.js";
+import {
+  createPasswordResetDelivery,
+  type PasswordResetDelivery,
+} from "./password-reset-delivery.js";
 
 export type BetterAuthSessionUser = {
   id: string;
@@ -122,7 +127,12 @@ export function deriveAuthTrustedOrigins(config: Config, opts?: { listenPort?: n
   return Array.from(trustedOrigins);
 }
 
-export function createBetterAuthInstance(db: Db, config: Config, trustedOrigins: string[]): BetterAuthInstance {
+export function createBetterAuthInstance(
+  db: Db,
+  config: Config,
+  trustedOrigins: string[],
+  options?: { passwordResetDelivery?: PasswordResetDelivery },
+): BetterAuthInstance {
   const baseUrl = config.authBaseUrlMode === "explicit" ? config.authPublicBaseUrl : undefined;
   const publicUrl = process.env.PAPERCLIP_PUBLIC_URL?.trim() || baseUrl;
   const secret = process.env.BETTER_AUTH_SECRET ?? process.env.PAPERCLIP_AGENT_JWT_SECRET;
@@ -139,6 +149,13 @@ export function createBetterAuthInstance(db: Db, config: Config, trustedOrigins:
     authPublicBaseUrl: config.authPublicBaseUrl,
     publicUrl,
   });
+  const passwordResetDelivery = options?.passwordResetDelivery ?? createPasswordResetDelivery();
+
+  if (!passwordResetDelivery.configured) {
+    logger.warn(
+      "Password reset email delivery is not configured; administrator-assisted recovery remains active",
+    );
+  }
 
   const authConfig = {
     baseURL: baseUrl,
@@ -157,6 +174,36 @@ export function createBetterAuthInstance(db: Db, config: Config, trustedOrigins:
       enabled: true,
       requireEmailVerification: false,
       disableSignUp: config.authDisableSignUp,
+      resetPasswordTokenExpiresIn: 15 * 60,
+      revokeSessionsOnPasswordReset: true,
+      sendResetPassword: async ({ user, url, token }: {
+        user: { email: string; name: string };
+        url: string;
+        token: string;
+      }) => {
+        // Better Auth recommends not awaiting the provider call so registered
+        // and unknown addresses have the same observable response timing.
+        void passwordResetDelivery.send({
+          email: user.email,
+          name: user.name,
+          resetUrl: url,
+          token,
+        }).catch((error: unknown) => {
+          const code = error && typeof error === "object" && "code" in error
+            ? String(error.code)
+            : "delivery_failed";
+          logger.error({ code }, "Password reset email delivery failed");
+        });
+      },
+    },
+    rateLimit: {
+      enabled: true,
+      customRules: {
+        "/request-password-reset": {
+          window: 60,
+          max: 3,
+        },
+      },
     },
     advanced: buildBetterAuthAdvancedOptions({ disableSecureCookies }),
   };

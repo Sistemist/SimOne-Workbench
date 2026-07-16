@@ -65,6 +65,7 @@ import { OrgChart } from "./pages/OrgChart";
 import { NewAgent } from "./pages/NewAgent";
 import { TeamCatalog } from "./pages/TeamCatalog";
 import { AuthPage } from "./pages/Auth";
+import { PasswordRecoveryPage } from "./pages/PasswordRecovery";
 import { BoardClaimPage } from "./pages/BoardClaim";
 import { CliAuthPage } from "./pages/CliAuth";
 import { InviteLandingPage } from "./pages/InviteLanding";
@@ -399,6 +400,8 @@ export function App() {
     <>
       <Routes>
         <Route path="auth" element={<AuthPage />} />
+        <Route path="auth/forgot-password" element={<PasswordRecoveryPage />} />
+        <Route path="auth/reset-password" element={<PasswordRecoveryPage />} />
         <Route path="board-claim/:token" element={<BoardClaimPage />} />
         <Route path="cli-auth/:id" element={<CliAuthPage />} />
         <Route path="invite/:token" element={<InviteLandingPage />} />
