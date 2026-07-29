@@ -180,22 +180,21 @@ pnpm build
 
 If anything cannot be run, explicitly report what was not run and why.
 
-## 7.1 SimOne Linear Operating Rules
+## 7.1 Sysdom AI ClickUp Operating Rules
 
 - Treat `/Users/sistemist/Developer/SimOne-Workbench-Active` as the canonical active SimOne product and app repository. The distinct `-Active` name is intentional: never infer that an iCloud-restored `~/Desktop/SimOne-Workbench` copy is authoritative. This repo owns `/app`, `/scanner`, `/auth`, onboarding, SIM Coach, Customer Engine, share artifacts, model/routing surfaces, and product behavior.
-- The old `/Users/sistemist/Desktop/SimOne` repo is a temporary public landing container only. Do not edit it for product/app behavior. A landing-only patch there is allowed only when the user explicitly approves the exception, and the Linear update must call out that it touched the landing container.
+- The old `/Users/sistemist/Desktop/SimOne` repo is a temporary public landing container only. Do not edit it for product/app behavior. A landing-only patch there is allowed only when the user explicitly approves the exception, and the ClickUp outcome must call out that it touched the landing container.
 - Do not move the live public root (`https://sim.sysdom.org/`) into Workbench unless the full landing experience, assets, signup API, docker image, nginx routes, deploy path, and visual verification plan are migrated together.
 - Prefer finishing a milestone when the next task is self-contained.
 - Allow a cross-milestone slice only when it completes a visible first-user path or unblocks a real dependency.
-- Use parent/child issues for breakdown and related/blocking links for dependency clarity.
+- Use the existing ClickUp outcome for founder-visible progress. Keep detailed implementation breakdown in the repository, PR, or subtasks only when it improves execution.
 - Avoid fake blockers; use blockers only when the next task truly cannot proceed without the prior one.
-- Treat Linear reconciliation as part of the work, not optional reporting after it.
-- At the start of every SimOne work session, read the live SimOne project, milestones, and relevant issues before selecting the next slice. Reconcile them with the current branch and recent commits instead of trusting an older tracker or recreating existing work.
-- When a meaningful bug, reliability gap, product decision, or follow-up is identified, create or update the relevant Linear issue in the same slice. Do not leave discoveries only in chat, local notes, or commit messages.
-- Move the active issue to In Progress when implementation begins. After every meaningful code, deploy, or product-direction slice, comment with the commit SHA when applicable, verification evidence, deploy evidence when applicable, and specific remaining gaps.
-- Before ending a session, perform a final Linear reconciliation: issue statuses must match the repository, completed work must have evidence, new findings must be captured, duplicate or superseded issues must be linked or closed, and the project status update must describe the current next slice.
-- If milestone completion or sequencing materially changed, update `doc/product/simone-milestone-tracker.md` in the same slice so it and Linear tell the same story.
-- A Linear connector failure is an explicit hand-off blocker for reporting, not permission to forget the update. Record what remains to be synchronized and make that reconciliation the first task after access returns.
+- At the start of a founder-directed session, read the linked ClickUp task or identify the existing ClickUp outcome before creating another record.
+- After meaningful code, deploy, reliability, or product-direction work, update that ClickUp outcome with the shipped result, verification evidence, relevant commit/deploy links, remaining gap, and next move.
+- Keep `doc/product/simone-milestone-tracker.md` current when technical sequencing materially changes, but do not require Han to reconcile it manually.
+- Linear is frozen historical engineering evidence. Read it only when older issue detail is genuinely useful; do not create or update Linear issues.
+- Sysdom HQ and Linear are not session-start checks, session-end destinations, or fallback work queues.
+- If ClickUp is unavailable, preserve the task link and a compact reconciliation note in the final handoff. Do not recreate the work in Linear, Sysdom HQ, or a new repository tracker.
 
 ## 8. API and Auth Expectations
 
@@ -237,7 +236,7 @@ A change is done when all are true:
 3. Contracts are synced across db/shared/server/ui
 4. Docs updated when behavior or commands change
 5. PR description follows the [PR template](.github/PULL_REQUEST_TEMPLATE.md) with all sections filled in (including Model Used)
-6. Linear is reconciled: issue state, evidence comment, newly discovered follow-ups, project status, and milestone tracker all match the shipped repository state
+6. The existing ClickUp outcome is updated with shipped evidence, remaining gaps, and the next move; the milestone tracker is refreshed when technical sequencing changed
 
 ## 11. Fork-Specific: HenkDz/paperclip
 
@@ -280,3 +279,20 @@ PR #2218 (`feat/external-adapter-phase1`) adds external adapter support. See roo
 - `createServerAdapter()` must include ALL optional fields (especially `detectModel`)
 - Built-in UI adapters can shadow external plugin parsers; external override pause/resume should restore the built-in parser.
 - Reference external adapters: Droid (npm); Hermes can also be tested as an override package.
+
+
+## Sysdom Command Center
+
+ClickUp's **Sysdom Command Center** is the organizational source of truth for
+current priorities, cross-project state, decisions, risks, CRM, and work in
+progress. This repository remains canonical for its own technical internals.
+After meaningful work, update the existing ClickUp outcome with shipped
+evidence and the next move; do not create a duplicate strategic record in
+Linear or Sysdom HQ.
+
+`~/Developer/Sysdom-HQ` is a frozen historical archive. Read it only when older
+context is genuinely needed. Do not require Han to consult, approve, or update
+it, and do not write to it unless Han explicitly asks for an archive change.
+Sysdom HQ and Linear are not session-start checks, session-end destinations, or
+fallback work queues. Never copy secrets into ClickUp, repositories, or the HQ
+archive.
