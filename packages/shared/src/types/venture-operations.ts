@@ -113,6 +113,43 @@ export interface FounderCockpitSnapshot {
   latestCycle: SimCycle | null;
 }
 
+export interface FounderCoachMemoryEntry {
+  id: string;
+  kind: "venture_state" | "context_projection";
+  version: number;
+  status: "current" | "superseded";
+  summary: string;
+  creationReason: string;
+  sourceRefs: VentureSourceRef[];
+  basedOnCycleId: string | null;
+  createdAt: Date;
+  supersededAt: Date | null;
+}
+
+export interface FounderCoachGuidance {
+  headline: string;
+  explanation: string;
+  engine: SimEngine | null;
+  approvalRequired: boolean;
+  nextAction: {
+    title: string;
+    href: "/cockpit";
+  };
+  activeConstraint: VentureConstraintHypothesis | null;
+  promotedLearning: string | null;
+  sourceRefs: VentureSourceRef[];
+  stateVersion: number;
+  projectionVersion: number | null;
+}
+
+export interface FounderCoachSnapshot {
+  guidance: FounderCoachGuidance | null;
+  currentMemory: FounderCoachMemoryEntry[];
+  supersededMemory: FounderCoachMemoryEntry[];
+  activeCycle: SimCycle | null;
+  latestCycle: SimCycle | null;
+}
+
 export const SIM_CYCLE_PHASES = ["map", "diagnose", "leverage", "compound", "complete"] as const;
 export type SimCyclePhase = (typeof SIM_CYCLE_PHASES)[number];
 

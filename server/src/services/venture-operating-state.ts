@@ -282,6 +282,124 @@ export function ventureOperatingStateService(db: Db) {
           .then((rows) => rows[0]!);
       }),
 
+    coach: async (companyId: string) => {
+      const [states, projections, activeCycle, latestCycle] = await Promise.all([
+        db
+          .select()
+          .from(ventureStateRevisions)
+          .where(eq(ventureStateRevisions.companyId, companyId))
+          .orderBy(desc(ventureStateRevisions.version)),
+        db
+          .select()
+          .from(ventureContextProjections)
+          .where(eq(ventureContextProjections.companyId, companyId))
+          .orderBy(desc(ventureContextProjections.version)),
+        db
+          .select()
+          .from(simCycles)
+          .where(
+            and(
+              eq(simCycles.companyId, companyId),
+              inArray(simCycles.status, ["active", "paused"]),
+            ),
+          )
+          .orderBy(desc(simCycles.createdAt))
+          .limit(1)
+          .then((rows) => rows[0] ?? null),
+        db
+          .select()
+          .from(simCycles)
+          .where(eq(simCycles.companyId, companyId))
+          .orderBy(desc(simCycles.createdAt))
+          .limit(1)
+          .then((rows) => rows[0] ?? null),
+      ]);
+
+      const state = states.find((revision) => revision.status === "current") ?? null;
+      const projection = projections.find((revision) => revision.status === "current") ?? null;
+      const memory = [
+        ...states.map((revision) => ({
+          id: revision.id,
+          kind: "venture_state" as const,
+          version: revision.version,
+          status: revision.status as "current" | "superseded",
+          summary: revision.content.ventureSummary,
+          creationReason: revision.creationReason,
+          sourceRefs: revision.sourceRefs,
+          basedOnCycleId: revision.basedOnCycleId,
+          createdAt: revision.createdAt,
+          supersededAt: revision.supersededAt,
+        })),
+        ...projections.map((revision) => ({
+          id: revision.id,
+          kind: "context_projection" as const,
+          version: revision.version,
+          status: revision.status as "current" | "superseded",
+          summary: revision.content.ventureSummary,
+          creationReason: revision.creationReason,
+          sourceRefs: revision.sourceRefs,
+          basedOnCycleId: null,
+          createdAt: revision.createdAt,
+          supersededAt: revision.supersededAt,
+        })),
+      ].sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
+
+      if (!state) {
+        return {
+          guidance: null,
+          currentMemory: [],
+          supersededMemory: memory.filter((entry) => entry.status === "superseded").slice(0, 20),
+          activeCycle,
+          latestCycle,
+        };
+      }
+
+      const activeConstraint = projection?.content.activeConstraint ?? state.content.activeConstraint;
+      const nextMove = projection?.content.nextMove ?? state.content.nextMove;
+      const promotedLearning =
+        latestCycle?.compoundOutput?.learning
+        ?? state.content.learnings.at(-1)
+        ?? null;
+      const nextAction = activeCycle
+        ? {
+            title: `${activeCycle.status === "paused" ? "Resume" : "Continue"} ${activeCycle.phase.toUpperCase()} in the guided SIM Cycle`,
+            href: "/cockpit" as const,
+          }
+        : {
+            title: nextMove?.title ?? "Review the canonical venture state before assigning more work",
+            href: "/cockpit" as const,
+          };
+      const explanation = activeCycle
+        ? `The founder-triggered cycle is ${activeCycle.status} in ${activeCycle.phase.toUpperCase()}. Complete that bounded phase before opening another intervention.`
+        : nextMove
+          ? nextMove.rationale
+          : "The venture has canonical state, but no bounded next move has been accepted yet.";
+
+      return {
+        guidance: {
+          headline: activeConstraint?.hypothesis ?? state.content.ventureSummary,
+          explanation,
+          engine: activeCycle?.leverageOutput?.intervention.engine
+            ?? nextMove?.engine
+            ?? activeConstraint?.engine
+            ?? null,
+          approvalRequired: activeCycle
+            ? activeCycle.phase === "diagnose" || activeCycle.phase === "leverage"
+            : nextMove?.approvalRequired ?? true,
+          nextAction,
+          activeConstraint,
+          promotedLearning,
+          sourceRefs: projection?.sourceRefs ?? state.sourceRefs,
+          stateVersion: state.version,
+          projectionVersion: projection?.version ?? null,
+        },
+        currentMemory: memory.filter((entry) => entry.status === "current"),
+        supersededMemory: memory.filter((entry) => entry.status === "superseded").slice(0, 20),
+        activeCycle,
+        latestCycle,
+      };
+    },
+
     cockpit: async (companyId: string) => {
       const [
         company,

@@ -14,9 +14,16 @@ const mockPluginsApi = vi.hoisted(() => ({
   list: vi.fn(),
   bridgePerformAction: vi.fn(),
 }));
+const mockFounderCockpitApi = vi.hoisted(() => ({
+  getCoach: vi.fn(),
+}));
 
 vi.mock("@/api/plugins", () => ({
   pluginsApi: mockPluginsApi,
+}));
+
+vi.mock("@/api/founderCockpit", () => ({
+  founderCockpitApi: mockFounderCockpitApi,
 }));
 
 vi.mock("@/lib/router", () => ({
@@ -91,12 +98,20 @@ describe("SimCoach", () => {
     vi.stubGlobal("EventSource", FakeEventSource);
     mockPluginsApi.list.mockReset();
     mockPluginsApi.bridgePerformAction.mockReset();
+    mockFounderCockpitApi.getCoach.mockReset();
     mockPluginsApi.list.mockResolvedValue([]);
     mockPluginsApi.bridgePerformAction.mockResolvedValue({
       data: {
         status: "ok",
         path: "wiki/synthesis/scanner-2026-07-08-customer-loop-is-leaking.md",
       },
+    });
+    mockFounderCockpitApi.getCoach.mockResolvedValue({
+      guidance: null,
+      currentMemory: [],
+      supersededMemory: [],
+      activeCycle: null,
+      latestCycle: null,
     });
   });
 
@@ -127,6 +142,109 @@ describe("SimCoach", () => {
     ).toBe(true);
     expect(links.some((link) => link.getAttribute("href") === "/wiki/query")).toBe(false);
     expect(mockSetBreadcrumbs).toHaveBeenCalledWith([{ label: "SIM Coach" }]);
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
+  it("turns canonical venture state into one bounded action and separates current from superseded memory", async () => {
+    mockFounderCockpitApi.getCoach.mockResolvedValue({
+      guidance: {
+        headline: "Founder activation is the current constraint.",
+        explanation: "Validate the first-use loop before increasing acquisition.",
+        engine: "customer",
+        approvalRequired: true,
+        nextAction: {
+          title: "Run one founder onboarding session",
+          href: "/cockpit",
+        },
+        activeConstraint: {
+          engine: "customer",
+          hypothesis: "Founder activation is the current constraint.",
+          confidence: "medium",
+          evidence: [],
+          decision: "accepted",
+          decisionNote: "Founder accepted.",
+          decidedByUserId: "founder-1",
+          decidedAt: "2026-08-01T00:00:00.000Z",
+        },
+        promotedLearning: "A concrete next move is more useful than another broad strategy document.",
+        sourceRefs: [
+          { kind: "venture_state_revision", id: "state-2", label: "Canonical venture state v2" },
+          { kind: "clickup", id: "86eydprxx", label: "Control Core milestone" },
+        ],
+        stateVersion: 2,
+        projectionVersion: 2,
+      },
+      currentMemory: [
+        {
+          id: "state-2",
+          kind: "venture_state",
+          version: 2,
+          status: "current",
+          summary: "Sysdom AI is preparing for the November 1 alpha.",
+          creationReason: "Refresh after the guided SIM Cycle.",
+          sourceRefs: [],
+          basedOnCycleId: "cycle-1",
+          createdAt: "2026-08-01T00:00:00.000Z",
+          supersededAt: null,
+        },
+        {
+          id: "projection-2",
+          kind: "context_projection",
+          version: 2,
+          status: "current",
+          summary: "Sysdom AI is preparing for the November 1 alpha.",
+          creationReason: "Project current founder context.",
+          sourceRefs: [],
+          basedOnCycleId: null,
+          createdAt: "2026-08-01T00:01:00.000Z",
+          supersededAt: null,
+        },
+      ],
+      supersededMemory: [
+        {
+          id: "state-1",
+          kind: "venture_state",
+          version: 1,
+          status: "superseded",
+          summary: "The Founder Cockpit is the next product proof.",
+          creationReason: "Initial map.",
+          sourceRefs: [],
+          basedOnCycleId: null,
+          createdAt: "2026-07-31T00:00:00.000Z",
+          supersededAt: "2026-08-01T00:00:00.000Z",
+        },
+      ],
+      activeCycle: null,
+      latestCycle: null,
+    });
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderSimCoach(container);
+    await flushReact();
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Canonical coaching brief");
+    expect(text).toContain("Founder activation is the current constraint.");
+    expect(text).toContain("One bounded next action");
+    expect(text).toContain("Run one founder onboarding session");
+    expect(text).toContain("Founder approval required");
+    expect(text).toContain("Latest promoted learning");
+    expect(text).toContain("Grounded in 2 canonical sources");
+    expect(text).toContain("Temporal venture memory");
+    expect(text).toContain("Venture state v2");
+    expect(text).toContain("Context projection v2");
+    expect(text).toContain("Venture state v1 · Superseded");
+    expect(text).not.toMatch(/choose a provider|paste an api key|adapter setup/i);
+    expect(mockFounderCockpitApi.getCoach).toHaveBeenCalledWith("company-1");
+    expect(
+      Array.from(container.querySelectorAll<HTMLAnchorElement>("a")).some(
+        (link) => link.getAttribute("href") === "/cockpit" && link.textContent?.includes("Open Founder Cockpit"),
+      ),
+    ).toBe(true);
 
     flushSync(() => {
       root.unmount();

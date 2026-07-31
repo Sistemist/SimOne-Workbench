@@ -269,6 +269,62 @@ describeEmbeddedPostgres("venture operating state routes", () => {
       }),
       expect.objectContaining({ id: firstProjection.body.id, version: 1, status: "superseded" }),
     ]);
+
+    const coach = await request(app).get(`/api/companies/${companyId}/founder-coach`);
+    expect(coach.status).toBe(200);
+    expect(coach.body).toMatchObject({
+      guidance: {
+        headline: revisedContent.activeConstraint?.hypothesis,
+        explanation: revisedContent.nextMove?.rationale,
+        engine: "customer",
+        approvalRequired: true,
+        nextAction: {
+          title: "Run one founder onboarding session",
+          href: "/cockpit",
+        },
+        stateVersion: 2,
+        projectionVersion: 2,
+      },
+      activeCycle: null,
+      latestCycle: null,
+    });
+    expect(coach.body.guidance.sourceRefs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "venture_state_revision", id: secondState.body.id }),
+      ]),
+    );
+    expect(coach.body.currentMemory).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: secondState.body.id,
+          kind: "venture_state",
+          version: 2,
+          status: "current",
+        }),
+        expect.objectContaining({
+          id: secondProjection.body.id,
+          kind: "context_projection",
+          version: 2,
+          status: "current",
+        }),
+      ]),
+    );
+    expect(coach.body.supersededMemory).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: firstState.body.id,
+          kind: "venture_state",
+          version: 1,
+          status: "superseded",
+        }),
+        expect.objectContaining({
+          id: firstProjection.body.id,
+          kind: "context_projection",
+          version: 1,
+          status: "superseded",
+        }),
+      ]),
+    );
   });
 
   it("returns a founder-readable cockpit with governance and work counts", async () => {

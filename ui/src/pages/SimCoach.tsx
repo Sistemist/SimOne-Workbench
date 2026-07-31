@@ -17,6 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@/lib/router";
 import { Button } from "@/components/ui/button";
+import { founderCockpitApi } from "@/api/founderCockpit";
 import { pluginsApi } from "@/api/plugins";
 import { useBreadcrumbs } from "../context/BreadcrumbContext";
 import { useCompany } from "../context/CompanyContext";
@@ -512,6 +513,11 @@ export function SimCoach() {
     queryKey: queryKeys.plugins.all,
     queryFn: () => pluginsApi.list(),
   });
+  const { data: coachSnapshot, isLoading: coachLoading } = useQuery({
+    queryKey: queryKeys.founderCockpit.coach(companyId ?? "__none__"),
+    queryFn: () => founderCockpitApi.getCoach(companyId!),
+    enabled: Boolean(companyId),
+  });
   const simWikiPlugin = plugins?.find((plugin) => plugin.packageName === SIM_WIKI_PACKAGE);
   const simWikiReady = simWikiPlugin?.status === "ready";
   const retrievalChannel = retrievalState.status === "queued" ? retrievalState.channel : null;
@@ -814,6 +820,140 @@ export function SimCoach() {
                 {simWikiReady ? "Open SIM Wiki" : "Enable SIM Wiki"}
               </Link>
             </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-4 border-b border-border pb-6 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-md border border-border bg-card p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Compass className="h-4 w-4" aria-hidden="true" />
+              <span>Canonical coaching brief</span>
+            </div>
+            {coachSnapshot?.guidance ? (
+              <div className="flex flex-wrap gap-2 text-xs">
+                <span className="rounded-full border border-border px-2.5 py-1 text-muted-foreground">
+                  State v{coachSnapshot.guidance.stateVersion}
+                </span>
+                {coachSnapshot.guidance.projectionVersion !== null ? (
+                  <span className="rounded-full border border-border px-2.5 py-1 text-muted-foreground">
+                    Projection v{coachSnapshot.guidance.projectionVersion}
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+          {coachLoading ? (
+            <p className="mt-4 text-sm text-muted-foreground">Loading canonical venture memory...</p>
+          ) : coachSnapshot?.guidance ? (
+            <>
+              <h2 className="mt-4 text-xl font-semibold text-foreground">
+                {coachSnapshot.guidance.headline}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                {coachSnapshot.guidance.explanation}
+              </p>
+              <div className="mt-4 rounded-md border border-primary/20 bg-primary/5 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    One bounded next action
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    {coachSnapshot.guidance.engine ? (
+                      <span className="rounded-full border border-border bg-background px-2.5 py-1">
+                        {coachSnapshot.guidance.engine} engine
+                      </span>
+                    ) : null}
+                    <span className="rounded-full border border-border bg-background px-2.5 py-1">
+                      {coachSnapshot.guidance.approvalRequired ? "Founder approval required" : "Within delegated boundary"}
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm font-medium text-foreground">
+                    {coachSnapshot.guidance.nextAction.title}
+                  </p>
+                  <Button asChild size="sm" className="h-8">
+                    <Link to={coachSnapshot.guidance.nextAction.href}>
+                      Open Founder Cockpit
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+              {coachSnapshot.guidance.promotedLearning ? (
+                <div className="mt-4 rounded-md border border-border bg-muted/20 p-3">
+                  <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Latest promoted learning
+                  </div>
+                  <p className="mt-1 text-sm leading-6 text-foreground">
+                    {coachSnapshot.guidance.promotedLearning}
+                  </p>
+                </div>
+              ) : null}
+              <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                Grounded in {coachSnapshot.guidance.sourceRefs.length} canonical source
+                {coachSnapshot.guidance.sourceRefs.length === 1 ? "" : "s"}; open the Cockpit to inspect provenance.
+              </p>
+            </>
+          ) : (
+            <div className="mt-4 rounded-md border border-dashed border-border p-4">
+              <h2 className="text-base font-semibold text-foreground">Canonical venture memory is not ready yet.</h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Activate a Venture Constitution and map the current venture state before asking Coach to direct work.
+              </p>
+              <Button asChild size="sm" className="mt-3 h-8">
+                <Link to="/cockpit">Open Founder Cockpit</Link>
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-md border border-border bg-muted/10 p-5">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <BookOpenCheck className="h-4 w-4" aria-hidden="true" />
+            <span>Temporal venture memory</span>
+          </div>
+          <div className="mt-4">
+            <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Current</div>
+            {coachSnapshot?.currentMemory.length ? (
+              <div className="mt-2 grid gap-2">
+                {coachSnapshot.currentMemory.map((entry) => (
+                  <div key={entry.id} className="rounded-md border border-emerald-500/20 bg-emerald-500/5 p-3">
+                    <div className="flex items-center justify-between gap-2 text-xs">
+                      <span className="font-medium text-emerald-700 dark:text-emerald-200">
+                        {entry.kind === "venture_state" ? "Venture state" : "Context projection"} v{entry.version}
+                      </span>
+                      <span className="text-muted-foreground">Current</span>
+                    </div>
+                    <p className="mt-1 text-sm leading-5 text-foreground">{entry.summary}</p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">{entry.creationReason}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-muted-foreground">No current canonical memory.</p>
+            )}
+          </div>
+          <div className="mt-5 border-t border-border pt-4">
+            <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Superseded</div>
+            {coachSnapshot?.supersededMemory.length ? (
+              <div className="mt-2 grid gap-2">
+                {coachSnapshot.supersededMemory.slice(0, 4).map((entry) => (
+                  <div key={entry.id} className="border-l-2 border-border pl-3">
+                    <div className="text-xs font-medium text-muted-foreground">
+                      {entry.kind === "venture_state" ? "Venture state" : "Context projection"} v{entry.version} · Superseded
+                    </div>
+                    <p className="mt-1 text-sm leading-5 text-muted-foreground">{entry.summary}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-muted-foreground">
+                No superseded memory yet. Earlier versions will remain visible here after the next accepted change.
+              </p>
+            )}
           </div>
         </div>
       </section>

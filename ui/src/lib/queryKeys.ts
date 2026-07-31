@@ -6,6 +6,7 @@ export const queryKeys = {
   },
   founderCockpit: {
     snapshot: (companyId: string) => ["founder-cockpit", companyId] as const,
+    coach: (companyId: string) => ["founder-cockpit", companyId, "coach"] as const,
     constitutionRevisions: (companyId: string) =>
       ["founder-cockpit", companyId, "constitution-revisions"] as const,
     stateRevisions: (companyId: string) =>

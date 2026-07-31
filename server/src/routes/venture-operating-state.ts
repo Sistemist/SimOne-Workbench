@@ -18,6 +18,12 @@ export function ventureOperatingStateRoutes(db: Db) {
     res.json(await svc.cockpit(companyId));
   });
 
+  router.get("/companies/:companyId/founder-coach", async (req, res) => {
+    const companyId = req.params.companyId as string;
+    assertCompanyAccess(req, companyId);
+    res.json(await svc.coach(companyId));
+  });
+
   router.get("/companies/:companyId/venture-state/revisions", async (req, res) => {
     const companyId = req.params.companyId as string;
     assertCompanyAccess(req, companyId);

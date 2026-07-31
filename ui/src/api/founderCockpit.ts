@@ -2,6 +2,7 @@ import type {
   CreateVentureConstitutionRevision,
   CreateVentureContextProjection,
   CreateVentureStateRevision,
+  FounderCoachSnapshot,
   FounderCockpitSnapshot,
   CommitSimCycleLeverage,
   CompleteSimCycleCompound,
@@ -20,6 +21,8 @@ import { api } from "./client";
 export const founderCockpitApi = {
   get: (companyId: string) =>
     api.get<FounderCockpitSnapshot>(`/companies/${companyId}/founder-cockpit`),
+  getCoach: (companyId: string) =>
+    api.get<FounderCoachSnapshot>(`/companies/${companyId}/founder-coach`),
   constitutionRevisions: (companyId: string) =>
     api.get<VentureConstitutionRevision[]>(
       `/companies/${companyId}/venture-constitution/revisions`,
