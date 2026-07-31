@@ -5,6 +5,7 @@ import {
   CloudUpload,
   Cpu,
   FlaskConical,
+  GitPullRequestArrow,
   KeyRound,
   MailPlus,
   MonitorCog,
@@ -209,6 +210,11 @@ export function CompanySettingsSidebar() {
             to={`${INSTANCE_SETTINGS_PATH_PREFIX}/model-routing`}
             label="Model routing"
             icon={Route}
+          />
+          <SidebarNavItem
+            to={`${INSTANCE_SETTINGS_PATH_PREFIX}/governed-intake`}
+            label="Governed intake"
+            icon={GitPullRequestArrow}
           />
         </div>
       </nav>

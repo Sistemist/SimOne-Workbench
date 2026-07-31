@@ -453,6 +453,10 @@ export {
   type RestoreVentureConstitutionRevision,
 } from "./venture-constitution.js";
 export {
+  createGovernedIntakeAssessmentSchema,
+  type CreateGovernedIntakeAssessment,
+} from "./governed-intake.js";
+export {
   createVentureContextProjectionSchema,
   createVentureStateRevisionSchema,
   simEngineSchema,

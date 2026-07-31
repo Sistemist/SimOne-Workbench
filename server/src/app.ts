@@ -26,6 +26,7 @@ import { executionWorkspaceRoutes } from "./routes/execution-workspaces.js";
 import { goalRoutes } from "./routes/goals.js";
 import { ventureConstitutionRoutes } from "./routes/venture-constitution.js";
 import { ventureOperatingStateRoutes } from "./routes/venture-operating-state.js";
+import { governedIntakeRoutes } from "./routes/governed-intake.js";
 import { simCycleRoutes } from "./routes/sim-cycles.js";
 import { boardChatRoutes } from "./routes/board-chat.js";
 import { approvalRoutes } from "./routes/approvals.js";
@@ -324,6 +325,14 @@ export async function createApp(
       },
     },
   );
+  api.use(governedIntakeRoutes(db, {
+    deactivatePlugin: async (pluginId, reason) => {
+      const plugin = await pluginRegistry.getById(pluginId);
+      if (plugin?.status === "ready") {
+        await lifecycle.disable(pluginId, reason);
+      }
+    },
+  }));
   api.use(
     pluginRoutes(
       db,

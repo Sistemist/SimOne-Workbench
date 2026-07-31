@@ -1,4 +1,7 @@
 export const queryKeys = {
+  governedIntake: {
+    all: ["governed-intake"] as const,
+  },
   companies: {
     all: ["companies"] as const,
     detail: (id: string) => ["companies", id] as const,

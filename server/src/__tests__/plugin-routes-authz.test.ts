@@ -17,6 +17,9 @@ const mockLifecycle = vi.hoisted(() => ({
   enable: vi.fn(),
   disable: vi.fn(),
 }));
+const mockIntake = vi.hoisted(() => ({
+  approvedForPluginVersion: vi.fn().mockResolvedValue({ id: "intake-1" }),
+}));
 
 vi.mock("../services/plugin-registry.js", () => ({
   pluginRegistryService: () => mockRegistry,
@@ -78,6 +81,7 @@ async function createApp(
     undefined,
     routeOverrides.toolDeps as never,
     routeOverrides.bridgeDeps as never,
+    { intake: mockIntake } as never,
   ));
   app.use(errorHandler);
 
@@ -221,8 +225,50 @@ describe.sequential("plugin install and upgrade authz", () => {
       packageName: "paperclip-plugin-example",
       version: undefined,
     });
-    expect(mockLifecycle.load).toHaveBeenCalledWith(pluginId);
+    expect(mockLifecycle.load).not.toHaveBeenCalled();
+    expect(res.body.status).not.toBe("ready");
   }, 20_000);
+
+  it("blocks plugin activation without compatible exact-version intake", async () => {
+    mockRegistry.getById.mockResolvedValue({
+      id: pluginId,
+      pluginKey: "paperclip.example",
+      version: "1.0.0",
+      status: "installed",
+    });
+    mockIntake.approvedForPluginVersion.mockResolvedValueOnce(null);
+    const { app } = await createApp(boardActor({ isInstanceAdmin: true }));
+
+    const res = await request(app)
+      .post(`/api/plugins/${pluginId}/enable`)
+      .send({});
+
+    expect(res.status).toBe(409);
+    expect(res.body.code).toBe("GOVERNED_INTAKE_REQUIRED");
+    expect(mockLifecycle.load).not.toHaveBeenCalled();
+    expect(mockLifecycle.enable).not.toHaveBeenCalled();
+  });
+
+  it("loads an installed plugin after exact-version intake approval", async () => {
+    const plugin = {
+      id: pluginId,
+      pluginKey: "paperclip.example",
+      version: "1.0.0",
+      status: "installed",
+    };
+    mockRegistry.getById.mockResolvedValue(plugin);
+    mockLifecycle.load.mockResolvedValue({ ...plugin, status: "ready" });
+    const { app } = await createApp(boardActor({ isInstanceAdmin: true }));
+
+    const res = await request(app)
+      .post(`/api/plugins/${pluginId}/enable`)
+      .send({});
+
+    expect(res.status).toBe(200);
+    expect(mockIntake.approvedForPluginVersion).toHaveBeenCalledWith(pluginId, "1.0.0");
+    expect(mockLifecycle.load).toHaveBeenCalledWith(pluginId);
+    expect(res.body.status).toBe("ready");
+  });
 
   it("rejects plugin upgrades for non-admin board users", async () => {
     const pluginId = "11111111-1111-4111-8111-111111111111";
@@ -359,6 +405,36 @@ describe.sequential("plugin install and upgrade authz", () => {
     expect(res.status).toBe(200);
     expect(mockLifecycle.upgrade).toHaveBeenCalledWith(pluginId, "1.1.0");
   }, 20_000);
+
+  it("returns an upgraded ready plugin to review-required state", async () => {
+    const current = {
+      id: pluginId,
+      pluginKey: "paperclip.example",
+      version: "1.0.0",
+      status: "ready",
+    };
+    const upgraded = { ...current, version: "1.1.0", status: "ready" };
+    const reviewRequired = {
+      ...upgraded,
+      status: "disabled",
+      lastError: "Governed intake review required",
+    };
+    mockRegistry.getById.mockResolvedValue(current);
+    mockLifecycle.upgrade.mockResolvedValue(upgraded);
+    mockLifecycle.disable.mockResolvedValue(reviewRequired);
+    const { app } = await createApp(boardActor({ isInstanceAdmin: true }));
+
+    const res = await request(app)
+      .post(`/api/plugins/${pluginId}/upgrade`)
+      .send({ version: "1.1.0" });
+
+    expect(res.status).toBe(200);
+    expect(mockLifecycle.disable).toHaveBeenCalledWith(
+      pluginId,
+      "Governed intake review required for paperclip.example@1.1.0",
+    );
+    expect(res.body.status).toBe("disabled");
+  });
 });
 
 describe.sequential("scoped plugin API routes", () => {

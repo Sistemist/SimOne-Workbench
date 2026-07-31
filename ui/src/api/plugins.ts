@@ -233,8 +233,8 @@ export const pluginsApi = {
   /**
    * Install a plugin from npm or a local path.
    *
-   * On success, the plugin is registered in the database and transitioned to
-   * `ready` state. The response is the newly created `PluginRecord`.
+   * On success, the plugin is registered in the database but remains inactive
+   * until an exact-version governed intake assessment permits activation.
    *
    * @param params.packageName - npm package name (e.g. `@paperclip/plugin-linear`)
    *   or a filesystem path when `isLocalPath` is `true`.

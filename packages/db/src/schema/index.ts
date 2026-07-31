@@ -97,6 +97,7 @@ export { companySecretBindings } from "./company_secret_bindings.js";
 export { secretAccessEvents } from "./secret_access_events.js";
 export { companySkills, companySkillVersions, companySkillStars, companySkillComments } from "./company_skills.js";
 export { plugins } from "./plugins.js";
+export { governedIntakeAssessments } from "./governed_intake_assessments.js";
 export { pluginConfig } from "./plugin_config.js";
 export { pluginCompanySettings } from "./plugin_company_settings.js";
 export { pluginManagedResources } from "./plugin_managed_resources.js";

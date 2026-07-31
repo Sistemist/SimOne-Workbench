@@ -57,6 +57,7 @@ import { InstanceAccess } from "./pages/InstanceAccess";
 import { InstanceSettings } from "./pages/InstanceSettings";
 import { InstanceExperimentalSettings } from "./pages/InstanceExperimentalSettings";
 import { ModelRoutingAudit } from "./pages/ModelRoutingAudit";
+import { GovernedIntake } from "./pages/GovernedIntake";
 import { ProfileSettings } from "./pages/ProfileSettings";
 import { PluginManager } from "./pages/PluginManager";
 import { PluginSettings } from "./pages/PluginSettings";
@@ -113,6 +114,7 @@ function boardRoutes() {
       <Route path="company/settings/instance/plugins/:pluginId" element={<PluginSettings />} />
       <Route path="company/settings/instance/adapters" element={<AdapterManager />} />
       <Route path="company/settings/instance/model-routing" element={<ModelRoutingAudit />} />
+      <Route path="company/settings/instance/governed-intake" element={<GovernedIntake />} />
       <Route path="company/settings/:settingsRoutePath/*" element={<CompanySettingsPluginPage />} />
       <Route path="skills/*" element={<CompanySkills />} />
       <Route path="teams-catalog/*" element={<TeamCatalog />} />

@@ -56,6 +56,7 @@ import {
 import { logActivity } from "../services/activity-log.js";
 import { publishGlobalLiveEvent } from "../services/live-events.js";
 import { issueService } from "../services/issues.js";
+import { governedIntakeService } from "../services/governed-intake.js";
 import type { PluginJobScheduler } from "../services/plugin-job-scheduler.js";
 import type { PluginJobStore } from "../services/plugin-job-store.js";
 import type { PluginWorkerManager } from "../services/plugin-worker-manager.js";
@@ -422,6 +423,10 @@ export interface PluginRouteBridgeDeps {
   streamBus?: PluginStreamBus;
 }
 
+export interface PluginRouteGovernanceDeps {
+  intake: Pick<ReturnType<typeof governedIntakeService>, "approvedForPluginVersion">;
+}
+
 interface PluginScopedApiRequest {
   routeKey: string;
   method: string;
@@ -507,6 +512,7 @@ export function pluginRoutes(
   webhookDeps?: PluginRouteWebhookDeps,
   toolDeps?: PluginRouteToolDeps,
   bridgeDeps?: PluginRouteBridgeDeps,
+  governanceDeps?: PluginRouteGovernanceDeps,
 ) {
   const router = Router();
   const registry = pluginRegistryService(db);
@@ -515,6 +521,7 @@ export function pluginRoutes(
     workerManager: bridgeDeps?.workerManager ?? webhookDeps?.workerManager,
   });
   const issuesSvc = issueService(db);
+  const intake = governanceDeps?.intake ?? governedIntakeService(db);
 
   function matchScopedApiRoute(route: PluginApiRouteDeclaration, method: string, requestPath: string) {
     if (route.method !== method) return null;
@@ -1024,7 +1031,7 @@ export function pluginRoutes(
    * 1. Downloads from npm or loads from local path
    * 2. Validates the manifest (schema + capability consistency)
    * 3. Registers in the database
-   * 4. Transitions to `ready` state if no new capability approval is needed
+   * 4. Leaves the plugin installed and inactive pending governed intake review
    *
    * Response: `PluginRecord`
    *
@@ -1077,10 +1084,8 @@ export function pluginRoutes(
         return;
       }
 
-      // Transition to ready state
       const existingPlugin = await registry.getByKey(discovered.manifest.id);
       if (existingPlugin) {
-        await lifecycle.load(existingPlugin.id);
         const updated = await registry.getById(existingPlugin.id);
         await logPluginMutationActivity(req, "plugin.installed", existingPlugin.id, {
           pluginId: existingPlugin.id,
@@ -1088,6 +1093,7 @@ export function pluginRoutes(
           packageName: updated?.packageName ?? existingPlugin.packageName,
           version: updated?.version ?? existingPlugin.version,
           source: isLocalPath ? "local_path" : "npm",
+          governanceState: "review_required",
         });
         publishGlobalLiveEvent({ type: "plugin.ui.updated", payload: { pluginId: existingPlugin.id, action: "installed" } });
         res.json(updated);
@@ -1892,14 +1898,26 @@ export function pluginRoutes(
     }
 
     try {
-      const result = await lifecycle.enable(plugin.id);
+      const assessment = await intake.approvedForPluginVersion(plugin.id, plugin.version);
+      if (!assessment) {
+        res.status(409).json({
+          error: `Governed intake approval is required before activating ${plugin.pluginKey}@${plugin.version}`,
+          code: "GOVERNED_INTAKE_REQUIRED",
+        });
+        return;
+      }
+      const result = plugin.status === "installed"
+        ? await lifecycle.load(plugin.id)
+        : await lifecycle.enable(plugin.id);
+      const current = result ?? await registry.getById(plugin.id);
       await logPluginMutationActivity(req, "plugin.enabled", plugin.id, {
         pluginId: plugin.id,
         pluginKey: plugin.pluginKey,
-        version: result?.version ?? plugin.version,
+        version: current?.version ?? plugin.version,
+        governedIntakeAssessmentId: assessment.id,
       });
       publishGlobalLiveEvent({ type: "plugin.ui.updated", payload: { pluginId: plugin.id, action: "enabled" } });
-      res.json(result);
+      res.json(current);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       res.status(400).json({ error: message });
@@ -2099,13 +2117,20 @@ export function pluginRoutes(
       // 2. Compare capabilities
       // 3. If new capabilities, mark as upgrade_pending
       // 4. Otherwise, transition to ready
-      const result = await lifecycle.upgrade(plugin.id, version);
+      const upgraded = await lifecycle.upgrade(plugin.id, version);
+      const result = upgraded.status === "ready"
+        ? await lifecycle.disable(
+            plugin.id,
+            `Governed intake review required for ${upgraded.pluginKey}@${upgraded.version}`,
+          )
+        : upgraded;
       await logPluginMutationActivity(req, "plugin.upgraded", plugin.id, {
         pluginId: plugin.id,
         pluginKey: plugin.pluginKey,
         previousVersion: plugin.version,
-        version: result?.version ?? plugin.version,
+        version: result.version,
         targetVersion: version ?? null,
+        governanceState: "review_required",
       });
       publishGlobalLiveEvent({ type: "plugin.ui.updated", payload: { pluginId: plugin.id, action: "upgraded" } });
       res.json(result);

@@ -1507,6 +1507,15 @@ export {
   type VentureSourceRef,
 } from "./types/venture-constitution.js";
 export {
+  GOVERNED_INTAKE_COMPATIBILITY,
+  GOVERNED_INTAKE_DECISIONS,
+  GOVERNED_INTAKE_RESOURCE_KINDS,
+  type GovernedIntakeAssessment,
+  type GovernedIntakeCompatibility,
+  type GovernedIntakeDecision,
+  type GovernedIntakeResourceKind,
+} from "./types/governed-intake.js";
+export {
   activateVentureConstitutionRevisionSchema,
   createVentureConstitutionRevisionSchema,
   restoreVentureConstitutionRevisionSchema,
@@ -1517,6 +1526,10 @@ export {
   type CreateVentureConstitutionRevision,
   type RestoreVentureConstitutionRevision,
 } from "./validators/venture-constitution.js";
+export {
+  createGovernedIntakeAssessmentSchema,
+  type CreateGovernedIntakeAssessment,
+} from "./validators/governed-intake.js";
 export {
   SIM_ENGINES,
   VENTURE_CONSTRAINT_DECISIONS,

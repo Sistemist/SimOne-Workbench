@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { PluginRecord } from "@paperclipai/shared";
 import { Link, useSearchParams } from "@/lib/router";
-import { AlertTriangle, FlaskConical, Plus, Power, Puzzle, Settings, Trash } from "lucide-react";
+import { AlertTriangle, FlaskConical, Plus, Power, Puzzle, Settings, ShieldCheck, Trash } from "lucide-react";
 import { useCompany } from "@/context/CompanyContext";
 import { useBreadcrumbs } from "@/context/BreadcrumbContext";
 import { pluginsApi, type AvailableBundledPlugin } from "@/api/plugins";
@@ -142,7 +142,11 @@ export function PluginManager() {
       invalidatePluginQueries();
       setInstallDialogOpen(false);
       setInstallPackage("");
-      pushToast({ title: "Plugin installed successfully", tone: "success" });
+      pushToast({
+        title: "Plugin installed for review",
+        body: "Record a governed intake decision before activation.",
+        tone: "success",
+      });
     },
     onError: (err: Error) => {
       pushToast({ title: "Failed to install plugin", body: err.message, tone: "error" });
@@ -263,6 +267,21 @@ export function PluginManager() {
         </div>
       </div>
 
+      <div className="flex flex-col gap-3 rounded-lg border bg-muted/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+          <div>
+            <p className="text-sm font-medium">Activation is governed by exact version.</p>
+            <p className="text-sm text-muted-foreground">
+              Review compatibility, permissions, cost, provenance, and product boundaries before enabling.
+            </p>
+          </div>
+        </div>
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/company/settings/instance/governed-intake">Open intake gate</Link>
+        </Button>
+      </div>
+
       {focusedBundledPlugin && (
         <section className="rounded-lg border border-primary/25 bg-primary/[0.04] p-4">
           {(() => {
@@ -301,14 +320,20 @@ export function PluginManager() {
                   {installedPlugin ? (
                     <>
                       {installedPlugin.status !== "ready" && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={enableMutation.isPending}
-                          onClick={() => enableMutation.mutate(installedPlugin.id)}
-                        >
-                          Enable
-                        </Button>
+                        installedPlugin.status === "installed" ? (
+                          <Button variant="outline" size="sm" asChild>
+                            <Link to="/company/settings/instance/governed-intake">Review intake</Link>
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={enableMutation.isPending}
+                            onClick={() => enableMutation.mutate(installedPlugin.id)}
+                          >
+                            Enable
+                          </Button>
+                        )
                       )}
                       <Button variant="outline" size="sm" asChild>
                         <Link to={`/company/settings/instance/plugins/${installedPlugin.id}`}>
@@ -402,14 +427,20 @@ export function PluginManager() {
                       {installedPlugin ? (
                         <>
                           {installedPlugin.status !== "ready" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={enableMutation.isPending}
-                              onClick={() => enableMutation.mutate(installedPlugin.id)}
-                            >
-                              Enable
-                            </Button>
+                            installedPlugin.status === "installed" ? (
+                              <Button variant="outline" size="sm" asChild>
+                                <Link to="/company/settings/instance/governed-intake">Review intake</Link>
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={enableMutation.isPending}
+                                onClick={() => enableMutation.mutate(installedPlugin.id)}
+                              >
+                                Enable
+                              </Button>
+                            )
                           )}
                           <Button variant="outline" size="sm" asChild>
                             <Link to={`/company/settings/instance/plugins/${installedPlugin.id}`}>
