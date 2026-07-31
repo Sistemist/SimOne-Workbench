@@ -34,9 +34,19 @@ vi.mock("@/context/ToastContext", () => ({
 
 async function flushReact() {
   await act(async () => {
-    await Promise.resolve();
+    for (let index = 0; index < 5; index += 1) {
+      await Promise.resolve();
+    }
     await new Promise((resolve) => window.setTimeout(resolve, 0));
   });
+}
+
+async function waitForText(container: HTMLElement, text: string) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    if (container.textContent?.includes(text)) return;
+    await flushReact();
+  }
+  expect(container.textContent).toContain(text);
 }
 
 describe("GovernedIntake", () => {
@@ -75,7 +85,7 @@ describe("GovernedIntake", () => {
         </QueryClientProvider>,
       );
     });
-    await flushReact();
+    await waitForText(container, "Context Projection");
 
     const text = container.textContent ?? "";
     expect(text).toContain("Governed intake");

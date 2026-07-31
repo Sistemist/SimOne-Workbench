@@ -69,6 +69,42 @@ async function waitForRouteDecisionReview(
     .then((rows) => rows[0] ?? null);
 }
 
+async function waitForRouteDecisionCost(
+  db: ReturnType<typeof createDb>,
+  runId: string,
+  timeoutMs = 5_000,
+) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const decision = await db
+      .select()
+      .from(modelRouteDecisions)
+      .where(eq(modelRouteDecisions.heartbeatRunId, runId))
+      .then((rows) => rows[0] ?? null);
+    if (decision) {
+      const linkedCosts = await db
+        .select()
+        .from(costEvents)
+        .where(eq(costEvents.modelRouteDecisionId, decision.id));
+      if (linkedCosts.length > 0) return { decision, linkedCosts };
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+
+  const decision = await db
+    .select()
+    .from(modelRouteDecisions)
+    .where(eq(modelRouteDecisions.heartbeatRunId, runId))
+    .then((rows) => rows[0] ?? null);
+  const linkedCosts = decision
+    ? await db
+        .select()
+        .from(costEvents)
+        .where(eq(costEvents.modelRouteDecisionId, decision.id))
+    : [];
+  return { decision, linkedCosts };
+}
+
 describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
   let db!: ReturnType<typeof createDb>;
   let tempDb: Awaited<ReturnType<typeof startEmbeddedPostgresTestDatabase>> | null = null;
@@ -278,11 +314,9 @@ describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
     expect((await waitForRunToFinish(heartbeat, run!.id))?.status).toBe("succeeded");
     expect(capturedRuns).toHaveLength(1);
 
-    const decision = await db
-      .select()
-      .from(modelRouteDecisions)
-      .where(eq(modelRouteDecisions.heartbeatRunId, run!.id))
-      .then((rows) => rows[0] ?? null);
+    // A terminal run precedes post-run runtime ledger bookkeeping. Wait for
+    // that promised evidence before teardown removes the suite's shared rows.
+    const { decision, linkedCosts } = await waitForRouteDecisionCost(db, run!.id);
     expect(decision?.metadata).toMatchObject({
       executionSafety: {
         status: "ready",
@@ -321,10 +355,6 @@ describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
         },
       },
     });
-    const linkedCosts = await db
-      .select()
-      .from(costEvents)
-      .where(eq(costEvents.modelRouteDecisionId, decision!.id));
     expect(linkedCosts).toHaveLength(1);
     expect(linkedCosts[0]).toMatchObject({
       provider: TEST_ADAPTER_TYPE,

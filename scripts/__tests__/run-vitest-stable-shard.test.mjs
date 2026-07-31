@@ -57,6 +57,23 @@ test("a route/authz suite never leaks into the general-server shards", () => {
   }
 });
 
+test("stateful heartbeat runtime skills stay in the serialized lane", () => {
+  const suite = "server/src/__tests__/heartbeat-runtime-skills.test.ts";
+  const serialized = dryRunJson(["--mode", "serialized"]);
+  assert.ok(
+    serialized.selectedSerializedSuites.includes(suite),
+    `${suite} must run in an isolated process`,
+  );
+
+  const shards = Array.from({ length: SHARD_COUNT }, (_, index) =>
+    dryRunJson(["--mode", "general", "--group", "general-server", "--shard-index", String(index), "--shard-count", String(SHARD_COUNT)]),
+  );
+  assert.ok(
+    shards.every((shard) => !shard.selectedGeneralServerSuites.includes(suite)),
+    `${suite} must not leak into a general-server shard`,
+  );
+});
+
 test("shard flags are rejected for the parallel workspace groups", () => {
   const result = dryRun(["--mode", "general", "--group", "general-workspaces-a", "--shard-index", "0", "--shard-count", "3"]);
   assert.notEqual(result.status, 0, "workspace groups must not accept shard flags");

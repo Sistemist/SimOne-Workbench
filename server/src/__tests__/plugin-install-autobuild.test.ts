@@ -301,7 +301,7 @@ describeEmbeddedPostgres("plugin install auto-build route", () => {
     await tempDb?.cleanup();
   });
 
-  it("auto-builds bundled local plugins during POST /api/plugins/install when dist is missing", async () => {
+  it("auto-builds bundled local plugins but leaves them inactive pending governed intake", async () => {
     const fixture = await createBundledPluginFixture("success");
     cleanupPaths.add(fixture.packageRoot);
     const app = await createInstallApp(db);
@@ -315,13 +315,14 @@ describeEmbeddedPostgres("plugin install auto-build route", () => {
     expect(res.status).toBe(200);
     expect(res.body.packageName).toBe(fixture.packageName);
     expect(res.body.pluginKey).toBe(fixture.pluginKey);
+    expect(res.body.status).toBe("installed");
     expect(existsSync(path.join(fixture.distDir, "manifest.js"))).toBe(true);
     expect(existsSync(path.join(fixture.distDir, "worker.js"))).toBe(true);
     expect(existsSync(path.join(fixture.distDir, "ui", "index.js"))).toBe(true);
-    expect(mockLifecycle.load).toHaveBeenCalledTimes(1);
+    expect(mockLifecycle.load).not.toHaveBeenCalled();
   }, 60_000);
 
-  it("auto-builds standalone bundled local plugins outside the root pnpm workspace", async () => {
+  it("auto-builds standalone bundled local plugins without activating them", async () => {
     const fixture = await createBundledPluginFixture("standalone-success", { rootDir: standaloneRepoPluginRoot });
     cleanupPaths.add(fixture.packageRoot);
     const app = await createInstallApp(db);
@@ -336,14 +337,15 @@ describeEmbeddedPostgres("plugin install auto-build route", () => {
     expect(res.status).toBe(200);
     expect(res.body.packageName).toBe(fixture.packageName);
     expect(res.body.pluginKey).toBe(fixture.pluginKey);
+    expect(res.body.status).toBe("installed");
     expect(existsSync(path.join(fixture.distDir, "manifest.js"))).toBe(true);
     expect(existsSync(path.join(fixture.distDir, "worker.js"))).toBe(true);
     expect(existsSync(path.join(fixture.distDir, "ui", "index.js"))).toBe(true);
     expect(existsSync(path.join(fixture.packageRoot, "node_modules", "@paperclipai", "plugin-sdk"))).toBe(true);
-    expect(mockLifecycle.load).toHaveBeenCalledTimes(1);
+    expect(mockLifecycle.load).not.toHaveBeenCalled();
   }, 60_000);
 
-  it("bootstraps standalone bundled local plugin runtime dependencies when dist already exists", async () => {
+  it("bootstraps standalone runtime dependencies without activating the plugin", async () => {
     const fixture = await createBundledPluginFixture("standalone-runtime-success", {
       rootDir: standaloneRepoPluginRoot,
       buildDistImmediately: true,
@@ -361,8 +363,9 @@ describeEmbeddedPostgres("plugin install auto-build route", () => {
     expect(res.status).toBe(200);
     expect(res.body.packageName).toBe(fixture.packageName);
     expect(res.body.pluginKey).toBe(fixture.pluginKey);
+    expect(res.body.status).toBe("installed");
     expect(existsSync(path.join(fixture.packageRoot, "node_modules", "@paperclipai", "plugin-sdk"))).toBe(true);
-    expect(mockLifecycle.load).toHaveBeenCalledTimes(1);
+    expect(mockLifecycle.load).not.toHaveBeenCalled();
   }, 60_000);
 
   it("returns the manual build command when auto-build is disabled and dist is missing", async () => {
