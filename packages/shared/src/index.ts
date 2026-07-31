@@ -1499,6 +1499,24 @@ export {
 } from "./validators/index.js";
 
 export { API_PREFIX, API } from "./api.js";
+export {
+  VENTURE_CONSTITUTION_STATUSES,
+  type VentureConstitutionContent,
+  type VentureConstitutionRevision,
+  type VentureConstitutionStatus,
+  type VentureSourceRef,
+} from "./types/venture-constitution.js";
+export {
+  activateVentureConstitutionRevisionSchema,
+  createVentureConstitutionRevisionSchema,
+  restoreVentureConstitutionRevisionSchema,
+  ventureConstitutionContentSchema,
+  ventureConstitutionStatusSchema,
+  ventureSourceRefSchema,
+  type ActivateVentureConstitutionRevision,
+  type CreateVentureConstitutionRevision,
+  type RestoreVentureConstitutionRevision,
+} from "./validators/venture-constitution.js";
 export { normalizeAgentUrlKey, deriveAgentUrlKey, isUuidLike } from "./agent-url-key.js";
 export { deriveProjectUrlKey, normalizeProjectUrlKey, hasNonAsciiContent } from "./project-url-key.js";
 export {

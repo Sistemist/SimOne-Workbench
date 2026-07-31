@@ -442,6 +442,18 @@ export {
 } from "./goal.js";
 
 export {
+  activateVentureConstitutionRevisionSchema,
+  createVentureConstitutionRevisionSchema,
+  restoreVentureConstitutionRevisionSchema,
+  ventureConstitutionContentSchema,
+  ventureConstitutionStatusSchema,
+  ventureSourceRefSchema,
+  type ActivateVentureConstitutionRevision,
+  type CreateVentureConstitutionRevision,
+  type RestoreVentureConstitutionRevision,
+} from "./venture-constitution.js";
+
+export {
   createApprovalSchema,
   resolveApprovalSchema,
   requestApprovalRevisionSchema,

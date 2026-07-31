@@ -82,6 +82,10 @@ export { bootstrapExecutionPolicyFromEnv } from "./execution-policy-bootstrap.js
 export { cloudUpstreamService, reconcileCloudUpstreamRunsOnStartup } from "./cloud-upstreams.js";
 export { companyPortabilityService } from "./company-portability.js";
 export { buildVentureShareSnapshot, ventureShareService } from "./venture-shares.js";
+export {
+  ventureConstitutionService,
+  type VentureConstitutionActor,
+} from "./venture-constitution.js";
 export { teamsCatalogService } from "./teams-catalog.js";
 export { environmentService } from "./environments.js";
 export { executionWorkspaceService } from "./execution-workspaces.js";

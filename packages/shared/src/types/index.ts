@@ -546,6 +546,13 @@ export type {
   VentureShareRecord,
   VentureShareSnapshot,
 } from "./venture-share.js";
+export {
+  VENTURE_CONSTITUTION_STATUSES,
+  type VentureConstitutionContent,
+  type VentureConstitutionRevision,
+  type VentureConstitutionStatus,
+  type VentureSourceRef,
+} from "./venture-constitution.js";
 export type {
   JsonSchema,
   PluginJobDeclaration,
