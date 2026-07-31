@@ -460,8 +460,20 @@ export {
   ventureEngineStateSchema,
   ventureNextMoveSchema,
   ventureStateContentSchema,
+  commitSimCycleLeverageSchema,
+  completeSimCycleCompoundSchema,
+  decideSimCycleDiagnosisSchema,
+  pauseSimCycleSchema,
+  startSimCycleSchema,
+  submitSimCycleMapSchema,
+  type CommitSimCycleLeverage,
+  type CompleteSimCycleCompound,
+  type DecideSimCycleDiagnosis,
   type CreateVentureContextProjection,
   type CreateVentureStateRevision,
+  type PauseSimCycle,
+  type StartSimCycle,
+  type SubmitSimCycleMap,
 } from "./venture-operations.js";
 
 export {

@@ -932,6 +932,13 @@
       "when": 1785528500000,
       "tag": "0132_venture_operating_state",
       "breakpoints": true
+    },
+    {
+      "idx": 133,
+      "version": "7",
+      "when": 1785530000000,
+      "tag": "0133_guided_sim_cycles",
+      "breakpoints": true
     }
   ]
 }

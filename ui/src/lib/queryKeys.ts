@@ -12,6 +12,8 @@ export const queryKeys = {
       ["founder-cockpit", companyId, "state-revisions"] as const,
     contextProjections: (companyId: string) =>
       ["founder-cockpit", companyId, "context-projections"] as const,
+    cycleEvents: (companyId: string, cycleId: string) =>
+      ["founder-cockpit", companyId, "cycle-events", cycleId] as const,
   },
   companySkills: {
     list: (companyId: string) => ["company-skills", companyId] as const,

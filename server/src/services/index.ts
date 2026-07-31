@@ -90,6 +90,7 @@ export {
   ventureOperatingStateService,
   type VentureOperatingActor,
 } from "./venture-operating-state.js";
+export { simCycleService } from "./sim-cycles.js";
 export { teamsCatalogService } from "./teams-catalog.js";
 export { environmentService } from "./environments.js";
 export { executionWorkspaceService } from "./execution-workspaces.js";

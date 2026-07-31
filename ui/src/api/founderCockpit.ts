@@ -3,6 +3,14 @@ import type {
   CreateVentureContextProjection,
   CreateVentureStateRevision,
   FounderCockpitSnapshot,
+  CommitSimCycleLeverage,
+  CompleteSimCycleCompound,
+  DecideSimCycleDiagnosis,
+  PauseSimCycle,
+  SimCycle,
+  SimCycleEvent,
+  StartSimCycle,
+  SubmitSimCycleMap,
   VentureConstitutionRevision,
   VentureContextProjection,
   VentureStateRevision,
@@ -53,4 +61,32 @@ export const founderCockpitApi = {
     data: CreateVentureContextProjection,
   ) =>
     api.post<VentureContextProjection>(`/companies/${companyId}/context-projections`, data),
+  startCycle: (companyId: string, data: StartSimCycle) =>
+    api.post<SimCycle>(`/companies/${companyId}/sim-cycles`, data),
+  submitCycleMap: (companyId: string, cycleId: string, data: SubmitSimCycleMap) =>
+    api.post<SimCycle>(`/companies/${companyId}/sim-cycles/${cycleId}/map`, data),
+  decideCycleDiagnosis: (
+    companyId: string,
+    cycleId: string,
+    data: DecideSimCycleDiagnosis,
+  ) =>
+    api.post<SimCycle>(`/companies/${companyId}/sim-cycles/${cycleId}/diagnose`, data),
+  commitCycleLeverage: (
+    companyId: string,
+    cycleId: string,
+    data: CommitSimCycleLeverage,
+  ) =>
+    api.post<SimCycle>(`/companies/${companyId}/sim-cycles/${cycleId}/leverage`, data),
+  completeCycleCompound: (
+    companyId: string,
+    cycleId: string,
+    data: CompleteSimCycleCompound,
+  ) =>
+    api.post<SimCycle>(`/companies/${companyId}/sim-cycles/${cycleId}/compound`, data),
+  pauseCycle: (companyId: string, cycleId: string, data: PauseSimCycle) =>
+    api.post<SimCycle>(`/companies/${companyId}/sim-cycles/${cycleId}/pause`, data),
+  resumeCycle: (companyId: string, cycleId: string) =>
+    api.post<SimCycle>(`/companies/${companyId}/sim-cycles/${cycleId}/resume`, {}),
+  cycleEvents: (companyId: string, cycleId: string) =>
+    api.get<SimCycleEvent[]>(`/companies/${companyId}/sim-cycles/${cycleId}/events`),
 };

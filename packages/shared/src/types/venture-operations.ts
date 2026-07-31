@@ -109,4 +109,81 @@ export interface FounderCockpitSnapshot {
     projectedAt: string;
     sources: VentureSourceRef[];
   };
+  activeCycle: SimCycle | null;
+  latestCycle: SimCycle | null;
+}
+
+export const SIM_CYCLE_PHASES = ["map", "diagnose", "leverage", "compound", "complete"] as const;
+export type SimCyclePhase = (typeof SIM_CYCLE_PHASES)[number];
+
+export const SIM_CYCLE_STATUSES = ["active", "paused", "completed"] as const;
+export type SimCycleStatus = (typeof SIM_CYCLE_STATUSES)[number];
+
+export interface SimCycleMapOutput {
+  ventureStateRevisionId: string;
+  completedAt: string;
+}
+
+export interface SimCycleDiagnoseOutput {
+  constraint: VentureConstraintHypothesis;
+  approvedByUserId: string | null;
+  approvedAt: string | null;
+}
+
+export interface SimCycleIntervention {
+  title: string;
+  rationale: string;
+  engine: SimEngine;
+  successSignal: string;
+  approvalRequired: boolean;
+  evidence: VentureSourceRef[];
+}
+
+export interface SimCycleLeverageOutput {
+  intervention: SimCycleIntervention;
+  commitmentNote: string;
+  committedByUserId: string;
+  committedAt: string;
+}
+
+export interface SimCycleCompoundOutput {
+  outcome: string;
+  evidence: VentureSourceRef[];
+  learning: string;
+  promotedStateRevisionId: string;
+  completedAt: string;
+}
+
+export interface SimCycle {
+  id: string;
+  companyId: string;
+  status: SimCycleStatus;
+  phase: SimCyclePhase;
+  constitutionRevisionId: string;
+  startingStateRevisionId: string | null;
+  currentStateRevisionId: string | null;
+  contextProjectionId: string | null;
+  startReason: string;
+  mapOutput: SimCycleMapOutput | null;
+  diagnoseOutput: SimCycleDiagnoseOutput | null;
+  leverageOutput: SimCycleLeverageOutput | null;
+  compoundOutput: SimCycleCompoundOutput | null;
+  startedByUserId: string;
+  pausedReason: string | null;
+  pausedAt: Date | null;
+  resumedAt: Date | null;
+  completedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface SimCycleEvent {
+  id: string;
+  companyId: string;
+  cycleId: string;
+  type: string;
+  phase: SimCyclePhase;
+  actorUserId: string;
+  payload: Record<string, unknown>;
+  createdAt: Date;
 }

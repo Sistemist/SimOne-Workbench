@@ -23,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { GuidedSimCycle } from "@/components/GuidedSimCycle";
 import { useBreadcrumbs } from "@/context/BreadcrumbContext";
 import { useCompany } from "@/context/CompanyContext";
 import { queryKeys } from "@/lib/queryKeys";
@@ -594,8 +595,62 @@ export function FounderCockpit() {
         </Card>
       </section>
 
+      <GuidedSimCycle
+        companyId={selectedCompanyId}
+        cycle={snapshot.activeCycle}
+        currentState={state}
+        constitutionActive={Boolean(activeRevision)}
+      />
+
+      {!snapshot.activeCycle && snapshot.latestCycle?.status === "completed" ? (
+        <Card className="border-emerald-500/30">
+          <CardHeader>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <CardTitle className="text-base">Most recent SIM Cycle</CardTitle>
+              <Badge variant="secondary">completed</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2">
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Observed outcome</p>
+              <p className="mt-2 text-sm leading-relaxed">
+                {snapshot.latestCycle.compoundOutput?.outcome ?? "Outcome retained in the cycle evidence trail."}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Promoted learning</p>
+              <p className="mt-2 text-sm leading-relaxed">
+                {snapshot.latestCycle.compoundOutput?.learning ?? "Learning retained in canonical venture state."}
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground md:col-span-2">
+              Completed {formatTimestamp(snapshot.latestCycle.completedAt)} · consumed projection{" "}
+              {snapshot.latestCycle.contextProjectionId?.slice(0, 8) ?? "not recorded"} · promoted state{" "}
+              {snapshot.latestCycle.compoundOutput?.promotedStateRevisionId.slice(0, 8) ?? "not recorded"}
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
+
       {state ? (
         <>
+          {state.content.learnings.length > 0 ? (
+            <Card className="border-emerald-500/30 bg-emerald-500/5">
+              <CardHeader>
+                <CardTitle className="text-base">Promoted learning</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  {state.content.learnings.map((learning, index) => (
+                    <li key={`${index}-${learning}`} className="flex items-start gap-2">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                      <span>{learning}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ) : null}
           <section className="grid gap-4 md:grid-cols-2">
             {Object.entries(state.content.engines).map(([engine, value]) => (
               <Card key={engine}>

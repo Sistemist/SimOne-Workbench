@@ -4,6 +4,7 @@ import {
   approvals,
   companies,
   issues,
+  simCycles,
   ventureConstitutionRevisions,
   ventureContextProjections,
   ventureStateRevisions,
@@ -289,6 +290,8 @@ export function ventureOperatingStateService(db: Db) {
         projection,
         approvalCount,
         issueCounts,
+        activeCycle,
+        latestCycle,
       ] = await Promise.all([
         db
           .select({ id: companies.id, name: companies.name, updatedAt: companies.updatedAt })
@@ -331,6 +334,23 @@ export function ventureOperatingStateService(db: Db) {
           .from(issues)
           .where(and(eq(issues.companyId, companyId), isNull(issues.hiddenAt)))
           .groupBy(issues.status),
+        db
+          .select()
+          .from(simCycles)
+          .where(
+            and(
+              eq(simCycles.companyId, companyId),
+              inArray(simCycles.status, ["active", "paused"]),
+            ),
+          )
+          .then((rows) => rows[0] ?? null),
+        db
+          .select()
+          .from(simCycles)
+          .where(eq(simCycles.companyId, companyId))
+          .orderBy(desc(simCycles.createdAt))
+          .limit(1)
+          .then((rows) => rows[0] ?? null),
       ]);
       if (!company) throw notFound("Company not found");
 
@@ -353,6 +373,8 @@ export function ventureOperatingStateService(db: Db) {
           projectedAt: new Date().toISOString(),
           sources: projection?.sourceRefs ?? state?.sourceRefs ?? constitution?.sourceRefs ?? [],
         },
+        activeCycle,
+        latestCycle,
       };
     },
   };
