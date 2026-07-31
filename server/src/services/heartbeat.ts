@@ -70,6 +70,11 @@ import { createLocalAgentJwt } from "../agent-auth-jwt.js";
 import { parseObject, asBoolean, asNumber, appendWithByteCap, MAX_EXCERPT_BYTES } from "../adapters/utils.js";
 import { costService } from "./costs.js";
 import { modelRouteDecisionService } from "./model-route-decisions.js";
+import {
+  assessModelExecutionSafety,
+  modelExecutionSafetyBlockMessage,
+  modelExecutionSafetyDisablesAutomaticRetries,
+} from "./model-execution-safety.js";
 import { trackAgentFirstHeartbeat } from "@paperclipai/shared/telemetry";
 import { getTelemetryClient } from "../telemetry.js";
 import { companySkillService } from "./company-skills.js";
@@ -5811,6 +5816,20 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
     agent: typeof agents.$inferSelect,
     issueId: string,
   ) {
+    if (
+      modelExecutionSafetyDisablesAutomaticRetries(
+        parseObject(agent.adapterConfig).modelExecutionSafety,
+      )
+    ) {
+      await appendRunEvent(run, await nextRunEventSeq(run.id), {
+        eventType: "lifecycle",
+        stream: "system",
+        level: "warn",
+        message: "Missing-comment retry suppressed by the model execution safety policy",
+      });
+      return null;
+    }
+
     const invokability = await getAgentInvokability(agent);
     if (!invokability.invokable) {
       await appendRunEvent(run, await nextRunEventSeq(run.id), {
@@ -6553,7 +6572,11 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
     const now = opts?.now ?? new Date();
     const retryReason = opts?.retryReason ?? BOUNDED_TRANSIENT_HEARTBEAT_RETRY_REASON;
     const wakeReason = opts?.wakeReason ?? BOUNDED_TRANSIENT_HEARTBEAT_RETRY_WAKE_REASON;
-    const maxAttempts = Math.max(0, Math.floor(opts?.maxAttempts ?? BOUNDED_TRANSIENT_HEARTBEAT_RETRY_MAX_ATTEMPTS));
+    const maxAttempts = modelExecutionSafetyDisablesAutomaticRetries(
+      parseObject(agent.adapterConfig).modelExecutionSafety,
+    )
+      ? 0
+      : Math.max(0, Math.floor(opts?.maxAttempts ?? BOUNDED_TRANSIENT_HEARTBEAT_RETRY_MAX_ATTEMPTS));
     const nextAttempt = (run.scheduledRetryAttempt ?? 0) + 1;
     const baseSchedule = opts?.delayMs != null
       ? nextAttempt <= maxAttempts
@@ -8156,7 +8179,13 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         });
       }
 
-      const shouldRetry = tracksLocalChild && (!!run.processPid || !!run.processGroupId) && (run.processLossRetryCount ?? 0) < 1;
+      const shouldRetry =
+        tracksLocalChild &&
+        (!!run.processPid || !!run.processGroupId) &&
+        (run.processLossRetryCount ?? 0) < 1 &&
+        !modelExecutionSafetyDisablesAutomaticRetries(
+          parseObject(adapterConfig).modelExecutionSafety,
+        );
       const baseMessage = buildProcessLossMessage(run, descendantOnlyCleanup ? { descendantOnly: true } : undefined);
 
       let finalizedRun = await setRunStatus(run.id, "failed", {
@@ -9721,11 +9750,25 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
       };
 
       let adapterResult: Awaited<ReturnType<typeof adapter.execute>>;
+      const routeDecisionRuntimeConfig = parseObject(runtimeConfig);
       const routeDecisionModel =
-        readConfiguredModelFromAdapterConfig(runtimeConfig)
+        readConfiguredModelFromAdapterConfig(routeDecisionRuntimeConfig)
         ?? configuredModel
         ?? modelProfileApplication.applied
         ?? "adapter-default";
+      const routeDecisionProvider =
+        readNonEmptyString(routeDecisionRuntimeConfig.provider)
+        ?? agent.adapterType;
+      const heartbeatPolicy = parseHeartbeatPolicy(agent);
+      const routeDecisionExecutionSafety = assessModelExecutionSafety({
+        provider: routeDecisionProvider,
+        model: routeDecisionModel,
+        timeoutSec: routeDecisionRuntimeConfig.timeoutSec,
+        maxTurnsPerRun: routeDecisionRuntimeConfig.maxTurnsPerRun,
+        maxConcurrentRuns: heartbeatPolicy.maxConcurrentRuns,
+        maxDailyRuns: heartbeatPolicy.maxDailyRuns,
+        policy: routeDecisionRuntimeConfig.modelExecutionSafety,
+      });
       const routeDecisionModelProfile = modelProfileRunMetadata(modelProfileApplication);
       const routeDecision = await modelRouteDecisionService(db).create(agent.companyId, {
         agentId: agent.id,
@@ -9733,7 +9776,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         projectId: issueRef?.projectId ?? projectContext?.id ?? null,
         heartbeatRunId: run.id,
         lane: "workhorse",
-        provider: agent.adapterType,
+        provider: routeDecisionProvider,
         model: routeDecisionModel,
         reason: "Heartbeat execution dispatched through the configured agent adapter.",
         riskLevel: "medium",
@@ -9751,6 +9794,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
           triggerDetail: run.triggerDetail,
           wakeReason: readNonEmptyString(context.wakeReason) ?? null,
           ...(routeDecisionModelProfile ? { modelProfile: routeDecisionModelProfile } : {}),
+          executionSafety: routeDecisionExecutionSafety,
           contextKeys: Object.keys(context).sort().slice(0, 50),
         },
         createdByRunId: run.id,
@@ -9758,6 +9802,25 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         createdByAgentId: agent.id,
       });
       heartbeatRouteDecisionId = routeDecision.id;
+      if (
+        routeDecisionExecutionSafety.enforced &&
+        routeDecisionExecutionSafety.status !== "ready"
+      ) {
+        throw new ConfigurationIncompleteFailure(
+          `configuration incomplete: ${modelExecutionSafetyBlockMessage(routeDecisionExecutionSafety)}`,
+          {
+            configurationIncomplete: {
+              reason: "model_execution_safety",
+              companyId: agent.companyId,
+              agentId: agent.id,
+              issueId: issueRef?.id ?? null,
+              projectId: issueRef?.projectId ?? projectContext?.id ?? null,
+              blockers: routeDecisionExecutionSafety.blockers,
+            },
+            modelExecutionSafety: routeDecisionExecutionSafety,
+          },
+        );
+      }
       try {
         adapterResult = await adapter.execute({
           runId: run.id,
@@ -10821,6 +10884,12 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
       const shouldBlockImmediately =
         !recoveryAgentInvokable ||
         !recoveryAgent ||
+        (
+          recoveryAgent &&
+          modelExecutionSafetyDisablesAutomaticRetries(
+            parseObject(recoveryAgent.adapterConfig).modelExecutionSafety,
+          )
+        ) ||
         isWorkspaceValidationFailedRun(run) ||
         isConfigurationIncompleteFailedRun(run) ||
         didAutomaticRecoveryFail(run, issue.status === "todo" ? "assignment_recovery" : "issue_continuation_needed");

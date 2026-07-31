@@ -4,7 +4,13 @@ import path from "node:path";
 import { promises as fs } from "node:fs";
 import { eq, sql } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { agents, companies, companySkills, createDb } from "@paperclipai/db";
+import {
+  agents,
+  companies,
+  companySkills,
+  createDb,
+  modelRouteDecisions,
+} from "@paperclipai/db";
 import type { PaperclipSkillEntry } from "@paperclipai/adapter-utils/server-utils";
 import {
   getEmbeddedPostgresTestSupport,
@@ -36,6 +42,28 @@ async function waitForRunToFinish(
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
   return await heartbeat.getRun(runId);
+}
+
+async function waitForRouteDecisionReview(
+  db: ReturnType<typeof createDb>,
+  runId: string,
+  timeoutMs = 5_000,
+) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const decision = await db
+      .select()
+      .from(modelRouteDecisions)
+      .where(eq(modelRouteDecisions.heartbeatRunId, runId))
+      .then((rows) => rows[0] ?? null);
+    if (decision && decision.reviewStatus !== "pending") return decision;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  return db
+    .select()
+    .from(modelRouteDecisions)
+    .where(eq(modelRouteDecisions.heartbeatRunId, runId))
+    .then((rows) => rows[0] ?? null);
 }
 
 describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
@@ -86,6 +114,7 @@ describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
         "heartbeat_runs",
         "agent_wakeup_requests",
         "agent_runtime_state",
+        "model_route_decisions",
         "company_skill_versions",
         "company_skills",
         "agents",
@@ -104,6 +133,153 @@ describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
       await fs.rm(paperclipHome, { recursive: true, force: true });
     }
     await tempDb?.cleanup();
+  });
+
+  it("blocks an explicitly governed model route before the adapter runs when spend controls are incomplete", async () => {
+    const companyId = randomUUID();
+    const agentId = randomUUID();
+    const issuePrefix = `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`;
+
+    await db.insert(companies).values({
+      id: companyId,
+      name: "Sysdom AI",
+      issuePrefix,
+      requireBoardApprovalForNewAgents: false,
+    });
+    await db.insert(agents).values({
+      id: agentId,
+      companyId,
+      name: "Governed Route",
+      role: "engineer",
+      status: "idle",
+      adapterType: TEST_ADAPTER_TYPE,
+      adapterConfig: {
+        model: "test-model",
+        modelExecutionSafety: {
+          billingType: "metered_api",
+          provider: TEST_ADAPTER_TYPE,
+          model: "test-model",
+          maxRuns: 2,
+          maxRetries: 1,
+          concurrency: 2,
+        },
+      },
+      runtimeConfig: {},
+      permissions: {},
+    });
+
+    const heartbeat = heartbeatService(db);
+    const run = await heartbeat.invoke(agentId, "on_demand", {}, "manual");
+    expect(run).not.toBeNull();
+
+    const finished = await waitForRunToFinish(heartbeat, run!.id);
+    expect(finished).toMatchObject({
+      status: "failed",
+      errorCode: "configuration_incomplete",
+    });
+    expect(capturedRuns).toHaveLength(0);
+
+    const decision = await waitForRouteDecisionReview(db, run!.id);
+    expect(decision).toMatchObject({
+      provider: TEST_ADAPTER_TYPE,
+      model: "test-model",
+      reviewStatus: "needs_revision",
+      outputConfidence: "low",
+      metadata: {
+        executionSafety: {
+          status: "blocked",
+          enforced: true,
+          billingType: "metered_api",
+          blockers: expect.arrayContaining([
+            "timeout_missing",
+            "max_turns_missing",
+            "max_runs_not_one",
+            "automatic_retries_enabled",
+            "concurrency_not_one",
+            "provider_cap_missing",
+            "provider_cap_verification_missing",
+            "run_cap_missing",
+          ]),
+        },
+      },
+    });
+  });
+
+  it("runs a fully pinned mock route once when independent and runtime controls agree", async () => {
+    const companyId = randomUUID();
+    const agentId = randomUUID();
+    const issuePrefix = `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`;
+
+    await db.insert(companies).values({
+      id: companyId,
+      name: "Sysdom AI",
+      issuePrefix,
+      requireBoardApprovalForNewAgents: false,
+    });
+    await db.insert(agents).values({
+      id: agentId,
+      companyId,
+      name: "Governed Mock Route",
+      role: "engineer",
+      status: "idle",
+      adapterType: TEST_ADAPTER_TYPE,
+      adapterConfig: {
+        model: "test-model",
+        timeoutSec: 60,
+        maxTurnsPerRun: 5,
+        modelExecutionSafety: {
+          billingType: "metered_api",
+          provider: TEST_ADAPTER_TYPE,
+          model: "test-model",
+          providerHardCapCents: 100,
+          providerHardCapVerifiedAt: "2026-07-31T08:00:00.000Z",
+          maxRunCostCents: 25,
+          maxRuns: 1,
+          maxRetries: 0,
+          concurrency: 1,
+        },
+      },
+      runtimeConfig: {
+        heartbeat: {
+          maxConcurrentRuns: 1,
+          maxDailyRuns: 1,
+          maxTurnContinuation: {
+            enabled: false,
+            maxAttempts: 0,
+          },
+        },
+      },
+      permissions: {},
+    });
+
+    const heartbeat = heartbeatService(db);
+    const run = await heartbeat.invoke(agentId, "on_demand", {}, "manual");
+    expect(run).not.toBeNull();
+    expect((await waitForRunToFinish(heartbeat, run!.id))?.status).toBe("succeeded");
+    expect(capturedRuns).toHaveLength(1);
+
+    const decision = await db
+      .select()
+      .from(modelRouteDecisions)
+      .where(eq(modelRouteDecisions.heartbeatRunId, run!.id))
+      .then((rows) => rows[0] ?? null);
+    expect(decision?.metadata).toMatchObject({
+      executionSafety: {
+        status: "ready",
+        enforced: true,
+        billingType: "metered_api",
+        blockers: [],
+        controls: {
+          timeoutSec: 60,
+          maxTurnsPerRun: 5,
+          maxRuns: 1,
+          maxRetries: 0,
+          concurrency: 1,
+          maxRunCostCents: 25,
+          providerHardCapCents: 100,
+        },
+      },
+    });
   });
 
   it("materializes different pinned skill versions for different agents at runtime", async () => {

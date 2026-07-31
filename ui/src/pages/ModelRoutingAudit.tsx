@@ -18,6 +18,22 @@ const NO_COMPANY = "__none__";
 const DECISION_LIMIT = 50;
 type ReviewStatus = "approved" | "needs_revision" | "rejected";
 type ReviewFilter = "all" | "pending" | ReviewStatus;
+type ExecutionSafetyStatus = "ready" | "blocked" | "unverified";
+
+interface ExecutionSafetyEvidence {
+  status: ExecutionSafetyStatus;
+  billingType: string;
+  blockers: string[];
+  controls: {
+    timeoutSec: number | null;
+    maxTurnsPerRun: number | null;
+    maxRuns: number | null;
+    maxRetries: number | null;
+    concurrency: number | null;
+    maxRunCostCents: number | null;
+    providerHardCapCents: number | null;
+  };
+}
 
 const REVIEW_FILTERS: Array<{ value: ReviewFilter; label: string }> = [
   { value: "all", label: "All" },
@@ -89,6 +105,86 @@ function routeLaneEvidence(decision: ModelRouteDecisionAuditRow): { title: strin
   return null;
 }
 
+function routeExecutionSafety(
+  decision: ModelRouteDecisionAuditRow,
+): ExecutionSafetyEvidence | null {
+  const raw = decision.metadata?.executionSafety;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const evidence = raw as Record<string, unknown>;
+  if (evidence.version !== "sysdom_model_execution_safety_v1") return null;
+  if (!["ready", "blocked", "unverified"].includes(String(evidence.status))) return null;
+  const rawControls =
+    evidence.controls && typeof evidence.controls === "object" && !Array.isArray(evidence.controls)
+      ? evidence.controls as Record<string, unknown>
+      : {};
+  const numberOrNull = (value: unknown) => typeof value === "number" ? value : null;
+  return {
+    status: evidence.status as ExecutionSafetyStatus,
+    billingType: typeof evidence.billingType === "string" ? evidence.billingType : "unknown",
+    blockers: Array.isArray(evidence.blockers)
+      ? evidence.blockers.filter((value): value is string => typeof value === "string")
+      : [],
+    controls: {
+      timeoutSec: numberOrNull(rawControls.timeoutSec),
+      maxTurnsPerRun: numberOrNull(rawControls.maxTurnsPerRun),
+      maxRuns: numberOrNull(rawControls.maxRuns),
+      maxRetries: numberOrNull(rawControls.maxRetries),
+      concurrency: numberOrNull(rawControls.concurrency),
+      maxRunCostCents: numberOrNull(rawControls.maxRunCostCents),
+      providerHardCapCents: numberOrNull(rawControls.providerHardCapCents),
+    },
+  };
+}
+
+function executionSafetyTone(status: ExecutionSafetyStatus) {
+  if (status === "ready") return "border-emerald-500/30 bg-emerald-500/5";
+  if (status === "blocked") return "border-destructive/30 bg-destructive/5";
+  return "border-amber-500/30 bg-amber-500/5";
+}
+
+function ExecutionSafetyEvidenceCard({
+  evidence,
+}: {
+  evidence: ExecutionSafetyEvidence;
+}) {
+  const controls = evidence.controls;
+  const readySummary = [
+    controls.timeoutSec ? `${controls.timeoutSec}s timeout` : null,
+    controls.maxTurnsPerRun ? `${controls.maxTurnsPerRun} turns` : null,
+    controls.maxRuns !== null ? `${controls.maxRuns} run` : null,
+    controls.maxRetries !== null ? `${controls.maxRetries} retries` : null,
+    controls.concurrency !== null ? `${controls.concurrency} concurrent` : null,
+    controls.maxRunCostCents !== null ? `${formatCents(controls.maxRunCostCents)} declared run allowance` : null,
+    controls.providerHardCapCents !== null ? `${formatCents(controls.providerHardCapCents)} provider hard cap` : null,
+  ].filter((value): value is string => Boolean(value));
+
+  return (
+    <div className={`rounded-md border px-3 py-3 ${executionSafetyTone(evidence.status)}`}>
+      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {evidence.status === "blocked"
+          ? <TriangleAlert className="h-3.5 w-3.5 text-destructive" />
+          : <ShieldCheck className="h-3.5 w-3.5" />}
+        Execution safety: {evidence.status}
+      </div>
+      <p className="mt-1 text-sm leading-6">
+        {evidence.status === "ready"
+          ? `${titleCase(evidence.billingType)} route has pinned selection, bounded runtime, and recorded external-cap evidence before provider execution.`
+          : evidence.status === "blocked"
+            ? "The provider invocation was blocked before execution because required controls were missing or inconsistent."
+            : "No enforceable execution-safety policy was attached. This audit row does not prove the route was safe to run."}
+      </p>
+      {evidence.status === "ready" && readySummary.length > 0 ? (
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">{readySummary.join(" · ")}</p>
+      ) : null}
+      {evidence.status !== "ready" && evidence.blockers.length > 0 ? (
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+          {evidence.blockers.map(titleCase).join(" · ")}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function DecisionCard({
   decision,
   isReviewing,
@@ -104,6 +200,7 @@ function DecisionCard({
   const modelLabel = `${decision.provider} / ${decision.model}`;
   const outputArtifacts = routeDecisionOutputArtifacts(decision);
   const laneEvidence = routeLaneEvidence(decision);
+  const executionSafety = routeExecutionSafety(decision);
 
   return (
     <Card>
@@ -183,6 +280,10 @@ function DecisionCard({
             </div>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">{laneEvidence.body}</p>
           </div>
+        ) : null}
+
+        {executionSafety ? (
+          <ExecutionSafetyEvidenceCard evidence={executionSafety} />
         ) : null}
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">

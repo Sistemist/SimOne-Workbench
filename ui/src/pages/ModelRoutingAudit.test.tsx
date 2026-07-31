@@ -92,6 +92,25 @@ function modelRouteDecision(overrides: Record<string, unknown> = {}) {
     reviewNote: "Review before using this in a customer-facing output.",
     metadata: {
       source: "SYS-202",
+      executionSafety: {
+        version: "sysdom_model_execution_safety_v1",
+        source: "heartbeat_pre_dispatch",
+        status: "ready",
+        enforced: true,
+        billingType: "metered_api",
+        provider: "sakana",
+        model: "fugu-ultra",
+        blockers: [],
+        controls: {
+          timeoutSec: 300,
+          maxTurnsPerRun: 20,
+          maxRuns: 1,
+          maxRetries: 0,
+          concurrency: 1,
+          maxRunCostCents: 25,
+          providerHardCapCents: 500,
+        },
+      },
       outputArtifacts: [
         {
           id: "artifact-brief-1",
@@ -143,6 +162,11 @@ describe("ModelRoutingAudit", () => {
     expect(text).toContain("needs revision");
     expect(text).toContain("1 cost event");
     expect(text).toContain("$0.87");
+    expect(text).toContain("Execution safety: ready");
+    expect(text).toContain("Metered api route has pinned selection, bounded runtime, and recorded external-cap evidence before provider execution.");
+    expect(text).toContain("300s timeout");
+    expect(text).toContain("$0.25 declared run allowance");
+    expect(text).toContain("$5.00 provider hard cap");
     expect(text).toContain("human after draft");
     expect(text).toContain("Compressed task brief and acceptance criteria.");
     expect(text).toContain("Returned a draft implementation plan.");
@@ -161,6 +185,41 @@ describe("ModelRoutingAudit", () => {
       { label: "Instance settings", href: "/company/settings/instance/general" },
       { label: "Model routing" },
     ]);
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
+  it("shows why an enforced route was blocked before provider execution", async () => {
+    mockModelRoutingApi.listDecisions.mockResolvedValue({
+      items: [
+        modelRouteDecision({
+          metadata: {
+            source: "heartbeat_adapter_execution",
+            executionSafety: {
+              version: "sysdom_model_execution_safety_v1",
+              source: "heartbeat_pre_dispatch",
+              status: "blocked",
+              enforced: true,
+              billingType: "metered_api",
+              provider: "openrouter",
+              model: "openai/gpt-oss-120b",
+              blockers: ["timeout_missing", "provider_cap_missing"],
+              controls: {},
+            },
+          },
+        }),
+      ],
+    });
+
+    const { container, root } = renderAuditPage();
+    await waitForText(container, "Execution safety: blocked");
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("provider invocation was blocked before execution");
+    expect(text).toContain("Timeout missing");
+    expect(text).toContain("Provider cap missing");
 
     flushSync(() => {
       root.unmount();
