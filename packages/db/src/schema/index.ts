@@ -12,6 +12,10 @@ export { cliAuthChallenges } from "./cli_auth_challenges.js";
 export { companyMemberships } from "./company_memberships.js";
 export { companyVentureShares } from "./company_venture_shares.js";
 export { ventureConstitutionRevisions } from "./venture_constitution_revisions.js";
+export {
+  ventureContextProjections,
+  ventureStateRevisions,
+} from "./venture_operating_state.js";
 export { publicFunnelEvents } from "./public_funnel_events.js";
 export { companyUserSidebarPreferences } from "./company_user_sidebar_preferences.js";
 export { principalPermissionGrants } from "./principal_permission_grants.js";

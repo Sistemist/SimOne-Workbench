@@ -4,6 +4,15 @@ export const queryKeys = {
     detail: (id: string) => ["companies", id] as const,
     stats: ["companies", "stats"] as const,
   },
+  founderCockpit: {
+    snapshot: (companyId: string) => ["founder-cockpit", companyId] as const,
+    constitutionRevisions: (companyId: string) =>
+      ["founder-cockpit", companyId, "constitution-revisions"] as const,
+    stateRevisions: (companyId: string) =>
+      ["founder-cockpit", companyId, "state-revisions"] as const,
+    contextProjections: (companyId: string) =>
+      ["founder-cockpit", companyId, "context-projections"] as const,
+  },
   companySkills: {
     list: (companyId: string) => ["company-skills", companyId] as const,
     detail: (companyId: string, skillId: string) => ["company-skills", companyId, skillId] as const,

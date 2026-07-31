@@ -553,6 +553,24 @@ export {
   type VentureConstitutionStatus,
   type VentureSourceRef,
 } from "./venture-constitution.js";
+export {
+  SIM_ENGINES,
+  VENTURE_CONSTRAINT_DECISIONS,
+  VENTURE_CONTEXT_PROJECTION_STATUSES,
+  VENTURE_STATE_STATUSES,
+  type FounderCockpitSnapshot,
+  type SimEngine,
+  type VentureConstraintDecision,
+  type VentureConstraintHypothesis,
+  type VentureContextProjection,
+  type VentureContextProjectionContent,
+  type VentureContextProjectionStatus,
+  type VentureEngineState,
+  type VentureNextMove,
+  type VentureStateContent,
+  type VentureStateRevision,
+  type VentureStateStatus,
+} from "./venture-operations.js";
 export type {
   JsonSchema,
   PluginJobDeclaration,

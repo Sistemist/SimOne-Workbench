@@ -8,6 +8,7 @@ import { OnboardingWizardVariant } from "./components/OnboardingWizardVariant";
 import { CloudAccessGate } from "./components/CloudAccessGate";
 import { Dashboard } from "./pages/Dashboard";
 import { DashboardLive } from "./pages/DashboardLive";
+import { FounderCockpit } from "./pages/FounderCockpit";
 import { SimCoach } from "./pages/SimCoach";
 import { CustomerEngine } from "./pages/CustomerEngine";
 import { SystemsBottleneckScanner } from "./pages/SystemsBottleneckScanner";
@@ -83,7 +84,8 @@ import { normalizeRememberedInstanceSettingsPath } from "./lib/instance-settings
 function boardRoutes() {
   return (
     <>
-      <Route index element={<Navigate to="dashboard" replace />} />
+      <Route index element={<Navigate to="cockpit" replace />} />
+      <Route path="cockpit" element={<FounderCockpit />} />
       <Route path="dashboard" element={<Dashboard />} />
       <Route path="dashboard/live" element={<DashboardLive />} />
       <Route path="sim-coach" element={<SimCoach />} />

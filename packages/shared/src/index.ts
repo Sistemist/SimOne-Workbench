@@ -1517,6 +1517,35 @@ export {
   type CreateVentureConstitutionRevision,
   type RestoreVentureConstitutionRevision,
 } from "./validators/venture-constitution.js";
+export {
+  SIM_ENGINES,
+  VENTURE_CONSTRAINT_DECISIONS,
+  VENTURE_CONTEXT_PROJECTION_STATUSES,
+  VENTURE_STATE_STATUSES,
+  type FounderCockpitSnapshot,
+  type SimEngine,
+  type VentureConstraintDecision,
+  type VentureConstraintHypothesis,
+  type VentureContextProjection,
+  type VentureContextProjectionContent,
+  type VentureContextProjectionStatus,
+  type VentureEngineState,
+  type VentureNextMove,
+  type VentureStateContent,
+  type VentureStateRevision,
+  type VentureStateStatus,
+} from "./types/venture-operations.js";
+export {
+  createVentureContextProjectionSchema,
+  createVentureStateRevisionSchema,
+  simEngineSchema,
+  ventureConstraintHypothesisSchema,
+  ventureEngineStateSchema,
+  ventureNextMoveSchema,
+  ventureStateContentSchema,
+  type CreateVentureContextProjection,
+  type CreateVentureStateRevision,
+} from "./validators/venture-operations.js";
 export { normalizeAgentUrlKey, deriveAgentUrlKey, isUuidLike } from "./agent-url-key.js";
 export { deriveProjectUrlKey, normalizeProjectUrlKey, hasNonAsciiContent } from "./project-url-key.js";
 export {

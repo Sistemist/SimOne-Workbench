@@ -452,6 +452,17 @@ export {
   type CreateVentureConstitutionRevision,
   type RestoreVentureConstitutionRevision,
 } from "./venture-constitution.js";
+export {
+  createVentureContextProjectionSchema,
+  createVentureStateRevisionSchema,
+  simEngineSchema,
+  ventureConstraintHypothesisSchema,
+  ventureEngineStateSchema,
+  ventureNextMoveSchema,
+  ventureStateContentSchema,
+  type CreateVentureContextProjection,
+  type CreateVentureStateRevision,
+} from "./venture-operations.js";
 
 export {
   createApprovalSchema,

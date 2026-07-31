@@ -86,6 +86,10 @@ export {
   ventureConstitutionService,
   type VentureConstitutionActor,
 } from "./venture-constitution.js";
+export {
+  ventureOperatingStateService,
+  type VentureOperatingActor,
+} from "./venture-operating-state.js";
 export { teamsCatalogService } from "./teams-catalog.js";
 export { environmentService } from "./environments.js";
 export { executionWorkspaceService } from "./execution-workspaces.js";
