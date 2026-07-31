@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   assessModelExecutionSafety,
+  modelExecutionReconciliationBlockMessage,
   modelExecutionSafetyBlockMessage,
   modelExecutionSafetyDisablesAutomaticRetries,
+  reconcileModelExecution,
 } from "../services/model-execution-safety.ts";
 
 describe("model execution safety assessment", () => {
@@ -175,4 +177,132 @@ describe("model execution safety assessment", () => {
     expect(modelExecutionSafetyDisablesAutomaticRetries({ maxRetries: 1 })).toBe(false);
     expect(modelExecutionSafetyDisablesAutomaticRetries({ maxRetries: 0 })).toBe(true);
   });
+});
+
+function readyMeteredAssessment() {
+  return assessModelExecutionSafety({
+    provider: "openrouter",
+    model: "openai/gpt-oss-120b",
+    timeoutSec: 300,
+    maxTurnsPerRun: 20,
+    maxConcurrentRuns: 1,
+    maxDailyRuns: 1,
+    policy: {
+      billingType: "metered_api",
+      provider: "openrouter",
+      model: "openai/gpt-oss-120b",
+      providerHardCapCents: 500,
+      providerHardCapVerifiedAt: "2026-07-31T08:00:00.000Z",
+      maxRunCostCents: 25,
+      maxRuns: 1,
+      maxRetries: 0,
+      concurrency: 1,
+    },
+  });
+}
+
+describe("model execution reconciliation", () => {
+  it("reconciles the actual provider, model, billing, usage, and cost after a governed run", () => {
+    const reconciliation = reconcileModelExecution({
+      assessment: readyMeteredAssessment(),
+      terminalOutcome: "succeeded",
+      provider: "openrouter",
+      model: "openai/gpt-oss-120b",
+      billingType: "metered_api",
+      costUsd: 0.12,
+      usage: {
+        inputTokens: 1200,
+        cachedInputTokens: 100,
+        outputTokens: 450,
+      },
+      reconciledAt: new Date("2026-07-31T09:00:00.000Z"),
+    });
+
+    expect(reconciliation).toMatchObject({
+      status: "reconciled",
+      terminalOutcome: "succeeded",
+      blockers: [],
+      expected: {
+        provider: "openrouter",
+        model: "openai/gpt-oss-120b",
+        billingType: "metered_api",
+        maxRunCostCents: 25,
+      },
+      actual: {
+        provider: "openrouter",
+        model: "openai/gpt-oss-120b",
+        billingType: "metered_api",
+        costKnown: true,
+        costCents: 12,
+        inputTokens: 1200,
+        cachedInputTokens: 100,
+        outputTokens: 450,
+      },
+      reconciledAt: "2026-07-31T09:00:00.000Z",
+    });
+  });
+
+  it("fails closed when actual routing or metered cost evidence is missing or inconsistent", () => {
+    const reconciliation = reconcileModelExecution({
+      assessment: readyMeteredAssessment(),
+      terminalOutcome: "succeeded",
+      provider: "another-provider",
+      model: null,
+      billingType: "unknown",
+      costUsd: null,
+    });
+
+    expect(reconciliation.status).toBe("blocked");
+    expect(reconciliation.blockers).toEqual([
+      "actual_model_missing",
+      "actual_provider_mismatch",
+      "actual_billing_type_unknown",
+      "actual_cost_missing",
+    ]);
+    expect(modelExecutionReconciliationBlockMessage(reconciliation)).toContain(
+      "actual_cost_missing",
+    );
+  });
+
+  it("blocks actual spend above the authorized per-run allowance", () => {
+    const reconciliation = reconcileModelExecution({
+      assessment: readyMeteredAssessment(),
+      terminalOutcome: "succeeded",
+      provider: "openrouter",
+      model: "openai/gpt-oss-120b",
+      billingType: "metered_api",
+      costUsd: 0.26,
+    });
+
+    expect(reconciliation.status).toBe("blocked");
+    expect(reconciliation.blockers).toEqual(["run_cost_exceeded"]);
+    expect(reconciliation.actual.costCents).toBe(26);
+  });
+
+  it.each(["cancelled", "timed_out"] as const)(
+    "retains %s terminal evidence without scheduling another run when actual usage reconciles",
+    (terminalOutcome) => {
+      const reconciliation = reconcileModelExecution({
+        assessment: readyMeteredAssessment(),
+        terminalOutcome,
+        provider: "openrouter",
+        model: "openai/gpt-oss-120b",
+        billingType: "metered_api",
+        costUsd: 0.03,
+        usage: { inputTokens: 100, outputTokens: 20 },
+      });
+
+      expect(reconciliation).toMatchObject({
+        status: "reconciled",
+        terminalOutcome,
+        blockers: [],
+        actual: {
+          costKnown: true,
+          costCents: 3,
+          inputTokens: 100,
+          outputTokens: 20,
+        },
+      });
+    },
+  );
 });

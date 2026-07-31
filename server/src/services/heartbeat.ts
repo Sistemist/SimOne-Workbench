@@ -72,8 +72,10 @@ import { costService } from "./costs.js";
 import { modelRouteDecisionService } from "./model-route-decisions.js";
 import {
   assessModelExecutionSafety,
+  modelExecutionReconciliationBlockMessage,
   modelExecutionSafetyBlockMessage,
   modelExecutionSafetyDisablesAutomaticRetries,
+  reconcileModelExecution,
 } from "./model-execution-safety.js";
 import { trackAgentFirstHeartbeat } from "@paperclipai/shared/telemetry";
 import { getTelemetryClient } from "../telemetry.js";
@@ -8341,6 +8343,10 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
     const billingType = normalizeLedgerBillingType(result.billingType);
     const additionalCostCents = normalizeBilledCostCents(result.costUsd, billingType);
     const hasTokenUsage = inputTokens > 0 || outputTokens > 0 || cachedInputTokens > 0;
+    const hasExplicitCost =
+      typeof result.costUsd === "number" &&
+      Number.isFinite(result.costUsd) &&
+      result.costUsd >= 0;
     const provider = result.provider ?? "unknown";
     const biller = resolveLedgerBiller(result);
     const ledgerScope = await resolveLedgerScopeForRun(db, agent.companyId, run);
@@ -8361,7 +8367,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
       })
       .where(eq(agentRuntimeState.agentId, agent.id));
 
-    if (additionalCostCents > 0 || hasTokenUsage) {
+    if (additionalCostCents > 0 || hasTokenUsage || (modelRouteDecisionId && hasExplicitCost)) {
       const costs = costService(db, budgetHooks);
       await costs.createEvent(agent.companyId, {
         heartbeatRunId: run.id,
@@ -9770,7 +9776,12 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         policy: routeDecisionRuntimeConfig.modelExecutionSafety,
       });
       const routeDecisionModelProfile = modelProfileRunMetadata(modelProfileApplication);
-      const routeDecision = await modelRouteDecisionService(db).create(agent.companyId, {
+      const routeDecisions = modelRouteDecisionService(db);
+      const priorReconciliationBlock = await routeDecisions.findBlockingExecutionReconciliation(
+        agent.companyId,
+        agent.id,
+      );
+      const routeDecision = await routeDecisions.create(agent.companyId, {
         agentId: agent.id,
         issueId: issueRef?.id ?? null,
         projectId: issueRef?.projectId ?? projectContext?.id ?? null,
@@ -9802,6 +9813,28 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         createdByAgentId: agent.id,
       });
       heartbeatRouteDecisionId = routeDecision.id;
+      if (priorReconciliationBlock) {
+        const priorReconciliation = parseObject(
+          parseObject(priorReconciliationBlock.metadata).executionReconciliation,
+        );
+        const blockers = Array.isArray(priorReconciliation.blockers)
+          ? priorReconciliation.blockers.filter((value): value is string => typeof value === "string")
+          : [];
+        throw new ConfigurationIncompleteFailure(
+          `configuration incomplete: prior model execution reconciliation requires board review: ${blockers.join(", ") || priorReconciliationBlock.id}`,
+          {
+            configurationIncomplete: {
+              reason: "model_execution_reconciliation",
+              companyId: agent.companyId,
+              agentId: agent.id,
+              issueId: issueRef?.id ?? null,
+              projectId: issueRef?.projectId ?? projectContext?.id ?? null,
+              priorModelRouteDecisionId: priorReconciliationBlock.id,
+              blockers,
+            },
+          },
+        );
+      }
       if (
         routeDecisionExecutionSafety.enforced &&
         routeDecisionExecutionSafety.status !== "ready"
@@ -9935,7 +9968,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         outcome = "failed";
       }
 
-      const nextSessionState = resolveNextSessionState({
+      let nextSessionState = resolveNextSessionState({
         adapterType: agent.adapterType,
         codec: sessionCodec,
         adapterResult,
@@ -9952,13 +9985,46 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         rawUsage,
       });
       const normalizedUsage = sessionUsageResolution.normalizedUsage;
+      const executionReconciliation = reconcileModelExecution({
+        assessment: routeDecisionExecutionSafety,
+        terminalOutcome: outcome,
+        provider: adapterResult.provider,
+        model: adapterResult.model,
+        billingType: normalizeLedgerBillingType(adapterResult.billingType),
+        costUsd: adapterResult.costUsd,
+        usage: normalizedUsage,
+      });
+      await routeDecisions.recordExecutionReconciliation(
+        agent.companyId,
+        routeDecision.id,
+        executionReconciliation,
+        { agentId: agent.id },
+      );
+      const reconciliationFailureMessage =
+        routeDecisionExecutionSafety.enforced && executionReconciliation.status === "blocked"
+          ? modelExecutionReconciliationBlockMessage(executionReconciliation)
+          : null;
+      if (outcome === "succeeded" && reconciliationFailureMessage) {
+        outcome = "failed";
+        nextSessionState = resolveNextSessionState({
+          adapterType: agent.adapterType,
+          codec: sessionCodec,
+          adapterResult,
+          outcome,
+          previousParams: previousSessionParams,
+          previousDisplayId: runtimeForAdapter.sessionDisplayId,
+          previousLegacySessionId: runtimeForAdapter.sessionId,
+        });
+      }
       const runErrorMessage =
         outcome === "cancelled"
           ? (latestRun?.error ?? adapterResult.errorMessage ?? "Cancelled")
           : outcome === "succeeded"
             ? null
             : redactCurrentUserText(
-                adapterResult.errorMessage ?? (outcome === "timed_out" ? "Timed out" : "Adapter failed"),
+                reconciliationFailureMessage
+                  ?? adapterResult.errorMessage
+                  ?? (outcome === "timed_out" ? "Timed out" : "Adapter failed"),
                 currentUserRedactionOptions,
               );
       const runErrorCode =
@@ -9967,7 +10033,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
           : outcome === "cancelled"
             ? (latestRun?.errorCode ?? "cancelled")
             : outcome === "failed"
-              ? (adapterResult.errorCode ?? "adapter_failed")
+              ? (reconciliationFailureMessage ? "model_execution_reconciliation" : adapterResult.errorCode ?? "adapter_failed")
               : null;
 
       let logSummary: { bytes: number; sha256?: string; compressed: boolean } | null = null;

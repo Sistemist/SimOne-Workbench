@@ -19,6 +19,7 @@ const DECISION_LIMIT = 50;
 type ReviewStatus = "approved" | "needs_revision" | "rejected";
 type ReviewFilter = "all" | "pending" | ReviewStatus;
 type ExecutionSafetyStatus = "ready" | "blocked" | "unverified";
+type ExecutionReconciliationStatus = "reconciled" | "blocked" | "unverified";
 
 interface ExecutionSafetyEvidence {
   status: ExecutionSafetyStatus;
@@ -32,6 +33,28 @@ interface ExecutionSafetyEvidence {
     concurrency: number | null;
     maxRunCostCents: number | null;
     providerHardCapCents: number | null;
+  };
+}
+
+interface ExecutionReconciliationEvidence {
+  status: ExecutionReconciliationStatus;
+  terminalOutcome: string;
+  blockers: string[];
+  expected: {
+    provider: string;
+    model: string;
+    billingType: string;
+    maxRunCostCents: number | null;
+  };
+  actual: {
+    provider: string | null;
+    model: string | null;
+    billingType: string;
+    costKnown: boolean;
+    costCents: number | null;
+    inputTokens: number;
+    cachedInputTokens: number;
+    outputTokens: number;
   };
 }
 
@@ -142,6 +165,98 @@ function executionSafetyTone(status: ExecutionSafetyStatus) {
   return "border-amber-500/30 bg-amber-500/5";
 }
 
+function routeExecutionReconciliation(
+  decision: ModelRouteDecisionAuditRow,
+): ExecutionReconciliationEvidence | null {
+  const raw = decision.metadata?.executionReconciliation;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const evidence = raw as Record<string, unknown>;
+  if (evidence.version !== "sysdom_model_execution_reconciliation_v1") return null;
+  if (![ "reconciled", "blocked", "unverified" ].includes(String(evidence.status))) return null;
+  const expected =
+    evidence.expected && typeof evidence.expected === "object" && !Array.isArray(evidence.expected)
+      ? evidence.expected as Record<string, unknown>
+      : {};
+  const actual =
+    evidence.actual && typeof evidence.actual === "object" && !Array.isArray(evidence.actual)
+      ? evidence.actual as Record<string, unknown>
+      : {};
+  const numberOrZero = (value: unknown) => typeof value === "number" ? value : 0;
+  const numberOrNull = (value: unknown) => typeof value === "number" ? value : null;
+  const stringOrNull = (value: unknown) => typeof value === "string" && value.length > 0 ? value : null;
+  return {
+    status: evidence.status as ExecutionReconciliationStatus,
+    terminalOutcome: typeof evidence.terminalOutcome === "string" ? evidence.terminalOutcome : "unknown",
+    blockers: Array.isArray(evidence.blockers)
+      ? evidence.blockers.filter((value): value is string => typeof value === "string")
+      : [],
+    expected: {
+      provider: typeof expected.provider === "string" ? expected.provider : "unknown",
+      model: typeof expected.model === "string" ? expected.model : "unknown",
+      billingType: typeof expected.billingType === "string" ? expected.billingType : "unknown",
+      maxRunCostCents: numberOrNull(expected.maxRunCostCents),
+    },
+    actual: {
+      provider: stringOrNull(actual.provider),
+      model: stringOrNull(actual.model),
+      billingType: typeof actual.billingType === "string" ? actual.billingType : "unknown",
+      costKnown: actual.costKnown === true,
+      costCents: numberOrNull(actual.costCents),
+      inputTokens: numberOrZero(actual.inputTokens),
+      cachedInputTokens: numberOrZero(actual.cachedInputTokens),
+      outputTokens: numberOrZero(actual.outputTokens),
+    },
+  };
+}
+
+function ExecutionReconciliationCard({
+  evidence,
+}: {
+  evidence: ExecutionReconciliationEvidence;
+}) {
+  const actualRoute = `${evidence.actual.provider ?? "missing provider"} / ${evidence.actual.model ?? "missing model"}`;
+  const expectedRoute = `${evidence.expected.provider} / ${evidence.expected.model}`;
+  const tokenTotal =
+    evidence.actual.inputTokens +
+    evidence.actual.cachedInputTokens +
+    evidence.actual.outputTokens;
+  return (
+    <div className={`rounded-md border px-3 py-3 ${executionSafetyTone(evidence.status === "reconciled" ? "ready" : evidence.status)}`}>
+      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {evidence.status === "blocked"
+          ? <TriangleAlert className="h-3.5 w-3.5 text-destructive" />
+          : <CheckCircle2 className="h-3.5 w-3.5" />}
+        Actual usage reconciliation: {evidence.status}
+      </div>
+      <p className="mt-1 text-sm leading-6">
+        {evidence.status === "reconciled"
+          ? `The ${humanize(evidence.terminalOutcome)} run reported the authorized route and billing evidence.`
+          : evidence.status === "blocked"
+            ? "Actual provider, model, billing, or spend evidence did not match the authorization. Further automatic execution remains stopped until board review clears this decision."
+            : "This legacy run did not have an enforceable pre-dispatch policy, so its usage cannot be claimed as reconciled."}
+      </p>
+      <div className="mt-2 grid gap-2 text-xs text-muted-foreground md:grid-cols-2">
+        <p>Authorized: {expectedRoute} · {humanize(evidence.expected.billingType)}</p>
+        <p>Reported: {actualRoute} · {humanize(evidence.actual.billingType)}</p>
+        <p>
+          Cost: {evidence.actual.costKnown && evidence.actual.costCents !== null
+            ? formatCents(evidence.actual.costCents)
+            : "unknown"}
+          {evidence.expected.maxRunCostCents !== null
+            ? ` / ${formatCents(evidence.expected.maxRunCostCents)} allowance`
+            : ""}
+        </p>
+        <p>Tokens reported: {tokenTotal.toLocaleString()}</p>
+      </div>
+      {evidence.blockers.length > 0 ? (
+        <p className="mt-2 text-xs leading-5 text-muted-foreground">
+          {evidence.blockers.map(titleCase).join(" · ")}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function ExecutionSafetyEvidenceCard({
   evidence,
 }: {
@@ -201,6 +316,7 @@ function DecisionCard({
   const outputArtifacts = routeDecisionOutputArtifacts(decision);
   const laneEvidence = routeLaneEvidence(decision);
   const executionSafety = routeExecutionSafety(decision);
+  const executionReconciliation = routeExecutionReconciliation(decision);
 
   return (
     <Card>
@@ -284,6 +400,9 @@ function DecisionCard({
 
         {executionSafety ? (
           <ExecutionSafetyEvidenceCard evidence={executionSafety} />
+        ) : null}
+        {executionReconciliation ? (
+          <ExecutionReconciliationCard evidence={executionReconciliation} />
         ) : null}
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">

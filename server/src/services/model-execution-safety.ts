@@ -1,4 +1,5 @@
 export const MODEL_EXECUTION_SAFETY_VERSION = "sysdom_model_execution_safety_v1";
+export const MODEL_EXECUTION_RECONCILIATION_VERSION = "sysdom_model_execution_reconciliation_v1";
 
 export type ModelExecutionBillingType =
   | "local"
@@ -61,6 +62,59 @@ export interface ModelExecutionSafetyInput {
   policy?: unknown;
 }
 
+export type ModelExecutionReconciliationStatus = "reconciled" | "blocked" | "unverified";
+
+export type ModelExecutionReconciliationBlocker =
+  | "pre_dispatch_policy_unverified"
+  | "actual_provider_missing"
+  | "actual_model_missing"
+  | "actual_provider_mismatch"
+  | "actual_model_mismatch"
+  | "actual_billing_type_unknown"
+  | "actual_billing_type_mismatch"
+  | "actual_cost_missing"
+  | "run_cost_exceeded";
+
+export interface ModelExecutionReconciliation {
+  version: typeof MODEL_EXECUTION_RECONCILIATION_VERSION;
+  source: "heartbeat_post_run";
+  status: ModelExecutionReconciliationStatus;
+  terminalOutcome: "succeeded" | "failed" | "cancelled" | "timed_out";
+  blockers: ModelExecutionReconciliationBlocker[];
+  expected: {
+    provider: string;
+    model: string;
+    billingType: ModelExecutionBillingType;
+    maxRunCostCents: number | null;
+  };
+  actual: {
+    provider: string | null;
+    model: string | null;
+    billingType: string;
+    costKnown: boolean;
+    costCents: number | null;
+    inputTokens: number;
+    cachedInputTokens: number;
+    outputTokens: number;
+  };
+  reconciledAt: string;
+}
+
+export interface ModelExecutionReconciliationInput {
+  assessment: ModelExecutionSafetyAssessment;
+  terminalOutcome: ModelExecutionReconciliation["terminalOutcome"];
+  provider?: unknown;
+  model?: unknown;
+  billingType?: unknown;
+  costUsd?: unknown;
+  usage?: {
+    inputTokens?: unknown;
+    cachedInputTokens?: unknown;
+    outputTokens?: unknown;
+  } | null;
+  reconciledAt?: Date;
+}
+
 const BILLING_TYPES = new Set<ModelExecutionBillingType>([
   "local",
   "free",
@@ -104,6 +158,18 @@ function readNonNegativeInteger(value: unknown): number | null {
 
 function readBoolean(value: unknown): boolean | null {
   return typeof value === "boolean" ? value : null;
+}
+
+function readNonNegativeNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0
+    ? value
+    : null;
+}
+
+function readNonNegativeIntegerOrZero(value: unknown): number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0
+    ? value
+    : 0;
 }
 
 function readIsoDate(value: unknown): string | null {
@@ -218,4 +284,89 @@ export function modelExecutionSafetyBlockMessage(
   assessment: ModelExecutionSafetyAssessment,
 ) {
   return `model execution safety gate blocked provider invocation: ${assessment.blockers.join(", ")}`;
+}
+
+function billingTypesMatch(
+  expected: ModelExecutionBillingType,
+  actual: string,
+) {
+  if (expected === "metered_api") return actual === "metered_api";
+  if (expected === "subscription_included") return actual === "subscription_included";
+  if (expected === "local") return actual === "fixed";
+  if (expected === "free") return actual === "credits" || actual === "fixed";
+  return false;
+}
+
+export function reconcileModelExecution(
+  input: ModelExecutionReconciliationInput,
+): ModelExecutionReconciliation {
+  const actualProvider = readString(input.provider);
+  const actualModel = readString(input.model);
+  const actualBillingType = readString(input.billingType) ?? "unknown";
+  const costUsd = readNonNegativeNumber(input.costUsd);
+  const costCents = costUsd === null ? null : Math.round(costUsd * 100);
+  const blockers: ModelExecutionReconciliationBlocker[] = [];
+
+  if (!input.assessment.enforced || input.assessment.status !== "ready") {
+    blockers.push("pre_dispatch_policy_unverified");
+  } else {
+    if (!actualProvider) blockers.push("actual_provider_missing");
+    if (!actualModel) blockers.push("actual_model_missing");
+    if (actualProvider && actualProvider !== input.assessment.provider) {
+      blockers.push("actual_provider_mismatch");
+    }
+    if (actualModel && actualModel !== input.assessment.model) {
+      blockers.push("actual_model_mismatch");
+    }
+    if (actualBillingType === "unknown") {
+      blockers.push("actual_billing_type_unknown");
+    } else if (!billingTypesMatch(input.assessment.billingType, actualBillingType)) {
+      blockers.push("actual_billing_type_mismatch");
+    }
+    if (input.assessment.billingType === "metered_api" && costCents === null) {
+      blockers.push("actual_cost_missing");
+    }
+    if (
+      costCents !== null &&
+      input.assessment.controls.maxRunCostCents !== null &&
+      costCents > input.assessment.controls.maxRunCostCents
+    ) {
+      blockers.push("run_cost_exceeded");
+    }
+  }
+
+  return {
+    version: MODEL_EXECUTION_RECONCILIATION_VERSION,
+    source: "heartbeat_post_run",
+    status: !input.assessment.enforced || input.assessment.status !== "ready"
+      ? "unverified"
+      : blockers.length === 0
+        ? "reconciled"
+        : "blocked",
+    terminalOutcome: input.terminalOutcome,
+    blockers,
+    expected: {
+      provider: input.assessment.provider,
+      model: input.assessment.model,
+      billingType: input.assessment.billingType,
+      maxRunCostCents: input.assessment.controls.maxRunCostCents,
+    },
+    actual: {
+      provider: actualProvider,
+      model: actualModel,
+      billingType: actualBillingType,
+      costKnown: costCents !== null,
+      costCents,
+      inputTokens: readNonNegativeIntegerOrZero(input.usage?.inputTokens),
+      cachedInputTokens: readNonNegativeIntegerOrZero(input.usage?.cachedInputTokens),
+      outputTokens: readNonNegativeIntegerOrZero(input.usage?.outputTokens),
+    },
+    reconciledAt: (input.reconciledAt ?? new Date()).toISOString(),
+  };
+}
+
+export function modelExecutionReconciliationBlockMessage(
+  reconciliation: ModelExecutionReconciliation,
+) {
+  return `model execution reconciliation blocked further automatic execution: ${reconciliation.blockers.join(", ")}`;
 }

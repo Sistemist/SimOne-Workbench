@@ -111,6 +111,30 @@ function modelRouteDecision(overrides: Record<string, unknown> = {}) {
           providerHardCapCents: 500,
         },
       },
+      executionReconciliation: {
+        version: "sysdom_model_execution_reconciliation_v1",
+        source: "heartbeat_post_run",
+        status: "reconciled",
+        terminalOutcome: "succeeded",
+        blockers: [],
+        expected: {
+          provider: "sakana",
+          model: "fugu-ultra",
+          billingType: "metered_api",
+          maxRunCostCents: 100,
+        },
+        actual: {
+          provider: "sakana",
+          model: "fugu-ultra",
+          billingType: "metered_api",
+          costKnown: true,
+          costCents: 87,
+          inputTokens: 1200,
+          cachedInputTokens: 100,
+          outputTokens: 450,
+        },
+        reconciledAt: "2026-07-08T10:01:00.000Z",
+      },
       outputArtifacts: [
         {
           id: "artifact-brief-1",
@@ -167,6 +191,12 @@ describe("ModelRoutingAudit", () => {
     expect(text).toContain("300s timeout");
     expect(text).toContain("$0.25 declared run allowance");
     expect(text).toContain("$5.00 provider hard cap");
+    expect(text).toContain("Actual usage reconciliation: reconciled");
+    expect(text).toContain("The succeeded run reported the authorized route and billing evidence.");
+    expect(text).toContain("Authorized: sakana / fugu-ultra · metered api");
+    expect(text).toContain("Reported: sakana / fugu-ultra · metered api");
+    expect(text).toContain("Cost: $0.87 / $1.00 allowance");
+    expect(text).toContain("Tokens reported: 1,750");
     expect(text).toContain("human after draft");
     expect(text).toContain("Compressed task brief and acceptance criteria.");
     expect(text).toContain("Returned a draft implementation plan.");
@@ -220,6 +250,80 @@ describe("ModelRoutingAudit", () => {
     expect(text).toContain("provider invocation was blocked before execution");
     expect(text).toContain("Timeout missing");
     expect(text).toContain("Provider cap missing");
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
+  it("shows why post-run usage reconciliation stopped further automatic execution", async () => {
+    mockModelRoutingApi.listDecisions.mockResolvedValue({
+      items: [
+        modelRouteDecision({
+          metadata: {
+            source: "heartbeat_adapter_execution",
+            executionSafety: {
+              version: "sysdom_model_execution_safety_v1",
+              source: "heartbeat_pre_dispatch",
+              status: "ready",
+              enforced: true,
+              billingType: "metered_api",
+              provider: "openrouter",
+              model: "openai/gpt-oss-120b",
+              blockers: [],
+              controls: {
+                timeoutSec: 300,
+                maxTurnsPerRun: 20,
+                maxRuns: 1,
+                maxRetries: 0,
+                concurrency: 1,
+                maxRunCostCents: 25,
+                providerHardCapCents: 500,
+              },
+            },
+            executionReconciliation: {
+              version: "sysdom_model_execution_reconciliation_v1",
+              source: "heartbeat_post_run",
+              status: "blocked",
+              terminalOutcome: "succeeded",
+              blockers: [
+                "actual_provider_mismatch",
+                "actual_model_mismatch",
+                "actual_cost_missing",
+              ],
+              expected: {
+                provider: "openrouter",
+                model: "openai/gpt-oss-120b",
+                billingType: "metered_api",
+                maxRunCostCents: 25,
+              },
+              actual: {
+                provider: "unexpected-provider",
+                model: "unexpected-model",
+                billingType: "metered_api",
+                costKnown: false,
+                costCents: null,
+                inputTokens: 0,
+                cachedInputTokens: 0,
+                outputTokens: 0,
+              },
+            },
+          },
+        }),
+      ],
+    });
+
+    const { container, root } = renderAuditPage();
+    await waitForText(container, "Actual usage reconciliation: blocked");
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Further automatic execution remains stopped until board review clears this decision.");
+    expect(text).toContain("Authorized: openrouter / openai/gpt-oss-120b · metered api");
+    expect(text).toContain("Reported: unexpected-provider / unexpected-model · metered api");
+    expect(text).toContain("Cost: unknown / $0.25 allowance");
+    expect(text).toContain("Actual provider mismatch");
+    expect(text).toContain("Actual model mismatch");
+    expect(text).toContain("Actual cost missing");
 
     flushSync(() => {
       root.unmount();

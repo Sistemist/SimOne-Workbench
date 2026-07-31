@@ -8,9 +8,11 @@ import {
   agents,
   companies,
   companySkills,
+  costEvents,
   createDb,
   modelRouteDecisions,
 } from "@paperclipai/db";
+import type { AdapterExecutionResult } from "@paperclipai/adapter-utils";
 import type { PaperclipSkillEntry } from "@paperclipai/adapter-utils/server-utils";
 import {
   getEmbeddedPostgresTestSupport,
@@ -18,6 +20,7 @@ import {
 } from "./helpers/embedded-postgres.js";
 import { companySkillService } from "../services/company-skills.ts";
 import { heartbeatService } from "../services/heartbeat.ts";
+import { modelRouteDecisionService } from "../services/model-route-decisions.ts";
 import { registerServerAdapter, unregisterServerAdapter } from "../adapters/index.ts";
 
 const embeddedPostgresSupport = await getEmbeddedPostgresTestSupport();
@@ -87,11 +90,25 @@ describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
           agentId: ctx.agent.id,
           skills: (ctx.config.paperclipRuntimeSkills ?? []) as PaperclipSkillEntry[],
         });
+        const configuredResult =
+          ctx.config.testExecutionResult && typeof ctx.config.testExecutionResult === "object"
+            ? ctx.config.testExecutionResult as Partial<AdapterExecutionResult>
+            : {};
         return {
           exitCode: 0,
           signal: null,
           timedOut: false,
           label: "Captured runtime skills",
+          provider: TEST_ADAPTER_TYPE,
+          model: typeof ctx.config.model === "string" ? ctx.config.model : "test-model",
+          billingType: "api" as const,
+          costUsd: 0.12,
+          usage: {
+            inputTokens: 1200,
+            cachedInputTokens: 100,
+            outputTokens: 450,
+          },
+          ...configuredResult,
         };
       },
       testEnvironment: async () => ({
@@ -203,6 +220,7 @@ describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
         },
       },
     });
+
   });
 
   it("runs a fully pinned mock route once when independent and runtime controls agree", async () => {
@@ -279,7 +297,150 @@ describeEmbeddedPostgres("heartbeat runtime skill version pins", () => {
           providerHardCapCents: 100,
         },
       },
+      executionReconciliation: {
+        status: "reconciled",
+        terminalOutcome: "succeeded",
+        blockers: [],
+        expected: {
+          provider: TEST_ADAPTER_TYPE,
+          model: "test-model",
+          billingType: "metered_api",
+          maxRunCostCents: 25,
+        },
+        actual: {
+          provider: TEST_ADAPTER_TYPE,
+          model: "test-model",
+          billingType: "metered_api",
+          costKnown: true,
+          costCents: 12,
+          inputTokens: 1200,
+          cachedInputTokens: 100,
+          outputTokens: 450,
+        },
+      },
     });
+    const linkedCosts = await db
+      .select()
+      .from(costEvents)
+      .where(eq(costEvents.modelRouteDecisionId, decision!.id));
+    expect(linkedCosts).toHaveLength(1);
+    expect(linkedCosts[0]).toMatchObject({
+      provider: TEST_ADAPTER_TYPE,
+      model: "test-model",
+      billingType: "metered_api",
+      costCents: 12,
+      inputTokens: 1200,
+      cachedInputTokens: 100,
+      outputTokens: 450,
+    });
+  });
+
+  it("fails the mock run after invocation when actual route evidence violates the authorization", async () => {
+    const companyId = randomUUID();
+    const agentId = randomUUID();
+    const issuePrefix = `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`;
+
+    await db.insert(companies).values({
+      id: companyId,
+      name: "Sysdom AI",
+      issuePrefix,
+      requireBoardApprovalForNewAgents: false,
+    });
+    await db.insert(agents).values({
+      id: agentId,
+      companyId,
+      name: "Mismatched Governed Mock Route",
+      role: "engineer",
+      status: "idle",
+      adapterType: TEST_ADAPTER_TYPE,
+      adapterConfig: {
+        model: "test-model",
+        timeoutSec: 60,
+        maxTurnsPerRun: 5,
+        testExecutionResult: {
+          provider: "unexpected-provider",
+          model: "unexpected-model",
+          billingType: "api",
+          costUsd: null,
+        },
+        modelExecutionSafety: {
+          billingType: "metered_api",
+          provider: TEST_ADAPTER_TYPE,
+          model: "test-model",
+          providerHardCapCents: 100,
+          providerHardCapVerifiedAt: "2026-07-31T08:00:00.000Z",
+          maxRunCostCents: 25,
+          maxRuns: 1,
+          maxRetries: 0,
+          concurrency: 1,
+        },
+      },
+      runtimeConfig: {
+        heartbeat: {
+          maxConcurrentRuns: 1,
+          maxDailyRuns: 1,
+          maxTurnContinuation: {
+            enabled: false,
+            maxAttempts: 0,
+          },
+        },
+      },
+      permissions: {},
+    });
+
+    const heartbeat = heartbeatService(db);
+    const run = await heartbeat.invoke(agentId, "on_demand", {}, "manual");
+    expect(run).not.toBeNull();
+
+    const finished = await waitForRunToFinish(heartbeat, run!.id);
+    expect(finished).toMatchObject({
+      status: "failed",
+      errorCode: "model_execution_reconciliation",
+    });
+    expect(capturedRuns).toHaveLength(1);
+
+    const decision = await waitForRouteDecisionReview(db, run!.id);
+    expect(decision).toMatchObject({
+      provider: TEST_ADAPTER_TYPE,
+      model: "test-model",
+      reviewStatus: "needs_revision",
+      metadata: {
+        executionSafety: {
+          status: "ready",
+          blockers: [],
+        },
+        executionReconciliation: {
+          status: "blocked",
+          terminalOutcome: "succeeded",
+          blockers: [
+            "actual_provider_mismatch",
+            "actual_model_mismatch",
+            "actual_cost_missing",
+          ],
+          actual: {
+            provider: "unexpected-provider",
+            model: "unexpected-model",
+            billingType: "metered_api",
+            costKnown: false,
+          },
+        },
+      },
+    });
+
+    const routeDecisions = modelRouteDecisionService(db);
+    expect(
+      await routeDecisions.findBlockingExecutionReconciliation(companyId, agentId),
+    ).toMatchObject({ id: decision!.id });
+
+    await routeDecisions.updateReview(companyId, decision!.id, {
+      outputSummary: decision!.outputSummary,
+      outputConfidence: "low",
+      reviewStatus: "approved",
+      reviewNote: "Board reviewed the mismatch and explicitly cleared the execution lock.",
+    });
+    expect(
+      await routeDecisions.findBlockingExecutionReconciliation(companyId, agentId),
+    ).toBeNull();
   });
 
   it("materializes different pinned skill versions for different agents at runtime", async () => {

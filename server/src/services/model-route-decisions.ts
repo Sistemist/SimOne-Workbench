@@ -3,6 +3,7 @@ import type { Db } from "@paperclipai/db";
 import { agents, costEvents, modelRouteDecisions } from "@paperclipai/db";
 import type { CreateModelRouteDecision, UpdateModelRouteDecisionReview } from "@paperclipai/shared";
 import { notFound, unprocessable } from "../errors.js";
+import type { ModelExecutionReconciliation } from "./model-execution-safety.js";
 
 export interface ModelRouteDecisionActor {
   createdByAgentId?: string | null;
@@ -92,6 +93,24 @@ export function modelRouteDecisionService(db: Db) {
       });
     },
 
+    findBlockingExecutionReconciliation: async (
+      companyId: string,
+      agentId: string,
+    ) => {
+      return db
+        .select()
+        .from(modelRouteDecisions)
+        .where(and(
+          eq(modelRouteDecisions.companyId, companyId),
+          eq(modelRouteDecisions.agentId, agentId),
+          sql`${modelRouteDecisions.metadata} -> 'executionReconciliation' ->> 'status' = 'blocked'`,
+          sql`${modelRouteDecisions.reviewStatus} <> 'approved'`,
+        ))
+        .orderBy(desc(modelRouteDecisions.createdAt))
+        .limit(1)
+        .then((rows) => rows[0] ?? null);
+    },
+
     updateReview: async (
       companyId: string,
       id: string,
@@ -115,6 +134,30 @@ export function modelRouteDecisionService(db: Db) {
                   outputArtifacts: data.outputArtifacts,
                 })}::jsonb`,
               }),
+        })
+        .where(and(...conditions))
+        .returning()
+        .then((rows) => rows[0] ?? null);
+
+      if (!updated) throw notFound("Model route decision not found");
+      return updated;
+    },
+
+    recordExecutionReconciliation: async (
+      companyId: string,
+      id: string,
+      reconciliation: ModelExecutionReconciliation,
+      options: { agentId?: string | null } = {},
+    ) => {
+      const conditions = [eq(modelRouteDecisions.companyId, companyId), eq(modelRouteDecisions.id, id)];
+      if (options.agentId) conditions.push(eq(modelRouteDecisions.agentId, options.agentId));
+
+      const updated = await db
+        .update(modelRouteDecisions)
+        .set({
+          metadata: sql`${modelRouteDecisions.metadata} || ${JSON.stringify({
+            executionReconciliation: reconciliation,
+          })}::jsonb`,
         })
         .where(and(...conditions))
         .returning()
