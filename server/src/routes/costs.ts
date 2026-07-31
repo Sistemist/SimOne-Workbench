@@ -6,6 +6,7 @@ import {
   createModelRouteDecisionSchema,
   normalizeIssueIdentifier,
   resolveBudgetIncidentSchema,
+  updateModelExecutionPolicySchema,
   updateModelRouteDecisionReviewSchema,
   updateBudgetSchema,
   upsertBudgetPolicySchema,
@@ -28,6 +29,10 @@ import { fetchAllQuotaWindows } from "../services/quota-windows.js";
 import { compressJsonContextPayload } from "../services/context-compression.js";
 import { badRequest } from "../errors.js";
 import type { PluginWorkerManager } from "../services/plugin-worker-manager.js";
+import {
+  buildModelExecutionPolicyPatch,
+  modelExecutionPolicySnapshot,
+} from "../services/model-execution-policy.js";
 
 const RAW_CONTEXT_METADATA_KEY_PATTERN = /authorization|api[-_]?key|bearer|context|cookie|password|payload|secret|token/i;
 const RAW_CONTEXT_METADATA_VALUE_PATTERN =
@@ -237,6 +242,68 @@ export function costRoutes(
     const items = await modelRouteDecisions.list(companyId, { limit, agentId });
     res.json({ items });
   });
+
+  router.get("/companies/:companyId/model-execution-policies", async (req, res) => {
+    const companyId = req.params.companyId as string;
+    assertCompanyAccess(req, companyId);
+    assertBoard(req);
+
+    const items = (await agents.list(companyId))
+      .map((agent) => modelExecutionPolicySnapshot(agent))
+      .sort((left, right) => left.agentName.localeCompare(right.agentName));
+    res.json({ items });
+  });
+
+  router.put(
+    "/companies/:companyId/model-execution-policies/:agentId",
+    validate(updateModelExecutionPolicySchema),
+    async (req, res) => {
+      const companyId = req.params.companyId as string;
+      const agentId = req.params.agentId as string;
+      assertCompanyAccess(req, companyId);
+      assertBoard(req);
+
+      const existing = await agents.getById(agentId);
+      if (!existing || existing.companyId !== companyId) {
+        res.status(404).json({ error: "Agent not found" });
+        return;
+      }
+
+      const actor = getActorInfo(req);
+      const patch = buildModelExecutionPolicyPatch(existing, req.body);
+      const updated = await agents.update(agentId, patch, {
+        recordRevision: {
+          createdByAgentId: actor.agentId,
+          createdByUserId: actor.actorType === "user" ? actor.actorId : null,
+          source: "model_execution_policy",
+        },
+      });
+      if (!updated) {
+        res.status(404).json({ error: "Agent not found" });
+        return;
+      }
+
+      const snapshot = modelExecutionPolicySnapshot(updated);
+      await logActivity(db, {
+        companyId,
+        actorType: actor.actorType,
+        actorId: actor.actorId,
+        agentId: actor.agentId,
+        action: "model_execution_policy.updated",
+        entityType: "agent",
+        entityId: agentId,
+        details: {
+          billingType: snapshot.policy.billingType,
+          provider: snapshot.policy.provider,
+          model: snapshot.policy.model,
+          safetyStatus: snapshot.assessment.status,
+          blockers: snapshot.assessment.blockers,
+        },
+      });
+
+      res.json(snapshot);
+    },
+  );
 
   router.patch(
     "/companies/:companyId/model-route-decisions/:decisionId/review",

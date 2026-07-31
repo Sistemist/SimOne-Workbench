@@ -30,6 +30,62 @@ export const modelRouteDecisionReviewStatusSchema = z.enum([
   "rejected",
 ]);
 
+export const modelExecutionBillingTypeSchema = z.enum([
+  "local",
+  "free",
+  "subscription_included",
+  "metered_api",
+  "unknown",
+]);
+
+const nullablePositiveInteger = z.number().int().positive().nullable();
+const nullableDateTime = z.string().datetime().nullable();
+const nullableEvidenceSource = z.string().trim().min(1).max(500).nullable();
+
+export const updateModelExecutionPolicySchema = z.object({
+  provider: z.string().trim().min(1).max(200),
+  model: z.string().trim().min(1).max(300),
+  billingType: modelExecutionBillingTypeSchema,
+  timeoutSec: z.number().int().positive().max(86_400),
+  maxTurnsPerRun: z.number().int().positive().max(1_000),
+  maxRuns: z.literal(1),
+  maxRetries: z.literal(0),
+  concurrency: z.literal(1),
+  maxRunCostCents: nullablePositiveInteger,
+  providerHardCapCents: nullablePositiveInteger,
+  providerHardCapEvidenceSource: nullableEvidenceSource,
+  providerHardCapVerifiedAt: nullableDateTime,
+  providerHardCapExpiresAt: nullableDateTime,
+  subscriptionEvidenceSource: nullableEvidenceSource,
+  subscriptionVerifiedAt: nullableDateTime,
+  subscriptionExpiresAt: nullableDateTime,
+  meteredOverageAllowed: z.boolean(),
+}).strict().superRefine((value, ctx) => {
+  const validateEvidenceWindow = (
+    verifiedAt: string | null,
+    expiresAt: string | null,
+    path: "providerHardCapExpiresAt" | "subscriptionExpiresAt",
+  ) => {
+    if (verifiedAt && expiresAt && new Date(expiresAt).getTime() <= new Date(verifiedAt).getTime()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Evidence expiry must be later than its verification time",
+        path: [path],
+      });
+    }
+  };
+  validateEvidenceWindow(
+    value.providerHardCapVerifiedAt,
+    value.providerHardCapExpiresAt,
+    "providerHardCapExpiresAt",
+  );
+  validateEvidenceWindow(
+    value.subscriptionVerifiedAt,
+    value.subscriptionExpiresAt,
+    "subscriptionExpiresAt",
+  );
+});
+
 export const modelRouteDecisionOutputArtifactSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
@@ -71,3 +127,5 @@ export type ModelRouteDecisionRiskLevel = z.infer<typeof modelRouteDecisionRiskL
 export type ModelRouteDecisionOutputConfidence = z.infer<typeof modelRouteDecisionOutputConfidenceSchema>;
 export type ModelRouteDecisionReviewStatus = z.infer<typeof modelRouteDecisionReviewStatusSchema>;
 export type ModelRouteDecisionOutputArtifact = z.infer<typeof modelRouteDecisionOutputArtifactSchema>;
+export type ModelExecutionBillingTypeInput = z.infer<typeof modelExecutionBillingTypeSchema>;
+export type UpdateModelExecutionPolicy = z.infer<typeof updateModelExecutionPolicySchema>;

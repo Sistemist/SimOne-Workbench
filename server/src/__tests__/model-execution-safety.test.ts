@@ -37,12 +37,15 @@ describe("model execution safety assessment", () => {
         provider: "openrouter",
         model: "openai/gpt-oss-120b",
         providerHardCapCents: 500,
+        providerHardCapEvidenceSource: "OpenRouter billing settings screenshot",
         providerHardCapVerifiedAt: "2026-07-31T08:00:00.000Z",
+        providerHardCapExpiresAt: "2026-08-02T08:00:00.000Z",
         maxRunCostCents: 25,
         maxRuns: 1,
         maxRetries: 0,
         concurrency: 1,
       },
+      now: new Date("2026-08-01T08:00:00.000Z"),
     });
 
     expect(assessment).toMatchObject({
@@ -60,7 +63,9 @@ describe("model execution safety assessment", () => {
         concurrency: 1,
         maxRunCostCents: 25,
         providerHardCapCents: 500,
+        providerHardCapEvidenceSource: "OpenRouter billing settings screenshot",
         providerHardCapVerifiedAt: "2026-07-31T08:00:00.000Z",
+        providerHardCapExpiresAt: "2026-08-02T08:00:00.000Z",
       },
     });
   });
@@ -87,7 +92,9 @@ describe("model execution safety assessment", () => {
       "automatic_retries_enabled",
       "concurrency_not_one",
       "provider_cap_missing",
+      "provider_cap_source_missing",
       "provider_cap_verification_missing",
+      "provider_cap_expiry_missing",
       "run_cap_missing",
     ]);
     expect(modelExecutionSafetyBlockMessage(assessment)).toContain(
@@ -108,12 +115,15 @@ describe("model execution safety assessment", () => {
         provider: "provider-a",
         model: "model-a",
         providerHardCapCents: 100,
+        providerHardCapEvidenceSource: "Provider account cap page",
         providerHardCapVerifiedAt: "2026-07-31T08:00:00.000Z",
+        providerHardCapExpiresAt: "2026-08-02T08:00:00.000Z",
         maxRunCostCents: 150,
         maxRuns: 1,
         maxRetries: 0,
         concurrency: 1,
       },
+      now: new Date("2026-08-01T08:00:00.000Z"),
     });
 
     expect(assessment.status).toBe("blocked");
@@ -142,9 +152,39 @@ describe("model execution safety assessment", () => {
 
     expect(assessment.status).toBe("blocked");
     expect(assessment.blockers).toEqual([
+      "subscription_source_missing",
       "subscription_verification_missing",
+      "subscription_expiry_missing",
       "subscription_overage_enabled",
     ]);
+  });
+
+  it("fails closed when otherwise complete provider cap evidence has expired", () => {
+    const assessment = assessModelExecutionSafety({
+      provider: "openrouter",
+      model: "openai/gpt-oss-120b",
+      timeoutSec: 300,
+      maxTurnsPerRun: 20,
+      maxConcurrentRuns: 1,
+      maxDailyRuns: 1,
+      policy: {
+        billingType: "metered_api",
+        provider: "openrouter",
+        model: "openai/gpt-oss-120b",
+        providerHardCapCents: 500,
+        providerHardCapEvidenceSource: "Provider account cap page",
+        providerHardCapVerifiedAt: "2026-07-30T08:00:00.000Z",
+        providerHardCapExpiresAt: "2026-07-31T08:00:00.000Z",
+        maxRunCostCents: 25,
+        maxRuns: 1,
+        maxRetries: 0,
+        concurrency: 1,
+      },
+      now: new Date("2026-08-01T08:00:00.000Z"),
+    });
+
+    expect(assessment.status).toBe("blocked");
+    expect(assessment.blockers).toEqual(["provider_cap_evidence_stale"]);
   });
 
   it("blocks policy drift from the provider and model selected for execution", () => {
@@ -192,12 +232,15 @@ function readyMeteredAssessment() {
       provider: "openrouter",
       model: "openai/gpt-oss-120b",
       providerHardCapCents: 500,
+      providerHardCapEvidenceSource: "OpenRouter billing settings screenshot",
       providerHardCapVerifiedAt: "2026-07-31T08:00:00.000Z",
+      providerHardCapExpiresAt: "2026-08-02T08:00:00.000Z",
       maxRunCostCents: 25,
       maxRuns: 1,
       maxRetries: 0,
       concurrency: 1,
     },
+    now: new Date("2026-08-01T08:00:00.000Z"),
   });
 }
 

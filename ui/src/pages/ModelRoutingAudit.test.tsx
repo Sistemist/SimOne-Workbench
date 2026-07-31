@@ -5,12 +5,14 @@ import { createRoot } from "react-dom/client";
 import { flushSync } from "react-dom";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ModelRoutingAudit } from "./ModelRoutingAudit";
 
 const mockSetBreadcrumbs = vi.hoisted(() => vi.fn());
 const mockModelRoutingApi = vi.hoisted(() => ({
   listDecisions: vi.fn(),
+  listPolicies: vi.fn(),
+  updatePolicy: vi.fn(),
   updateReview: vi.fn(),
 }));
 
@@ -154,6 +156,48 @@ function modelRouteDecision(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function modelExecutionPolicy(overrides: Record<string, unknown> = {}) {
+  return {
+    agentId: "agent-1",
+    agentName: "SIM Coach",
+    agentStatus: "idle",
+    adapterType: "codex_local",
+    policy: {
+      provider: "openrouter",
+      model: "openai/gpt-oss-120b",
+      billingType: "metered_api",
+      timeoutSec: 300,
+      maxTurnsPerRun: 20,
+      maxRuns: 1,
+      maxRetries: 0,
+      concurrency: 1,
+      maxRunCostCents: 25,
+      providerHardCapCents: 500,
+      providerHardCapEvidenceSource: "Provider billing settings",
+      providerHardCapVerifiedAt: "2026-07-31T08:00:00.000Z",
+      providerHardCapExpiresAt: "2026-08-01T08:00:00.000Z",
+      subscriptionEvidenceSource: null,
+      subscriptionVerifiedAt: null,
+      subscriptionExpiresAt: null,
+      meteredOverageAllowed: false,
+    },
+    assessment: {
+      status: "blocked",
+      enforced: true,
+      blockers: ["provider_cap_evidence_stale"],
+      controls: {
+        providerHardCapEvidenceSource: "Provider billing settings",
+        providerHardCapVerifiedAt: "2026-07-31T08:00:00.000Z",
+        providerHardCapExpiresAt: "2026-08-01T08:00:00.000Z",
+        subscriptionEvidenceSource: null,
+        subscriptionVerifiedAt: null,
+        subscriptionExpiresAt: null,
+      },
+    },
+    ...overrides,
+  };
+}
+
 async function setTextareaValue(textarea: HTMLTextAreaElement, value: string) {
   await act(async () => {
     const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
@@ -163,6 +207,12 @@ async function setTextareaValue(textarea: HTMLTextAreaElement, value: string) {
 }
 
 describe("ModelRoutingAudit", () => {
+  beforeEach(() => {
+    mockModelRoutingApi.listPolicies.mockResolvedValue({
+      items: [modelExecutionPolicy()],
+    });
+  });
+
   afterEach(() => {
     document.body.innerHTML = "";
     vi.clearAllMocks();
@@ -177,7 +227,7 @@ describe("ModelRoutingAudit", () => {
     await waitForText(container, "Model routing audit");
 
     const text = container.textContent ?? "";
-    expect(text).toContain("Inspect why a model lane was chosen");
+    expect(text).toContain("Configure a governed route before execution");
     expect(text).toContain("External specialist");
     expect(text).toContain("External specialist review");
     expect(text).toContain("Task boundary, returned result, evaluation, fallback, and human review must be inspectable before this output becomes trusted.");
@@ -202,6 +252,7 @@ describe("ModelRoutingAudit", () => {
     expect(text).toContain("Returned a draft implementation plan.");
     expect(text).toContain("Review before using this in a customer-facing output.");
     expect(mockModelRoutingApi.listDecisions).toHaveBeenCalledWith("company-1", { limit: 50 });
+    expect(mockModelRoutingApi.listPolicies).toHaveBeenCalledWith("company-1");
     const runLink = container.querySelector<HTMLAnchorElement>('a[href="/agents/agent-1/runs/run-1"]');
     expect(runLink).toBeTruthy();
     expect(runLink?.textContent).toContain("Run linked");
@@ -215,6 +266,55 @@ describe("ModelRoutingAudit", () => {
       { label: "Instance settings", href: "/company/settings/instance/general" },
       { label: "Model routing" },
     ]);
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
+  it("saves a first-class operator policy while surfacing stale cap evidence", async () => {
+    mockModelRoutingApi.listDecisions.mockResolvedValue({ items: [] });
+    const readyPolicy = modelExecutionPolicy({
+      assessment: {
+        status: "ready",
+        enforced: true,
+        blockers: [],
+        controls: {},
+      },
+    });
+    mockModelRoutingApi.updatePolicy.mockResolvedValue(readyPolicy);
+
+    const { container, root } = renderAuditPage();
+    await waitForText(container, "Provider cap evidence stale");
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Execution policy");
+    expect(text).toContain("Saving never tests or calls the provider.");
+    expect(text).toContain("1 run per day · 0 automatic retries · concurrency 1");
+
+    const saveButton = Array.from(container.querySelectorAll("button"))
+      .find((button) => button.textContent?.trim() === "Save execution policy");
+    expect(saveButton).toBeTruthy();
+
+    await act(async () => {
+      saveButton!.click();
+    });
+    await flushReact();
+
+    expect(mockModelRoutingApi.updatePolicy).toHaveBeenCalledWith(
+      "company-1",
+      "agent-1",
+      expect.objectContaining({
+        provider: "openrouter",
+        model: "openai/gpt-oss-120b",
+        billingType: "metered_api",
+        maxRuns: 1,
+        maxRetries: 0,
+        concurrency: 1,
+        providerHardCapEvidenceSource: "Provider billing settings",
+      }),
+    );
+    await waitForText(container, "Policy saved. Current safety status: ready.");
 
     flushSync(() => {
       root.unmount();

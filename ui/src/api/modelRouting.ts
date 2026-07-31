@@ -48,6 +48,58 @@ export interface UpdateModelRouteDecisionReviewInput {
   outputArtifacts?: ModelRouteDecisionOutputArtifact[];
 }
 
+export type ModelExecutionBillingType =
+  | "local"
+  | "free"
+  | "subscription_included"
+  | "metered_api"
+  | "unknown";
+
+export interface ModelExecutionPolicyInput {
+  provider: string;
+  model: string;
+  billingType: ModelExecutionBillingType;
+  timeoutSec: number;
+  maxTurnsPerRun: number;
+  maxRuns: 1;
+  maxRetries: 0;
+  concurrency: 1;
+  maxRunCostCents: number | null;
+  providerHardCapCents: number | null;
+  providerHardCapEvidenceSource: string | null;
+  providerHardCapVerifiedAt: string | null;
+  providerHardCapExpiresAt: string | null;
+  subscriptionEvidenceSource: string | null;
+  subscriptionVerifiedAt: string | null;
+  subscriptionExpiresAt: string | null;
+  meteredOverageAllowed: boolean;
+}
+
+export interface ModelExecutionPolicySnapshot {
+  agentId: string;
+  agentName: string;
+  agentStatus: string;
+  adapterType: string;
+  policy: ModelExecutionPolicyInput;
+  assessment: {
+    status: "ready" | "blocked" | "unverified";
+    enforced: boolean;
+    blockers: string[];
+    controls: {
+      providerHardCapEvidenceSource: string | null;
+      providerHardCapVerifiedAt: string | null;
+      providerHardCapExpiresAt: string | null;
+      subscriptionEvidenceSource: string | null;
+      subscriptionVerifiedAt: string | null;
+      subscriptionExpiresAt: string | null;
+    };
+  };
+}
+
+export interface ModelExecutionPolicyListResponse {
+  items: ModelExecutionPolicySnapshot[];
+}
+
 export const modelRoutingApi = {
   listDecisions: (companyId: string, options: { limit?: number } = {}) => {
     const params = new URLSearchParams();
@@ -63,6 +115,18 @@ export const modelRoutingApi = {
     input: UpdateModelRouteDecisionReviewInput,
   ) => api.patch<ModelRouteDecisionAuditRow>(
     `/companies/${companyId}/model-route-decisions/${decisionId}/review`,
+    input,
+  ),
+  listPolicies: (companyId: string) =>
+    api.get<ModelExecutionPolicyListResponse>(
+      `/companies/${companyId}/model-execution-policies`,
+    ),
+  updatePolicy: (
+    companyId: string,
+    agentId: string,
+    input: ModelExecutionPolicyInput,
+  ) => api.put<ModelExecutionPolicySnapshot>(
+    `/companies/${companyId}/model-execution-policies/${agentId}`,
     input,
   ),
 };

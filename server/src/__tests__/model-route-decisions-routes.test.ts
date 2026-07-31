@@ -4,6 +4,7 @@ import request from "supertest";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import {
   activityLog,
+  agentConfigRevisions,
   agents,
   companies,
   costEvents,
@@ -62,6 +63,7 @@ describeEmbeddedPostgres("model route decision routes", () => {
 
   afterEach(async () => {
     await db.delete(activityLog);
+    await db.delete(agentConfigRevisions);
     await db.delete(costEvents);
     await db.delete(modelRouteDecisions);
     await db.delete(agents);
@@ -94,6 +96,133 @@ describeEmbeddedPostgres("model route decision routes", () => {
     });
     return { companyId, agentId };
   }
+
+  it("lets a board operator configure a governed route without editing raw agent JSON", async () => {
+    const { companyId, agentId } = await seed();
+    await db.update(agents).set({
+      adapterConfig: {
+        cwd: "/tmp/sysdom-fixture",
+        unrelatedAdapterFlag: true,
+      },
+      runtimeConfig: {
+        heartbeat: {
+          enabled: true,
+          intervalSec: 900,
+        },
+        unrelatedRuntimeFlag: true,
+      },
+    });
+    const app = createApp(db, boardActor(companyId));
+
+    const beforeRes = await request(app)
+      .get(`/api/companies/${companyId}/model-execution-policies`);
+
+    expect(beforeRes.status).toBe(200);
+    expect(beforeRes.body.items).toHaveLength(1);
+    expect(beforeRes.body.items[0]).toMatchObject({
+      agentId,
+      agentName: "SIM Coach",
+      policy: {
+        provider: "codex_local",
+        model: "adapter-default",
+        billingType: "unknown",
+      },
+      assessment: {
+        status: "unverified",
+        enforced: false,
+        blockers: expect.arrayContaining(["policy_missing", "model_unpinned"]),
+      },
+    });
+
+    const updateRes = await request(app)
+      .put(`/api/companies/${companyId}/model-execution-policies/${agentId}`)
+      .send({
+        provider: "openrouter",
+        model: "openai/gpt-oss-120b",
+        billingType: "metered_api",
+        timeoutSec: 300,
+        maxTurnsPerRun: 20,
+        maxRuns: 1,
+        maxRetries: 0,
+        concurrency: 1,
+        maxRunCostCents: 25,
+        providerHardCapCents: 500,
+        providerHardCapEvidenceSource: "Recorded provider account cap fixture",
+        providerHardCapVerifiedAt: "2026-08-01T08:00:00.000Z",
+        providerHardCapExpiresAt: "2099-08-02T08:00:00.000Z",
+        subscriptionEvidenceSource: null,
+        subscriptionVerifiedAt: null,
+        subscriptionExpiresAt: null,
+        meteredOverageAllowed: false,
+      });
+
+    expect(updateRes.status, JSON.stringify(updateRes.body)).toBe(200);
+    expect(updateRes.body).toMatchObject({
+      agentId,
+      policy: {
+        provider: "openrouter",
+        model: "openai/gpt-oss-120b",
+        billingType: "metered_api",
+        maxRuns: 1,
+        maxRetries: 0,
+        concurrency: 1,
+        providerHardCapEvidenceSource: "Recorded provider account cap fixture",
+      },
+      assessment: {
+        status: "ready",
+        enforced: true,
+        blockers: [],
+        controls: {
+          maxRunCostCents: 25,
+          providerHardCapCents: 500,
+          providerHardCapEvidenceSource: "Recorded provider account cap fixture",
+        },
+      },
+    });
+
+    const [stored] = await db.select().from(agents);
+    expect(stored.adapterConfig).toMatchObject({
+      cwd: "/tmp/sysdom-fixture",
+      unrelatedAdapterFlag: true,
+      provider: "openrouter",
+      model: "openai/gpt-oss-120b",
+      timeoutSec: 300,
+      maxTurnsPerRun: 20,
+      modelExecutionSafety: {
+        billingType: "metered_api",
+        maxRuns: 1,
+        maxRetries: 0,
+        concurrency: 1,
+      },
+    });
+    expect(stored.runtimeConfig).toMatchObject({
+      unrelatedRuntimeFlag: true,
+      heartbeat: {
+        enabled: true,
+        intervalSec: 900,
+        maxConcurrentRuns: 1,
+        maxDailyRuns: 1,
+      },
+    });
+
+    const revisions = await db.select().from(agentConfigRevisions);
+    expect(revisions).toHaveLength(1);
+    expect(revisions[0]).toMatchObject({
+      companyId,
+      agentId,
+      source: "model_execution_policy",
+    });
+
+    const activities = await db.select().from(activityLog);
+    expect(activities).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        companyId,
+        action: "model_execution_policy.updated",
+        entityType: "agent",
+        entityId: agentId,
+      }),
+    ]));
+  });
 
   it("records an auditable model route decision before execution", async () => {
     const { companyId, agentId } = await seed();

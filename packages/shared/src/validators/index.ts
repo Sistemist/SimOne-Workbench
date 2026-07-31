@@ -560,13 +560,17 @@ export {
   modelRouteDecisionOutputConfidenceSchema,
   modelRouteDecisionRiskLevelSchema,
   modelRouteDecisionReviewStatusSchema,
+  modelExecutionBillingTypeSchema,
+  updateModelExecutionPolicySchema,
   updateModelRouteDecisionReviewSchema,
   type CreateModelRouteDecision,
+  type ModelExecutionBillingTypeInput,
   type ModelRouteDecisionLane,
   type ModelRouteDecisionOutputArtifact,
   type ModelRouteDecisionOutputConfidence,
   type ModelRouteDecisionRiskLevel,
   type ModelRouteDecisionReviewStatus,
+  type UpdateModelExecutionPolicy,
   type UpdateModelRouteDecisionReview,
 } from "./model-route-decision.js";
 

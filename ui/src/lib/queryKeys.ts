@@ -271,6 +271,8 @@ export const queryKeys = {
     ["costs", companyId, from, to] as const,
   modelRouteDecisions: (companyId: string, limit: number = 50) =>
     ["model-route-decisions", companyId, limit] as const,
+  modelExecutionPolicies: (companyId: string) =>
+    ["model-execution-policies", companyId] as const,
   usageByProvider: (companyId: string, from?: string, to?: string) =>
     ["usage-by-provider", companyId, from, to] as const,
   usageByBiller: (companyId: string, from?: string, to?: string) =>

@@ -63,6 +63,7 @@ import {
   createCostEventSchema,
   createModelRouteDecisionSchema,
   createFinanceEventSchema,
+  updateModelExecutionPolicySchema,
   updateModelRouteDecisionReviewSchema,
   updateBudgetSchema,
   upsertBudgetPolicySchema,
@@ -2302,6 +2303,34 @@ registry.registerPath({
 });
 
 registry.registerPath({
+  method: "get",
+  path: "/api/companies/{companyId}/model-execution-policies",
+  tags: ["costs"],
+  summary: "List agent model execution policies and safety assessments",
+  request: { params: z.object({ companyId: z.string() }) },
+  responses: { 200: r.ok(), 401: r.unauthorized, 403: r.forbidden },
+});
+
+registry.registerPath({
+  method: "put",
+  path: "/api/companies/{companyId}/model-execution-policies/{agentId}",
+  tags: ["costs"],
+  summary: "Configure a governed agent model execution policy",
+  request: {
+    params: z.object({ companyId: z.string(), agentId: z.string() }),
+    body: jsonBody(updateModelExecutionPolicySchema),
+  },
+  responses: {
+    200: r.ok(),
+    400: r.badRequest,
+    401: r.unauthorized,
+    403: r.forbidden,
+    404: r.notFound,
+    422: r.unprocessable,
+  },
+});
+
+registry.registerPath({
   method: "patch",
   path: "/api/companies/{companyId}/model-route-decisions/{decisionId}/review",
   tags: ["costs"],
@@ -2312,6 +2341,53 @@ registry.registerPath({
   },
   responses: { 200: r.ok(), 400: r.badRequest, 401: r.unauthorized, 404: r.notFound },
 });
+
+const controlCoreReadRoutes = [
+  ["/api/companies/{companyId}/context-projections", "List provenance-backed context projections"],
+  ["/api/companies/{companyId}/founder-coach", "Get the founder coach state"],
+  ["/api/companies/{companyId}/founder-cockpit", "Get the founder cockpit state"],
+  ["/api/companies/{companyId}/sim-cycles", "List guided SIM cycles"],
+  ["/api/companies/{companyId}/sim-cycles/active", "Get the active guided SIM cycle"],
+  ["/api/companies/{companyId}/sim-cycles/{id}/events", "List guided SIM cycle events"],
+  ["/api/companies/{companyId}/venture-constitution", "Get the active Venture Constitution"],
+  ["/api/companies/{companyId}/venture-constitution/revisions", "List Venture Constitution revisions"],
+  ["/api/companies/{companyId}/venture-state/revisions", "List structured venture state revisions"],
+  ["/api/governed-intake/assessments", "List governed intake assessments"],
+] as const;
+
+for (const [path, summary] of controlCoreReadRoutes) {
+  registerCurrentRoute({
+    method: "get",
+    path,
+    tags: ["control-core"],
+    summary,
+  });
+}
+
+const controlCoreWriteRoutes = [
+  ["/api/companies/{companyId}/context-projections", "Create a provenance-backed context projection"],
+  ["/api/companies/{companyId}/sim-cycles", "Start a founder-triggered guided SIM cycle"],
+  ["/api/companies/{companyId}/sim-cycles/{id}/compound", "Complete the COMPOUND step"],
+  ["/api/companies/{companyId}/sim-cycles/{id}/diagnose", "Complete the DIAGNOSE step"],
+  ["/api/companies/{companyId}/sim-cycles/{id}/leverage", "Complete the LEVERAGE step"],
+  ["/api/companies/{companyId}/sim-cycles/{id}/map", "Complete the MAP step"],
+  ["/api/companies/{companyId}/sim-cycles/{id}/pause", "Pause a guided SIM cycle"],
+  ["/api/companies/{companyId}/sim-cycles/{id}/resume", "Resume a guided SIM cycle"],
+  ["/api/companies/{companyId}/venture-constitution/revisions", "Create a Venture Constitution revision"],
+  ["/api/companies/{companyId}/venture-constitution/revisions/{id}/activate", "Activate a Venture Constitution revision"],
+  ["/api/companies/{companyId}/venture-constitution/revisions/{id}/restore", "Restore a Venture Constitution revision"],
+  ["/api/companies/{companyId}/venture-state/revisions", "Create a structured venture state revision"],
+  ["/api/governed-intake/assessments", "Record a governed intake assessment"],
+] as const;
+
+for (const [path, summary] of controlCoreWriteRoutes) {
+  registerCurrentRoute({
+    method: "post",
+    path,
+    tags: ["control-core"],
+    summary,
+  });
+}
 
 registerCurrentRoute({
   method: "get",

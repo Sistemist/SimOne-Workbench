@@ -23,10 +23,16 @@ export type ModelExecutionSafetyBlocker =
   | "automatic_retries_enabled"
   | "concurrency_not_one"
   | "provider_cap_missing"
+  | "provider_cap_source_missing"
   | "provider_cap_verification_missing"
+  | "provider_cap_expiry_missing"
+  | "provider_cap_evidence_stale"
   | "run_cap_missing"
   | "run_cap_exceeds_provider_cap"
+  | "subscription_source_missing"
   | "subscription_verification_missing"
+  | "subscription_expiry_missing"
+  | "subscription_evidence_stale"
   | "subscription_overage_enabled";
 
 export interface ModelExecutionSafetyAssessment {
@@ -46,8 +52,12 @@ export interface ModelExecutionSafetyAssessment {
     concurrency: number | null;
     maxRunCostCents: number | null;
     providerHardCapCents: number | null;
+    providerHardCapEvidenceSource: string | null;
     providerHardCapVerifiedAt: string | null;
+    providerHardCapExpiresAt: string | null;
+    subscriptionEvidenceSource: string | null;
     subscriptionVerifiedAt: string | null;
+    subscriptionExpiresAt: string | null;
     meteredOverageAllowed: boolean | null;
   };
 }
@@ -60,6 +70,7 @@ export interface ModelExecutionSafetyInput {
   maxConcurrentRuns?: unknown;
   maxDailyRuns?: unknown;
   policy?: unknown;
+  now?: Date;
 }
 
 export type ModelExecutionReconciliationStatus = "reconciled" | "blocked" | "unverified";
@@ -205,8 +216,12 @@ export function assessModelExecutionSafety(
   const concurrency = readPositiveInteger(input.maxConcurrentRuns);
   const maxRunCostCents = readPositiveInteger(policy?.maxRunCostCents);
   const providerHardCapCents = readPositiveInteger(policy?.providerHardCapCents);
+  const providerHardCapEvidenceSource = readString(policy?.providerHardCapEvidenceSource);
   const providerHardCapVerifiedAt = readIsoDate(policy?.providerHardCapVerifiedAt);
+  const providerHardCapExpiresAt = readIsoDate(policy?.providerHardCapExpiresAt);
+  const subscriptionEvidenceSource = readString(policy?.subscriptionEvidenceSource);
   const subscriptionVerifiedAt = readIsoDate(policy?.subscriptionVerifiedAt);
+  const subscriptionExpiresAt = readIsoDate(policy?.subscriptionExpiresAt);
   const meteredOverageAllowed = readBoolean(policy?.meteredOverageAllowed);
   const policyProvider = readString(policy?.provider);
   const policyModel = readString(policy?.model);
@@ -234,7 +249,15 @@ export function assessModelExecutionSafety(
 
     if (billingType === "metered_api") {
       if (providerHardCapCents === null) blockers.push("provider_cap_missing");
+      if (providerHardCapEvidenceSource === null) blockers.push("provider_cap_source_missing");
       if (providerHardCapVerifiedAt === null) blockers.push("provider_cap_verification_missing");
+      if (providerHardCapExpiresAt === null) blockers.push("provider_cap_expiry_missing");
+      if (
+        providerHardCapExpiresAt !== null &&
+        new Date(providerHardCapExpiresAt).getTime() <= (input.now ?? new Date()).getTime()
+      ) {
+        blockers.push("provider_cap_evidence_stale");
+      }
       if (maxRunCostCents === null) blockers.push("run_cap_missing");
       if (
         maxRunCostCents !== null &&
@@ -246,7 +269,15 @@ export function assessModelExecutionSafety(
     }
 
     if (billingType === "subscription_included") {
+      if (subscriptionEvidenceSource === null) blockers.push("subscription_source_missing");
       if (subscriptionVerifiedAt === null) blockers.push("subscription_verification_missing");
+      if (subscriptionExpiresAt === null) blockers.push("subscription_expiry_missing");
+      if (
+        subscriptionExpiresAt !== null &&
+        new Date(subscriptionExpiresAt).getTime() <= (input.now ?? new Date()).getTime()
+      ) {
+        blockers.push("subscription_evidence_stale");
+      }
       if (meteredOverageAllowed !== false) blockers.push("subscription_overage_enabled");
     }
   }
@@ -268,8 +299,12 @@ export function assessModelExecutionSafety(
       concurrency,
       maxRunCostCents,
       providerHardCapCents,
+      providerHardCapEvidenceSource,
       providerHardCapVerifiedAt,
+      providerHardCapExpiresAt,
+      subscriptionEvidenceSource,
       subscriptionVerifiedAt,
+      subscriptionExpiresAt,
       meteredOverageAllowed,
     },
   };

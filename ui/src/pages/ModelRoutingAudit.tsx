@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BrainCircuit, CheckCircle2, Clock3, Coins, ListFilter, ShieldCheck, TriangleAlert, XCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { modelRoutingApi, type ModelRouteDecisionAuditRow } from "../api/modelRouting";
+import { ModelExecutionPolicyEditor } from "../components/model-routing/ModelExecutionPolicyEditor";
 import { EmptyState } from "../components/EmptyState";
 import { PageSkeleton } from "../components/PageSkeleton";
 import { Badge } from "@/components/ui/badge";
@@ -501,6 +502,27 @@ export function ModelRoutingAudit() {
     refetchInterval: 30_000,
   });
 
+  const policiesQuery = useQuery({
+    queryKey: queryKeys.modelExecutionPolicies(companyId),
+    queryFn: () => modelRoutingApi.listPolicies(companyId),
+    enabled: !!selectedCompanyId,
+  });
+
+  const policyMutation = useMutation({
+    mutationFn: ({
+      agentId,
+      input,
+    }: {
+      agentId: string;
+      input: Parameters<typeof modelRoutingApi.updatePolicy>[2];
+    }) => modelRoutingApi.updatePolicy(companyId, agentId, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.modelExecutionPolicies(companyId),
+      });
+    },
+  });
+
   const reviewMutation = useMutation({
     mutationFn: ({
       decision,
@@ -527,17 +549,18 @@ export function ModelRoutingAudit() {
     return <div className="text-sm text-muted-foreground">Select a company to inspect model routing.</div>;
   }
 
-  if (decisionsQuery.isLoading) {
+  if (decisionsQuery.isLoading || policiesQuery.isLoading) {
     return <PageSkeleton />;
   }
 
-  if (decisionsQuery.error) {
+  if (decisionsQuery.error || policiesQuery.error) {
+    const loadError = decisionsQuery.error ?? policiesQuery.error;
     return (
       <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
         <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
         <span>
-          {decisionsQuery.error instanceof Error
-            ? decisionsQuery.error.message
+          {loadError instanceof Error
+            ? loadError.message
             : "Failed to load model routing decisions."}
         </span>
       </div>
@@ -571,10 +594,24 @@ export function ModelRoutingAudit() {
           <h1 className="text-lg font-semibold">Model routing audit</h1>
         </div>
         <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-          Inspect why a model lane was chosen, what approval boundary applied, how the output was reviewed,
-          and whether spend has been linked back to the route.
+          Configure a governed route before execution, then inspect why a model lane was chosen, what approval
+          boundary applied, how the output was reviewed, and whether spend reconciled back to the route.
         </p>
       </div>
+
+      <ModelExecutionPolicyEditor
+        policies={policiesQuery.data?.items ?? []}
+        isSaving={policyMutation.isPending}
+        saveError={
+          policyMutation.isError
+            ? policyMutation.error instanceof Error
+              ? policyMutation.error.message
+              : "Failed to save execution policy."
+            : null
+        }
+        savedPolicy={policyMutation.data ?? null}
+        onSave={(agentId, input) => policyMutation.mutate({ agentId, input })}
+      />
 
       {decisions.length === 0 ? (
         <EmptyState
