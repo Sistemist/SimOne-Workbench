@@ -13,6 +13,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import type {
+  VentureStateRevision,
   VentureConstitutionContent,
   VentureConstitutionRevision,
 } from "@paperclipai/shared";
@@ -146,6 +147,92 @@ function Metric({
   );
 }
 
+function sameValue(left: unknown, right: unknown) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function constitutionChangeLabels(
+  revision: VentureConstitutionRevision,
+  previous: VentureConstitutionRevision | null,
+) {
+  if (!previous) return ["Initial Constitution"];
+
+  const labels: string[] = [];
+  const current = revision.content;
+  const prior = previous.content;
+  if (
+    !sameValue(
+      [current.purpose, current.intendedImpact],
+      [prior.purpose, prior.intendedImpact],
+    )
+  ) {
+    labels.push("Direction");
+  }
+  if (
+    !sameValue(
+      [current.customerPrinciples, current.qualityPrinciples, current.voice],
+      [prior.customerPrinciples, prior.qualityPrinciples, prior.voice],
+    )
+  ) {
+    labels.push("Principles and voice");
+  }
+  if (
+    !sameValue(
+      [current.nonNegotiables, current.antiGoals],
+      [prior.nonNegotiables, prior.antiGoals],
+    )
+  ) {
+    labels.push("Boundaries");
+  }
+  if (!sameValue(current.decisionRights, prior.decisionRights)) {
+    labels.push("Decision rights");
+  }
+  if (!sameValue(current.riskTolerance, prior.riskTolerance)) {
+    labels.push("Risk tolerance");
+  }
+  if (!sameValue(current.evidenceStandards, prior.evidenceStandards)) {
+    labels.push("Evidence standards");
+  }
+  return labels.length > 0 ? labels : ["No governed fields changed"];
+}
+
+function ventureStateChangeLabels(
+  revision: VentureStateRevision,
+  previous: VentureStateRevision | null,
+) {
+  if (!previous) return ["Initial venture state"];
+
+  const labels: string[] = [];
+  if (revision.content.ventureSummary !== previous.content.ventureSummary) {
+    labels.push("Venture summary changed");
+  }
+  for (const engine of Object.keys(ENGINE_LABELS) as Array<keyof typeof ENGINE_LABELS>) {
+    const currentEngine = revision.content.engines[engine];
+    const previousEngine = previous.content.engines[engine];
+    if (
+      !sameValue(
+        [currentEngine.summary, currentEngine.evidence],
+        [previousEngine.summary, previousEngine.evidence],
+      )
+    ) {
+      labels.push(`${ENGINE_LABELS[engine]} changed`);
+    }
+  }
+  if (!sameValue(revision.content.activeConstraint, previous.content.activeConstraint)) {
+    labels.push("Constraint changed");
+  }
+  if (!sameValue(revision.content.nextMove, previous.content.nextMove)) {
+    labels.push("Next move changed");
+  }
+  if (!sameValue(revision.content.learnings, previous.content.learnings)) {
+    const added = revision.content.learnings.filter(
+      (learning) => !previous.content.learnings.includes(learning),
+    ).length;
+    labels.push(added > 0 ? `${added} learning${added === 1 ? "" : "s"} added` : "Learnings changed");
+  }
+  return labels.length > 0 ? labels : ["No material operating fields changed"];
+}
+
 function RevisionHistory({
   revisions,
   companyId,
@@ -181,6 +268,7 @@ function RevisionHistory({
   });
 
   if (revisions.length === 0) return null;
+  const sortedRevisions = [...revisions].sort((left, right) => right.version - left.version);
 
   return (
     <Card>
@@ -199,52 +287,141 @@ function RevisionHistory({
             onChange={(event) => setApprovalNote(event.target.value)}
           />
         </div>
-        {revisions.map((revision) => (
-          <div
-            key={revision.id}
-            className="flex flex-col gap-3 border-t border-border py-4 first:border-t-0 first:pt-0 md:flex-row md:items-start md:justify-between"
-          >
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-medium">Version {revision.version}</span>
-                <Badge variant={revision.status === "active" ? "default" : "outline"}>
-                  {revision.status}
-                </Badge>
-                {revision.restoredFromRevisionId ? <Badge variant="secondary">restored</Badge> : null}
+        {sortedRevisions.map((revision) => {
+          const previous =
+            sortedRevisions.find((candidate) => candidate.version < revision.version) ?? null;
+          const changes = constitutionChangeLabels(revision, previous);
+          return (
+            <div
+              key={revision.id}
+              className="flex flex-col gap-3 border-t border-border py-4 first:border-t-0 first:pt-0 md:flex-row md:items-start md:justify-between"
+            >
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium">Version {revision.version}</span>
+                  <Badge variant={revision.status === "active" ? "default" : "outline"}>
+                    {revision.status}
+                  </Badge>
+                  {revision.restoredFromRevisionId ? <Badge variant="secondary">restored</Badge> : null}
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">{revision.changeReason}</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {changes.map((change) => (
+                    <Badge key={change} variant="secondary">{change}</Badge>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Created {formatTimestamp(revision.createdAt)}
+                  {revision.activatedAt ? ` · active ${formatTimestamp(revision.activatedAt)}` : ""}
+                </p>
               </div>
-              <p className="mt-1 text-sm text-muted-foreground">{revision.changeReason}</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Created {formatTimestamp(revision.createdAt)}
-                {revision.activatedAt ? ` · active ${formatTimestamp(revision.activatedAt)}` : ""}
-              </p>
+              <div className="flex gap-2">
+                {revision.status === "draft" ? (
+                  <Button
+                    size="sm"
+                    disabled={mutation.isPending || !approvalNote.trim()}
+                    onClick={() => mutation.mutate({ kind: "activate", revision })}
+                  >
+                    Activate
+                  </Button>
+                ) : null}
+                {revision.status === "superseded" ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={mutation.isPending}
+                    onClick={() => mutation.mutate({ kind: "restore", revision })}
+                  >
+                    Restore as draft
+                  </Button>
+                ) : null}
+              </div>
             </div>
-            <div className="flex gap-2">
-              {revision.status === "draft" ? (
-                <Button
-                  size="sm"
-                  disabled={mutation.isPending || !approvalNote.trim()}
-                  onClick={() => mutation.mutate({ kind: "activate", revision })}
-                >
-                  Activate
-                </Button>
-              ) : null}
-              {revision.status === "superseded" ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={mutation.isPending}
-                  onClick={() => mutation.mutate({ kind: "restore", revision })}
-                >
-                  Restore as draft
-                </Button>
-              ) : null}
-            </div>
-          </div>
-        ))}
+          );
+        })}
         {mutation.error ? (
           <p className="text-sm text-destructive">
             {mutation.error instanceof Error ? mutation.error.message : "Could not update the revision."}
           </p>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
+function VentureStateHistory({
+  revisions,
+  currentState,
+}: {
+  revisions: VentureStateRevision[];
+  currentState: VentureStateRevision | null;
+}) {
+  if (!currentState || revisions.length === 0) return null;
+
+  const sortedRevisions = [...revisions].sort((left, right) => right.version - left.version);
+  const previous =
+    sortedRevisions.find((revision) => revision.version < currentState.version) ?? null;
+  const changes = ventureStateChangeLabels(currentState, previous);
+
+  return (
+    <Card className="border-primary/30">
+      <CardHeader>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FileClock className="h-4 w-4" />
+              What changed in State v{currentState.version}
+            </CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {previous
+                ? `Compared with State v${previous.version}.`
+                : "This is the first canonical venture-state baseline."}
+            </p>
+          </div>
+          <Badge variant="secondary">{currentState.status}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <div className="flex flex-wrap gap-2">
+          {changes.map((change) => (
+            <Badge key={change} variant="outline">{change}</Badge>
+          ))}
+        </div>
+        <div className="grid gap-4 text-sm md:grid-cols-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Why it changed</p>
+            <p className="mt-2 leading-relaxed">{currentState.creationReason}</p>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Provenance</p>
+            <p className="mt-2">{currentState.sourceRefs.length} source reference(s)</p>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Cycle</p>
+            <p className="mt-2">
+              {currentState.basedOnCycleId
+                ? `Promoted by cycle ${currentState.basedOnCycleId.slice(0, 8)}`
+                : "Recorded outside a completed cycle"}
+            </p>
+          </div>
+        </div>
+        {sortedRevisions.length > 1 ? (
+          <div className="border-t border-border pt-4">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Recent state history</p>
+            <div className="mt-3 space-y-3">
+              {sortedRevisions.slice(0, 5).map((revision) => (
+                <div className="flex flex-wrap items-start justify-between gap-3 text-sm" key={revision.id}>
+                  <div>
+                    <span className="font-medium">State v{revision.version}</span>
+                    <span className="ml-2 text-muted-foreground">{revision.creationReason}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {revision.sourceRefs.length} source(s) · {formatTimestamp(revision.createdAt)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         ) : null}
       </CardContent>
     </Card>
@@ -418,6 +595,11 @@ export function FounderCockpit() {
   const revisionsQuery = useQuery({
     queryKey: queryKeys.founderCockpit.constitutionRevisions(selectedCompanyId ?? "__none__"),
     queryFn: () => founderCockpitApi.constitutionRevisions(selectedCompanyId!),
+    enabled: Boolean(selectedCompanyId),
+  });
+  const stateRevisionsQuery = useQuery({
+    queryKey: queryKeys.founderCockpit.stateRevisions(selectedCompanyId ?? "__none__"),
+    queryFn: () => founderCockpitApi.stateRevisions(selectedCompanyId!),
     enabled: Boolean(selectedCompanyId),
   });
   const projectionMutation = useMutation({
@@ -595,6 +777,25 @@ export function FounderCockpit() {
         </Card>
       </section>
 
+      {stateRevisionsQuery.error ? (
+        <Card className="border-amber-500/40">
+          <CardContent className="flex items-start gap-3 py-5">
+            <CircleAlert className="mt-0.5 h-5 w-5 text-amber-600" />
+            <div>
+              <p className="font-medium">State history could not load.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                The current venture state remains available, but revision comparison is temporarily unavailable.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <VentureStateHistory
+          revisions={stateRevisionsQuery.data ?? []}
+          currentState={state}
+        />
+      )}
+
       <GuidedSimCycle
         companyId={selectedCompanyId}
         cycle={snapshot.activeCycle}
@@ -734,7 +935,21 @@ export function FounderCockpit() {
         </div>
       ) : null}
 
-      <RevisionHistory revisions={revisionsQuery.data ?? []} companyId={selectedCompanyId} />
+      {revisionsQuery.error ? (
+        <Card className="border-amber-500/40">
+          <CardContent className="flex items-start gap-3 py-5">
+            <CircleAlert className="mt-0.5 h-5 w-5 text-amber-600" />
+            <div>
+              <p className="font-medium">Constitution history could not load.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                The active Constitution remains visible, but revision actions are temporarily unavailable.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <RevisionHistory revisions={revisionsQuery.data ?? []} companyId={selectedCompanyId} />
+      )}
     </div>
   );
 }

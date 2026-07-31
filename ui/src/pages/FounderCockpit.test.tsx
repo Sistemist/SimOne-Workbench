@@ -11,6 +11,7 @@ const mockSetBreadcrumbs = vi.hoisted(() => vi.fn());
 const mockFounderCockpitApi = vi.hoisted(() => ({
   get: vi.fn(),
   constitutionRevisions: vi.fn(),
+  stateRevisions: vi.fn(),
   createConstitutionRevision: vi.fn(),
   activateConstitutionRevision: vi.fn(),
   restoreConstitutionRevision: vi.fn(),
@@ -119,7 +120,7 @@ const state = {
       engine: "customer",
       approvalRequired: true,
     },
-    learnings: [],
+    learnings: ["Founder control must remain explicit."],
     refreshedAt: "2026-07-31T20:00:00.000Z",
   },
   creationReason: "Guided SIM Cycle map.",
@@ -130,6 +131,33 @@ const state = {
   createdByUserId: "founder-1",
   createdAt: "2026-07-31T20:00:00.000Z",
   supersededAt: null,
+};
+
+const previousState = {
+  ...state,
+  id: "22222222-2222-4222-8222-111111111111",
+  version: 2,
+  status: "superseded",
+  content: {
+    ...state.content,
+    ventureSummary: "Sysdom AI has a working control plane but no founder operating loop.",
+    engines: {
+      ...state.content.engines,
+      customer: {
+        summary: "Founder cohort definition is incomplete.",
+        evidence: [{ kind: "customer_review", label: "Earlier customer review" }],
+        freshness: "2026-07-30T20:00:00.000Z",
+      },
+    },
+    activeConstraint: null,
+    nextMove: null,
+    learnings: [],
+    refreshedAt: "2026-07-30T20:00:00.000Z",
+  },
+  creationReason: "Initial deterministic venture map.",
+  sourceRefs: [{ kind: "founder_map", label: "Initial founder map" }],
+  createdAt: "2026-07-30T20:00:00.000Z",
+  supersededAt: "2026-07-31T20:00:00.000Z",
 };
 
 const projection = {
@@ -215,6 +243,7 @@ describe("FounderCockpit", () => {
       freshness: { projectedAt: "2026-07-31T20:02:00.000Z", sources: projection.sourceRefs },
     });
     mockFounderCockpitApi.constitutionRevisions.mockResolvedValue([constitution]);
+    mockFounderCockpitApi.stateRevisions.mockResolvedValue([state, previousState]);
     mockFounderCockpitApi.createContextProjection.mockResolvedValue(projection);
   });
 
@@ -245,13 +274,37 @@ describe("FounderCockpit", () => {
     expect(text).toContain("Founder approval required");
     expect(text).toContain("Venture Constitution v2");
     expect(text).toContain("Canonical venture state v3");
+    expect(text).toContain("What changed in State v3");
+    expect(text).toContain("Compared with State v2.");
+    expect(text).toContain("Customer changed");
+    expect(text).toContain("Constraint changed");
+    expect(text).toContain("Next move changed");
+    expect(text).toContain("1 learning added");
+    expect(text).toContain("Initial deterministic venture map.");
     expect(mockSetBreadcrumbs).toHaveBeenCalledWith([{ label: "Founder Cockpit" }]);
 
     await act(async () => root.unmount());
   });
 
   it("keeps an unactivated Constitution draft visibly pending founder approval", async () => {
-    const draft = { ...constitution, id: "draft-1", version: 3, status: "draft", activatedAt: null };
+    const draft = {
+      ...constitution,
+      id: "draft-1",
+      version: 3,
+      status: "draft",
+      content: {
+        ...constitution.content,
+        purpose: "Keep the founder in control while making revision decisions inspectable.",
+        decisionRights: {
+          ...constitution.content.decisionRights,
+          approvalRequired: [
+            ...constitution.content.decisionRights.approvalRequired,
+            "Plugin exposure changes",
+          ],
+        },
+      },
+      activatedAt: null,
+    };
     mockFounderCockpitApi.constitutionRevisions.mockResolvedValue([draft, constitution]);
 
     const { container, root } = renderPage();
@@ -259,7 +312,24 @@ describe("FounderCockpit", () => {
 
     expect(container.textContent).toContain("Version 3");
     expect(container.textContent).toContain("draft");
+    expect(container.textContent).toContain("Direction");
+    expect(container.textContent).toContain("Decision rights");
     expect(Array.from(container.querySelectorAll("button")).some((button) => button.textContent === "Activate")).toBe(true);
+
+    await act(async () => root.unmount());
+  });
+
+  it("keeps current venture state usable when revision history cannot load", async () => {
+    mockFounderCockpitApi.stateRevisions.mockRejectedValue(new Error("history unavailable"));
+
+    const { container, root } = renderPage();
+    await waitForText(container, "State history could not load.");
+
+    expect(container.textContent).toContain(state.content.activeConstraint.hypothesis);
+    expect(container.textContent).toContain("Run one founder onboarding session");
+    expect(container.textContent).toContain(
+      "The current venture state remains available, but revision comparison is temporarily unavailable.",
+    );
 
     await act(async () => root.unmount());
   });
