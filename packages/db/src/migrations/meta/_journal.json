@@ -911,6 +911,13 @@
       "when": 1783621906000,
       "tag": "0129_model_route_decision_agent_lifecycle",
       "breakpoints": true
+    },
+    {
+      "idx": 130,
+      "version": "7",
+      "when": 1785524660000,
+      "tag": "0130_public_funnel_events",
+      "breakpoints": true
     }
   ]
 }

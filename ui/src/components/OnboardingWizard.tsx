@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "../lib/utils";
+import { trackPublicFunnelEvent } from "../lib/publicFunnel";
 import {
   extractModelName,
   extractProviderIdWithFallback
@@ -361,6 +362,11 @@ export function OnboardingWizard() {
   useEffect(() => {
     setRouteDismissed(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!effectiveOnboardingOpen || !location.search?.includes("from=scanner")) return;
+    trackPublicFunnelEvent("starter_reached");
+  }, [effectiveOnboardingOpen, location.search]);
 
   // Sync step and company when onboarding opens with explicit options.
   // Only override saved state when explicit options provide values.
@@ -1309,7 +1315,7 @@ export function OnboardingWizard() {
                       <p className="text-xs text-muted-foreground">
                         {onboardingPath === "starter" ? (
                           <>
-                            Paste the messy version of what <strong>{companyName}</strong> is trying to build, sell, teach, or fix. SimOne will draft a first map from it before any agents run.
+                            Paste the messy version of what <strong>{companyName}</strong> is trying to build, sell, teach, or fix. Sysdom AI will draft a first map from it before any agents run.
                           </>
                         ) : (
                           <>
@@ -1322,7 +1328,7 @@ export function OnboardingWizard() {
 
                   {onboardingPath === "starter" && (
                     <div className="rounded-md border border-border bg-muted/20 p-3 text-xs text-muted-foreground">
-                      <p className="font-medium text-foreground">SimOne will look for:</p>
+                      <p className="font-medium text-foreground">Sysdom AI will look for:</p>
                       <ul className="mt-2 space-y-1">
                         <li>Product, Customer, Cash, and Skills signals hiding in the note</li>
                         <li>one likely bottleneck or missing proof point</li>
@@ -1334,7 +1340,7 @@ export function OnboardingWizard() {
                   {/* Mission path selector */}
                   <div className="space-y-3">
                     <label className="text-xs text-foreground block">
-                      {onboardingPath === "starter" ? "How would you like to give SimOne context?" : "How would you like to define your mission?"}
+                      {onboardingPath === "starter" ? "How would you like to give Sysdom AI context?" : "How would you like to define your mission?"}
                     </label>
                     <div className="grid grid-cols-2 gap-2">
                       <button
@@ -1522,7 +1528,7 @@ export function OnboardingWizard() {
                           </div>
                           <div>
                             <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-foreground">
-                              Assumptions SimOne will check
+                              Assumptions Sysdom AI will check
                             </p>
                             <ul className="mt-1 space-y-1">
                               <li>who the work is for</li>

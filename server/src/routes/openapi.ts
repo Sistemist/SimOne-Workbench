@@ -38,6 +38,7 @@ import {
   updateCompanyBrandingSchema,
   companyArtifactsQuerySchema,
   companyArtifactsResponseSchema,
+  createPublicFunnelEventSchema,
   // Routine
   createRoutineSchema,
   updateRoutineSchema,
@@ -535,6 +536,7 @@ const PUBLIC_OPERATIONS = new Set([
   "GET /api/invites/{token}/test-resolution",
   "POST /api/invites/{token}/accept",
   "GET /api/venture-shares/{shareId}",
+  "POST /api/public/funnel-events",
   "POST /api/join-requests/{requestId}/claim-api-key",
 ]);
 
@@ -548,6 +550,7 @@ const BOARD_ONLY_PREFIXES = [
 
 const BOARD_ONLY_OPERATIONS = new Set([
   "GET /api/companies",
+  "GET /api/public/funnel-events/summary",
   "POST /api/companies",
   "GET /api/companies/stats",
   "GET /api/companies/issues",
@@ -2331,6 +2334,25 @@ registerCurrentRoute({
   tags: ["companies"],
   summary: "Get a public venture snapshot",
   responses: { 200: r.ok(), 404: r.notFound },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/public/funnel-events",
+  tags: ["companies"],
+  summary: "Record a privacy-safe public acquisition event",
+  request: {
+    body: jsonBody(createPublicFunnelEventSchema),
+  },
+  responses: { 202: r.ok(), 400: r.badRequest },
+});
+
+registerCurrentRoute({
+  method: "get",
+  path: "/api/public/funnel-events/summary",
+  tags: ["companies"],
+  summary: "Get the private early-access funnel summary",
+  responses: { 200: r.ok(), 401: r.unauthorized, 403: r.forbidden },
 });
 
 registry.registerPath({

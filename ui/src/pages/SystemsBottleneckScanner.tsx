@@ -1,7 +1,8 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, ClipboardCheck, Gauge, Radar, Route, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { scannerResultCategory, trackPublicFunnelEvent } from "@/lib/publicFunnel";
 
 type ScannerResult = {
   headline: string;
@@ -104,7 +105,7 @@ const fallbackResult: ScannerResult = {
   severity: "medium",
   reason: "The note has a goal, but the system that turns feedback into a decision is not visible yet.",
   nextAction: "Write down the next customer decision and who approves it.",
-  watches: "SimOne would watch for missing feedback, ownership, and approval boundaries.",
+  watches: "Sysdom AI would watch for missing feedback, ownership, and approval boundaries.",
   quickWin: {
     title: "Try this in 10 minutes",
     steps: [
@@ -163,13 +164,13 @@ const fallbackResult: ScannerResult = {
   shareSummary: {
     title: "Share this result",
     publicText:
-      "Built with SimOne: Feedback loop is unclear. Focus: Product Engine. Next move: Write down the next customer decision and who approves it.",
+      "Built with Sysdom AI: Feedback loop is unclear. Focus: Product Engine. Next move: Write down the next customer decision and who approves it.",
     excludes: ["founderNote", "startupUrl"],
   },
   conversionPath: {
     title: "Turn this into a Product Engine map",
     summary:
-      "SimOne will keep the product loop, proof question, and approval boundary together after sign-in.",
+      "Sysdom AI will keep the product loop, proof question, and approval boundary together after sign-in.",
     primaryCta: "Save the full Product Engine map",
     onboardingHref: signUpHref("/onboarding?from=scanner&focus=product-engine"),
   },
@@ -186,7 +187,7 @@ const fallbackResult: ScannerResult = {
     items: [
       "No technical setup before you see the map.",
       "Nothing posts publicly.",
-      "Agents wait for your approval before they act.",
+      "Customer, money, public-claim, and company-structure decisions still require your explicit approval.",
     ],
   },
   trustFrame: {
@@ -214,7 +215,7 @@ const patterns: Array<{
     keywords: ["lead", "customer", "reply", "waitlist", "prospect", "follow-up", "follow up", "inbox"],
     reason: "Customer signal exists, but it is not moving through one trusted review loop.",
     nextAction: "Make one review queue for replies, prospects, and proof points.",
-    watches: "SimOne would watch the handoff from signal to human approval to durable memory.",
+    watches: "Sysdom AI would watch the handoff from signal to human approval to durable memory.",
     diagnosisSignals: [
       "Customer signal was present.",
       "Follow-up or inbox work looked scattered.",
@@ -238,7 +239,7 @@ const patterns: Array<{
     keywords: ["cash", "burn", "revenue", "pricing", "runway", "sales", "paid", "budget"],
     reason: "The business constraint is financial, but the next pricing or revenue decision is not explicit.",
     nextAction: "Name the next money decision and the evidence needed to make it.",
-    watches: "SimOne would watch budget pressure, pricing assumptions, and approval thresholds.",
+    watches: "Sysdom AI would watch budget pressure, pricing assumptions, and approval thresholds.",
     diagnosisSignals: [
       "A money constraint was present.",
       "Pricing, runway, or revenue pressure appeared.",
@@ -247,7 +248,7 @@ const patterns: Array<{
     questions: [
       "Which money decision needs a human yes next?",
       "What proof would make this worth doing now?",
-      "What number should SimOne keep visible each week?",
+      "What number should Sysdom AI keep visible each week?",
     ],
     firstSection: "Money decision loop",
     quickWinSteps: [
@@ -262,7 +263,7 @@ const patterns: Array<{
     keywords: ["hire", "hiring", "team", "capacity", "manual", "ops", "skills", "overwhelmed"],
     reason: "The work depends on people or skills that are not yet mapped to a clear operating role.",
     nextAction: "List the recurring work and assign one accountable role for the next week.",
-    watches: "SimOne would watch ownership, missing skills, and work that keeps bouncing back to the founder.",
+    watches: "Sysdom AI would watch ownership, missing skills, and work that keeps bouncing back to the founder.",
     diagnosisSignals: [
       "Capacity or recurring work pressure was present.",
       "Ownership looked unclear.",
@@ -286,7 +287,7 @@ const patterns: Array<{
     keywords: ["feature", "roadmap", "product", "prototype", "launch", "scope", "positioning"],
     reason: "The product surface is moving, but the next sharp decision is not anchored to customer evidence.",
     nextAction: "Pick one user promise and one proof point that would make it believable.",
-    watches: "SimOne would watch product promises, proof, and the approval point before building more.",
+    watches: "Sysdom AI would watch product promises, proof, and the approval point before building more.",
     diagnosisSignals: [
       "Product or positioning movement was present.",
       "The next user promise needs sharper proof.",
@@ -410,12 +411,12 @@ function scanBottleneck(input: string): ScannerResult {
     },
     shareSummary: {
       title: "Share this result",
-      publicText: `Built with SimOne: ${result.headline}. Focus: ${result.engine}. Next move: ${result.nextAction}`,
+      publicText: `Built with Sysdom AI: ${result.headline}. Focus: ${result.engine}. Next move: ${result.nextAction}`,
       excludes: ["founderNote", "startupUrl"],
     },
     conversionPath: {
       title: `Turn this into a ${result.engine} map`,
-      summary: `SimOne will keep the ${engineLoopLabel(result.engine)}, proof question, and approval boundary together after sign-in.`,
+      summary: `Sysdom AI will keep the ${engineLoopLabel(result.engine)}, proof question, and approval boundary together after sign-in.`,
       primaryCta: `Save the full ${result.engine} map`,
       onboardingHref: signUpHref(`/onboarding?from=scanner&focus=${engineFocusSlug(result.engine)}`),
     },
@@ -432,7 +433,7 @@ function scanBottleneck(input: string): ScannerResult {
       items: [
         "No technical setup before you see the map.",
         "Nothing posts publicly.",
-        "Agents wait for your approval before they act.",
+        "Customer, money, public-claim, and company-structure decisions still require your explicit approval.",
       ],
     },
     trustFrame: {
@@ -449,15 +450,27 @@ export function SystemsBottleneckScanner() {
   const [result, setResult] = useState<ScannerResult | null>(null);
   const [shareSummaryStatus, setShareSummaryStatus] = useState<"idle" | "copied" | "manual">("idle");
   const [scanStorageStatus, setScanStorageStatus] = useState<"idle" | "saved" | "blocked">("idle");
+  const scannerViewEventKey = useRef(crypto.randomUUID());
   const canScan = useMemo(
     () => startupUrl.trim().length > 0 || founderNote.trim().length > 0,
     [startupUrl, founderNote],
   );
 
+  useEffect(() => {
+    trackPublicFunnelEvent("scanner_view", { eventKey: scannerViewEventKey.current });
+  }, []);
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canScan) return;
+    trackPublicFunnelEvent("scanner_start");
     const nextResult = scanBottleneck(`${startupUrl}\n${founderNote}`);
+    trackPublicFunnelEvent("scanner_complete", {
+      resultCategory: scannerResultCategory(nextResult.engine),
+    });
+    trackPublicFunnelEvent("scanner_next_move_view", {
+      resultCategory: scannerResultCategory(nextResult.engine),
+    });
     setResult(nextResult);
     setShareSummaryStatus("idle");
     try {
@@ -497,14 +510,14 @@ export function SystemsBottleneckScanner() {
               className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition hover:text-foreground"
             >
               <Radar className="h-4 w-4" aria-hidden="true" />
-              <span>SimOne</span>
+              <span>Sysdom AI</span>
             </a>
             <h1 className="mt-3 text-2xl font-semibold tracking-normal sm:text-3xl">
               Systems Bottleneck Scanner
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Paste a startup URL, a messy founder note, or both. SimOne will return one likely bottleneck and
-              one next move.
+              Paste a startup URL, a messy founder note, or both. Sysdom AI will return one likely bottleneck
+              hypothesis and one next move for your review.
             </p>
             <p className="mt-2 max-w-2xl text-sm font-medium text-foreground">
               Free first readout, protected full map after sign-in.
@@ -680,7 +693,7 @@ export function SystemsBottleneckScanner() {
                       <p className="mt-1">{result.approvalPath.needsHumanYes}</p>
                     </div>
                     <div>
-                      <h3 className="font-medium text-foreground">Carry into SimOne</h3>
+                    <h3 className="font-medium text-foreground">Carry into Sysdom AI</h3>
                       <p className="mt-1">{result.approvalPath.carryForward}</p>
                     </div>
                   </div>
@@ -688,7 +701,7 @@ export function SystemsBottleneckScanner() {
                 <div className="border-l border-border pl-3">
                   <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
                     <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                    What SimOne would watch
+                    What Sysdom AI would watch
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">{result.watches}</p>
                 </div>
@@ -710,7 +723,7 @@ export function SystemsBottleneckScanner() {
                 </div>
                 <div className="rounded-md border border-border bg-background/60 p-3">
                   <div className="text-xs font-medium uppercase text-muted-foreground">
-                    Questions SimOne would ask next
+                    Questions Sysdom AI would ask next
                   </div>
                   <ul className="mt-2 grid gap-2 text-sm text-muted-foreground">
                     {result.questions.map((question) => (
@@ -793,6 +806,9 @@ export function SystemsBottleneckScanner() {
                           } else {
                             setShareSummaryStatus("manual");
                           }
+                          trackPublicFunnelEvent("scanner_share", {
+                            resultCategory: scannerResultCategory(result.engine),
+                          });
                         }}
                       >
                         Copy share summary
@@ -847,8 +863,8 @@ export function SystemsBottleneckScanner() {
                     </div>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
                       {scanStorageStatus === "blocked"
-                        ? "Sign up now to keep this readout with your full SimOne map."
-                        : "Sign up to keep this readout with your full SimOne map."}
+                        ? "Sign up now to keep this readout with your full Sysdom AI map."
+                        : "Sign up to keep this readout with your full Sysdom AI map."}
                     </p>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -865,6 +881,9 @@ export function SystemsBottleneckScanner() {
                   </p>
                   <a
                     href={result.conversionPath.onboardingHref}
+                    onClick={() => trackPublicFunnelEvent("scanner_signup_click", {
+                      resultCategory: scannerResultCategory(result.engine),
+                    })}
                     className="inline-flex h-9 w-fit items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                   >
                     {result.conversionPath.primaryCta}
@@ -884,7 +903,7 @@ export function SystemsBottleneckScanner() {
                   </div>
                   <h2 className="mt-3 text-xl font-semibold">One bottleneck, one next move.</h2>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    The full SimOne map comes after sign-in, when the work can be protected and turned into a
+                    The full Sysdom AI map comes after sign-in, when the work can be protected and turned into a
                     starter operating system.
                   </p>
                 </div>
@@ -898,7 +917,7 @@ export function SystemsBottleneckScanner() {
                   <div className="rounded-md border border-border bg-background/60 p-3">
                     <h3 className="font-medium text-foreground">Protected full map</h3>
                     <p className="mt-1">
-                      Sign in when you want SimOne to save the scan, draft the starter map, and keep decisions behind approval.
+                      Sign in when you want Sysdom AI to save the scan, draft the starter map, and carry its review boundaries forward.
                     </p>
                   </div>
                 </div>
@@ -918,7 +937,7 @@ export function SystemsBottleneckScanner() {
         </section>
 
         <footer className="text-xs text-muted-foreground">
-          Built with SimOne. The scanner gives a first read, not a diagnosis of your whole company.
+          Built with Sysdom AI. The scanner gives an early pattern match, not a diagnosis of your whole company.
         </footer>
       </div>
     </main>

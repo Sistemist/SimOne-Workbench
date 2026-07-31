@@ -61,7 +61,7 @@ export function VentureShare() {
         <header className="border-b border-border pb-5">
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
             <Compass className="h-4 w-4" aria-hidden="true" />
-            <span>SimOne</span>
+            <span>Sysdom AI</span>
           </div>
           <h1 className="mt-3 text-2xl font-semibold tracking-normal sm:text-3xl">
             {snapshot?.company.name ?? "Venture Architecture Map"}

@@ -43,6 +43,15 @@ type BetterAuthInstance = BetterAuthHandlerTarget & BetterAuthSessionResolver;
 
 const AUTH_COOKIE_PREFIX_FALLBACK = "default";
 const AUTH_COOKIE_PREFIX_INVALID_SEGMENTS_RE = /[^a-zA-Z0-9_-]+/g;
+export const ALPHA_SESSION_EXPIRES_IN_SECONDS = 30 * 24 * 60 * 60;
+export const ALPHA_SESSION_UPDATE_AGE_SECONDS = 24 * 60 * 60;
+
+export function buildBetterAuthSessionOptions() {
+  return {
+    expiresIn: ALPHA_SESSION_EXPIRES_IN_SECONDS,
+    updateAge: ALPHA_SESSION_UPDATE_AGE_SECONDS,
+  };
+}
 
 export function deriveAuthCookiePrefix(instanceId = resolvePaperclipInstanceId()): string {
   const scopedInstanceId = instanceId
@@ -196,6 +205,7 @@ export function createBetterAuthInstance(
         });
       },
     },
+    session: buildBetterAuthSessionOptions(),
     rateLimit: {
       enabled: true,
       customRules: {

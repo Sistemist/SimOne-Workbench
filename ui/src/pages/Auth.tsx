@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { AsciiArtAnimation } from "@/components/AsciiArtAnimation";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Sparkles } from "lucide-react";
+import { trackPublicFunnelEvent } from "@/lib/publicFunnel";
 
 type AuthMode = "sign_in" | "sign_up";
 
@@ -54,6 +55,7 @@ export function AuthPage() {
     },
     onSuccess: async () => {
       setError(null);
+      if (mode === "sign_up") trackPublicFunnelEvent("signup_complete");
       await queryClient.invalidateQueries({ queryKey: queryKeys.auth.session });
       await queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
       navigate(nextPath, { replace: true });
@@ -86,11 +88,11 @@ export function AuthPage() {
         <div className="w-full max-w-md mx-auto my-auto px-8 py-12">
           <div className="flex items-center gap-2 mb-8">
             <Sparkles className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">SimOne</span>
+            <span className="text-sm font-medium">Sysdom AI</span>
           </div>
 
           <h1 className="text-xl font-semibold">
-            {mode === "sign_in" ? "Sign in to SimOne" : "Create your SimOne account"}
+            {mode === "sign_in" ? "Sign in to Sysdom AI" : "Create your Sysdom AI account"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {mode === "sign_in"

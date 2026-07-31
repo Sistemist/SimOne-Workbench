@@ -35,7 +35,7 @@ export function buildVentureShareSnapshot(
   opts: { shareId: string; createdAt?: string },
 ): VentureShareSnapshot {
   const manifest = exported.manifest;
-  const companyName = manifest.company?.name ?? manifest.source?.companyName ?? "SimOne venture";
+  const companyName = manifest.company?.name ?? manifest.source?.companyName ?? "Sysdom AI venture";
   const projectsBySlug = new Map(manifest.projects.map((project) => [project.slug, project]));
 
   const agents: VentureShareAgent[] = manifest.agents.slice(0, 8).map((agent) => ({

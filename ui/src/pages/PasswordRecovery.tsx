@@ -21,7 +21,7 @@ function RecoveryShell({ children }: { children: ReactNode }) {
         <div className="mx-auto my-auto w-full max-w-md px-8 py-12">
           <div className="mb-8 flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">SimOne</span>
+            <span className="text-sm font-medium">Sysdom AI</span>
           </div>
           {children}
         </div>
@@ -88,7 +88,7 @@ export function PasswordRecoveryPage() {
       <RecoveryShell>
         <h1 className="text-xl font-semibold">Reset your password</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Enter the email used for your SimOne account.
+          Enter the email used for your Sysdom AI account.
         </p>
         {message ? (
           <div className="mt-6 space-y-4">

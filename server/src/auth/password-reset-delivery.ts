@@ -81,9 +81,9 @@ export function createPasswordResetDelivery(
           body: JSON.stringify({
             from,
             to: [input.email],
-            subject: "Reset your SimOne password",
-            text: `${greeting}\n\nUse this one-time link to choose a new SimOne password:\n${input.resetUrl}\n\nThis link expires in 15 minutes. If you did not request it, you can ignore this email.`,
-            html: `<p>${escapeHtml(greeting)}</p><p>Use this one-time link to choose a new SimOne password:</p><p><a href="${safeResetUrl}">Reset your password</a></p><p>This link expires in 15 minutes. If you did not request it, you can ignore this email.</p>`,
+            subject: "Reset your Sysdom AI password",
+            text: `${greeting}\n\nUse this one-time link to choose a new Sysdom AI password:\n${input.resetUrl}\n\nThis link expires in 15 minutes. If you did not request it, you can ignore this email.`,
+            html: `<p>${escapeHtml(greeting)}</p><p>Use this one-time link to choose a new Sysdom AI password:</p><p><a href="${safeResetUrl}">Reset your password</a></p><p>This link expires in 15 minutes. If you did not request it, you can ignore this email.</p>`,
           }),
           signal: AbortSignal.timeout(DELIVERY_TIMEOUT_MS),
         });

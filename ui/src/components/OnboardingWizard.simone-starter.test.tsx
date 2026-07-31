@@ -186,7 +186,7 @@ describe("OnboardingWizard SIM Starter path", () => {
 
     expect(document.body.textContent ?? "").toContain("SIM Starter will create:");
     expect(document.body.textContent ?? "").toContain("First draft preview");
-    expect(document.body.textContent ?? "").toContain("Assumptions SimOne will check");
+    expect(document.body.textContent ?? "").toContain("Assumptions Sysdom AI will check");
     expect(document.body.textContent ?? "").toContain("You approve before agents act on customers, money, public claims, or company structure");
     expect(document.body.textContent ?? "").toContain(
       "CEO/controller plus Product, Customer, Cash, and Skills engine leads"
@@ -291,7 +291,7 @@ describe("OnboardingWizard SIM Starter path", () => {
     });
 
     expect(document.body.textContent ?? "").toContain("Paste the messy version");
-    expect(document.body.textContent ?? "").toContain("SimOne will draft a first map from it");
+    expect(document.body.textContent ?? "").toContain("Sysdom AI will draft a first map from it");
     expect(document.body.textContent ?? "").toContain("Product, Customer, Cash, and Skills");
     expect(document.body.textContent ?? "").toContain("approval boundary");
     expect(document.body.textContent ?? "").not.toContain("Choose a model");

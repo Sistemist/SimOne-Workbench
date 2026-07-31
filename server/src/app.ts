@@ -32,6 +32,7 @@ import { activityRoutes } from "./routes/activity.js";
 import { dashboardRoutes } from "./routes/dashboard.js";
 import { customerEngineBridgeRoutes } from "./routes/customer-engine-bridge.js";
 import { ventureShareRoutes } from "./routes/venture-shares.js";
+import { publicFunnelEventRoutes } from "./routes/public-funnel-events.js";
 import { userProfileRoutes } from "./routes/user-profiles.js";
 import { sidebarBadgeRoutes } from "./routes/sidebar-badges.js";
 import { sidebarPreferenceRoutes } from "./routes/sidebar-preferences.js";
@@ -247,6 +248,7 @@ export async function createApp(
   api.use(dashboardRoutes(db));
   api.use(customerEngineBridgeRoutes(db));
   api.use(ventureShareRoutes(db));
+  api.use(publicFunnelEventRoutes(db));
   api.use(userProfileRoutes(db));
   api.use(sidebarBadgeRoutes(db));
   api.use(sidebarPreferenceRoutes(db));

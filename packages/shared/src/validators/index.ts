@@ -187,6 +187,15 @@ export {
 export {
   ventureShareSnapshotSchema,
 } from "./venture-share.js";
+export {
+  PUBLIC_FUNNEL_EVENT_NAMES,
+  publicFunnelEventNameSchema,
+  publicFunnelResultCategorySchema,
+  createPublicFunnelEventSchema,
+  type PublicFunnelEventName,
+  type PublicFunnelResultCategory,
+  type CreatePublicFunnelEvent,
+} from "./public-funnel-event.js";
 
 export {
   trustPresetSchema,

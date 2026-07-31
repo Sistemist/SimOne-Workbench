@@ -41,7 +41,7 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Public first read");
     expect(text).toContain("No account needed. Get one bottleneck and one next move from the note you provide.");
     expect(text).toContain("Protected full map");
-    expect(text).toContain("Sign in when you want SimOne to save the scan, draft the starter map, and keep decisions behind approval.");
+    expect(text).toContain("Sign in when you want Sysdom AI to save the scan, draft the starter map, and carry its review boundaries forward.");
     expect(text).toContain("Customer follow-up");
     expect(text).toContain("Cash runway");
     expect(text).toContain("Skills capacity");
@@ -49,7 +49,7 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
-    expect(links.some((link) => link.textContent?.includes("SimOne") && link.getAttribute("href") === "/")).toBe(true);
+    expect(links.some((link) => link.textContent?.includes("Sysdom AI") && link.getAttribute("href") === "/")).toBe(true);
     expect(
       links.some((link) => link.textContent?.includes("Sign in") && link.getAttribute("href") === "/auth?next=%2Fapp"),
     ).toBe(true);
@@ -186,7 +186,7 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Calibration status");
     expect(text).toContain("Early pattern match");
     expect(text).toContain("Real submission review still needed.");
-    expect(text).toContain("Questions SimOne would ask next");
+    expect(text).toContain("Questions Sysdom AI would ask next");
     expect(text).toContain("Who should approve the next customer reply or offer?");
     expect(text).toContain("What proof would make this worth doing now?");
     expect(text).toContain("Starter map preview");
@@ -201,13 +201,13 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("First move");
     expect(text).toContain("Share this result");
     expect(text).toContain(
-      "Built with SimOne: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points.",
+      "Built with Sysdom AI: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points.",
     );
     expect(text).toContain("The share version leaves out raw notes and URLs.");
     expect(text).toContain("Ask SIM Coach why");
     expect(text).toContain("Coach explains the method before you assign work.");
     expect(text).toContain("Saved in this browser");
-    expect(text).toContain("Sign up to keep this readout with your full SimOne map.");
+    expect(text).toContain("Sign up to keep this readout with your full Sysdom AI map.");
     expect(text).toContain("Your scan will carry into SIM Starter after sign-in.");
     expect(text).toContain("Save the full Customer Engine map");
     const generatedSummary = text.slice(text.indexOf("Why this scan picked Customer Engine"));
@@ -312,7 +312,7 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Make one review queue for replies, prospects, and proof points.");
     expect(text).toContain("Needs your yes");
     expect(text).toContain("Approve the next customer-facing reply or offer before agents act.");
-    expect(text).toContain("Carry into SimOne");
+    expect(text).toContain("Carry into Sysdom AI");
     expect(text).toContain("Save this scan as Sprint Zero context after sign-in.");
     expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
 
@@ -365,7 +365,7 @@ describe("SystemsBottleneckScanner", () => {
     const text = container.textContent ?? "";
     expect(text).toContain("Share this result");
     expect(text).toContain(
-      "Built with SimOne: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points.",
+      "Built with Sysdom AI: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points.",
     );
     expect(text).toContain("Copy share summary");
     expect(text).toContain("The share version leaves out raw notes and URLs.");
@@ -379,7 +379,7 @@ describe("SystemsBottleneckScanner", () => {
       copyButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
     expect(writeText).toHaveBeenCalledWith(
-      "Built with SimOne: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points.",
+      "Built with Sysdom AI: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points.",
     );
     expect(container.textContent).toContain("Copied. Safe to share: raw notes and URLs stay out.");
 
@@ -390,7 +390,7 @@ describe("SystemsBottleneckScanner", () => {
         shareSummary: {
           title: "Share this result",
           publicText:
-            "Built with SimOne: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points.",
+            "Built with Sysdom AI: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points.",
           excludes: ["founderNote", "startupUrl"],
         },
       },
@@ -512,7 +512,7 @@ describe("SystemsBottleneckScanner", () => {
 
     const text = container.textContent ?? "";
     expect(text).toContain("Ready to continue");
-    expect(text).toContain("Sign up now to keep this readout with your full SimOne map.");
+    expect(text).toContain("Sign up now to keep this readout with your full Sysdom AI map.");
     expect(text).not.toContain("Saved in this browser");
 
     flushSync(() => {
@@ -546,17 +546,18 @@ describe("SystemsBottleneckScanner", () => {
 
     const text = container.textContent ?? "";
     expect(text).toContain("Turn this into a Customer Engine map");
-    expect(text).toContain("SimOne will keep the customer loop, proof question, and approval boundary together after sign-in.");
+    expect(text).toContain("Sysdom AI will keep the customer loop, proof question, and approval boundary together after sign-in.");
     expect(text).toContain("What happens after sign-in");
     expect(text).toContain("Saved in this browser");
-    expect(text).toContain("Sign up to keep this readout with your full SimOne map.");
+    expect(text).toContain("Sign up to keep this readout with your full Sysdom AI map.");
     expect(text).toContain("Prefill the starter map with this customer loop readout.");
     expect(text).toContain("Create the first setup task: Make one review queue for replies, prospects, and proof points.");
     expect(text).toContain("Keep any customer, money, public-claim, or structure decision behind your approval.");
     expect(text).toContain("What will not happen");
     expect(text).toContain("No technical setup before you see the map.");
     expect(text).toContain("Nothing posts publicly.");
-    expect(text).toContain("Agents wait for your approval before they act.");
+    expect(text).toContain("Customer, money, public-claim, and company-structure decisions still require your explicit approval.");
+    expect(text).not.toContain("Agents wait for your approval before they act.");
     expect(text).toContain("Save the full Customer Engine map");
     expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
 
@@ -591,7 +592,7 @@ describe("SystemsBottleneckScanner", () => {
           items: [
             "No technical setup before you see the map.",
             "Nothing posts publicly.",
-            "Agents wait for your approval before they act.",
+            "Customer, money, public-claim, and company-structure decisions still require your explicit approval.",
           ],
         },
       },

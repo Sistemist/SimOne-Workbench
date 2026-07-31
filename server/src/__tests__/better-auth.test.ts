@@ -3,6 +3,9 @@ import type { BetterAuthOptions } from "better-auth";
 import { getCookies } from "better-auth/cookies";
 import {
   buildBetterAuthAdvancedOptions,
+  buildBetterAuthSessionOptions,
+  ALPHA_SESSION_EXPIRES_IN_SECONDS,
+  ALPHA_SESSION_UPDATE_AGE_SECONDS,
   deriveAuthCookiePrefix,
   deriveAuthTrustedOrigins,
   shouldDisableSecureAuthCookies,
@@ -19,6 +22,15 @@ afterEach(() => {
 });
 
 describe("Better Auth cookie scoping", () => {
+  it("uses an explicit 30-day alpha session with daily refresh", () => {
+    expect(buildBetterAuthSessionOptions()).toEqual({
+      expiresIn: ALPHA_SESSION_EXPIRES_IN_SECONDS,
+      updateAge: ALPHA_SESSION_UPDATE_AGE_SECONDS,
+    });
+    expect(ALPHA_SESSION_EXPIRES_IN_SECONDS).toBe(30 * 24 * 60 * 60);
+    expect(ALPHA_SESSION_UPDATE_AGE_SECONDS).toBe(24 * 60 * 60);
+  });
+
   it("derives an instance-scoped cookie prefix", () => {
     expect(deriveAuthCookiePrefix("default")).toBe("paperclip-default");
     expect(deriveAuthCookiePrefix("PAP-1601-worktree")).toBe("paperclip-PAP-1601-worktree");

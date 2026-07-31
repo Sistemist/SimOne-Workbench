@@ -185,7 +185,7 @@ describe("AuthPage", () => {
   it("opens directly in sign-up mode from the public landing CTA", async () => {
     const root = await mount("/auth?mode=sign_up&next=%2Fapp");
 
-    expect(container.textContent).toContain("Create your SimOne account");
+    expect(container.textContent).toContain("Create your Sysdom AI account");
     expect(container.querySelector('input[name="name"]')).not.toBeNull();
 
     const passwordInput = container.querySelector('input[name="password"]') as HTMLInputElement;

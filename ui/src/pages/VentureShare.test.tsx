@@ -92,6 +92,7 @@ describe("VentureShare", () => {
     await waitForAssertion(() => {
       const text = container.textContent ?? "";
       expect(text).toContain("Acme Systems");
+      expect(text).toContain("Sysdom AI");
       expect(text).toContain("Venture Architecture Map");
       expect(text).toContain("What this map means");
       expect(text).toContain("A public, safe view of how Acme Systems is organized to move work forward.");
