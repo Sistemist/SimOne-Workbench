@@ -59,6 +59,19 @@ interface ExecutionReconciliationEvidence {
   };
 }
 
+interface RouteRecommendationEvidence {
+  status: "ready" | "no_model" | "blocked";
+  policyVersion: string;
+  posture: string;
+  lane: string;
+  riskLevel: string;
+  reason: string;
+  selectedCandidate: {
+    provider: string;
+    model: string;
+  } | null;
+}
+
 const REVIEW_FILTERS: Array<{ value: ReviewFilter; label: string }> = [
   { value: "all", label: "All" },
   { value: "pending", label: "Pending" },
@@ -143,6 +156,75 @@ function routeLaneEvidence(decision: ModelRouteDecisionAuditRow): { title: strin
     };
   }
   return null;
+}
+
+function routeRecommendationEvidence(
+  decision: ModelRouteDecisionAuditRow,
+): RouteRecommendationEvidence | null {
+  const raw = decision.metadata?.routeRecommendation;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const evidence = raw as Record<string, unknown>;
+  if (evidence.version !== "sysdom_model_route_recommendation_v1") return null;
+  if (!["ready", "no_model", "blocked"].includes(String(evidence.status))) return null;
+  const rawCandidate =
+    evidence.selectedCandidate
+    && typeof evidence.selectedCandidate === "object"
+    && !Array.isArray(evidence.selectedCandidate)
+      ? evidence.selectedCandidate as Record<string, unknown>
+      : null;
+  const selectedCandidate =
+    rawCandidate
+    && typeof rawCandidate.provider === "string"
+    && typeof rawCandidate.model === "string"
+      ? {
+          provider: rawCandidate.provider,
+          model: rawCandidate.model,
+        }
+      : null;
+  return {
+    status: evidence.status as RouteRecommendationEvidence["status"],
+    policyVersion: typeof evidence.policyVersion === "string" ? evidence.policyVersion : "unknown",
+    posture: typeof evidence.posture === "string" ? evidence.posture : "balanced",
+    lane: typeof evidence.lane === "string" ? evidence.lane : "unknown",
+    riskLevel: typeof evidence.riskLevel === "string" ? evidence.riskLevel : "unknown",
+    reason: typeof evidence.reason === "string"
+      ? evidence.reason
+      : "No recommendation reason was recorded.",
+    selectedCandidate,
+  };
+}
+
+function RouteRecommendationCard({
+  evidence,
+}: {
+  evidence: RouteRecommendationEvidence;
+}) {
+  const recommendation =
+    evidence.status === "no_model"
+      ? "Use deterministic code or rules; no model call."
+      : evidence.selectedCandidate
+        ? `${evidence.selectedCandidate.provider} / ${evidence.selectedCandidate.model}`
+        : "No permitted exact model is currently available.";
+  return (
+    <section
+      aria-label="Sysdom Auto shadow recommendation"
+      className="rounded-md border border-sky-500/30 bg-sky-500/5 px-3 py-3"
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Sysdom Auto shadow recommendation
+        </div>
+        <Badge variant="outline">{humanize(evidence.status)}</Badge>
+        <Badge variant="outline">{titleCase(evidence.lane)}</Badge>
+        <Badge variant="outline">{humanize(evidence.riskLevel)} risk</Badge>
+      </div>
+      <p className="mt-2 text-sm font-medium text-foreground">{recommendation}</p>
+      <p className="mt-1 text-sm leading-6 text-muted-foreground">{evidence.reason}</p>
+      <p className="mt-2 text-xs text-muted-foreground">
+        Shadow mode only—this recommendation did not change execution. Policy {evidence.policyVersion}; posture {humanize(evidence.posture)}.
+      </p>
+    </section>
+  );
 }
 
 function routeExecutionSafety(
@@ -332,6 +414,7 @@ function DecisionCard({
   const modelLabel = `${decision.provider} / ${decision.model}`;
   const outputArtifacts = routeDecisionOutputArtifacts(decision);
   const laneEvidence = routeLaneEvidence(decision);
+  const routeRecommendation = routeRecommendationEvidence(decision);
   const executionSafety = routeExecutionSafety(decision);
   const executionReconciliation = routeExecutionReconciliation(decision);
   const contextProjection = routeContextProjectionEvidence(decision);
@@ -438,6 +521,9 @@ function DecisionCard({
           </section>
         ) : null}
 
+        {routeRecommendation ? (
+          <RouteRecommendationCard evidence={routeRecommendation} />
+        ) : null}
         {executionSafety ? (
           <ExecutionSafetyEvidenceCard evidence={executionSafety} />
         ) : null}

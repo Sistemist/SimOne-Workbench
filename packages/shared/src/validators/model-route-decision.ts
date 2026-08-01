@@ -38,6 +38,131 @@ export const modelExecutionBillingTypeSchema = z.enum([
   "unknown",
 ]);
 
+export const modelRoutePostureSchema = z.enum([
+  "cost_conscious",
+  "balanced",
+  "quality_first",
+]);
+
+export const modelRouteTaskClassSchema = z.enum([
+  "deterministic",
+  "triage",
+  "synthesis",
+  "analysis",
+  "strategy",
+  "specialist",
+]);
+
+export const modelRouteExternalEffectSchema = z.enum([
+  "public",
+  "customer",
+  "financial",
+  "security",
+  "privacy",
+  "deletion",
+  "governance",
+]);
+
+export const modelRouteDataSensitivitySchema = z.enum([
+  "public",
+  "internal",
+  "confidential",
+  "restricted",
+]);
+
+export const modelRouteEvidenceRequirementSchema = z.enum([
+  "none",
+  "standard",
+  "provenance_required",
+  "independent_review",
+]);
+
+export const modelRouteRecommendationLaneSchema = z.enum([
+  "no_model",
+  ...modelRouteDecisionLaneSchema.options,
+]);
+
+export const modelRouteCandidateSchema = z.object({
+  provider: z.string().trim().min(1).max(200),
+  model: z.string().trim().min(1).max(300),
+  lane: modelRouteDecisionLaneSchema,
+  billingType: modelExecutionBillingTypeSchema,
+  costRank: z.number().int().min(1).max(1_000),
+  qualityRank: z.number().int().min(1).max(1_000),
+  enabled: z.boolean().optional().default(true),
+  supportsTools: z.boolean().optional().default(false),
+  supportsStructuredOutput: z.boolean().optional().default(true),
+  supportsConfidentialData: z.boolean().optional().default(false),
+  supportsRestrictedData: z.boolean().optional().default(false),
+}).strict();
+
+export const modelRouteRecommendationInputSchema = z.object({
+  policyVersion: z.string().trim().min(1).max(200),
+  posture: modelRoutePostureSchema.optional().default("balanced"),
+  task: z.object({
+    intent: z.string().trim().min(1).max(4_000),
+    taskClass: modelRouteTaskClassSchema,
+    criticality: z.enum(["low", "medium", "high", "critical"]),
+    reversible: z.boolean(),
+    externalEffects: z.array(modelRouteExternalEffectSchema).max(7).optional().default([]),
+    dataSensitivity: modelRouteDataSensitivitySchema,
+    evidenceRequirement: modelRouteEvidenceRequirementSchema,
+    requiresTools: z.boolean().optional().default(false),
+    requiresStructuredOutput: z.boolean().optional().default(true),
+    approvalRequired: z.boolean().optional().default(false),
+  }).strict(),
+  simContext: z.object({
+    projectionId: z.string().uuid().nullable().optional().default(null),
+    projectionVersion: z.number().int().positive().nullable().optional().default(null),
+    constitutionRevisionId: z.string().uuid().nullable().optional().default(null),
+    activeEngine: z.enum(["product", "customer", "cash", "skills"]).nullable().optional().default(null),
+    activeConstraintDecision: z.enum(["proposed", "accepted", "rejected"]).nullable().optional().default(null),
+    nextMoveApprovalRequired: z.boolean().optional().default(false),
+    approvalBoundaries: z.array(z.string().trim().min(1).max(2_000)).max(100).optional().default([]),
+  }).strict().nullable().optional().default(null),
+  candidates: z.array(modelRouteCandidateSchema).max(100),
+}).strict();
+
+export const modelRouteCandidateAssessmentSchema = z.object({
+  provider: z.string().min(1),
+  model: z.string().min(1),
+  lane: modelRouteDecisionLaneSchema,
+  outcome: z.enum(["selected", "excluded"]),
+  reason: z.string().min(1),
+});
+
+export const modelRouteRecommendationSchema = z.object({
+  version: z.literal("sysdom_model_route_recommendation_v1"),
+  mode: z.literal("shadow"),
+  policyVersion: z.string().min(1),
+  status: z.enum(["ready", "no_model", "blocked"]),
+  posture: modelRoutePostureSchema,
+  lane: modelRouteRecommendationLaneSchema,
+  riskLevel: z.enum(["low", "medium", "high", "critical"]),
+  selectedCandidate: modelRouteCandidateSchema.nullable(),
+  candidateAssessments: z.array(modelRouteCandidateAssessmentSchema).max(100),
+  confidence: z.enum(["low", "medium", "high"]),
+  reason: z.string().min(1),
+  approvalGate: z.enum([
+    "none",
+    "founder_review_before_execution",
+    "founder_approval_before_external_effect",
+  ]),
+  signals: z.object({
+    taskClass: modelRouteTaskClassSchema,
+    criticality: z.enum(["low", "medium", "high", "critical"]),
+    reversible: z.boolean(),
+    externalEffects: z.array(modelRouteExternalEffectSchema).max(7),
+    dataSensitivity: modelRouteDataSensitivitySchema,
+    evidenceRequirement: modelRouteEvidenceRequirementSchema,
+    approvalRequired: z.boolean(),
+    activeEngine: z.enum(["product", "customer", "cash", "skills"]).nullable(),
+    projectionId: z.string().uuid().nullable(),
+    projectionVersion: z.number().int().positive().nullable(),
+    constitutionRevisionId: z.string().uuid().nullable(),
+  }).strict(),
+}).strict();
+
 const nullablePositiveInteger = z.number().int().positive().nullable();
 const nullableDateTime = z.string().datetime().nullable();
 const nullableEvidenceSource = z.string().trim().min(1).max(500).nullable();
@@ -128,4 +253,14 @@ export type ModelRouteDecisionOutputConfidence = z.infer<typeof modelRouteDecisi
 export type ModelRouteDecisionReviewStatus = z.infer<typeof modelRouteDecisionReviewStatusSchema>;
 export type ModelRouteDecisionOutputArtifact = z.infer<typeof modelRouteDecisionOutputArtifactSchema>;
 export type ModelExecutionBillingTypeInput = z.infer<typeof modelExecutionBillingTypeSchema>;
+export type ModelRoutePosture = z.infer<typeof modelRoutePostureSchema>;
+export type ModelRouteTaskClass = z.infer<typeof modelRouteTaskClassSchema>;
+export type ModelRouteExternalEffect = z.infer<typeof modelRouteExternalEffectSchema>;
+export type ModelRouteDataSensitivity = z.infer<typeof modelRouteDataSensitivitySchema>;
+export type ModelRouteEvidenceRequirement = z.infer<typeof modelRouteEvidenceRequirementSchema>;
+export type ModelRouteRecommendationLane = z.infer<typeof modelRouteRecommendationLaneSchema>;
+export type ModelRouteCandidate = z.infer<typeof modelRouteCandidateSchema>;
+export type ModelRouteRecommendationInput = z.infer<typeof modelRouteRecommendationInputSchema>;
+export type ModelRouteCandidateAssessment = z.infer<typeof modelRouteCandidateAssessmentSchema>;
+export type ModelRouteRecommendation = z.infer<typeof modelRouteRecommendationSchema>;
 export type UpdateModelExecutionPolicy = z.infer<typeof updateModelExecutionPolicySchema>;

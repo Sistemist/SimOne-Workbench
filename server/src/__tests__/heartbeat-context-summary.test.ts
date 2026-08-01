@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildHeartbeatRouteRecommendation,
   buildPaperclipTaskMarkdown,
   buildVentureContextProjectionRouteMetadata,
   mergeCoalescedContextSnapshot,
@@ -185,6 +186,74 @@ describe("buildPaperclipTaskMarkdown", () => {
       constitutionRevisionId: "22222222-2222-4222-8222-222222222222",
       ventureStateRevisionId: "33333333-3333-4333-8333-333333333333",
     });
+  });
+
+  it("records a conservative shadow recommendation without changing the configured route", () => {
+    const recommendation = buildHeartbeatRouteRecommendation({
+      issue: {
+        title: "Decide the customer launch promise",
+        priority: "medium",
+        workMode: "planning",
+      },
+      contextProjection: {
+        id: "11111111-1111-4111-8111-111111111111",
+        version: 4,
+        constitutionRevisionId: "22222222-2222-4222-8222-222222222222",
+        ventureStateRevisionId: "33333333-3333-4333-8333-333333333333",
+        creationReason: "Founder committed the next move.",
+        createdAt: "2026-08-01T10:00:00.000Z",
+        content: {
+          purpose: "Keep the founder in control.",
+          nonNegotiables: [],
+          approvalBoundaries: ["Founder approval is required before public commitments."],
+          ventureSummary: "Sysdom AI",
+          engines: {
+            product: { summary: "Ready", freshness: "2026-08-01T10:00:00.000Z" },
+            customer: { summary: "Ready", freshness: "2026-08-01T10:00:00.000Z" },
+            cash: { summary: "Ready", freshness: "2026-08-01T10:00:00.000Z" },
+            skills: { summary: "Ready", freshness: "2026-08-01T10:00:00.000Z" },
+          },
+          activeConstraint: {
+            engine: "customer",
+            hypothesis: "The launch promise is not yet evidenced.",
+            confidence: "medium",
+            evidence: [],
+            decision: "accepted",
+            decisionNote: "Test before publishing.",
+            decidedByUserId: "user-1",
+            decidedAt: "2026-08-01T10:00:00.000Z",
+          },
+          nextMove: {
+            title: "Approve one launch promise.",
+            rationale: "Keep public claims bounded.",
+            engine: "customer",
+            approvalRequired: true,
+          },
+        },
+        sourceRefs: [{ kind: "founder_session", label: "Founder review" }],
+      },
+      provider: "openrouter",
+      model: "openai/gpt-oss-20b:free",
+      billingType: "free",
+      posture: "cost_conscious",
+    });
+
+    expect(recommendation).toMatchObject({
+      version: "sysdom_model_route_recommendation_v1",
+      mode: "shadow",
+      status: "blocked",
+      posture: "cost_conscious",
+      lane: "frontier",
+      riskLevel: "high",
+      selectedCandidate: null,
+      approvalGate: "founder_review_before_execution",
+      signals: {
+        activeEngine: "customer",
+        projectionVersion: 4,
+        approvalRequired: true,
+      },
+    });
+    expect(recommendation.reason).toContain("no permitted exact model");
   });
 });
 

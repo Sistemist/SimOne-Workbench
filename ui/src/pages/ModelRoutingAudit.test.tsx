@@ -98,6 +98,20 @@ function modelRouteDecision(overrides: Record<string, unknown> = {}) {
       contextProjectionVersion: 4,
       constitutionRevisionId: "22222222-2222-4222-8222-222222222222",
       ventureStateRevisionId: "33333333-3333-4333-8333-333333333333",
+      routeRecommendation: {
+        version: "sysdom_model_route_recommendation_v1",
+        mode: "shadow",
+        policyVersion: "sysdom-auto-alpha-1",
+        status: "ready",
+        posture: "balanced",
+        lane: "workhorse",
+        riskLevel: "medium",
+        selectedCandidate: {
+          provider: "openrouter",
+          model: "openai/gpt-oss-20b:free",
+        },
+        reason: "Sysdom Auto recommends a bounded workhorse route for this reversible analysis.",
+      },
       executionSafety: {
         version: "sysdom_model_execution_safety_v1",
         source: "heartbeat_pre_dispatch",
@@ -257,6 +271,10 @@ describe("ModelRoutingAudit", () => {
     expect(text).toContain("Review before using this in a customer-facing output.");
     expect(text).toContain("Founder-approved venture context");
     expect(text).toContain("Context Projection v4 was pinned to this delegated run.");
+    expect(text).toContain("Sysdom Auto shadow recommendation");
+    expect(text).toContain("openrouter / openai/gpt-oss-20b:free");
+    expect(text).toContain("Shadow mode only—this recommendation did not change execution.");
+    expect(text).toContain("Policy sysdom-auto-alpha-1; posture balanced.");
     expect(mockModelRoutingApi.listDecisions).toHaveBeenCalledWith("company-1", { limit: 50 });
     expect(mockModelRoutingApi.listPolicies).toHaveBeenCalledWith("company-1");
     const runLink = container.querySelector<HTMLAnchorElement>('a[href="/agents/agent-1/runs/run-1"]');

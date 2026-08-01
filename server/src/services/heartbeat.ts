@@ -72,6 +72,7 @@ import { createLocalAgentJwt } from "../agent-auth-jwt.js";
 import { parseObject, asBoolean, asNumber, appendWithByteCap, MAX_EXCERPT_BYTES } from "../adapters/utils.js";
 import { costService } from "./costs.js";
 import { modelRouteDecisionService } from "./model-route-decisions.js";
+import { recommendModelRoute } from "./model-route-recommendation.js";
 import {
   assessModelExecutionSafety,
   modelExecutionReconciliationBlockMessage,
@@ -3304,6 +3305,84 @@ export function buildVentureContextProjectionRouteMetadata(
         ventureStateRevisionId: receipt.ventureStateRevisionId,
       }
     : {};
+}
+
+function routeRecommendationCriticality(priority: string | null | undefined) {
+  if (priority === "critical" || priority === "high" || priority === "low") return priority;
+  return "medium" as const;
+}
+
+function routeRecommendationPosture(value: unknown) {
+  if (value === "cost_conscious" || value === "quality_first") return value;
+  return "balanced" as const;
+}
+
+export function buildHeartbeatRouteRecommendation(input: {
+  issue: {
+    title: string;
+    priority: string;
+    workMode: string;
+  } | null;
+  contextProjection: VentureContextProjectionReceipt | null;
+  provider: string;
+  model: string;
+  billingType: "local" | "free" | "subscription_included" | "metered_api" | "unknown";
+  posture?: unknown;
+}) {
+  const approvalRequired =
+    input.contextProjection?.content.nextMove?.approvalRequired === true;
+  const taskClass = input.issue?.workMode === "planning"
+    ? "strategy"
+    : input.issue
+      ? "analysis"
+      : "triage";
+  return recommendModelRoute({
+    policyVersion: "sysdom-auto-alpha-1",
+    posture: routeRecommendationPosture(input.posture),
+    task: {
+      intent: input.issue
+        ? `Work on ${input.issue.title}`
+        : "Run the configured agent heartbeat.",
+      taskClass,
+      criticality: routeRecommendationCriticality(input.issue?.priority),
+      reversible: !approvalRequired,
+      externalEffects: [],
+      dataSensitivity: "internal",
+      evidenceRequirement: input.contextProjection?.sourceRefs.length
+        ? "provenance_required"
+        : "standard",
+      requiresTools: false,
+      requiresStructuredOutput: true,
+      approvalRequired,
+    },
+    simContext: input.contextProjection
+      ? {
+          projectionId: input.contextProjection.id,
+          projectionVersion: input.contextProjection.version,
+          constitutionRevisionId: input.contextProjection.constitutionRevisionId,
+          activeEngine: input.contextProjection.content.activeConstraint?.engine
+            ?? input.contextProjection.content.nextMove?.engine
+            ?? null,
+          activeConstraintDecision:
+            input.contextProjection.content.activeConstraint?.decision ?? null,
+          nextMoveApprovalRequired: approvalRequired,
+          approvalBoundaries: input.contextProjection.content.approvalBoundaries,
+        }
+      : null,
+    candidates: [{
+      provider: input.provider,
+      model: input.model,
+      lane: "workhorse",
+      billingType: input.billingType,
+      costRank: 1,
+      qualityRank: 1,
+      enabled: true,
+      supportsTools: true,
+      supportsStructuredOutput: true,
+      supportsConfidentialData: false,
+      supportsRestrictedData: false,
+    }],
+  });
 }
 
 // A positive liveness check means some process currently owns the PID.
@@ -9855,6 +9934,20 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         maxDailyRuns: heartbeatPolicy.maxDailyRuns,
         policy: routeDecisionRuntimeConfig.modelExecutionSafety,
       });
+      const routeRecommendation = buildHeartbeatRouteRecommendation({
+        issue: issueRef
+          ? {
+              title: issueRef.title,
+              priority: issueRef.priority,
+              workMode: issueRef.workMode,
+            }
+          : null,
+        contextProjection: ventureContextProjectionReceipt,
+        provider: routeDecisionProvider,
+        model: routeDecisionModel,
+        billingType: routeDecisionExecutionSafety.billingType,
+        posture: routeDecisionRuntimeConfig.modelRoutePosture,
+      });
       const routeDecisionModelProfile = modelProfileRunMetadata(modelProfileApplication);
       const routeDecisions = modelRouteDecisionService(db);
       const priorReconciliationBlock = await routeDecisions.findBlockingExecutionReconciliation(
@@ -9886,6 +9979,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
           wakeReason: readNonEmptyString(context.wakeReason) ?? null,
           ...buildVentureContextProjectionRouteMetadata(ventureContextProjectionReceipt),
           ...(routeDecisionModelProfile ? { modelProfile: routeDecisionModelProfile } : {}),
+          routeRecommendation,
           executionSafety: routeDecisionExecutionSafety,
           contextKeys: Object.keys(context).sort().slice(0, 50),
         },

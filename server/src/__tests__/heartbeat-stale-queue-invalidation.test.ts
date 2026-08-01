@@ -470,6 +470,15 @@ describeEmbeddedPostgres("heartbeat stale queued-run invalidation", () => {
       outputConfidence: "medium",
       outputSummary: "Route ledger test run.",
     });
+    expect(decisions[0]!.metadata).toMatchObject({
+      routeRecommendation: {
+        version: "sysdom_model_route_recommendation_v1",
+        mode: "shadow",
+        status: "blocked",
+        lane: "workhorse",
+        selectedCandidate: null,
+      },
+    });
 
     const costs = await db
       .select()
