@@ -155,6 +155,43 @@ describe("SimCoach", () => {
     });
   });
 
+  it("distinguishes a recoverable Coach load failure from legitimate empty memory", async () => {
+    mockFounderCockpitApi.getCoach
+      .mockRejectedValueOnce(new Error("coach snapshot unavailable"))
+      .mockResolvedValue({
+        guidance: null,
+        currentMemory: [],
+        supersededMemory: [],
+        activeCycle: null,
+        latestCycle: null,
+      });
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderSimCoach(container);
+    await flushReact();
+
+    expect(container.textContent).toContain("Canonical venture memory could not load.");
+    expect(container.textContent).toContain("Current canonical memory is temporarily unavailable.");
+    expect(container.textContent).not.toContain("Canonical venture memory is not ready yet.");
+    expect(container.textContent).not.toContain("No current canonical memory.");
+
+    const retry = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Retry"),
+    );
+    expect(retry).toBeDefined();
+    await act(async () => {
+      retry!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    await flushReact();
+
+    expect(container.textContent).toContain("Canonical venture memory is not ready yet.");
+    expect(container.textContent).toContain("No current canonical memory.");
+    expect(mockFounderCockpitApi.getCoach).toHaveBeenCalledTimes(2);
+
+    await act(async () => root.unmount());
+  });
+
   it("turns canonical venture state into one bounded action and separates current from superseded memory", async () => {
     const coachSnapshotV2 = {
       guidance: {

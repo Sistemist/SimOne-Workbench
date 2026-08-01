@@ -593,7 +593,12 @@ export function SimCoach() {
     queryKey: queryKeys.plugins.all,
     queryFn: () => pluginsApi.list(),
   });
-  const { data: coachSnapshot, isLoading: coachLoading } = useQuery({
+  const {
+    data: coachSnapshot,
+    isLoading: coachLoading,
+    error: coachError,
+    refetch: refetchCoach,
+  } = useQuery({
     queryKey: queryKeys.founderCockpit.coach(companyId ?? "__none__"),
     queryFn: () => founderCockpitApi.getCoach(companyId!),
     enabled: Boolean(companyId),
@@ -959,6 +964,23 @@ export function SimCoach() {
           </div>
           {coachLoading ? (
             <p className="mt-4 text-sm text-muted-foreground">Loading canonical venture memory...</p>
+          ) : coachError ? (
+            <div className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 p-4">
+              <h2 className="text-base font-semibold text-foreground">
+                Canonical venture memory could not load.
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                {coachError instanceof Error ? coachError.message : "Try the request again."}
+              </p>
+              <Button
+                className="mt-3 h-8"
+                size="sm"
+                variant="outline"
+                onClick={() => void refetchCoach()}
+              >
+                Retry
+              </Button>
+            </div>
           ) : coachSnapshot?.guidance ? (
             <>
               <h2 className="mt-4 text-xl font-semibold text-foreground">
@@ -1045,7 +1067,11 @@ export function SimCoach() {
           </div>
           <div className="mt-4">
             <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Current</div>
-            {coachSnapshot?.currentMemory.length ? (
+            {coachError ? (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Current canonical memory is temporarily unavailable.
+              </p>
+            ) : coachSnapshot?.currentMemory.length ? (
               <div className="mt-2 grid gap-2">
                 {coachSnapshot.currentMemory.map((entry) => (
                   <div key={entry.id} className="rounded-md border border-emerald-500/20 bg-emerald-500/5 p-3">
@@ -1066,7 +1092,11 @@ export function SimCoach() {
           </div>
           <div className="mt-5 border-t border-border pt-4">
             <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Superseded</div>
-            {coachSnapshot?.supersededMemory.length ? (
+            {coachError ? (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Revision history is temporarily unavailable.
+              </p>
+            ) : coachSnapshot?.supersededMemory.length ? (
               <div className="mt-2 grid gap-2">
                 {coachSnapshot.supersededMemory.slice(0, 4).map((entry) => (
                   <div key={entry.id} className="border-l-2 border-border pl-3">

@@ -364,8 +364,8 @@ export function ventureOperatingStateService(db: Db) {
       const activeConstraint = projection?.content.activeConstraint ?? state.content.activeConstraint;
       const nextMove = projection?.content.nextMove ?? state.content.nextMove;
       const promotedLearning =
-        latestCycle?.compoundOutput?.learning
-        ?? state.content.learnings.at(-1)
+        state.content.learnings.at(-1)
+        ?? latestCycle?.compoundOutput?.learning
         ?? null;
       const nextAction = activeCycle
         ? {

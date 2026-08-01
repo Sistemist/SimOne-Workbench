@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import type { ReactNode } from "react";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { flushSync } from "react-dom";
@@ -28,6 +29,10 @@ vi.mock("@/context/CompanyContext", () => ({
 
 vi.mock("@/api/founderCockpit", () => ({
   founderCockpitApi: mockFounderCockpitApi,
+}));
+
+vi.mock("@/lib/router", () => ({
+  Link: ({ to, children }: { to: string; children?: ReactNode }) => <a href={to}>{children}</a>,
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -201,6 +206,50 @@ const projection = {
   supersededAt: null,
 };
 
+const snapshot = {
+  company: { id: "company-1", name: "Sysdom AI", updatedAt: "2026-07-31T20:00:00.000Z" },
+  constitution,
+  ventureState: state,
+  contextProjection: projection,
+  approvals: { pending: 2 },
+  work: { active: 4, blocked: 1, completed: 8 },
+  freshness: { projectedAt: "2026-07-31T20:02:00.000Z", sources: projection.sourceRefs },
+  activeCycle: null,
+  latestCycle: null,
+};
+
+const completedCycle = {
+  id: "cycle-1",
+  companyId: "company-1",
+  status: "completed",
+  phase: "complete",
+  constitutionRevisionId: constitution.id,
+  startingStateRevisionId: null,
+  currentStateRevisionId: state.id,
+  contextProjectionId: "consumed-projection-1",
+  startReason: "Run one deliberate founder-triggered SIM Cycle.",
+  mapOutput: {
+    ventureStateRevisionId: "state-1",
+    completedAt: "2026-07-31T19:30:00.000Z",
+  },
+  diagnoseOutput: null,
+  leverageOutput: null,
+  compoundOutput: {
+    outcome: "The founder completed the first operating loop.",
+    evidence: [],
+    learning: "Keep the next action visible across every handoff.",
+    promotedStateRevisionId: state.id,
+    completedAt: "2026-07-31T20:00:00.000Z",
+  },
+  startedByUserId: "founder-1",
+  pausedReason: null,
+  pausedAt: null,
+  resumedAt: null,
+  completedAt: "2026-07-31T20:00:00.000Z",
+  createdAt: "2026-07-31T19:00:00.000Z",
+  updatedAt: "2026-07-31T20:00:00.000Z",
+};
+
 async function flushReact() {
   await act(async () => {
     for (let index = 0; index < 5; index += 1) await Promise.resolve();
@@ -233,15 +282,7 @@ function renderPage() {
 
 describe("FounderCockpit", () => {
   beforeEach(() => {
-    mockFounderCockpitApi.get.mockResolvedValue({
-      company: { id: "company-1", name: "Sysdom AI", updatedAt: "2026-07-31T20:00:00.000Z" },
-      constitution,
-      ventureState: state,
-      contextProjection: projection,
-      approvals: { pending: 2 },
-      work: { active: 4, blocked: 1, completed: 8 },
-      freshness: { projectedAt: "2026-07-31T20:02:00.000Z", sources: projection.sourceRefs },
-    });
+    mockFounderCockpitApi.get.mockResolvedValue(snapshot);
     mockFounderCockpitApi.constitutionRevisions.mockResolvedValue([constitution]);
     mockFounderCockpitApi.stateRevisions.mockResolvedValue([state, previousState]);
     mockFounderCockpitApi.createContextProjection.mockResolvedValue(projection);
@@ -258,6 +299,8 @@ describe("FounderCockpit", () => {
 
     const text = container.textContent ?? "";
     expect(text).toContain("Founder control surface");
+    expect(text).toContain("Founder practice path");
+    expect(text).toContain("Start the next guided cycle");
     expect(text).toContain("Constitution v2");
     expect(text).toContain("State v3");
     expect(text).toContain("4Active work");
@@ -330,6 +373,61 @@ describe("FounderCockpit", () => {
     expect(container.textContent).toContain(
       "The current venture state remains available, but revision comparison is temporarily unavailable.",
     );
+
+    await act(async () => root.unmount());
+  });
+
+  it("recovers a failed first load into an ordered empty-state practice path", async () => {
+    mockFounderCockpitApi.get
+      .mockRejectedValueOnce(new Error("snapshot unavailable"))
+      .mockResolvedValue({
+        ...snapshot,
+        constitution: null,
+        ventureState: null,
+        contextProjection: null,
+        activeCycle: null,
+        latestCycle: null,
+      });
+    mockFounderCockpitApi.constitutionRevisions.mockResolvedValue([]);
+    mockFounderCockpitApi.stateRevisions.mockResolvedValue([]);
+
+    const { container, root } = renderPage();
+    await waitForText(container, "The Founder Cockpit could not load.");
+
+    expect(container.textContent).not.toContain("Draft and activate the Constitution");
+    const retry = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Retry"),
+    );
+    expect(retry).toBeDefined();
+
+    await act(async () => {
+      retry!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    await waitForText(container, "Draft the Constitution");
+
+    const text = container.textContent ?? "";
+    expect(text.indexOf("Govern")).toBeLessThan(text.indexOf("Map"));
+    expect(text.indexOf("Map")).toBeLessThan(text.indexOf("Run one cycle"));
+    expect(text.indexOf("Run one cycle")).toBeLessThan(text.indexOf("Reflect"));
+    expect(text).toContain("You trigger every gate.");
+    expect(mockFounderCockpitApi.get).toHaveBeenCalledTimes(2);
+
+    await act(async () => root.unmount());
+  });
+
+  it("hands a completed guided cycle directly to SIM Coach", async () => {
+    mockFounderCockpitApi.get.mockResolvedValue({
+      ...snapshot,
+      latestCycle: completedCycle,
+    });
+
+    const { container, root } = renderPage();
+    await waitForText(container, "Review in SIM Coach");
+
+    expect(container.textContent).toContain("MAP → DIAGNOSE → LEVERAGE → COMPOUND complete");
+    expect(container.textContent).toContain("Open SIM Coach");
+    const coachLinks = Array.from(container.querySelectorAll<HTMLAnchorElement>('a[href="/sim-coach"]'));
+    expect(coachLinks).toHaveLength(2);
 
     await act(async () => root.unmount());
   });

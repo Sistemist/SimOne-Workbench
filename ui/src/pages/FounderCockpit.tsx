@@ -13,6 +13,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import type {
+  SimCycle,
   VentureStateRevision,
   VentureConstitutionContent,
   VentureConstitutionRevision,
@@ -28,6 +29,7 @@ import { GuidedSimCycle } from "@/components/GuidedSimCycle";
 import { useBreadcrumbs } from "@/context/BreadcrumbContext";
 import { useCompany } from "@/context/CompanyContext";
 import { queryKeys } from "@/lib/queryKeys";
+import { Link } from "@/lib/router";
 
 const ENGINE_LABELS = {
   product: "Product",
@@ -144,6 +146,121 @@ function Metric({
       </div>
       <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
     </div>
+  );
+}
+
+function FounderPracticePath({
+  activeRevision,
+  currentDraft,
+  state,
+  activeCycle,
+  latestCycle,
+}: {
+  activeRevision: VentureConstitutionRevision | null;
+  currentDraft: VentureConstitutionRevision | null;
+  state: VentureStateRevision | null;
+  activeCycle: SimCycle | null;
+  latestCycle: SimCycle | null;
+}) {
+  const completedCycle = latestCycle?.status === "completed";
+  const currentStep = !activeRevision ? 0 : !state ? 1 : !completedCycle ? 2 : 3;
+  const steps = [
+    {
+      label: "Govern",
+      detail: activeRevision
+        ? `Constitution v${activeRevision.version} active`
+        : currentDraft
+          ? `Draft v${currentDraft.version} needs approval`
+          : "Draft and activate the Constitution",
+    },
+    {
+      label: "Map",
+      detail: state ? `Canonical State v${state.version}` : "Record the current venture truth",
+    },
+    {
+      label: "Run one cycle",
+      detail: completedCycle
+        ? "MAP → DIAGNOSE → LEVERAGE → COMPOUND complete"
+        : activeCycle
+          ? `${activeCycle.status === "paused" ? "Paused" : "Active"} in ${activeCycle.phase.toUpperCase()}`
+          : "Founder-triggered, never scheduled",
+    },
+    {
+      label: "Reflect",
+      detail: completedCycle ? "SIM Coach is ready" : "Promote one useful learning",
+    },
+  ];
+  const action = !activeRevision
+    ? {
+        label: currentDraft ? "Review and activate draft" : "Draft the Constitution",
+        href: currentDraft ? "#constitution-history" : "#venture-constitution",
+        route: false,
+      }
+    : activeCycle
+      ? {
+          label: `${activeCycle.status === "paused" ? "Resume" : "Continue"} ${activeCycle.phase.toUpperCase()}`,
+          href: "#guided-sim-cycle",
+          route: false,
+        }
+      : completedCycle
+        ? { label: "Open SIM Coach", href: "/sim-coach", route: true }
+        : {
+            label: state ? "Start the next guided cycle" : "Start the first guided cycle",
+            href: "#guided-sim-cycle",
+            route: false,
+          };
+
+  return (
+    <Card className="border-primary/30 bg-primary/[0.03]">
+      <CardHeader className="gap-3">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <CardTitle className="text-base">Founder practice path</CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Govern → map → run one deliberate SIM Cycle → reflect. You trigger every gate.
+            </p>
+          </div>
+          <Button asChild size="sm">
+            {action.route ? (
+              <Link to={action.href}>
+                {action.label}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : (
+              <a href={action.href}>
+                {action.label}
+                <ArrowRight className="h-4 w-4" />
+              </a>
+            )}
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <ol className="grid gap-3 md:grid-cols-4">
+          {steps.map((step, index) => {
+            const complete = index < currentStep;
+            const active = index === currentStep;
+            return (
+              <li
+                key={step.label}
+                aria-current={active ? "step" : undefined}
+                className={`border-l-2 pl-3 ${complete ? "border-emerald-500" : active ? "border-primary" : "border-border"}`}
+              >
+                <div className="flex items-center gap-2">
+                  {complete ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                  ) : (
+                    <span className="text-xs font-semibold text-muted-foreground">{index + 1}</span>
+                  )}
+                  <span className="text-sm font-medium">{step.label}</span>
+                </div>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">{step.detail}</p>
+              </li>
+            );
+          })}
+        </ol>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -271,7 +388,7 @@ function RevisionHistory({
   const sortedRevisions = [...revisions].sort((left, right) => right.version - left.version);
 
   return (
-    <Card>
+    <Card id="constitution-history">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <FileClock className="h-4 w-4" />
@@ -643,11 +760,20 @@ export function FounderCockpit() {
         <Card className="border-destructive/40">
           <CardContent className="flex items-start gap-3 py-8">
             <CircleAlert className="mt-0.5 h-5 w-5 text-destructive" />
-            <div>
+            <div className="flex-1">
               <p className="font-medium">The Founder Cockpit could not load.</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {snapshotQuery.error instanceof Error ? snapshotQuery.error.message : "Try again."}
               </p>
+              <Button
+                className="mt-4"
+                size="sm"
+                variant="outline"
+                onClick={() => void snapshotQuery.refetch()}
+              >
+                <RefreshCw className="h-4 w-4" />
+                Retry
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -689,6 +815,14 @@ export function FounderCockpit() {
         <Metric label="Pending approvals" value={snapshot.approvals.pending} tone="warning" />
       </section>
 
+      <FounderPracticePath
+        activeRevision={activeRevision}
+        currentDraft={currentDraft}
+        state={state}
+        activeCycle={snapshot.activeCycle}
+        latestCycle={snapshot.latestCycle}
+      />
+
       {!activeRevision ? (
         <div className="flex items-start gap-3 border border-amber-500/40 bg-amber-500/5 px-4 py-3 text-sm">
           <ShieldCheck className="mt-0.5 h-5 w-5 text-amber-600" />
@@ -701,7 +835,7 @@ export function FounderCockpit() {
         </div>
       ) : null}
 
-      <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+      <section id="venture-constitution" className="grid scroll-mt-6 gap-4 lg:grid-cols-[1.2fr_0.8fr]">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
@@ -773,6 +907,13 @@ export function FounderCockpit() {
                 Refresh projection
               </Button>
             ) : null}
+            {projectionMutation.error ? (
+              <p className="text-sm text-destructive">
+                {projectionMutation.error instanceof Error
+                  ? projectionMutation.error.message
+                  : "Could not refresh the context projection."}
+              </p>
+            ) : null}
           </CardContent>
         </Card>
       </section>
@@ -796,12 +937,14 @@ export function FounderCockpit() {
         />
       )}
 
-      <GuidedSimCycle
-        companyId={selectedCompanyId}
-        cycle={snapshot.activeCycle}
-        currentState={state}
-        constitutionActive={Boolean(activeRevision)}
-      />
+      <section id="guided-sim-cycle" className="scroll-mt-6">
+        <GuidedSimCycle
+          companyId={selectedCompanyId}
+          cycle={snapshot.activeCycle}
+          currentState={state}
+          constitutionActive={Boolean(activeRevision)}
+        />
+      </section>
 
       {!snapshot.activeCycle && snapshot.latestCycle?.status === "completed" ? (
         <Card className="border-emerald-500/30">
@@ -829,6 +972,14 @@ export function FounderCockpit() {
               {snapshot.latestCycle.contextProjectionId?.slice(0, 8) ?? "not recorded"} · promoted state{" "}
               {snapshot.latestCycle.compoundOutput?.promotedStateRevisionId.slice(0, 8) ?? "not recorded"}
             </p>
+            <div className="md:col-span-2">
+              <Button asChild size="sm">
+                <Link to="/sim-coach">
+                  Review in SIM Coach
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : null}

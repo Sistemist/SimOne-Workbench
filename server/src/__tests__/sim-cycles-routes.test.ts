@@ -21,6 +21,7 @@ import {
 } from "./helpers/embedded-postgres.js";
 import { errorHandler } from "../middleware/index.js";
 import { simCycleRoutes } from "../routes/sim-cycles.js";
+import { ventureOperatingStateRoutes } from "../routes/venture-operating-state.js";
 
 const embeddedPostgresSupport = await getEmbeddedPostgresTestSupport();
 const describeEmbeddedPostgres = embeddedPostgresSupport.supported ? describe : describe.skip;
@@ -48,6 +49,7 @@ function createApp(db: ReturnType<typeof createDb>, actor: Express.Request["acto
     next();
   });
   app.use("/api", simCycleRoutes(db));
+  app.use("/api", ventureOperatingStateRoutes(db));
   app.use(errorHandler);
   return app;
 }
@@ -382,6 +384,30 @@ describeEmbeddedPostgres("guided SIM Cycle routes", () => {
 
     const active = await request(app).get(`/api/companies/${companyId}/sim-cycles/active`);
     expect(active.body).toBeNull();
+
+    const coachAfterCycle = await request(app).get(`/api/companies/${companyId}/founder-coach`);
+    expect(coachAfterCycle.body.guidance.promotedLearning).toBe(
+      "Ask for evidence examples inside each engine field before diagnosis.",
+    );
+    const currentProjectionId = coachAfterCycle.body.currentMemory.find(
+      (entry: { kind: string }) => entry.kind === "context_projection",
+    )?.id as string;
+    const coachInsight =
+      "Keep the founder's next action visible when the completed cycle hands off to Coach.";
+    const promoted = await request(app)
+      .post(`/api/companies/${companyId}/founder-coach/memory-promotions`)
+      .send({
+        expectedStateRevisionId: currentState.id,
+        expectedContextProjectionId: currentProjectionId,
+        insight: coachInsight,
+      });
+    expect(promoted.status).toBe(201);
+
+    const coachAfterPromotion = await request(app).get(
+      `/api/companies/${companyId}/founder-coach`,
+    );
+    expect(coachAfterPromotion.body.guidance.promotedLearning).toBe(coachInsight);
+    expect(coachAfterPromotion.body.guidance.stateVersion).toBe(currentState.version + 1);
   });
 
   it("enforces company access on the entire cycle path", async () => {
