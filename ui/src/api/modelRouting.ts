@@ -100,6 +100,46 @@ export interface ModelExecutionPolicyListResponse {
   items: ModelExecutionPolicySnapshot[];
 }
 
+export interface ModelPortfolioCandidate {
+  provider: string;
+  model: string;
+  lane: string;
+  billingType: ModelExecutionBillingType;
+  costRank: number;
+  qualityRank: number;
+  enabled: boolean;
+  evidence: {
+    sourceKind: string;
+    sourceLabel: string;
+    sourceUrl: string | null;
+    verifiedAt: string;
+    expiresAt: string;
+  } | null;
+}
+
+export interface ModelPortfolioRevision {
+  id: string;
+  companyId: string;
+  version: number;
+  status: "draft" | "active" | "superseded";
+  candidates: ModelPortfolioCandidate[];
+  changeReason: string;
+  sourceRefs: Array<{
+    kind: string;
+    label: string;
+    url: string | null;
+    capturedAt: string;
+  }>;
+  restoredFromRevisionId: string | null;
+  createdByAgentId: string | null;
+  createdByUserId: string | null;
+  activatedByUserId: string | null;
+  approvalNote: string | null;
+  activatedAt: string | null;
+  supersededAt: string | null;
+  createdAt: string;
+}
+
 export const modelRoutingApi = {
   listDecisions: (companyId: string, options: { limit?: number } = {}) => {
     const params = new URLSearchParams();
@@ -129,4 +169,8 @@ export const modelRoutingApi = {
     `/companies/${companyId}/model-execution-policies/${agentId}`,
     input,
   ),
+  listPortfolioRevisions: (companyId: string) =>
+    api.get<ModelPortfolioRevision[]>(
+      `/companies/${companyId}/model-portfolios/revisions`,
+    ),
 };

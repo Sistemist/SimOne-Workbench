@@ -19,6 +19,7 @@ import {
   type IssueExecutionMonitorClearReason,
   type IssueExecutionMonitorPolicy,
   type IssueExecutionMonitorRecoveryPolicy,
+  type ModelRouteCandidate,
   type ModelProfileKey,
   type RoutineRevisionSnapshotV1,
   type RunLivenessState,
@@ -73,6 +74,7 @@ import { parseObject, asBoolean, asNumber, appendWithByteCap, MAX_EXCERPT_BYTES 
 import { costService } from "./costs.js";
 import { modelRouteDecisionService } from "./model-route-decisions.js";
 import { recommendModelRoute } from "./model-route-recommendation.js";
+import { modelPortfolioService } from "./model-portfolio.js";
 import {
   assessModelExecutionSafety,
   modelExecutionReconciliationBlockMessage,
@@ -3324,9 +3326,12 @@ export function buildHeartbeatRouteRecommendation(input: {
     workMode: string;
   } | null;
   contextProjection: VentureContextProjectionReceipt | null;
-  provider: string;
-  model: string;
-  billingType: "local" | "free" | "subscription_included" | "metered_api" | "unknown";
+  evaluatedAt: string;
+  portfolio: {
+    id: string;
+    version: number;
+    candidates: ModelRouteCandidate[];
+  } | null;
   posture?: unknown;
 }) {
   const approvalRequired =
@@ -3338,7 +3343,14 @@ export function buildHeartbeatRouteRecommendation(input: {
       : "triage";
   return recommendModelRoute({
     policyVersion: "sysdom-auto-alpha-1",
+    evaluatedAt: input.evaluatedAt,
     posture: routeRecommendationPosture(input.posture),
+    portfolio: input.portfolio
+      ? {
+          revisionId: input.portfolio.id,
+          version: input.portfolio.version,
+        }
+      : null,
     task: {
       intent: input.issue
         ? `Work on ${input.issue.title}`
@@ -3369,19 +3381,7 @@ export function buildHeartbeatRouteRecommendation(input: {
           approvalBoundaries: input.contextProjection.content.approvalBoundaries,
         }
       : null,
-    candidates: [{
-      provider: input.provider,
-      model: input.model,
-      lane: "workhorse",
-      billingType: input.billingType,
-      costRank: 1,
-      qualityRank: 1,
-      enabled: true,
-      supportsTools: true,
-      supportsStructuredOutput: true,
-      supportsConfidentialData: false,
-      supportsRestrictedData: false,
-    }],
+    candidates: input.portfolio?.candidates ?? [],
   });
 }
 
@@ -9934,6 +9934,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         maxDailyRuns: heartbeatPolicy.maxDailyRuns,
         policy: routeDecisionRuntimeConfig.modelExecutionSafety,
       });
+      const activeModelPortfolio = await modelPortfolioService(db).current(agent.companyId);
       const routeRecommendation = buildHeartbeatRouteRecommendation({
         issue: issueRef
           ? {
@@ -9943,9 +9944,8 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
             }
           : null,
         contextProjection: ventureContextProjectionReceipt,
-        provider: routeDecisionProvider,
-        model: routeDecisionModel,
-        billingType: routeDecisionExecutionSafety.billingType,
+        evaluatedAt: new Date().toISOString(),
+        portfolio: activeModelPortfolio,
         posture: routeDecisionRuntimeConfig.modelRoutePosture,
       });
       const routeDecisionModelProfile = modelProfileRunMetadata(modelProfileApplication);

@@ -12,6 +12,7 @@ const mockSetBreadcrumbs = vi.hoisted(() => vi.fn());
 const mockModelRoutingApi = vi.hoisted(() => ({
   listDecisions: vi.fn(),
   listPolicies: vi.fn(),
+  listPortfolioRevisions: vi.fn(),
   updatePolicy: vi.fn(),
   updateReview: vi.fn(),
 }));
@@ -104,11 +105,15 @@ function modelRouteDecision(overrides: Record<string, unknown> = {}) {
         policyVersion: "sysdom-auto-alpha-1",
         status: "ready",
         posture: "balanced",
+        portfolio: {
+          revisionId: "44444444-4444-4444-8444-444444444444",
+          version: 2,
+        },
         lane: "workhorse",
         riskLevel: "medium",
         selectedCandidate: {
-          provider: "openrouter",
-          model: "openai/gpt-oss-20b:free",
+          provider: "synthetic-provider",
+          model: "synthetic/workhorse-v1",
         },
         reason: "Sysdom Auto recommends a bounded workhorse route for this reversible analysis.",
       },
@@ -229,6 +234,40 @@ describe("ModelRoutingAudit", () => {
     mockModelRoutingApi.listPolicies.mockResolvedValue({
       items: [modelExecutionPolicy()],
     });
+    mockModelRoutingApi.listPortfolioRevisions.mockResolvedValue([
+      {
+        id: "44444444-4444-4444-8444-444444444444",
+        companyId: "company-1",
+        version: 2,
+        status: "active",
+        candidates: [{
+          provider: "openrouter",
+          model: "openai/gpt-oss-20b:free",
+          lane: "workhorse",
+          billingType: "free",
+          costRank: 1,
+          qualityRank: 1,
+          enabled: true,
+          evidence: {
+            sourceKind: "manual_review",
+            sourceLabel: "Synthetic test catalog",
+            sourceUrl: null,
+            verifiedAt: "2026-07-31T00:00:00.000Z",
+            expiresAt: "2026-08-31T00:00:00.000Z",
+          },
+        }],
+        changeReason: "Synthetic portfolio for UI review.",
+        sourceRefs: [],
+        restoredFromRevisionId: null,
+        createdByAgentId: null,
+        createdByUserId: "founder-1",
+        activatedByUserId: "founder-1",
+        approvalNote: "Approved synthetic revision.",
+        activatedAt: "2026-08-01T00:00:00.000Z",
+        supersededAt: null,
+        createdAt: "2026-08-01T00:00:00.000Z",
+      },
+    ]);
   });
 
   afterEach(() => {
@@ -272,11 +311,16 @@ describe("ModelRoutingAudit", () => {
     expect(text).toContain("Founder-approved venture context");
     expect(text).toContain("Context Projection v4 was pinned to this delegated run.");
     expect(text).toContain("Sysdom Auto shadow recommendation");
-    expect(text).toContain("openrouter / openai/gpt-oss-20b:free");
+    expect(text).toContain("synthetic-provider / synthetic/workhorse-v1");
     expect(text).toContain("Shadow mode only—this recommendation did not change execution.");
-    expect(text).toContain("Policy sysdom-auto-alpha-1; posture balanced.");
+    expect(text).toContain("Policy sysdom-auto-alpha-1; posture balanced; portfolio v2.");
+    expect(text).toContain("Allowed-model portfolio");
+    expect(text).toContain("Active v2");
+    expect(text).toContain("1 permitted candidate");
+    expect(text).toContain("Synthetic portfolio for UI review.");
     expect(mockModelRoutingApi.listDecisions).toHaveBeenCalledWith("company-1", { limit: 50 });
     expect(mockModelRoutingApi.listPolicies).toHaveBeenCalledWith("company-1");
+    expect(mockModelRoutingApi.listPortfolioRevisions).toHaveBeenCalledWith("company-1");
     const runLink = container.querySelector<HTMLAnchorElement>('a[href="/agents/agent-1/runs/run-1"]');
     expect(runLink).toBeTruthy();
     expect(runLink?.textContent).toContain("Run linked");

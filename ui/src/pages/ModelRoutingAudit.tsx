@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BrainCircuit, CheckCircle2, Clock3, Coins, ListFilter, ShieldCheck, TriangleAlert, XCircle } from "lucide-react";
 import { Link } from "react-router-dom";
-import { modelRoutingApi, type ModelRouteDecisionAuditRow } from "../api/modelRouting";
+import {
+  modelRoutingApi,
+  type ModelPortfolioRevision,
+  type ModelRouteDecisionAuditRow,
+} from "../api/modelRouting";
 import { ModelExecutionPolicyEditor } from "../components/model-routing/ModelExecutionPolicyEditor";
 import { EmptyState } from "../components/EmptyState";
 import { PageSkeleton } from "../components/PageSkeleton";
@@ -69,6 +73,10 @@ interface RouteRecommendationEvidence {
   selectedCandidate: {
     provider: string;
     model: string;
+  } | null;
+  portfolio: {
+    revisionId: string;
+    version: number;
   } | null;
 }
 
@@ -191,6 +199,17 @@ function routeRecommendationEvidence(
       ? evidence.reason
       : "No recommendation reason was recorded.",
     selectedCandidate,
+    portfolio:
+      evidence.portfolio
+      && typeof evidence.portfolio === "object"
+      && !Array.isArray(evidence.portfolio)
+      && typeof (evidence.portfolio as Record<string, unknown>).revisionId === "string"
+      && typeof (evidence.portfolio as Record<string, unknown>).version === "number"
+        ? {
+            revisionId: (evidence.portfolio as Record<string, unknown>).revisionId as string,
+            version: (evidence.portfolio as Record<string, unknown>).version as number,
+          }
+        : null,
   };
 }
 
@@ -221,9 +240,90 @@ function RouteRecommendationCard({
       <p className="mt-2 text-sm font-medium text-foreground">{recommendation}</p>
       <p className="mt-1 text-sm leading-6 text-muted-foreground">{evidence.reason}</p>
       <p className="mt-2 text-xs text-muted-foreground">
-        Shadow mode only—this recommendation did not change execution. Policy {evidence.policyVersion}; posture {humanize(evidence.posture)}.
+        Shadow mode only—this recommendation did not change execution. Policy {evidence.policyVersion}; posture {humanize(evidence.posture)};{" "}
+        {evidence.portfolio ? `portfolio v${evidence.portfolio.version}` : "no active portfolio"}.
       </p>
     </section>
+  );
+}
+
+function ModelPortfolioOverview({
+  revisions,
+}: {
+  revisions: ModelPortfolioRevision[];
+}) {
+  const active = revisions.find((revision) => revision.status === "active") ?? null;
+  return (
+    <Card>
+      <CardHeader className="space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="text-base">Allowed-model portfolio</CardTitle>
+          <Badge variant={active ? "outline" : "destructive"}>
+            {active ? `Active v${active.version}` : "No active portfolio"}
+          </Badge>
+        </div>
+        <p className="text-sm leading-6 text-muted-foreground">
+          Sysdom Auto considers only exact candidates in the founder-approved active revision.
+          Missing, stale, or unpriced candidates fail closed; portfolio changes never silently become defaults.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {active ? (
+          <div className="space-y-3 rounded-md border border-border bg-muted/20 p-3">
+            <div>
+              <div className="text-sm font-medium">
+                {active.candidates.length} permitted {active.candidates.length === 1 ? "candidate" : "candidates"}
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">{active.changeReason}</div>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {active.candidates.map((candidate) => (
+                <div
+                  key={`${candidate.provider}/${candidate.model}`}
+                  className="rounded border border-border bg-background px-3 py-2"
+                >
+                  <div className="text-sm font-medium">{candidate.provider} / {candidate.model}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {titleCase(candidate.lane)} · {humanize(candidate.billingType)}
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {candidate.evidence
+                      ? `Evidence expires ${new Date(candidate.evidence.expiresAt).toLocaleDateString()}`
+                      : "No provenance evidence"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-3 text-sm">
+            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+            <div>
+              <div className="font-medium text-foreground">Shadow recommendations remain blocked</div>
+              <div className="mt-1 text-muted-foreground">
+                Research exact candidates, capture fresh pricing and capability provenance, then activate one reviewable revision.
+              </div>
+            </div>
+          </div>
+        )}
+        {revisions.length > 0 ? (
+          <div className="space-y-2">
+            <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Revision history
+            </div>
+            {revisions.map((revision) => (
+              <div key={revision.id} className="flex flex-wrap items-center gap-2 text-sm">
+                <Badge variant="outline">v{revision.version}</Badge>
+                <span className="font-medium">{titleCase(revision.status)}</span>
+                <span className="text-muted-foreground">
+                  {revision.candidates.length} candidates · {revision.changeReason}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -633,6 +733,12 @@ export function ModelRoutingAudit() {
     enabled: !!selectedCompanyId,
   });
 
+  const portfolioQuery = useQuery({
+    queryKey: queryKeys.modelPortfolioRevisions(companyId),
+    queryFn: () => modelRoutingApi.listPortfolioRevisions(companyId),
+    enabled: !!selectedCompanyId,
+  });
+
   const policyMutation = useMutation({
     mutationFn: ({
       agentId,
@@ -674,12 +780,12 @@ export function ModelRoutingAudit() {
     return <div className="text-sm text-muted-foreground">Select a company to inspect model routing.</div>;
   }
 
-  if (decisionsQuery.isLoading || policiesQuery.isLoading) {
+  if (decisionsQuery.isLoading || policiesQuery.isLoading || portfolioQuery.isLoading) {
     return <PageSkeleton />;
   }
 
-  if (decisionsQuery.error || policiesQuery.error) {
-    const loadError = decisionsQuery.error ?? policiesQuery.error;
+  if (decisionsQuery.error || policiesQuery.error || portfolioQuery.error) {
+    const loadError = decisionsQuery.error ?? policiesQuery.error ?? portfolioQuery.error;
     return (
       <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
         <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
@@ -737,6 +843,8 @@ export function ModelRoutingAudit() {
         savedPolicy={policyMutation.data ?? null}
         onSave={(agentId, input) => policyMutation.mutate({ agentId, input })}
       />
+
+      <ModelPortfolioOverview revisions={portfolioQuery.data ?? []} />
 
       {decisions.length === 0 ? (
         <EmptyState

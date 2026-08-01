@@ -558,6 +558,7 @@ export {
 export {
   createModelRouteDecisionSchema,
   modelRouteCandidateAssessmentSchema,
+  modelRouteCandidateEvidenceSchema,
   modelRouteCandidateSchema,
   modelRouteDataSensitivitySchema,
   modelRouteDecisionLaneSchema,
@@ -579,6 +580,7 @@ export {
   type ModelExecutionBillingTypeInput,
   type ModelRouteCandidate,
   type ModelRouteCandidateAssessment,
+  type ModelRouteCandidateEvidence,
   type ModelRouteDataSensitivity,
   type ModelRouteDecisionLane,
   type ModelRouteDecisionOutputArtifact,
@@ -595,6 +597,25 @@ export {
   type UpdateModelExecutionPolicy,
   type UpdateModelRouteDecisionReview,
 } from "./model-route-decision.js";
+
+export {
+  activateModelPortfolioRevisionSchema,
+  createModelPortfolioRevisionSchema,
+  modelPortfolioRevisionStatusSchema,
+  modelPortfolioSourceRefSchema,
+  modelRouteEngineBenchmarkFixtureSchema,
+  modelRouteEngineBenchmarkOutputSchema,
+  modelRouteEngineBenchmarkSuiteSchema,
+  restoreModelPortfolioRevisionSchema,
+  type ActivateModelPortfolioRevision,
+  type CreateModelPortfolioRevision,
+  type ModelPortfolioRevisionStatus,
+  type ModelPortfolioSourceRef,
+  type ModelRouteEngineBenchmarkFixture,
+  type ModelRouteEngineBenchmarkOutput,
+  type ModelRouteEngineBenchmarkSuite,
+  type RestoreModelPortfolioRevision,
+} from "./model-portfolio.js";
 
 export {
   createFinanceEventSchema,

@@ -62,7 +62,10 @@ import {
   // Cost / budget
   createCostEventSchema,
   createModelRouteDecisionSchema,
+  activateModelPortfolioRevisionSchema,
+  createModelPortfolioRevisionSchema,
   createFinanceEventSchema,
+  restoreModelPortfolioRevisionSchema,
   updateModelExecutionPolicySchema,
   updateModelRouteDecisionReviewSchema,
   updateBudgetSchema,
@@ -795,6 +798,73 @@ registry.registerPath({
       }).strict().optional(),
     })),
     503: { description: "Service unavailable", content: { "application/json": { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/companies/{companyId}/model-portfolios/active",
+  tags: ["costs"],
+  summary: "Get the founder-approved active model portfolio",
+  request: { params: z.object({ companyId: z.string() }) },
+  responses: { 200: r.ok(), 401: r.unauthorized, 403: r.forbidden },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/companies/{companyId}/model-portfolios/revisions",
+  tags: ["costs"],
+  summary: "List versioned model portfolio revisions",
+  request: { params: z.object({ companyId: z.string() }) },
+  responses: { 200: r.ok(), 401: r.unauthorized, 403: r.forbidden },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/companies/{companyId}/model-portfolios/revisions",
+  tags: ["costs"],
+  summary: "Create a draft model portfolio revision",
+  request: {
+    params: z.object({ companyId: z.string() }),
+    body: jsonBody(createModelPortfolioRevisionSchema),
+  },
+  responses: { 201: r.ok(), 400: r.badRequest, 401: r.unauthorized, 403: r.forbidden },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/companies/{companyId}/model-portfolios/revisions/{id}/activate",
+  tags: ["costs"],
+  summary: "Activate a reviewed model portfolio revision",
+  request: {
+    params: z.object({ companyId: z.string(), id: z.string() }),
+    body: jsonBody(activateModelPortfolioRevisionSchema),
+  },
+  responses: {
+    200: r.ok(),
+    400: r.badRequest,
+    401: r.unauthorized,
+    403: r.forbidden,
+    404: r.notFound,
+    422: r.unprocessable,
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/companies/{companyId}/model-portfolios/revisions/{id}/restore",
+  tags: ["costs"],
+  summary: "Restore a prior model portfolio into a new draft",
+  request: {
+    params: z.object({ companyId: z.string(), id: z.string() }),
+    body: jsonBody(restoreModelPortfolioRevisionSchema),
+  },
+  responses: {
+    201: r.ok(),
+    400: r.badRequest,
+    401: r.unauthorized,
+    403: r.forbidden,
+    404: r.notFound,
   },
 });
 

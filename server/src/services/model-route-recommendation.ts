@@ -105,6 +105,18 @@ function candidateExclusionReason(
   if (PLACEHOLDER_MODEL_NAMES.has(normalizedModel) || PLACEHOLDER_MODEL_NAMES.has(modelName)) {
     return "Candidate does not pin an exact model.";
   }
+  if (!candidate.evidence) {
+    return "Candidate provenance and freshness evidence is missing.";
+  }
+  const evaluatedAt = new Date(input.evaluatedAt).getTime();
+  const verifiedAt = new Date(candidate.evidence.verifiedAt).getTime();
+  const expiresAt = new Date(candidate.evidence.expiresAt).getTime();
+  if (verifiedAt > evaluatedAt) {
+    return "Candidate evidence verification is dated after this recommendation.";
+  }
+  if (expiresAt <= evaluatedAt) {
+    return "Candidate catalog evidence is stale.";
+  }
   if (input.task.requiresTools && !candidate.supportsTools) {
     return "Candidate does not support the tools required by this task.";
   }
@@ -144,11 +156,15 @@ function recommendationReason(
   lane: ModelRouteRecommendationLane,
   riskLevel: Exclude<ModelRouteDecisionRiskLevel, "unknown">,
   selectedCandidate: ModelRouteCandidate | null,
+  portfolio: ModelRouteRecommendationInput["portfolio"],
 ) {
   if (lane === "no_model") {
     return "This task is deterministic, so Sysdom Auto recommends code or rules instead of model inference.";
   }
   if (!selectedCandidate) {
+    if (!portfolio) {
+      return "Sysdom Auto cannot select a model because no active versioned model portfolio is available.";
+    }
     return `Sysdom Auto recommends the ${lane} lane for ${riskLevel}-risk work, but no permitted exact model satisfies the task controls.`;
   }
   return `Sysdom Auto recommends ${selectedCandidate.provider}/${selectedCandidate.model} in the ${lane} lane for ${riskLevel}-risk work.`;
@@ -166,8 +182,10 @@ export function recommendModelRoute(rawInput: ModelRouteRecommendationInput): Mo
       version: "sysdom_model_route_recommendation_v1",
       mode: "shadow",
       policyVersion: input.policyVersion,
+      evaluatedAt: input.evaluatedAt,
       status: "no_model",
       posture: input.posture,
+      portfolio: input.portfolio,
       lane,
       riskLevel,
       selectedCandidate: null,
@@ -179,7 +197,7 @@ export function recommendModelRoute(rawInput: ModelRouteRecommendationInput): Mo
         reason: "A model is unnecessary for deterministic work.",
       })),
       confidence: "high",
-      reason: recommendationReason(lane, riskLevel, null),
+      reason: recommendationReason(lane, riskLevel, null, input.portfolio),
       approvalGate: deriveApprovalGate(input, riskLevel),
       signals: {
         taskClass: input.task.taskClass,
@@ -234,8 +252,10 @@ export function recommendModelRoute(rawInput: ModelRouteRecommendationInput): Mo
     version: "sysdom_model_route_recommendation_v1",
     mode: "shadow",
     policyVersion: input.policyVersion,
+    evaluatedAt: input.evaluatedAt,
     status: selectedCandidate ? "ready" : "blocked",
     posture: input.posture,
+    portfolio: input.portfolio,
     lane,
     riskLevel,
     selectedCandidate,
@@ -243,7 +263,7 @@ export function recommendModelRoute(rawInput: ModelRouteRecommendationInput): Mo
     confidence: selectedCandidate
       ? input.simContext?.projectionId ? "high" : "medium"
       : "low",
-    reason: recommendationReason(lane, riskLevel, selectedCandidate),
+    reason: recommendationReason(lane, riskLevel, selectedCandidate, input.portfolio),
     approvalGate: deriveApprovalGate(input, riskLevel),
     signals: {
       taskClass: input.task.taskClass,

@@ -20,6 +20,13 @@ function candidate(
     supportsStructuredOutput: true,
     supportsConfidentialData: false,
     supportsRestrictedData: false,
+    evidence: {
+      sourceKind: "manual_review",
+      sourceLabel: "Synthetic unit-test catalog evidence",
+      sourceUrl: null,
+      verifiedAt: "2026-07-31T00:00:00.000Z",
+      expiresAt: "2026-08-31T00:00:00.000Z",
+    },
     ...overrides,
   };
 }
@@ -29,7 +36,12 @@ function input(
 ): ModelRouteRecommendationInput {
   return {
     policyVersion: "sysdom-auto-alpha-1",
+    evaluatedAt: "2026-08-01T00:00:00.000Z",
     posture: "balanced",
+    portfolio: {
+      revisionId: "33333333-3333-4333-8333-333333333333",
+      version: 2,
+    },
     task: {
       intent: "Synthesize founder evidence into one bounded next move.",
       taskClass: "analysis",
@@ -71,6 +83,9 @@ describe("recommendModelRoute", () => {
       mode: "shadow",
       status: "no_model",
       lane: "no_model",
+      portfolio: {
+        version: 2,
+      },
       selectedCandidate: null,
       confidence: "high",
     });
@@ -208,6 +223,50 @@ describe("recommendModelRoute", () => {
       "Candidate does not pin an exact model.",
       "Candidate billing is unknown and must fail closed.",
     ]);
+  });
+
+  it("fails closed when candidate provenance is missing or stale", () => {
+    const recommendation = recommendModelRoute(input({
+      candidates: [
+        candidate({ model: "vendor/no-evidence", evidence: null }),
+        candidate({
+          model: "vendor/stale-evidence",
+          evidence: {
+            sourceKind: "provider_docs",
+            sourceLabel: "Expired provider catalog",
+            sourceUrl: "https://example.com/models",
+            verifiedAt: "2026-06-01T00:00:00.000Z",
+            expiresAt: "2026-07-01T00:00:00.000Z",
+          },
+        }),
+      ],
+    }));
+
+    expect(recommendation).toMatchObject({
+      status: "blocked",
+      portfolio: {
+        version: 2,
+      },
+      selectedCandidate: null,
+    });
+    expect(recommendation.candidateAssessments.map((assessment) => assessment.reason)).toEqual([
+      "Candidate provenance and freshness evidence is missing.",
+      "Candidate catalog evidence is stale.",
+    ]);
+  });
+
+  it("names a missing active portfolio as the blocker", () => {
+    const recommendation = recommendModelRoute(input({
+      portfolio: null,
+      candidates: [],
+    }));
+
+    expect(recommendation).toMatchObject({
+      status: "blocked",
+      portfolio: null,
+      selectedCandidate: null,
+    });
+    expect(recommendation.reason).toContain("no active versioned model portfolio");
   });
 
   it("uses quality rank within the safe lane without downgrading strategy work", () => {
