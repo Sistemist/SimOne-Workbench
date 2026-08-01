@@ -677,11 +677,10 @@ export function OnboardingWizard() {
       setSelectedCompanyId(companyId);
       reset();
       closeOnboarding();
-      if (starterIssuePathId) {
-        navigate(companyPrefix ? `/${companyPrefix}/issues/${starterIssuePathId}` : `/issues/${starterIssuePathId}`);
-      } else {
-        navigate(companyPrefix ? `/${companyPrefix}/dashboard` : "/dashboard");
-      }
+      const cockpitPath = companyPrefix ? `/${companyPrefix}/cockpit` : "/cockpit";
+      const cockpitParams = new URLSearchParams({ from: "sim-starter" });
+      if (starterIssuePathId) cockpitParams.set("issue", starterIssuePathId);
+      navigate(`${cockpitPath}?${cockpitParams.toString()}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create SIM Starter");
     } finally {

@@ -268,7 +268,7 @@ describe("OnboardingWizard SIM Starter path", () => {
     );
     expect(mockSetSelectedCompanyId).toHaveBeenCalledWith("company-1");
     expect(mockCloseOnboarding).toHaveBeenCalled();
-    expect(mockNavigate).toHaveBeenCalledWith("/SYS/issues/SYS-1");
+    expect(mockNavigate).toHaveBeenCalledWith("/SYS/cockpit?from=sim-starter&issue=SYS-1");
   });
 
   it("frames the starter input as messy venture context before setup", () => {

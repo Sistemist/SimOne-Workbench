@@ -29,7 +29,7 @@ import { GuidedSimCycle } from "@/components/GuidedSimCycle";
 import { useBreadcrumbs } from "@/context/BreadcrumbContext";
 import { useCompany } from "@/context/CompanyContext";
 import { queryKeys } from "@/lib/queryKeys";
-import { Link } from "@/lib/router";
+import { Link, useSearchParams } from "@/lib/router";
 
 const ENGINE_LABELS = {
   product: "Product",
@@ -699,6 +699,9 @@ export function FounderCockpit() {
   const { selectedCompanyId } = useCompany();
   const { setBreadcrumbs } = useBreadcrumbs();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const arrivedFromSimStarter = searchParams.get("from") === "sim-starter";
+  const starterIssueRef = searchParams.get("issue");
 
   useEffect(() => {
     setBreadcrumbs([{ label: "Founder Cockpit" }]);
@@ -808,6 +811,29 @@ export function FounderCockpit() {
           </div>
         </div>
       </section>
+
+      {arrivedFromSimStarter ? (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="flex flex-wrap items-center justify-between gap-4 py-5">
+            <div>
+              <p className="font-medium">SIM Starter is ready in the Founder Cockpit.</p>
+              <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+                {starterIssueRef
+                  ? "Your seeded first-MAP task is preserved as working context. Use it while you activate the Venture Constitution and record canonical venture state."
+                  : "The starter was installed, but its first-MAP task could not be resolved. Continue here, then inspect Sprint Zero before recording canonical venture state."}
+              </p>
+            </div>
+            {starterIssueRef ? (
+              <Button asChild size="sm" variant="outline">
+                <Link to={`/issues/${encodeURIComponent(starterIssueRef)}`}>
+                  Open seeded first-MAP task
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
 
       <section className="grid gap-4 sm:grid-cols-3">
         <Metric label="Active work" value={snapshot.work.active} />

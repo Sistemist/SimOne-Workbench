@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FounderCockpit } from "./FounderCockpit";
 
 const mockSetBreadcrumbs = vi.hoisted(() => vi.fn());
+const mockSearchParams = vi.hoisted(() => ({ value: "" }));
 const mockFounderCockpitApi = vi.hoisted(() => ({
   get: vi.fn(),
   constitutionRevisions: vi.fn(),
@@ -33,6 +34,7 @@ vi.mock("@/api/founderCockpit", () => ({
 
 vi.mock("@/lib/router", () => ({
   Link: ({ to, children }: { to: string; children?: ReactNode }) => <a href={to}>{children}</a>,
+  useSearchParams: () => [new URLSearchParams(mockSearchParams.value)],
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -282,6 +284,7 @@ function renderPage() {
 
 describe("FounderCockpit", () => {
   beforeEach(() => {
+    mockSearchParams.value = "";
     mockFounderCockpitApi.get.mockResolvedValue(snapshot);
     mockFounderCockpitApi.constitutionRevisions.mockResolvedValue([constitution]);
     mockFounderCockpitApi.stateRevisions.mockResolvedValue([state, previousState]);
@@ -325,6 +328,21 @@ describe("FounderCockpit", () => {
     expect(text).toContain("1 learning added");
     expect(text).toContain("Initial deterministic venture map.");
     expect(mockSetBreadcrumbs).toHaveBeenCalledWith([{ label: "Founder Cockpit" }]);
+
+    await act(async () => root.unmount());
+  });
+
+  it("preserves the seeded first-MAP task when SIM Starter hands off to the Cockpit", async () => {
+    mockSearchParams.value = "from=sim-starter&issue=SYS-1";
+
+    const { container, root } = renderPage();
+    await waitForText(container, "SIM Starter is ready in the Founder Cockpit.");
+
+    expect(container.textContent).toContain("Your seeded first-MAP task is preserved as working context.");
+    const firstMapLink = Array.from(container.querySelectorAll("a")).find((link) =>
+      link.textContent?.includes("Open seeded first-MAP task"),
+    );
+    expect(firstMapLink?.getAttribute("href")).toBe("/issues/SYS-1");
 
     await act(async () => root.unmount());
   });
