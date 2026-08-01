@@ -139,6 +139,9 @@ export interface AvailableBundledPlugin {
   description: string;
   localPath: string;
   tag: "example" | "first-party";
+  alphaExposure: "founder-facing" | "advanced-internal" | "approval-gated" | "development-only";
+  alphaExposureReason: string;
+  installableInAlpha: boolean;
   experimental: boolean;
   hasBuiltEntrypoints: boolean;
 }

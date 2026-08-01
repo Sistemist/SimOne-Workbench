@@ -65,7 +65,10 @@ function makeBundledPlugin(overrides: Partial<AvailableBundledPlugin> = {}): Ava
     displayName: "Example Plugin",
     description: "A generic plugin.",
     localPath: "/repo/plugins/plugin-example",
-    tag: "example",
+    tag: "first-party",
+    alphaExposure: "advanced-internal",
+    alphaExposureReason: "Reserved for advanced or internal alpha use.",
+    installableInAlpha: true,
     experimental: false,
     hasBuiltEntrypoints: true,
     ...overrides,
@@ -108,6 +111,9 @@ describe("PluginManager", () => {
         displayName: "Cloudflare Sandbox Provider",
         description: "Run tools in an isolated sandbox.",
         localPath: "/repo/plugins/plugin-cloudflare-sandbox",
+        alphaExposure: "approval-gated",
+        alphaExposureReason: "External execution providers require explicit approval.",
+        installableInAlpha: false,
         experimental: true,
       }),
       makeBundledPlugin({
@@ -116,7 +122,28 @@ describe("PluginManager", () => {
         displayName: "SIM Wiki",
         description: "SimOne's durable knowledge layer for cited coaching.",
         localPath: "/repo/plugins/plugin-llm-wiki",
-        tag: "first-party",
+        alphaExposure: "founder-facing",
+        alphaExposureReason: "Approved founder-facing capability for durable, cited venture context.",
+      }),
+      makeBundledPlugin({
+        packageName: "@paperclipai/plugin-workspace-diff",
+        pluginKey: "paperclipai.plugin-workspace-diff",
+        displayName: "Workspace Diff",
+        description: "Review inspectable workspace changes.",
+        localPath: "/repo/plugins/plugin-workspace-diff",
+        alphaExposure: "advanced-internal",
+        alphaExposureReason: "Reserved for advanced operators.",
+      }),
+      makeBundledPlugin({
+        packageName: "@paperclipai/plugin-hello-world-example",
+        pluginKey: "paperclipai.plugin-hello-world-example",
+        displayName: "Hello World Example",
+        description: "Development fixture.",
+        localPath: "/repo/plugins/examples/plugin-hello-world-example",
+        tag: "example",
+        alphaExposure: "development-only",
+        alphaExposureReason: "Development fixtures stay outside the founder alpha catalog.",
+        installableInAlpha: false,
       }),
     ]);
   });
@@ -140,6 +167,37 @@ describe("PluginManager", () => {
     expect(text).toContain("SIM Coach recommends this for durable memory and cited coaching.");
     expect(text).toContain("Install SIM Wiki");
     expect(text.indexOf("Recommended setup")).toBeLessThan(text.indexOf("Cloudflare Sandbox Provider"));
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
+  it("exposes only governed alpha actions and hides development fixtures", async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = await renderPluginManager(container);
+
+    await flushReact();
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Alpha plugin catalog");
+    expect(text).toContain("Founder-facing");
+    expect(text).toContain("Advanced / internal");
+    expect(text).toContain("Approval-gated");
+    expect(text).toContain("1 development-only plugin hidden from the alpha catalog.");
+    expect(text).not.toContain("Hello World Example");
+
+    const cloudflareRow = Array.from(container.querySelectorAll("li")).find((row) =>
+      row.textContent?.includes("Cloudflare Sandbox Provider"),
+    );
+    expect(cloudflareRow?.textContent).toContain("Review exposure");
+    expect(cloudflareRow?.textContent).not.toContain("Install");
+
+    const workspaceDiffRow = Array.from(container.querySelectorAll("li")).find((row) =>
+      row.textContent?.includes("Workspace Diff"),
+    );
+    expect(workspaceDiffRow?.textContent).toContain("Install");
 
     flushSync(() => {
       root.unmount();

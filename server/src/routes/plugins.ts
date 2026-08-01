@@ -129,6 +129,9 @@ interface AvailableBundledPlugin {
   description: string;
   localPath: string;
   tag: "example" | "first-party";
+  alphaExposure: "founder-facing" | "advanced-internal" | "approval-gated" | "development-only";
+  alphaExposureReason: string;
+  installableInAlpha: boolean;
   experimental: boolean;
   hasBuiltEntrypoints: boolean;
 }
@@ -284,6 +287,55 @@ function isExperimentalBundledPlugin(packageRoot: string, packageName: string): 
   );
 }
 
+function classifyAlphaExposure(
+  packageRoot: string,
+  packageName: string,
+): Pick<AvailableBundledPlugin, "alphaExposure" | "alphaExposureReason" | "installableInAlpha"> {
+  if (
+    packageRoot.includes(`${path.sep}examples${path.sep}`)
+    || packageName === "@paperclipai/plugin-fake-sandbox"
+  ) {
+    return {
+      alphaExposure: "development-only",
+      alphaExposureReason: "Example, fake, and authoring fixtures stay outside the founder alpha catalog.",
+      installableInAlpha: false,
+    };
+  }
+
+  if (packageName === "@paperclipai/plugin-llm-wiki") {
+    return {
+      alphaExposure: "founder-facing",
+      alphaExposureReason: "Approved founder-facing capability for durable, cited venture context.",
+      installableInAlpha: true,
+    };
+  }
+
+  if (packageName === "@paperclipai/plugin-workspace-diff") {
+    return {
+      alphaExposure: "advanced-internal",
+      alphaExposureReason: "Reserved for advanced operators reviewing inspectable workspace changes.",
+      installableInAlpha: true,
+    };
+  }
+
+  if (
+    packageRoot.includes(`${path.sep}sandbox-providers${path.sep}`)
+    || packageName.includes("sandbox")
+  ) {
+    return {
+      alphaExposure: "approval-gated",
+      alphaExposureReason: "External execution providers require explicit approval and exact-version intake.",
+      installableInAlpha: false,
+    };
+  }
+
+  return {
+    alphaExposure: "advanced-internal",
+    alphaExposureReason: "First-party capability reserved for advanced or internal alpha use.",
+    installableInAlpha: true,
+  };
+}
+
 async function discoverBundledPlugins(): Promise<DiscoveredBundledPlugin[]> {
   const pluginRoot = path.resolve(REPO_ROOT, "packages/plugins");
   const bundledPlugins: DiscoveredBundledPlugin[] = [];
@@ -314,6 +366,7 @@ async function discoverBundledPlugins(): Promise<DiscoveredBundledPlugin[]> {
           ?? `Bundled Paperclip plugin from ${path.relative(REPO_ROOT, packageRoot)}.`,
         localPath: packageRoot,
         tag,
+        ...classifyAlphaExposure(packageRoot, packageName),
         experimental: isExperimentalBundledPlugin(packageRoot, packageName),
       },
       packageRoot,

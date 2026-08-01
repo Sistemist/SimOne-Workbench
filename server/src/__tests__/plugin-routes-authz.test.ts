@@ -163,6 +163,37 @@ describe.sequential("plugin install and upgrade authz", () => {
     expect(byPackageName.get("@paperclipai/plugin-modal")?.experimental).toBe(true);
     expect(byPackageName.get("@paperclipai/plugin-authoring-smoke-example")?.experimental).toBe(false);
     expect(typeof byPackageName.get("@paperclipai/plugin-workspace-diff")?.hasBuiltEntrypoints).toBe("boolean");
+    expect(byPackageName.get("@paperclipai/plugin-llm-wiki")).toMatchObject({
+      alphaExposure: "founder-facing",
+      installableInAlpha: true,
+    });
+    expect(byPackageName.get("@paperclipai/plugin-workspace-diff")).toMatchObject({
+      alphaExposure: "advanced-internal",
+      installableInAlpha: true,
+    });
+    expect(byPackageName.get("@paperclipai/plugin-modal")).toMatchObject({
+      alphaExposure: "approval-gated",
+      installableInAlpha: false,
+    });
+    expect(byPackageName.get("@paperclipai/plugin-authoring-smoke-example")).toMatchObject({
+      alphaExposure: "development-only",
+      installableInAlpha: false,
+    });
+    expect(byPackageName.get("@paperclipai/plugin-fake-sandbox")).toMatchObject({
+      alphaExposure: "development-only",
+      installableInAlpha: false,
+    });
+    expect(
+      res.body.every((plugin: {
+        alphaExposure?: string;
+        alphaExposureReason?: string;
+        installableInAlpha?: boolean;
+      }) =>
+        typeof plugin.alphaExposure === "string"
+        && typeof plugin.alphaExposureReason === "string"
+        && typeof plugin.installableInAlpha === "boolean"
+      ),
+    ).toBe(true);
   }, 20_000);
 
   it("rejects plugin installation for non-admin board users", async () => {

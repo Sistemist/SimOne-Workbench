@@ -68,6 +68,28 @@ function ExperimentalBadge() {
   );
 }
 
+const ALPHA_EXPOSURE_LABELS: Record<AvailableBundledPlugin["alphaExposure"], string> = {
+  "founder-facing": "Founder-facing",
+  "advanced-internal": "Advanced / internal",
+  "approval-gated": "Approval-gated",
+  "development-only": "Development-only",
+};
+
+function AlphaExposureBadge({ exposure }: { exposure: AvailableBundledPlugin["alphaExposure"] }) {
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        exposure === "founder-facing" && "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200",
+        exposure === "advanced-internal" && "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-200",
+        exposure === "approval-gated" && "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-200",
+      )}
+    >
+      {ALPHA_EXPOSURE_LABELS[exposure]}
+    </Badge>
+  );
+}
+
 function bundledPluginMatchesFocus(plugin: AvailableBundledPlugin, focus: string | null): boolean {
   const normalizedFocus = focus?.trim().toLowerCase();
   if (!normalizedFocus) return false;
@@ -188,10 +210,13 @@ export function PluginManager() {
 
   const installedPlugins = plugins ?? [];
   const bundledPlugins = bundledQuery.data ?? [];
+  const alphaCatalogPlugins = bundledPlugins.filter((plugin) => plugin.alphaExposure !== "development-only");
+  const developmentOnlyPluginCount = bundledPlugins.length - alphaCatalogPlugins.length;
   const installedByPackageName = new Map(installedPlugins.map((plugin) => [plugin.packageName, plugin]));
   const bundledByPackageName = new Map(bundledPlugins.map((plugin) => [plugin.packageName, plugin]));
-  const focusedBundledPlugin = bundledPlugins.find((plugin) =>
-    bundledPluginMatchesFocus(plugin, searchParams.get("focus"))
+  const focusedBundledPlugin = alphaCatalogPlugins.find((plugin) =>
+    plugin.alphaExposure !== "approval-gated"
+    && bundledPluginMatchesFocus(plugin, searchParams.get("focus"))
   );
   // Scope the in-section banner to bundled (local-path) installs so an npm-dialog
   // install failure does not surface its error in the bundled-plugins section.
@@ -221,14 +246,14 @@ export function PluginManager() {
           <DialogTrigger asChild>
             <Button size="sm" className="gap-2">
               <Plus className="h-4 w-4" />
-              Install Plugin
+              Install reviewed package
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Install Plugin</DialogTitle>
+              <DialogTitle>Install reviewed package</DialogTitle>
               <DialogDescription>
-                Enter the npm package name of the plugin you wish to install.
+                Enter an npm package that has passed the alpha exposure policy. Installation does not permit activation without exact-version intake.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -296,6 +321,7 @@ export function PluginManager() {
                 <div className="min-w-0 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="default">Recommended setup</Badge>
+                    <AlphaExposureBadge exposure={focusedBundledPlugin.alphaExposure} />
                     <span className="font-medium">{focusedBundledPlugin.displayName}</span>
                     {installedPlugin ? (
                       <Badge
@@ -363,11 +389,14 @@ export function PluginManager() {
       )}
 
       <section className="space-y-3">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <FlaskConical className="h-5 w-5 text-muted-foreground" />
-          <h2 className="text-base font-semibold">Available Plugins</h2>
-          <Badge variant="outline">Bundled</Badge>
+          <h2 className="text-base font-semibold">Alpha plugin catalog</h2>
+          <Badge variant="outline">Curated</Badge>
         </div>
+        <p className="text-sm text-muted-foreground">
+          Founder-facing and advanced capabilities can be installed for review. Approval-gated providers remain unavailable until their policy gate is cleared.
+        </p>
 
         {installErrorMessage && (
           <div className="rounded-md border border-destructive/25 bg-destructive/[0.06] px-4 py-3 text-sm text-destructive whitespace-pre-wrap break-words">
@@ -379,95 +408,105 @@ export function PluginManager() {
           <div className="text-sm text-muted-foreground">Loading bundled plugins...</div>
         ) : bundledQuery.error ? (
           <div className="text-sm text-destructive">Failed to load bundled plugins.</div>
-        ) : bundledPlugins.length === 0 ? (
+        ) : alphaCatalogPlugins.length === 0 ? (
           <div className="rounded-md border border-dashed px-4 py-3 text-sm text-muted-foreground">
-            No bundled plugins were found in this checkout.
+            No alpha-approved bundled plugins were found in this checkout.
           </div>
         ) : (
-          <ul className="divide-y rounded-md border bg-card">
-            {bundledPlugins.map((bundledPlugin) => {
-              const installedPlugin = installedByPackageName.get(bundledPlugin.packageName);
-              const installPending =
-                installMutation.isPending &&
-                installMutation.variables?.isLocalPath &&
-                installMutation.variables.packageName === bundledPlugin.localPath;
+          <>
+            <ul className="divide-y rounded-md border bg-card">
+              {alphaCatalogPlugins.map((bundledPlugin) => {
+                const installedPlugin = installedByPackageName.get(bundledPlugin.packageName);
+                const installPending =
+                  installMutation.isPending &&
+                  installMutation.variables?.isLocalPath &&
+                  installMutation.variables.packageName === bundledPlugin.localPath;
 
-              return (
-                <li key={bundledPlugin.packageName}>
-                  <div className="flex items-center gap-4 px-4 py-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-medium">{bundledPlugin.displayName}</span>
-                        <Badge variant="outline">
-                          {bundledPlugin.tag === "first-party" ? "First-party" : "Example"}
-                        </Badge>
-                        {isExperimentalPluginIdentity({
-                          packageName: bundledPlugin.packageName,
-                          packagePath: bundledPlugin.localPath,
-                          bundledExperimental: bundledPlugin.experimental,
-                        }) && <ExperimentalBadge />}
-                        {installedPlugin ? (
-                          <Badge
-                            variant={installedPlugin.status === "ready" ? "default" : "secondary"}
-                            className={installedPlugin.status === "ready" ? "bg-green-600 hover:bg-green-700" : ""}
-                          >
-                            {installedPlugin.status}
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary">Not installed</Badge>
+                return (
+                  <li key={bundledPlugin.packageName}>
+                    <div className="flex items-center gap-4 px-4 py-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-medium">{bundledPlugin.displayName}</span>
+                          <AlphaExposureBadge exposure={bundledPlugin.alphaExposure} />
+                          {isExperimentalPluginIdentity({
+                            packageName: bundledPlugin.packageName,
+                            packagePath: bundledPlugin.localPath,
+                            bundledExperimental: bundledPlugin.experimental,
+                          }) && <ExperimentalBadge />}
+                          {installedPlugin ? (
+                            <Badge
+                              variant={installedPlugin.status === "ready" ? "default" : "secondary"}
+                              className={installedPlugin.status === "ready" ? "bg-green-600 hover:bg-green-700" : ""}
+                            >
+                              {installedPlugin.status}
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">Not installed</Badge>
+                          )}
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground">{bundledPlugin.description}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{bundledPlugin.alphaExposureReason}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{bundledPlugin.packageName}</p>
+                        {installPending && !bundledPlugin.hasBuiltEntrypoints && (
+                          <p className="mt-2 text-xs text-muted-foreground">Building plugin...</p>
                         )}
                       </div>
-                      <p className="mt-1 text-sm text-muted-foreground">{bundledPlugin.description}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{bundledPlugin.packageName}</p>
-                      {installPending && !bundledPlugin.hasBuiltEntrypoints && (
-                        <p className="mt-2 text-xs text-muted-foreground">Building plugin...</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {installedPlugin ? (
-                        <>
-                          {installedPlugin.status !== "ready" && (
-                            installedPlugin.status === "installed" ? (
-                              <Button variant="outline" size="sm" asChild>
-                                <Link to="/company/settings/instance/governed-intake">Review intake</Link>
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={enableMutation.isPending}
-                                onClick={() => enableMutation.mutate(installedPlugin.id)}
-                              >
-                                Enable
-                              </Button>
-                            )
-                          )}
-                          <Button variant="outline" size="sm" asChild>
-                            <Link to={`/company/settings/instance/plugins/${installedPlugin.id}`}>
-                              {installedPlugin.status === "ready" ? "Open Settings" : "Review"}
-                            </Link>
+                      <div className="flex shrink-0 items-center gap-2">
+                        {installedPlugin ? (
+                          <>
+                            {installedPlugin.status !== "ready" && (
+                              installedPlugin.status === "installed" ? (
+                                <Button variant="outline" size="sm" asChild>
+                                  <Link to="/company/settings/instance/governed-intake">Review intake</Link>
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={enableMutation.isPending}
+                                  onClick={() => enableMutation.mutate(installedPlugin.id)}
+                                >
+                                  Enable
+                                </Button>
+                              )
+                            )}
+                            <Button variant="outline" size="sm" asChild>
+                              <Link to={`/company/settings/instance/plugins/${installedPlugin.id}`}>
+                                {installedPlugin.status === "ready" ? "Open Settings" : "Review"}
+                              </Link>
+                            </Button>
+                          </>
+                        ) : bundledPlugin.installableInAlpha ? (
+                          <Button
+                            size="sm"
+                            disabled={installPending || installMutation.isPending}
+                            onClick={() =>
+                              installMutation.mutate({
+                                packageName: bundledPlugin.localPath,
+                                isLocalPath: true,
+                              })
+                            }
+                          >
+                            {installPending ? "Installing..." : "Install"}
                           </Button>
-                        </>
-                      ) : (
-                        <Button
-                          size="sm"
-                          disabled={installPending || installMutation.isPending}
-                          onClick={() =>
-                            installMutation.mutate({
-                              packageName: bundledPlugin.localPath,
-                              isLocalPath: true,
-                            })
-                          }
-                        >
-                          {installPending ? "Installing..." : "Install"}
-                        </Button>
-                      )}
+                        ) : (
+                          <Button variant="outline" size="sm" asChild>
+                            <Link to="/company/settings/instance/governed-intake">Review exposure</Link>
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                  </li>
+                );
+              })}
+            </ul>
+            {developmentOnlyPluginCount > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                {developmentOnlyPluginCount} development-only plugin{developmentOnlyPluginCount === 1 ? "" : "s"} hidden from the alpha catalog.
+              </p>
+            ) : null}
+          </>
         )}
       </section>
 
