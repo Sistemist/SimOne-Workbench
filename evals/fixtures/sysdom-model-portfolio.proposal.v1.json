@@ -1,0 +1,231 @@
+{
+  "version": "sysdom_model_portfolio_proposal_v1",
+  "status": "review_required",
+  "researchedAt": "2026-08-01T20:12:46.000Z",
+  "expiresAt": "2026-08-15T20:12:46.000Z",
+  "changeReason": "Propose one current, exact, tool-capable candidate for each governed general-purpose lane. OpenRouter is the billing rail only; Sysdom selects the model and requires explicit provider controls.",
+  "candidates": [
+    {
+      "provider": "openrouter",
+      "model": "google/gemini-3.5-flash-lite",
+      "lane": "background",
+      "billingType": "metered_api",
+      "costRank": 1,
+      "qualityRank": 1,
+      "enabled": true,
+      "supportsTools": true,
+      "supportsStructuredOutput": true,
+      "supportsConfidentialData": false,
+      "supportsRestrictedData": false,
+      "evidence": {
+        "sourceKind": "provider_api",
+        "sourceLabel": "OpenRouter model catalog: Gemini 3.5 Flash-Lite",
+        "sourceUrl": "https://openrouter.ai/api/v1/model/google/gemini-3.5-flash-lite",
+        "verifiedAt": "2026-08-01T20:12:46.000Z",
+        "expiresAt": "2026-08-15T20:12:46.000Z"
+      },
+      "catalog": {
+        "canonicalSlug": "google/gemini-3.5-flash-lite-20260721",
+        "lifecycle": "stable",
+        "contextWindowTokens": 1048576,
+        "maxOutputTokens": 65536,
+        "pricing": {
+          "currency": "USD",
+          "unit": "per_million_tokens",
+          "inputUsd": 0.3,
+          "outputUsd": 2.5,
+          "cachedInputUsd": 0.03
+        },
+        "providerRouting": {
+          "sort": "price",
+          "allowFallbacks": true,
+          "requireParameters": true,
+          "dataCollection": "deny",
+          "zeroDataRetention": true,
+          "maxInputTokensPerRequest": 1048576,
+          "maxInputUsdPerMillion": 0.3,
+          "maxOutputUsdPerMillion": 2.5
+        }
+      }
+    },
+    {
+      "provider": "openrouter",
+      "model": "google/gemini-3.6-flash",
+      "lane": "workhorse",
+      "billingType": "metered_api",
+      "costRank": 1,
+      "qualityRank": 1,
+      "enabled": true,
+      "supportsTools": true,
+      "supportsStructuredOutput": true,
+      "supportsConfidentialData": false,
+      "supportsRestrictedData": false,
+      "evidence": {
+        "sourceKind": "provider_api",
+        "sourceLabel": "OpenRouter model catalog: Gemini 3.6 Flash",
+        "sourceUrl": "https://openrouter.ai/api/v1/model/google/gemini-3.6-flash",
+        "verifiedAt": "2026-08-01T20:12:46.000Z",
+        "expiresAt": "2026-08-15T20:12:46.000Z"
+      },
+      "catalog": {
+        "canonicalSlug": "google/gemini-3.6-flash-20260721",
+        "lifecycle": "stable",
+        "contextWindowTokens": 1048576,
+        "maxOutputTokens": 65536,
+        "pricing": {
+          "currency": "USD",
+          "unit": "per_million_tokens",
+          "inputUsd": 1.5,
+          "outputUsd": 7.5,
+          "cachedInputUsd": 0.15
+        },
+        "providerRouting": {
+          "sort": "price",
+          "allowFallbacks": true,
+          "requireParameters": true,
+          "dataCollection": "deny",
+          "zeroDataRetention": true,
+          "maxInputTokensPerRequest": 1048576,
+          "maxInputUsdPerMillion": 1.5,
+          "maxOutputUsdPerMillion": 7.5
+        }
+      }
+    },
+    {
+      "provider": "openrouter",
+      "model": "openai/gpt-5.6-sol",
+      "lane": "frontier",
+      "billingType": "metered_api",
+      "costRank": 1,
+      "qualityRank": 1,
+      "enabled": true,
+      "supportsTools": true,
+      "supportsStructuredOutput": true,
+      "supportsConfidentialData": false,
+      "supportsRestrictedData": false,
+      "evidence": {
+        "sourceKind": "provider_api",
+        "sourceLabel": "OpenRouter model catalog: GPT-5.6 Sol",
+        "sourceUrl": "https://openrouter.ai/api/v1/model/openai/gpt-5.6-sol",
+        "verifiedAt": "2026-08-01T20:12:46.000Z",
+        "expiresAt": "2026-08-15T20:12:46.000Z"
+      },
+      "catalog": {
+        "canonicalSlug": "openai/gpt-5.6-sol-20260709",
+        "lifecycle": "stable",
+        "contextWindowTokens": 1050000,
+        "maxOutputTokens": 128000,
+        "pricing": {
+          "currency": "USD",
+          "unit": "per_million_tokens",
+          "inputUsd": 5,
+          "outputUsd": 30,
+          "cachedInputUsd": 0.5
+        },
+        "providerRouting": {
+          "sort": "price",
+          "allowFallbacks": true,
+          "requireParameters": true,
+          "dataCollection": "deny",
+          "zeroDataRetention": true,
+          "maxInputTokensPerRequest": 272000,
+          "maxInputUsdPerMillion": 5,
+          "maxOutputUsdPerMillion": 30
+        }
+      }
+    },
+    {
+      "provider": "openrouter",
+      "model": "anthropic/claude-fable-5",
+      "lane": "deliberation_audit",
+      "billingType": "metered_api",
+      "costRank": 1,
+      "qualityRank": 1,
+      "enabled": true,
+      "supportsTools": true,
+      "supportsStructuredOutput": true,
+      "supportsConfidentialData": false,
+      "supportsRestrictedData": false,
+      "evidence": {
+        "sourceKind": "provider_api",
+        "sourceLabel": "OpenRouter model catalog: Claude Fable 5",
+        "sourceUrl": "https://openrouter.ai/api/v1/model/anthropic/claude-fable-5",
+        "verifiedAt": "2026-08-01T20:12:46.000Z",
+        "expiresAt": "2026-08-15T20:12:46.000Z"
+      },
+      "catalog": {
+        "canonicalSlug": "anthropic/claude-5-fable-20260609",
+        "lifecycle": "stable",
+        "contextWindowTokens": 1000000,
+        "maxOutputTokens": 128000,
+        "pricing": {
+          "currency": "USD",
+          "unit": "per_million_tokens",
+          "inputUsd": 10,
+          "outputUsd": 50,
+          "cachedInputUsd": 1
+        },
+        "providerRouting": {
+          "sort": "price",
+          "allowFallbacks": true,
+          "requireParameters": true,
+          "dataCollection": "deny",
+          "zeroDataRetention": false,
+          "maxInputTokensPerRequest": 1000000,
+          "maxInputUsdPerMillion": 10,
+          "maxOutputUsdPerMillion": 50
+        }
+      }
+    }
+  ],
+  "sourceRefs": [
+    {
+      "kind": "provider_api",
+      "label": "OpenRouter public Models API catalog snapshot",
+      "url": "https://openrouter.ai/api/v1/models",
+      "capturedAt": "2026-08-01T20:12:46.000Z"
+    },
+    {
+      "kind": "provider_docs",
+      "label": "OpenRouter model catalog response and pricing schema",
+      "url": "https://openrouter.ai/docs/guides/overview/models",
+      "capturedAt": "2026-08-01T20:12:46.000Z"
+    },
+    {
+      "kind": "provider_docs",
+      "label": "OpenRouter explicit provider routing, price caps, parameter enforcement, and data controls",
+      "url": "https://openrouter.ai/docs/guides/routing/provider-selection",
+      "capturedAt": "2026-08-01T20:12:46.000Z"
+    },
+    {
+      "kind": "provider_docs",
+      "label": "OpenRouter zero data retention enforcement",
+      "url": "https://openrouter.ai/docs/guides/features/zdr",
+      "capturedAt": "2026-08-01T20:12:46.000Z"
+    },
+    {
+      "kind": "provider_docs",
+      "label": "Google production Gemini model guidance and current pricing",
+      "url": "https://ai.google.dev/gemini-api/docs/latest-model",
+      "capturedAt": "2026-08-01T20:12:46.000Z"
+    },
+    {
+      "kind": "provider_docs",
+      "label": "OpenAI current model catalog and GPT-5.6 pricing",
+      "url": "https://developers.openai.com/api/docs/models",
+      "capturedAt": "2026-08-01T20:12:46.000Z"
+    },
+    {
+      "kind": "provider_docs",
+      "label": "Anthropic current model IDs, capabilities, and pricing",
+      "url": "https://platform.claude.com/docs/en/about-claude/models/overview",
+      "capturedAt": "2026-08-01T20:12:46.000Z"
+    }
+  ],
+  "unresolvedGaps": [
+    "No candidate has produced output-quality, acceptance, revision, latency, or realized-cost evidence on the four Sysdom engine workflows.",
+    "The execution adapters do not yet project these provider-routing constraints into every live request, so confidential and restricted context remain disabled.",
+    "The public OpenRouter ZDR endpoint catalog did not list Claude Fable 5 at research time; the deliberation candidate is internal-data only.",
+    "No provider-account hard cap, dedicated key, or post-call cost reconciliation has been configured for a live benchmark."
+  ]
+}

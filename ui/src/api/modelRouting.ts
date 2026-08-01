@@ -115,6 +115,29 @@ export interface ModelPortfolioCandidate {
     verifiedAt: string;
     expiresAt: string;
   } | null;
+  catalog: {
+    canonicalSlug: string;
+    lifecycle: "stable" | "preview";
+    contextWindowTokens: number;
+    maxOutputTokens: number;
+    pricing: {
+      currency: "USD";
+      unit: "per_million_tokens";
+      inputUsd: number;
+      outputUsd: number;
+      cachedInputUsd: number | null;
+    };
+    providerRouting: {
+      sort: "price" | "throughput" | "latency";
+      allowFallbacks: boolean;
+      requireParameters: boolean;
+      dataCollection: "allow" | "deny";
+      zeroDataRetention: boolean;
+      maxInputTokensPerRequest: number;
+      maxInputUsdPerMillion: number;
+      maxOutputUsdPerMillion: number;
+    };
+  } | null;
 }
 
 export interface ModelPortfolioRevision {

@@ -291,6 +291,24 @@ function ModelPortfolioOverview({
                       ? `Evidence expires ${new Date(candidate.evidence.expiresAt).toLocaleDateString()}`
                       : "No provenance evidence"}
                   </div>
+                  {candidate.catalog ? (
+                    <>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        ${candidate.catalog.pricing.inputUsd}/M input · ${candidate.catalog.pricing.outputUsd}/M output
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {candidate.catalog.providerRouting.zeroDataRetention
+                          ? "ZDR required"
+                          : "ZDR unavailable · internal context only"}
+                        {" · "}
+                        max {candidate.catalog.providerRouting.maxInputTokensPerRequest.toLocaleString()} input tokens
+                      </div>
+                    </>
+                  ) : (
+                    <div className="mt-1 text-xs text-amber-700">
+                      No catalog price or provider controls
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -312,12 +330,21 @@ function ModelPortfolioOverview({
               Revision history
             </div>
             {revisions.map((revision) => (
-              <div key={revision.id} className="flex flex-wrap items-center gap-2 text-sm">
-                <Badge variant="outline">v{revision.version}</Badge>
-                <span className="font-medium">{titleCase(revision.status)}</span>
-                <span className="text-muted-foreground">
-                  {revision.candidates.length} candidates · {revision.changeReason}
-                </span>
+              <div key={revision.id} className="space-y-1 rounded border border-border px-3 py-2 text-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="outline">v{revision.version}</Badge>
+                  <span className="font-medium">{titleCase(revision.status)}</span>
+                  <span className="text-muted-foreground">
+                    {revision.candidates.length} candidates · {revision.changeReason}
+                  </span>
+                </div>
+                {revision.status === "draft" && revision.candidates.length > 0 ? (
+                  <div className="text-xs text-muted-foreground">
+                    Review: {revision.candidates.map((candidate) =>
+                      `${candidate.lane} ${candidate.provider}/${candidate.model}`
+                    ).join(" · ")}
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>

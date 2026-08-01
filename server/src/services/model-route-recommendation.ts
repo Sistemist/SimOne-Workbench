@@ -96,6 +96,17 @@ function candidateExclusionReason(
   if (!candidate.enabled) return "Candidate is disabled in the allowed model portfolio.";
   if (candidate.lane !== lane) return `Candidate is assigned to the ${candidate.lane} lane, not ${lane}.`;
   if (candidate.billingType === "unknown") return "Candidate billing is unknown and must fail closed.";
+  if (candidate.billingType === "metered_api") {
+    if (!candidate.catalog) {
+      return "Metered candidate catalog pricing and provider controls are missing.";
+    }
+    if (candidate.catalog.providerRouting.dataCollection !== "deny") {
+      return "Metered candidate does not deny provider data collection.";
+    }
+    if (!candidate.catalog.providerRouting.requireParameters) {
+      return "Metered candidate does not require provider parameter compatibility.";
+    }
+  }
   const normalizedProvider = candidate.provider.trim().toLowerCase();
   const normalizedModel = candidate.model.trim().toLowerCase();
   const modelName = normalizedModel.split("/").at(-1)?.split(":")[0] ?? normalizedModel;
@@ -123,7 +134,16 @@ function candidateExclusionReason(
   if (input.task.requiresStructuredOutput && !candidate.supportsStructuredOutput) {
     return "Candidate does not support the required structured output.";
   }
-  if (input.task.dataSensitivity === "confidential" && !candidate.supportsConfidentialData) {
+  if (
+    input.task.dataSensitivity === "confidential"
+    && (
+      !candidate.supportsConfidentialData
+      || (
+        candidate.billingType === "metered_api"
+        && candidate.catalog?.providerRouting.zeroDataRetention !== true
+      )
+    )
+  ) {
     return "Candidate is not approved for confidential venture context.";
   }
   if (input.task.dataSensitivity === "restricted" && !candidate.supportsRestrictedData) {

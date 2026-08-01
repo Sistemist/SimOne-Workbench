@@ -13,6 +13,12 @@ export interface ModelPortfolioActor {
   userId: string | null;
 }
 
+export interface ModelCandidateTextUsage {
+  inputTokens: number;
+  outputTokens: number;
+  cachedInputTokens?: number;
+}
+
 type DbTransaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 const PLACEHOLDER_IDENTITIES = new Set(["adapter-default", "auto", "default", "unknown"]);
@@ -28,6 +34,26 @@ async function nextVersion(tx: DbTransaction, companyId: string) {
     .where(eq(modelPortfolioRevisions.companyId, companyId))
     .then((rows) => rows[0]);
   return (row?.value ?? 0) + 1;
+}
+
+export function estimateModelCandidateTextCostUsd(
+  candidate: ModelRouteCandidate,
+  usage: ModelCandidateTextUsage,
+) {
+  if (!candidate.catalog) return null;
+  const inputTokens = Math.max(0, Math.trunc(usage.inputTokens));
+  const outputTokens = Math.max(0, Math.trunc(usage.outputTokens));
+  const cachedInputTokens = Math.min(
+    inputTokens,
+    Math.max(0, Math.trunc(usage.cachedInputTokens ?? 0)),
+  );
+  const uncachedInputTokens = inputTokens - cachedInputTokens;
+  const { pricing } = candidate.catalog;
+  const inputCost = uncachedInputTokens / 1_000_000 * pricing.inputUsd;
+  const cachedInputCost = cachedInputTokens / 1_000_000
+    * (pricing.cachedInputUsd ?? pricing.inputUsd);
+  const outputCost = outputTokens / 1_000_000 * pricing.outputUsd;
+  return Math.round((inputCost + cachedInputCost + outputCost) * 1_000_000) / 1_000_000;
 }
 
 export function modelPortfolioActivationBlockers(
@@ -56,6 +82,37 @@ export function modelPortfolioActivationBlockers(
       blockers.push(`model_not_exact:${identity}`);
     }
     if (candidate.billingType === "unknown") blockers.push(`billing_unknown:${identity}`);
+    if (candidate.billingType === "metered_api") {
+      if (!candidate.catalog) {
+        blockers.push(`catalog_missing:${identity}`);
+      } else {
+        const { catalog } = candidate;
+        if (catalog.providerRouting.dataCollection !== "deny") {
+          blockers.push(`data_collection_not_denied:${identity}`);
+        }
+        if (!catalog.providerRouting.requireParameters) {
+          blockers.push(`required_parameters_not_enforced:${identity}`);
+        }
+        if (
+          catalog.providerRouting.maxInputTokensPerRequest
+          > catalog.contextWindowTokens
+        ) {
+          blockers.push(`input_limit_exceeds_context_window:${identity}`);
+        }
+        if (
+          catalog.providerRouting.maxInputUsdPerMillion < catalog.pricing.inputUsd
+          || catalog.providerRouting.maxOutputUsdPerMillion < catalog.pricing.outputUsd
+        ) {
+          blockers.push(`price_cap_below_catalog_rate:${identity}`);
+        }
+        if (
+          candidate.supportsConfidentialData
+          && !catalog.providerRouting.zeroDataRetention
+        ) {
+          blockers.push(`confidential_route_without_zdr:${identity}`);
+        }
+      }
+    }
     if (!candidate.evidence) {
       blockers.push(`evidence_missing:${identity}`);
       continue;

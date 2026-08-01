@@ -51,7 +51,11 @@ export { routineService } from "./routines.js";
 export { costService } from "./costs.js";
 export { modelRouteDecisionService } from "./model-route-decisions.js";
 export { recommendModelRoute } from "./model-route-recommendation.js";
-export { modelPortfolioActivationBlockers, modelPortfolioService } from "./model-portfolio.js";
+export {
+  estimateModelCandidateTextCostUsd,
+  modelPortfolioActivationBlockers,
+  modelPortfolioService,
+} from "./model-portfolio.js";
 export { scoreModelRouteEngineBenchmark } from "./model-route-engine-benchmark.js";
 export { governedIntakeService } from "./governed-intake.js";
 export { financeService } from "./finance.js";

@@ -39,6 +39,25 @@ export const restoreModelPortfolioRevisionSchema = z.object({
   changeReason: z.string().trim().min(1).max(4_000),
 }).strict();
 
+export const modelPortfolioResearchProposalSchema = z.object({
+  version: z.literal("sysdom_model_portfolio_proposal_v1"),
+  status: z.literal("review_required"),
+  researchedAt: z.string().datetime(),
+  expiresAt: z.string().datetime(),
+  changeReason: z.string().trim().min(1).max(4_000),
+  candidates: z.array(modelRouteCandidateSchema).min(1).max(100),
+  sourceRefs: z.array(modelPortfolioSourceRefSchema).min(1).max(100),
+  unresolvedGaps: z.array(z.string().trim().min(1).max(2_000)).min(1).max(100),
+}).strict().superRefine((proposal, ctx) => {
+  if (new Date(proposal.expiresAt).getTime() <= new Date(proposal.researchedAt).getTime()) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Proposal expiry must be after its research timestamp",
+      path: ["expiresAt"],
+    });
+  }
+});
+
 export const modelRouteEngineBenchmarkOutputSchema = z.object({
   summary: z.string().trim().min(1).max(8_000),
   nextMove: z.string().trim().min(1).max(4_000),
@@ -118,6 +137,7 @@ export type ModelPortfolioSourceRef = z.infer<typeof modelPortfolioSourceRefSche
 export type CreateModelPortfolioRevision = z.infer<typeof createModelPortfolioRevisionSchema>;
 export type ActivateModelPortfolioRevision = z.infer<typeof activateModelPortfolioRevisionSchema>;
 export type RestoreModelPortfolioRevision = z.infer<typeof restoreModelPortfolioRevisionSchema>;
+export type ModelPortfolioResearchProposal = z.infer<typeof modelPortfolioResearchProposalSchema>;
 export type ModelRouteEngineBenchmarkOutput = z.infer<typeof modelRouteEngineBenchmarkOutputSchema>;
 export type ModelRouteEngineBenchmarkFixture = z.infer<typeof modelRouteEngineBenchmarkFixtureSchema>;
 export type ModelRouteEngineBenchmarkSuite = z.infer<typeof modelRouteEngineBenchmarkSuiteSchema>;

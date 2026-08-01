@@ -558,6 +558,7 @@ export {
 export {
   createModelRouteDecisionSchema,
   modelRouteCandidateAssessmentSchema,
+  modelRouteCandidateCatalogSchema,
   modelRouteCandidateEvidenceSchema,
   modelRouteCandidateSchema,
   modelRouteDataSensitivitySchema,
@@ -580,6 +581,7 @@ export {
   type ModelExecutionBillingTypeInput,
   type ModelRouteCandidate,
   type ModelRouteCandidateAssessment,
+  type ModelRouteCandidateCatalog,
   type ModelRouteCandidateEvidence,
   type ModelRouteDataSensitivity,
   type ModelRouteDecisionLane,
@@ -601,6 +603,7 @@ export {
 export {
   activateModelPortfolioRevisionSchema,
   createModelPortfolioRevisionSchema,
+  modelPortfolioResearchProposalSchema,
   modelPortfolioRevisionStatusSchema,
   modelPortfolioSourceRefSchema,
   modelRouteEngineBenchmarkFixtureSchema,
@@ -609,6 +612,7 @@ export {
   restoreModelPortfolioRevisionSchema,
   type ActivateModelPortfolioRevision,
   type CreateModelPortfolioRevision,
+  type ModelPortfolioResearchProposal,
   type ModelPortfolioRevisionStatus,
   type ModelPortfolioSourceRef,
   type ModelRouteEngineBenchmarkFixture,

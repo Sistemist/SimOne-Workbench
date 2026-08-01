@@ -95,6 +95,30 @@ export const modelRouteCandidateEvidenceSchema = z.object({
   expiresAt: z.string().datetime(),
 }).strict();
 
+export const modelRouteCandidateCatalogSchema = z.object({
+  canonicalSlug: z.string().trim().min(1).max(300),
+  lifecycle: z.enum(["stable", "preview"]),
+  contextWindowTokens: z.number().int().positive(),
+  maxOutputTokens: z.number().int().positive(),
+  pricing: z.object({
+    currency: z.literal("USD"),
+    unit: z.literal("per_million_tokens"),
+    inputUsd: z.number().nonnegative(),
+    outputUsd: z.number().nonnegative(),
+    cachedInputUsd: z.number().nonnegative().nullable().optional().default(null),
+  }).strict(),
+  providerRouting: z.object({
+    sort: z.enum(["price", "throughput", "latency"]),
+    allowFallbacks: z.boolean(),
+    requireParameters: z.boolean(),
+    dataCollection: z.enum(["allow", "deny"]),
+    zeroDataRetention: z.boolean(),
+    maxInputTokensPerRequest: z.number().int().positive(),
+    maxInputUsdPerMillion: z.number().nonnegative(),
+    maxOutputUsdPerMillion: z.number().nonnegative(),
+  }).strict(),
+}).strict();
+
 export const modelRouteCandidateSchema = z.object({
   provider: z.string().trim().min(1).max(200),
   model: z.string().trim().min(1).max(300),
@@ -108,6 +132,7 @@ export const modelRouteCandidateSchema = z.object({
   supportsConfidentialData: z.boolean().optional().default(false),
   supportsRestrictedData: z.boolean().optional().default(false),
   evidence: modelRouteCandidateEvidenceSchema.nullable().optional().default(null),
+  catalog: modelRouteCandidateCatalogSchema.nullable().optional().default(null),
 }).strict();
 
 export const modelRouteRecommendationInputSchema = z.object({
@@ -284,6 +309,7 @@ export type ModelRouteDataSensitivity = z.infer<typeof modelRouteDataSensitivity
 export type ModelRouteEvidenceRequirement = z.infer<typeof modelRouteEvidenceRequirementSchema>;
 export type ModelRouteRecommendationLane = z.infer<typeof modelRouteRecommendationLaneSchema>;
 export type ModelRouteCandidateEvidence = z.infer<typeof modelRouteCandidateEvidenceSchema>;
+export type ModelRouteCandidateCatalog = z.infer<typeof modelRouteCandidateCatalogSchema>;
 export type ModelRouteCandidate = z.infer<typeof modelRouteCandidateSchema>;
 export type ModelRouteRecommendationInput = z.infer<typeof modelRouteRecommendationInputSchema>;
 export type ModelRouteCandidateAssessment = z.infer<typeof modelRouteCandidateAssessmentSchema>;

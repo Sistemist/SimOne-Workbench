@@ -255,6 +255,29 @@ describe("ModelRoutingAudit", () => {
             verifiedAt: "2026-07-31T00:00:00.000Z",
             expiresAt: "2026-08-31T00:00:00.000Z",
           },
+          catalog: {
+            canonicalSlug: "synthetic/workhorse-v1-20260731",
+            lifecycle: "stable",
+            contextWindowTokens: 100_000,
+            maxOutputTokens: 10_000,
+            pricing: {
+              currency: "USD",
+              unit: "per_million_tokens",
+              inputUsd: 1,
+              outputUsd: 5,
+              cachedInputUsd: 0.1,
+            },
+            providerRouting: {
+              sort: "price",
+              allowFallbacks: true,
+              requireParameters: true,
+              dataCollection: "deny",
+              zeroDataRetention: true,
+              maxInputTokensPerRequest: 100_000,
+              maxInputUsdPerMillion: 1,
+              maxOutputUsdPerMillion: 5,
+            },
+          },
         }],
         changeReason: "Synthetic portfolio for UI review.",
         sourceRefs: [],
@@ -266,6 +289,33 @@ describe("ModelRoutingAudit", () => {
         activatedAt: "2026-08-01T00:00:00.000Z",
         supersededAt: null,
         createdAt: "2026-08-01T00:00:00.000Z",
+      },
+      {
+        id: "55555555-5555-4555-8555-555555555555",
+        companyId: "company-1",
+        version: 3,
+        status: "draft",
+        candidates: [{
+          provider: "openrouter",
+          model: "synthetic/frontier-v1",
+          lane: "frontier",
+          billingType: "metered_api",
+          costRank: 1,
+          qualityRank: 1,
+          enabled: true,
+          evidence: null,
+          catalog: null,
+        }],
+        changeReason: "Review a replacement frontier candidate.",
+        sourceRefs: [],
+        restoredFromRevisionId: null,
+        createdByAgentId: null,
+        createdByUserId: "founder-1",
+        activatedByUserId: null,
+        approvalNote: null,
+        activatedAt: null,
+        supersededAt: null,
+        createdAt: "2026-08-01T01:00:00.000Z",
       },
     ]);
   });
@@ -318,6 +368,9 @@ describe("ModelRoutingAudit", () => {
     expect(text).toContain("Active v2");
     expect(text).toContain("1 permitted candidate");
     expect(text).toContain("Synthetic portfolio for UI review.");
+    expect(text).toContain("$1/M input · $5/M output");
+    expect(text).toContain("ZDR required · max 100,000 input tokens");
+    expect(text).toContain("Review: frontier openrouter/synthetic/frontier-v1");
     expect(mockModelRoutingApi.listDecisions).toHaveBeenCalledWith("company-1", { limit: 50 });
     expect(mockModelRoutingApi.listPolicies).toHaveBeenCalledWith("company-1");
     expect(mockModelRoutingApi.listPortfolioRevisions).toHaveBeenCalledWith("company-1");
