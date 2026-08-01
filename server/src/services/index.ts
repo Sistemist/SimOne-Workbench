@@ -52,6 +52,10 @@ export { costService } from "./costs.js";
 export { modelRouteDecisionService } from "./model-route-decisions.js";
 export { recommendModelRoute } from "./model-route-recommendation.js";
 export {
+  applyModelRouteExecutionContract,
+  assessModelRouteExecution,
+} from "./model-route-execution.js";
+export {
   estimateModelCandidateTextCostUsd,
   modelPortfolioActivationBlockers,
   modelPortfolioService,

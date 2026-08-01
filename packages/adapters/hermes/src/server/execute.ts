@@ -50,6 +50,10 @@ import {
   detectModel,
   resolveProvider,
 } from "./detect-model.js";
+import {
+  assessHermesModelRouteExecution,
+  hermesModelRouteExecutionBlockMessage,
+} from "./model-route-execution.js";
 
 // ---------------------------------------------------------------------------
 // Config helpers
@@ -371,6 +375,16 @@ export async function execute(
     detectedApiMode: detectedConfig?.apiMode,
     model,
   });
+  const modelRouteExecution = assessHermesModelRouteExecution({
+    rawContract: config.modelRouteExecution,
+    resolvedProvider,
+    model,
+  });
+  if (modelRouteExecution.status === "blocked") {
+    throw new Error(
+      `configuration incomplete: ${hermesModelRouteExecutionBlockMessage(modelRouteExecution)}`,
+    );
+  }
 
   // ── Load agent instructions file (Paperclip instruction bundles) ──────
   // Paperclip can materialize managed instructions into instructionsFilePath;

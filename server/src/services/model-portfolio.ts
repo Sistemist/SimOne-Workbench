@@ -117,6 +117,12 @@ export function modelPortfolioActivationBlockers(
       blockers.push(`evidence_missing:${identity}`);
       continue;
     }
+    if (
+      candidate.evidence.authority !== "independent"
+      && candidate.evidence.authority !== "sysdom_review"
+    ) {
+      blockers.push(`adoption_evidence_not_reviewed:${identity}`);
+    }
     const verifiedAt = new Date(candidate.evidence.verifiedAt);
     const expiresAt = new Date(candidate.evidence.expiresAt);
     if (verifiedAt.getTime() > evaluatedAt.getTime()) {

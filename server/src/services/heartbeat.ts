@@ -74,6 +74,10 @@ import { parseObject, asBoolean, asNumber, appendWithByteCap, MAX_EXCERPT_BYTES 
 import { costService } from "./costs.js";
 import { modelRouteDecisionService } from "./model-route-decisions.js";
 import { recommendModelRoute } from "./model-route-recommendation.js";
+import {
+  applyModelRouteExecutionContract,
+  assessModelRouteExecution,
+} from "./model-route-execution.js";
 import { modelPortfolioService } from "./model-portfolio.js";
 import {
   assessModelExecutionSafety,
@@ -9948,6 +9952,15 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         portfolio: activeModelPortfolio,
         posture: routeDecisionRuntimeConfig.modelRoutePosture,
       });
+      const routeExecutionAssessment = assessModelRouteExecution({
+        recommendation: routeRecommendation,
+        configuredProvider: routeDecisionProvider,
+        configuredModel: routeDecisionModel,
+      });
+      runtimeConfig = applyModelRouteExecutionContract(
+        runtimeConfig,
+        routeExecutionAssessment,
+      );
       const routeDecisionModelProfile = modelProfileRunMetadata(modelProfileApplication);
       const routeDecisions = modelRouteDecisionService(db);
       const priorReconciliationBlock = await routeDecisions.findBlockingExecutionReconciliation(
@@ -9959,11 +9972,15 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         issueId: issueRef?.id ?? null,
         projectId: issueRef?.projectId ?? projectContext?.id ?? null,
         heartbeatRunId: run.id,
-        lane: "workhorse",
+        lane: routeRecommendation.selectedCandidate?.lane ?? "workhorse",
         provider: routeDecisionProvider,
         model: routeDecisionModel,
-        reason: "Heartbeat execution dispatched through the configured agent adapter.",
-        riskLevel: "medium",
+        reason: routeExecutionAssessment.status === "ready"
+          ? routeRecommendation.reason
+          : routeExecutionAssessment.status === "blocked"
+            ? `Blocked before adapter dispatch: ${routeRecommendation.reason}`
+            : "Heartbeat execution dispatched through the configured agent adapter.",
+        riskLevel: routeRecommendation.riskLevel,
         taskIntent: issueRef
           ? `Work on ${issueRef.identifier ?? "assigned issue"}: ${issueRef.title}`
           : "Run the configured agent heartbeat.",
@@ -9980,6 +9997,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
           ...buildVentureContextProjectionRouteMetadata(ventureContextProjectionReceipt),
           ...(routeDecisionModelProfile ? { modelProfile: routeDecisionModelProfile } : {}),
           routeRecommendation,
+          routeExecution: routeExecutionAssessment,
           executionSafety: routeDecisionExecutionSafety,
           contextKeys: Object.keys(context).sort().slice(0, 50),
         },
@@ -10007,6 +10025,25 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
               priorModelRouteDecisionId: priorReconciliationBlock.id,
               blockers,
             },
+          },
+        );
+      }
+      if (
+        routeExecutionAssessment.enforced &&
+        routeExecutionAssessment.status !== "ready"
+      ) {
+        throw new ConfigurationIncompleteFailure(
+          `configuration incomplete: active model portfolio blocked adapter dispatch: ${routeExecutionAssessment.blockers.join(", ")}`,
+          {
+            configurationIncomplete: {
+              reason: "model_route_execution",
+              companyId: agent.companyId,
+              agentId: agent.id,
+              issueId: issueRef?.id ?? null,
+              projectId: issueRef?.projectId ?? projectContext?.id ?? null,
+              blockers: routeExecutionAssessment.blockers,
+            },
+            modelRouteExecution: routeExecutionAssessment,
           },
         );
       }

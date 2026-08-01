@@ -89,6 +89,11 @@ export const modelRouteCandidateEvidenceSchema = z.object({
     "manual_review",
     "benchmark",
   ]),
+  authority: z.enum([
+    "provider",
+    "independent",
+    "sysdom_review",
+  ]).optional(),
   sourceLabel: z.string().trim().min(1).max(500),
   sourceUrl: z.string().url().max(2_000).nullable().optional().default(null),
   verifiedAt: z.string().datetime(),
@@ -212,6 +217,21 @@ export const modelRouteRecommendationSchema = z.object({
   }).strict(),
 }).strict();
 
+export const modelRouteExecutionContractSchema = z.object({
+  version: z.literal("sysdom_model_route_execution_v1"),
+  policyVersion: z.string().trim().min(1).max(200),
+  evaluatedAt: z.string().datetime(),
+  portfolio: z.object({
+    revisionId: z.string().uuid(),
+    version: z.number().int().positive(),
+  }).strict(),
+  lane: modelRouteDecisionLaneSchema,
+  provider: z.string().trim().min(1).max(200),
+  model: z.string().trim().min(1).max(300),
+  billingType: modelExecutionBillingTypeSchema,
+  providerRouting: modelRouteCandidateCatalogSchema.shape.providerRouting.nullable(),
+}).strict();
+
 const nullablePositiveInteger = z.number().int().positive().nullable();
 const nullableDateTime = z.string().datetime().nullable();
 const nullableEvidenceSource = z.string().trim().min(1).max(500).nullable();
@@ -314,4 +334,5 @@ export type ModelRouteCandidate = z.infer<typeof modelRouteCandidateSchema>;
 export type ModelRouteRecommendationInput = z.infer<typeof modelRouteRecommendationInputSchema>;
 export type ModelRouteCandidateAssessment = z.infer<typeof modelRouteCandidateAssessmentSchema>;
 export type ModelRouteRecommendation = z.infer<typeof modelRouteRecommendationSchema>;
+export type ModelRouteExecutionContract = z.infer<typeof modelRouteExecutionContractSchema>;
 export type UpdateModelExecutionPolicy = z.infer<typeof updateModelExecutionPolicySchema>;

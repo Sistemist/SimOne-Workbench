@@ -5,6 +5,10 @@
 export { execute } from "./execute.js";
 export { testEnvironment } from "./test.js";
 export { detectModel, parseModelFromConfig, resolveProvider, inferProviderFromModel } from "./detect-model.js";
+export {
+  assessHermesModelRouteExecution,
+  hermesModelRouteExecutionBlockMessage,
+} from "./model-route-execution.js";
 export { getConfigSchema } from "./config-schema.js";
 export {
   listHermesSkills as listSkills,

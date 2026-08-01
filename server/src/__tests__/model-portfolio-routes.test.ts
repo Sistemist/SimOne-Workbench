@@ -73,6 +73,7 @@ function candidate(
     supportsRestrictedData: false,
     evidence: {
       sourceKind: "manual_review",
+      authority: "sysdom_review",
       sourceLabel: "Synthetic test catalog evidence",
       sourceUrl: "https://example.com/models",
       verifiedAt: "2026-07-31T00:00:00.000Z",
@@ -187,6 +188,36 @@ describeEmbeddedPostgres("model portfolio routes", () => {
     expect(activated.body.activatedAt).toEqual(expect.any(String));
     const current = await request(app).get(`/api/companies/${companyId}/model-portfolios/active`);
     expect(current.body).toMatchObject({ id: created.body.id, version: 1, status: "active" });
+  });
+
+  it("does not treat provider catalog evidence as reviewed adoption evidence", async () => {
+    const companyId = await seedCompany();
+    const app = createApp(db, boardActor([companyId]));
+    const catalogOnly = {
+      ...candidate("synthetic/catalog-only"),
+      evidence: {
+        sourceKind: "provider_api",
+        sourceLabel: "Synthetic provider catalog",
+        sourceUrl: "https://example.com/catalog",
+        verifiedAt: "2026-08-01T00:00:00.000Z",
+        expiresAt: "2099-08-15T00:00:00.000Z",
+      },
+    };
+    const created = await request(app)
+      .post(`/api/companies/${companyId}/model-portfolios/revisions`)
+      .send({
+        candidates: [catalogOnly],
+        changeReason: "Catalog facts alone must not activate a model.",
+      });
+
+    const activation = await request(app)
+      .post(`/api/companies/${companyId}/model-portfolios/revisions/${created.body.id}/activate`)
+      .send({ approvalNote: "Attempt activation without quality review." });
+
+    expect(activation.status).toBe(422);
+    expect(activation.body.error).toContain(
+      "adoption_evidence_not_reviewed:synthetic-provider/synthetic/catalog-only",
+    );
   });
 
   it("blocks placeholder identities, unknown billing, duplicates, and stale evidence", async () => {

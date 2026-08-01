@@ -52,7 +52,7 @@ function recommendationInput(
 }
 
 describe("Sysdom first exact-model portfolio proposal", () => {
-  it("is review-only, fresh, exact, and activation-safe without becoming active", () => {
+  it("is review-only, fresh, exact, and blocked from activation pending quality evidence", () => {
     expect(proposal.status).toBe("review_required");
     expect(proposal.candidates.map((candidate) => `${candidate.lane}:${candidate.model}`))
       .toEqual([
@@ -64,7 +64,12 @@ describe("Sysdom first exact-model portfolio proposal", () => {
     expect(modelPortfolioActivationBlockers(
       proposal.candidates,
       new Date(proposal.researchedAt),
-    )).toEqual([]);
+    )).toEqual([
+      "adoption_evidence_not_reviewed:openrouter/google/gemini-3.5-flash-lite",
+      "adoption_evidence_not_reviewed:openrouter/google/gemini-3.6-flash",
+      "adoption_evidence_not_reviewed:openrouter/openai/gpt-5.6-sol",
+      "adoption_evidence_not_reviewed:openrouter/anthropic/claude-fable-5",
+    ]);
     expect(proposal.unresolvedGaps).toEqual(expect.arrayContaining([
       expect.stringContaining("No candidate has produced output-quality"),
       expect.stringContaining("confidential and restricted context remain disabled"),
