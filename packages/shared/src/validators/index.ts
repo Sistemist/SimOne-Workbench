@@ -459,6 +459,7 @@ export {
 export {
   createVentureContextProjectionSchema,
   createVentureStateRevisionSchema,
+  promoteFounderCoachMemorySchema,
   simEngineSchema,
   ventureConstraintHypothesisSchema,
   ventureEngineStateSchema,
@@ -475,6 +476,7 @@ export {
   type DecideSimCycleDiagnosis,
   type CreateVentureContextProjection,
   type CreateVentureStateRevision,
+  type PromoteFounderCoachMemory,
   type PauseSimCycle,
   type StartSimCycle,
   type SubmitSimCycleMap,

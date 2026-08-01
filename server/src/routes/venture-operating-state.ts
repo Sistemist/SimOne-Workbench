@@ -3,6 +3,7 @@ import type { Db } from "@paperclipai/db";
 import {
   createVentureContextProjectionSchema,
   createVentureStateRevisionSchema,
+  promoteFounderCoachMemorySchema,
 } from "@paperclipai/shared";
 import { validate } from "../middleware/validate.js";
 import { logActivity, ventureOperatingStateService } from "../services/index.js";
@@ -23,6 +24,24 @@ export function ventureOperatingStateRoutes(db: Db) {
     assertCompanyAccess(req, companyId);
     res.json(await svc.coach(companyId));
   });
+
+  router.post(
+    "/companies/:companyId/founder-coach/memory-promotions",
+    validate(promoteFounderCoachMemorySchema),
+    async (req, res) => {
+      assertBoard(req);
+      const companyId = req.params.companyId as string;
+      assertCompanyAccess(req, companyId);
+      const actor = getActorInfo(req);
+      const result = await svc.promoteCoachMemory(companyId, req.body, {
+        actorType: "user",
+        actorId: actor.actorId,
+        agentId: actor.agentId,
+        userId: actor.actorId,
+      });
+      res.status(result.created ? 201 : 200).json(result);
+    },
+  );
 
   router.get("/companies/:companyId/venture-state/revisions", async (req, res) => {
     const companyId = req.params.companyId as string;

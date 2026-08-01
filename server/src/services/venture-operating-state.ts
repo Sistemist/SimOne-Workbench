@@ -1,6 +1,7 @@
 import { and, count, desc, eq, inArray, isNull, max, sql } from "drizzle-orm";
 import type { Db } from "@paperclipai/db";
 import {
+  activityLog,
   approvals,
   companies,
   issues,
@@ -12,14 +13,20 @@ import {
 import type {
   CreateVentureContextProjection,
   CreateVentureStateRevision,
+  PromoteFounderCoachMemory,
   VentureContextProjectionContent,
   VentureSourceRef,
 } from "@paperclipai/shared";
-import { notFound, unprocessable } from "../errors.js";
+import { conflict, notFound, unprocessable } from "../errors.js";
 
 export interface VentureOperatingActor {
   agentId: string | null;
   userId: string | null;
+}
+
+interface FounderCoachPromotionActor extends VentureOperatingActor {
+  actorType: "user";
+  actorId: string;
 }
 
 type DbTransaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
@@ -399,6 +406,179 @@ export function ventureOperatingStateService(db: Db) {
         latestCycle,
       };
     },
+
+    promoteCoachMemory: (
+      companyId: string,
+      data: PromoteFounderCoachMemory,
+      actor: FounderCoachPromotionActor,
+    ) =>
+      db.transaction(async (tx) => {
+        await lockCompany(tx, companyId);
+        const [constitution, state, previousProjection] = await Promise.all([
+          currentConstitution(tx, companyId),
+          tx
+            .select()
+            .from(ventureStateRevisions)
+            .where(
+              and(
+                eq(ventureStateRevisions.companyId, companyId),
+                eq(ventureStateRevisions.status, "current"),
+              ),
+            )
+            .then((rows) => rows[0] ?? null),
+          tx
+            .select()
+            .from(ventureContextProjections)
+            .where(
+              and(
+                eq(ventureContextProjections.companyId, companyId),
+                eq(ventureContextProjections.status, "current"),
+              ),
+            )
+            .then((rows) => rows[0] ?? null),
+        ]);
+        if (!constitution) {
+          throw unprocessable("Activate a Venture Constitution before promoting Coach memory");
+        }
+        if (!state) throw notFound("Canonical venture state not found");
+        if (
+          !previousProjection
+          || previousProjection.ventureStateRevisionId !== state.id
+          || previousProjection.constitutionRevisionId !== constitution.id
+        ) {
+          throw conflict(
+            "Canonical venture context changed; refresh Coach before promoting this insight",
+          );
+        }
+
+        const insight = data.insight.trim();
+        const alreadyPromoted = state.content.learnings.some(
+          (learning) => learning.trim() === insight,
+        );
+        const expectedStateIsDirectSource = state.sourceRefs.some(
+          (ref) =>
+            ref.kind === "venture_state_revision"
+            && ref.id === data.expectedStateRevisionId,
+        );
+        if (state.id !== data.expectedStateRevisionId) {
+          const expectedProjectionIsDirectSource = state.sourceRefs.some(
+            (ref) =>
+              ref.kind === "venture_context_projection"
+              && ref.id === data.expectedContextProjectionId,
+          );
+          if (
+            alreadyPromoted
+            && expectedStateIsDirectSource
+            && expectedProjectionIsDirectSource
+          ) {
+            return {
+              state,
+              contextProjection: previousProjection,
+              created: false,
+            };
+          }
+          throw conflict("Canonical venture state changed; refresh Coach before promoting this insight");
+        }
+        if (previousProjection.id !== data.expectedContextProjectionId) {
+          throw conflict(
+            "Canonical venture context changed; refresh Coach before promoting this insight",
+          );
+        }
+        if (alreadyPromoted) {
+          return {
+            state,
+            contextProjection: previousProjection,
+            created: false,
+          };
+        }
+
+        const now = new Date();
+        await tx
+          .update(ventureStateRevisions)
+          .set({ status: "superseded", supersededAt: now })
+          .where(eq(ventureStateRevisions.id, state.id));
+
+        const stateVersion = await nextStateVersion(tx, companyId);
+        const promotedState = await tx
+          .insert(ventureStateRevisions)
+          .values({
+            companyId,
+            version: stateVersion,
+            status: "current",
+            content: {
+              ...state.content,
+              learnings: [...state.content.learnings, insight].slice(-100),
+              refreshedAt: now.toISOString(),
+            },
+            creationReason: "Founder promoted a SIM Coach insight into canonical venture memory.",
+            sourceRefs: uniqueSourceRefs([
+              ...state.sourceRefs,
+              {
+                kind: "venture_state_revision",
+                id: state.id,
+                label: `Canonical venture state v${state.version}`,
+                capturedAt: state.createdAt.toISOString(),
+              },
+              {
+                kind: "venture_context_projection",
+                id: previousProjection.id,
+                label: `Venture Context Projection v${previousProjection.version}`,
+                capturedAt: previousProjection.createdAt.toISOString(),
+              },
+            ]),
+            constitutionRevisionId: constitution.id,
+            basedOnCycleId: state.basedOnCycleId,
+            createdByAgentId: actor.agentId,
+            createdByUserId: actor.userId,
+          })
+          .returning()
+          .then((rows) => rows[0]!);
+
+        await tx
+          .update(ventureContextProjections)
+          .set({ status: "superseded", supersededAt: now })
+          .where(eq(ventureContextProjections.id, previousProjection.id));
+        const projectionVersion = await nextProjectionVersion(tx, companyId);
+        const contextProjection = await tx
+          .insert(ventureContextProjections)
+          .values({
+            companyId,
+            version: projectionVersion,
+            status: "current",
+            constitutionRevisionId: constitution.id,
+            ventureStateRevisionId: promotedState.id,
+            creationReason: "Refresh bounded context after founder-approved Coach memory.",
+            content: buildProjectionContent(constitution, promotedState),
+            sourceRefs: buildProjectionSourceRefs(constitution, promotedState),
+            supersedesProjectionId: previousProjection.id,
+            createdByAgentId: actor.agentId,
+            createdByUserId: actor.userId,
+          })
+          .returning()
+          .then((rows) => rows[0]!);
+
+        await tx.insert(activityLog).values({
+          companyId,
+          actorType: actor.actorType,
+          actorId: actor.actorId,
+          agentId: actor.agentId,
+          action: "founder_coach.memory_promoted",
+          entityType: "venture_state_revision",
+          entityId: promotedState.id,
+          details: {
+            stateVersion: promotedState.version,
+            contextProjectionId: contextProjection.id,
+            contextProjectionVersion: contextProjection.version,
+            sourceRefCount: promotedState.sourceRefs.length,
+          },
+        });
+
+        return {
+          state: promotedState,
+          contextProjection,
+          created: true,
+        };
+      }),
 
     cockpit: async (companyId: string) => {
       const [

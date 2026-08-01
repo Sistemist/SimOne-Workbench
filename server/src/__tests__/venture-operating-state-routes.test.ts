@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { eq } from "drizzle-orm";
 import express from "express";
 import request from "supertest";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
@@ -35,6 +36,16 @@ function boardActor(companyIds: string[]): Express.Request["actor"] {
       membershipRole: "admin",
       status: "active",
     })),
+  };
+}
+
+function agentActor(companyId: string): Express.Request["actor"] {
+  return {
+    type: "agent",
+    agentId: randomUUID(),
+    companyId,
+    runId: null,
+    source: "agent_jwt",
   };
 }
 
@@ -325,6 +336,292 @@ describeEmbeddedPostgres("venture operating state routes", () => {
         }),
       ]),
     );
+  });
+
+  it("promotes one founder-approved Coach insight into canonical state and projection history", async () => {
+    const companyId = await seedCompany();
+    await seedActiveConstitution(companyId);
+    const app = createApp(db, boardActor([companyId]));
+
+    const state = await request(app)
+      .post(`/api/companies/${companyId}/venture-state/revisions`)
+      .send({ content: stateContent(), creationReason: "Initialize Coach context." });
+    const projection = await request(app)
+      .post(`/api/companies/${companyId}/context-projections`)
+      .send({ ventureStateRevisionId: state.body.id, creationReason: "Project Coach context." });
+    const insight =
+      "Founder activation should be proven with one bounded onboarding session before acquisition expands.";
+
+    const promoted = await request(app)
+      .post(`/api/companies/${companyId}/founder-coach/memory-promotions`)
+      .send({
+        expectedStateRevisionId: state.body.id,
+        expectedContextProjectionId: projection.body.id,
+        insight,
+      });
+
+    expect(promoted.status).toBe(201);
+    expect(promoted.body).toMatchObject({
+      created: true,
+      state: {
+        version: 2,
+        status: "current",
+        content: { learnings: [insight] },
+      },
+      contextProjection: {
+        version: 2,
+        status: "current",
+        ventureStateRevisionId: promoted.body.state.id,
+        supersedesProjectionId: projection.body.id,
+      },
+    });
+    expect(promoted.body.state.sourceRefs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "venture_state_revision", id: state.body.id }),
+        expect.objectContaining({ kind: "venture_context_projection", id: projection.body.id }),
+      ]),
+    );
+
+    const coach = await request(app).get(`/api/companies/${companyId}/founder-coach`);
+    expect(coach.status).toBe(200);
+    expect(coach.body.guidance).toMatchObject({
+      promotedLearning: insight,
+      stateVersion: 2,
+      projectionVersion: 2,
+    });
+    expect(coach.body.currentMemory).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: promoted.body.state.id, kind: "venture_state", status: "current" }),
+        expect.objectContaining({
+          id: promoted.body.contextProjection.id,
+          kind: "context_projection",
+          status: "current",
+        }),
+      ]),
+    );
+    expect(coach.body.supersededMemory).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: state.body.id, kind: "venture_state", status: "superseded" }),
+        expect.objectContaining({
+          id: projection.body.id,
+          kind: "context_projection",
+          status: "superseded",
+        }),
+      ]),
+    );
+
+    const replay = await request(app)
+      .post(`/api/companies/${companyId}/founder-coach/memory-promotions`)
+      .send({
+        expectedStateRevisionId: state.body.id,
+        expectedContextProjectionId: projection.body.id,
+        insight,
+      });
+    expect(replay.status).toBe(200);
+    expect(replay.body).toMatchObject({
+      created: false,
+      state: { id: promoted.body.state.id, version: 2 },
+      contextProjection: { id: promoted.body.contextProjection.id, version: 2 },
+    });
+
+    const stale = await request(app)
+      .post(`/api/companies/${companyId}/founder-coach/memory-promotions`)
+      .send({
+        expectedStateRevisionId: state.body.id,
+        expectedContextProjectionId: projection.body.id,
+        insight: "A different stale insight must not overwrite newer founder memory.",
+      });
+    expect(stale.status).toBe(409);
+
+    const activity = await db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.action, "founder_coach.memory_promoted"));
+    expect(activity).toHaveLength(1);
+    expect(activity[0]).toMatchObject({
+      companyId,
+      entityType: "venture_state_revision",
+      entityId: promoted.body.state.id,
+    });
+  });
+
+  it("rejects a Coach approval when its projection or Constitution context has changed", async () => {
+    const companyId = await seedCompany();
+    const constitution = await seedActiveConstitution(companyId);
+    const app = createApp(db, boardActor([companyId]));
+    const state = await request(app)
+      .post(`/api/companies/${companyId}/venture-state/revisions`)
+      .send({ content: stateContent(), creationReason: "Initialize Coach context." });
+    const firstProjection = await request(app)
+      .post(`/api/companies/${companyId}/context-projections`)
+      .send({ ventureStateRevisionId: state.body.id, creationReason: "Project Coach context." });
+    const refreshedProjection = await request(app)
+      .post(`/api/companies/${companyId}/context-projections`)
+      .send({ ventureStateRevisionId: state.body.id, creationReason: "Refresh Coach context." });
+
+    const staleProjection = await request(app)
+      .post(`/api/companies/${companyId}/founder-coach/memory-promotions`)
+      .send({
+        expectedStateRevisionId: state.body.id,
+        expectedContextProjectionId: firstProjection.body.id,
+        insight: "Do not approve against a superseded projection.",
+      });
+    expect(staleProjection.status).toBe(409);
+
+    await db
+      .update(ventureConstitutionRevisions)
+      .set({
+        status: "superseded",
+        supersededAt: new Date("2026-08-01T00:05:00.000Z"),
+      })
+      .where(eq(ventureConstitutionRevisions.id, constitution.id));
+    await db.insert(ventureConstitutionRevisions).values({
+      companyId,
+      version: 2,
+      status: "active",
+      content: constitutionContent(),
+      changeReason: "Tighten founder governance.",
+      sourceRefs: [],
+      createdByUserId: "founder-1",
+      activatedByUserId: "founder-1",
+      approvalNote: "Approved.",
+      activatedAt: new Date("2026-08-01T00:06:00.000Z"),
+    });
+
+    const staleConstitution = await request(app)
+      .post(`/api/companies/${companyId}/founder-coach/memory-promotions`)
+      .send({
+        expectedStateRevisionId: state.body.id,
+        expectedContextProjectionId: refreshedProjection.body.id,
+        insight: "Do not silently rebase founder judgment onto new governance.",
+      });
+    expect(staleConstitution.status).toBe(409);
+
+    const states = await db
+      .select()
+      .from(ventureStateRevisions)
+      .where(eq(ventureStateRevisions.companyId, companyId));
+    const promotedActivities = await db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.action, "founder_coach.memory_promoted"));
+    expect(states).toHaveLength(1);
+    expect(states[0]).toMatchObject({ id: state.body.id, status: "current" });
+    expect(promotedActivities).toHaveLength(0);
+  });
+
+  it("does not treat a current state paired with an older projection as an idempotent replay", async () => {
+    const companyId = await seedCompany();
+    await seedActiveConstitution(companyId);
+    const app = createApp(db, boardActor([companyId]));
+    const firstState = await request(app)
+      .post(`/api/companies/${companyId}/venture-state/revisions`)
+      .send({ content: stateContent(), creationReason: "Initialize Coach context." });
+    const projection = await request(app)
+      .post(`/api/companies/${companyId}/context-projections`)
+      .send({ ventureStateRevisionId: firstState.body.id, creationReason: "Project Coach context." });
+    const insight = "A current state must never be returned with a projection of older state.";
+    const secondState = await request(app)
+      .post(`/api/companies/${companyId}/venture-state/revisions`)
+      .send({
+        content: { ...stateContent(), learnings: [insight] },
+        sourceRefs: [
+          { kind: "venture_state_revision", id: firstState.body.id, label: "Prior state" },
+          { kind: "venture_context_projection", id: projection.body.id, label: "Prior projection" },
+        ],
+        creationReason: "Create a state without refreshing its projection.",
+      });
+
+    const response = await request(app)
+      .post(`/api/companies/${companyId}/founder-coach/memory-promotions`)
+      .send({
+        expectedStateRevisionId: firstState.body.id,
+        expectedContextProjectionId: projection.body.id,
+        insight,
+      });
+
+    expect(secondState.status).toBe(201);
+    expect(response.status).toBe(409);
+    const promotedActivities = await db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.action, "founder_coach.memory_promoted"));
+    expect(promotedActivities).toHaveLength(0);
+  });
+
+  it("keeps Coach memory promotion scoped to the URL company and expected revisions", async () => {
+    const firstCompanyId = await seedCompany("First venture");
+    const secondCompanyId = await seedCompany("Second venture");
+    await seedActiveConstitution(firstCompanyId);
+    await seedActiveConstitution(secondCompanyId);
+    const bothCompaniesApp = createApp(db, boardActor([firstCompanyId, secondCompanyId]));
+    const firstState = await request(bothCompaniesApp)
+      .post(`/api/companies/${firstCompanyId}/venture-state/revisions`)
+      .send({ content: stateContent(), creationReason: "Initialize first venture." });
+    const firstProjection = await request(bothCompaniesApp)
+      .post(`/api/companies/${firstCompanyId}/context-projections`)
+      .send({ ventureStateRevisionId: firstState.body.id, creationReason: "Project first venture." });
+    const secondState = await request(bothCompaniesApp)
+      .post(`/api/companies/${secondCompanyId}/venture-state/revisions`)
+      .send({ content: stateContent(), creationReason: "Initialize second venture." });
+    const secondProjection = await request(bothCompaniesApp)
+      .post(`/api/companies/${secondCompanyId}/context-projections`)
+      .send({ ventureStateRevisionId: secondState.body.id, creationReason: "Project second venture." });
+
+    const inaccessibleCompany = await request(createApp(db, boardActor([firstCompanyId])))
+      .post(`/api/companies/${secondCompanyId}/founder-coach/memory-promotions`)
+      .send({
+        expectedStateRevisionId: secondState.body.id,
+        expectedContextProjectionId: secondProjection.body.id,
+        insight: "No cross-company writes.",
+      });
+    const foreignRevision = await request(bothCompaniesApp)
+      .post(`/api/companies/${firstCompanyId}/founder-coach/memory-promotions`)
+      .send({
+        expectedStateRevisionId: secondState.body.id,
+        expectedContextProjectionId: secondProjection.body.id,
+        insight: "No foreign revision writes.",
+      });
+
+    expect(inaccessibleCompany.status).toBe(403);
+    expect(foreignRevision.status).toBe(409);
+    const firstCompanyStates = await db
+      .select()
+      .from(ventureStateRevisions)
+      .where(eq(ventureStateRevisions.companyId, firstCompanyId));
+    const firstCompanyProjections = await db
+      .select()
+      .from(ventureContextProjections)
+      .where(eq(ventureContextProjections.companyId, firstCompanyId));
+    expect(firstCompanyStates).toHaveLength(1);
+    expect(firstCompanyStates[0]?.id).toBe(firstState.body.id);
+    expect(firstCompanyProjections).toHaveLength(1);
+    expect(firstCompanyProjections[0]?.id).toBe(firstProjection.body.id);
+  });
+
+  it("keeps Coach memory promotion behind the board boundary", async () => {
+    const companyId = await seedCompany();
+    await seedActiveConstitution(companyId);
+    const boardApp = createApp(db, boardActor([companyId]));
+    const state = await request(boardApp)
+      .post(`/api/companies/${companyId}/venture-state/revisions`)
+      .send({ content: stateContent(), creationReason: "Initialize Coach context." });
+    const projection = await request(boardApp)
+      .post(`/api/companies/${companyId}/context-projections`)
+      .send({ ventureStateRevisionId: state.body.id, creationReason: "Project Coach context." });
+
+    const response = await request(createApp(db, agentActor(companyId)))
+      .post(`/api/companies/${companyId}/founder-coach/memory-promotions`)
+      .send({
+        expectedStateRevisionId: state.body.id,
+        expectedContextProjectionId: projection.body.id,
+        insight: "An agent must not approve founder memory.",
+      });
+
+    expect(response.status).toBe(403);
+    const states = await request(boardApp).get(`/api/companies/${companyId}/venture-state/revisions`);
+    expect(states.body).toHaveLength(1);
+    expect(states.body[0]).toMatchObject({ id: state.body.id, status: "current" });
   });
 
   it("returns a founder-readable cockpit with governance and work counts", async () => {

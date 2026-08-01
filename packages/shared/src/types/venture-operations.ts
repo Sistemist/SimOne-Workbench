@@ -168,6 +168,12 @@ export interface FounderCoachSnapshot {
   latestCycle: SimCycle | null;
 }
 
+export interface FounderCoachMemoryPromotion {
+  state: VentureStateRevision;
+  contextProjection: VentureContextProjection;
+  created: boolean;
+}
+
 export const SIM_CYCLE_PHASES = ["map", "diagnose", "leverage", "compound", "complete"] as const;
 export type SimCyclePhase = (typeof SIM_CYCLE_PHASES)[number];
 

@@ -56,6 +56,12 @@ export const createVentureContextProjectionSchema = z.object({
   creationReason: z.string().trim().min(1).max(2_000),
 });
 
+export const promoteFounderCoachMemorySchema = z.object({
+  expectedStateRevisionId: z.string().uuid(),
+  expectedContextProjectionId: z.string().uuid(),
+  insight: boundedText,
+});
+
 export const startSimCycleSchema = z.object({
   startReason: z.string().trim().min(1).max(2_000),
 });
@@ -97,6 +103,7 @@ export const pauseSimCycleSchema = z.object({
 
 export type CreateVentureStateRevision = z.infer<typeof createVentureStateRevisionSchema>;
 export type CreateVentureContextProjection = z.infer<typeof createVentureContextProjectionSchema>;
+export type PromoteFounderCoachMemory = z.infer<typeof promoteFounderCoachMemorySchema>;
 export type StartSimCycle = z.infer<typeof startSimCycleSchema>;
 export type SubmitSimCycleMap = z.infer<typeof submitSimCycleMapSchema>;
 export type DecideSimCycleDiagnosis = z.infer<typeof decideSimCycleDiagnosisSchema>;

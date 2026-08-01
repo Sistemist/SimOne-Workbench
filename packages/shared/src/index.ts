@@ -1543,6 +1543,7 @@ export {
   SIM_CYCLE_STATUSES,
   type FounderCoachGuidance,
   type FounderCoachMemoryEntry,
+  type FounderCoachMemoryPromotion,
   type FounderCoachSnapshot,
   type FounderCockpitSnapshot,
   type DelegatedSimCycleIntervention,
@@ -1571,6 +1572,7 @@ export {
 export {
   createVentureContextProjectionSchema,
   createVentureStateRevisionSchema,
+  promoteFounderCoachMemorySchema,
   simEngineSchema,
   ventureConstraintHypothesisSchema,
   ventureEngineStateSchema,
@@ -1587,6 +1589,7 @@ export {
   type DecideSimCycleDiagnosis,
   type CreateVentureContextProjection,
   type CreateVentureStateRevision,
+  type PromoteFounderCoachMemory,
   type PauseSimCycle,
   type StartSimCycle,
   type SubmitSimCycleMap,

@@ -2366,6 +2366,7 @@ for (const [path, summary] of controlCoreReadRoutes) {
 
 const controlCoreWriteRoutes = [
   ["/api/companies/{companyId}/context-projections", "Create a provenance-backed context projection"],
+  ["/api/companies/{companyId}/founder-coach/memory-promotions", "Promote a founder-approved Coach insight"],
   ["/api/companies/{companyId}/sim-cycles", "Start a founder-triggered guided SIM cycle"],
   ["/api/companies/{companyId}/sim-cycles/{id}/compound", "Complete the COMPOUND step"],
   [

@@ -16,6 +16,7 @@ const mockPluginsApi = vi.hoisted(() => ({
 }));
 const mockFounderCockpitApi = vi.hoisted(() => ({
   getCoach: vi.fn(),
+  promoteCoachMemory: vi.fn(),
 }));
 
 vi.mock("@/api/plugins", () => ({
@@ -99,6 +100,7 @@ describe("SimCoach", () => {
     mockPluginsApi.list.mockReset();
     mockPluginsApi.bridgePerformAction.mockReset();
     mockFounderCockpitApi.getCoach.mockReset();
+    mockFounderCockpitApi.promoteCoachMemory.mockReset();
     mockPluginsApi.list.mockResolvedValue([]);
     mockPluginsApi.bridgePerformAction.mockResolvedValue({
       data: {
@@ -112,6 +114,11 @@ describe("SimCoach", () => {
       supersededMemory: [],
       activeCycle: null,
       latestCycle: null,
+    });
+    mockFounderCockpitApi.promoteCoachMemory.mockResolvedValue({
+      created: true,
+      state: { id: "state-3", version: 3 },
+      contextProjection: { id: "projection-3", version: 3 },
     });
   });
 
@@ -149,7 +156,7 @@ describe("SimCoach", () => {
   });
 
   it("turns canonical venture state into one bounded action and separates current from superseded memory", async () => {
-    mockFounderCockpitApi.getCoach.mockResolvedValue({
+    const coachSnapshotV2 = {
       guidance: {
         headline: "Founder activation is the current constraint.",
         explanation: "Validate the first-use loop before increasing acquisition.",
@@ -219,7 +226,48 @@ describe("SimCoach", () => {
       ],
       activeCycle: null,
       latestCycle: null,
-    });
+    };
+    const promotedInsight =
+      "Founder activation needs one bounded onboarding proof before acquisition expands.";
+    const coachSnapshotV3 = {
+      ...coachSnapshotV2,
+      guidance: {
+        ...coachSnapshotV2.guidance,
+        promotedLearning: promotedInsight,
+        stateVersion: 3,
+        projectionVersion: 3,
+      },
+      currentMemory: [
+        {
+          ...coachSnapshotV2.currentMemory[0],
+          id: "state-3",
+          version: 3,
+          creationReason: "Founder promoted a SIM Coach insight into canonical venture memory.",
+        },
+        {
+          ...coachSnapshotV2.currentMemory[1],
+          id: "projection-3",
+          version: 3,
+          creationReason: "Refresh bounded context after founder-approved Coach memory.",
+        },
+      ],
+      supersededMemory: [
+        {
+          ...coachSnapshotV2.currentMemory[0],
+          status: "superseded",
+          supersededAt: "2026-08-01T00:02:00.000Z",
+        },
+        {
+          ...coachSnapshotV2.currentMemory[1],
+          status: "superseded",
+          supersededAt: "2026-08-01T00:02:00.000Z",
+        },
+        ...coachSnapshotV2.supersededMemory,
+      ],
+    };
+    mockFounderCockpitApi.getCoach
+      .mockResolvedValueOnce(coachSnapshotV2)
+      .mockResolvedValue(coachSnapshotV3);
 
     const container = document.createElement("div");
     document.body.appendChild(container);
@@ -245,6 +293,49 @@ describe("SimCoach", () => {
         (link) => link.getAttribute("href") === "/cockpit" && link.textContent?.includes("Open Founder Cockpit"),
       ),
     ).toBe(true);
+    expect(text).toContain("Promote a Coach insight");
+    expect(text).toContain("This does not start an agent or make a model call.");
+
+    const insight = container.querySelector<HTMLTextAreaElement>("#canonical-coach-insight");
+    expect(insight?.value).toContain("Founder activation is the current constraint.");
+    expect(insight?.maxLength).toBe(4000);
+    expect(mockFounderCockpitApi.promoteCoachMemory).not.toHaveBeenCalled();
+
+    await act(async () => {
+      if (!insight) throw new Error("Expected the canonical Coach insight editor");
+      const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
+      setter?.call(
+        insight,
+        promotedInsight,
+      );
+      insight.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    const promoteButton = Array.from(container.querySelectorAll<HTMLButtonElement>("button")).find(
+      (button) => button.textContent?.includes("Promote to venture memory"),
+    );
+    expect(promoteButton).toBeTruthy();
+    await act(async () => {
+      promoteButton?.click();
+      for (let i = 0; i < 5; i += 1) {
+        await Promise.resolve();
+      }
+    });
+    await flushReact();
+
+    expect(mockFounderCockpitApi.promoteCoachMemory).toHaveBeenCalledWith("company-1", {
+      expectedStateRevisionId: "state-2",
+      expectedContextProjectionId: "projection-2",
+      insight: promotedInsight,
+    });
+    expect(mockFounderCockpitApi.getCoach.mock.calls.length).toBeGreaterThan(1);
+    expect(mockPluginsApi.bridgePerformAction).not.toHaveBeenCalled();
+    expect(container.textContent).toContain(
+      "Promoted as venture state v3 and Context Projection v3.",
+    );
+    expect(container.textContent).toContain(promotedInsight);
+    expect(container.textContent).toContain("Venture state v3");
+    expect(container.textContent).toContain("Context projection v3");
+    expect(container.textContent).toContain("Venture state v2 · Superseded");
 
     flushSync(() => {
       root.unmount();

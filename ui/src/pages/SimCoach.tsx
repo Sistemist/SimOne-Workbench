@@ -13,10 +13,15 @@ import {
   Workflow,
   Users,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
+import type {
+  FounderCoachGuidance,
+  FounderCoachMemoryPromotion,
+} from "@paperclipai/shared";
 import { Link } from "@/lib/router";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { founderCockpitApi } from "@/api/founderCockpit";
 import { pluginsApi } from "@/api/plugins";
 import { useBreadcrumbs } from "../context/BreadcrumbContext";
@@ -244,6 +249,76 @@ type WikiAnswerSource = {
   kind: "wiki-page" | "raw-source";
   path: string;
 };
+
+function buildCanonicalCoachInsight(guidance: FounderCoachGuidance) {
+  const headline = guidance.activeConstraint?.hypothesis ?? guidance.headline;
+  return `${headline} ${guidance.explanation}`.trim();
+}
+
+function CoachMemoryPromotionForm({
+  guidance,
+  onPromote,
+}: {
+  guidance: FounderCoachGuidance;
+  onPromote: (insight: string) => Promise<void>;
+}) {
+  const [insight, setInsight] = useState(() => buildCanonicalCoachInsight(guidance));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function promote() {
+    setSaving(true);
+    setError(null);
+    try {
+      await onPromote(insight.trim());
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "The Coach insight could not be promoted. Refresh the canonical state and try again.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section aria-label="Promote Coach insight" className="mt-4 rounded-md border border-border bg-background p-4">
+      <label htmlFor="canonical-coach-insight" className="text-sm font-medium text-foreground">
+        Promote a Coach insight
+      </label>
+      <p id="canonical-coach-insight-help" className="mt-1 text-xs leading-5 text-muted-foreground">
+        Review and edit this proposed judgment before it becomes a new immutable venture-state and
+        Context Projection version. This does not start an agent or make a model call.{" "}
+        {insight.length}/4000 characters.
+      </p>
+      <Textarea
+        id="canonical-coach-insight"
+        aria-describedby="canonical-coach-insight-help"
+        className="mt-3 min-h-24"
+        maxLength={4000}
+        value={insight}
+        onChange={(event) => setInsight(event.target.value)}
+      />
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <Button
+          type="button"
+          size="sm"
+          disabled={saving || insight.trim().length === 0}
+          onClick={promote}
+        >
+          {saving ? "Promoting…" : "Promote to venture memory"}
+        </Button>
+        <span className="text-xs text-muted-foreground">Founder approval is recorded in the activity ledger.</span>
+      </div>
+      {error ? (
+        <p role="alert" className="mt-2 text-xs leading-5 text-destructive">
+          {error}
+        </p>
+      ) : null}
+    </section>
+  );
+}
 
 function loadScannerCoachContext(): ScannerCoachContext | null {
   try {
@@ -498,11 +573,16 @@ function methodologyForScannerContext(context: ScannerCoachContext): Methodology
 export function SimCoach() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const { selectedCompany } = useCompany();
+  const queryClient = useQueryClient();
   const companyId = selectedCompany?.id ?? null;
   const companyName = selectedCompany?.name ?? "this company";
   const [promotionState, setPromotionState] = useState<WikiPromotionState>({ status: "idle" });
   const [answerPromotionState, setAnswerPromotionState] = useState<WikiPromotionState>({ status: "idle" });
   const [retrievalState, setRetrievalState] = useState<WikiRetrievalState>({ status: "idle" });
+  const [canonicalPromotion, setCanonicalPromotion] = useState<{
+    companyId: string;
+    result: FounderCoachMemoryPromotion;
+  } | null>(null);
   const driverText = useMemo(() => drivers.join(" / "), []);
   const scannerContext = useMemo(loadScannerCoachContext, []);
   const methodologyContext = scannerContext ? methodologyForScannerContext(scannerContext) : null;
@@ -519,6 +599,14 @@ export function SimCoach() {
     enabled: Boolean(companyId),
   });
   const simWikiPlugin = plugins?.find((plugin) => plugin.packageName === SIM_WIKI_PACKAGE);
+  const currentStateRevisionId =
+    coachSnapshot?.currentMemory.find(
+      (entry) => entry.kind === "venture_state" && entry.status === "current",
+    )?.id ?? null;
+  const currentContextProjectionId =
+    coachSnapshot?.currentMemory.find(
+      (entry) => entry.kind === "context_projection" && entry.status === "current",
+    )?.id ?? null;
   const simWikiReady = simWikiPlugin?.status === "ready";
   const retrievalChannel = retrievalState.status === "queued" ? retrievalState.channel : null;
   const resolvedCoachFlow = useMemo(
@@ -677,6 +765,31 @@ export function SimCoach() {
         message: error instanceof Error ? error.message : "Could not save to SIM Wiki.",
       });
     }
+  }
+
+  async function promoteCanonicalCoachMemory(insight: string) {
+    if (!companyId || !currentStateRevisionId || !currentContextProjectionId) return;
+    setCanonicalPromotion(null);
+    const result = await founderCockpitApi.promoteCoachMemory(companyId, {
+      expectedStateRevisionId: currentStateRevisionId,
+      expectedContextProjectionId: currentContextProjectionId,
+      insight,
+    });
+    setCanonicalPromotion({ companyId, result });
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.founderCockpit.coach(companyId),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.founderCockpit.snapshot(companyId),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.founderCockpit.stateRevisions(companyId),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.founderCockpit.contextProjections(companyId),
+      }),
+    ]);
   }
 
   async function queueWikiRetrieval() {
@@ -896,6 +1009,21 @@ export function SimCoach() {
                 Grounded in {coachSnapshot.guidance.sourceRefs.length} canonical source
                 {coachSnapshot.guidance.sourceRefs.length === 1 ? "" : "s"}; open the Cockpit to inspect provenance.
               </p>
+              {currentStateRevisionId && currentContextProjectionId ? (
+                <CoachMemoryPromotionForm
+                  key={currentStateRevisionId}
+                  guidance={coachSnapshot.guidance}
+                  onPromote={promoteCanonicalCoachMemory}
+                />
+              ) : null}
+              {canonicalPromotion?.companyId === companyId
+                && canonicalPromotion.result.state.id === currentStateRevisionId ? (
+                <p aria-live="polite" role="status" className="mt-3 text-xs leading-5 text-emerald-700 dark:text-emerald-200">
+                  {canonicalPromotion.result.created ? "Promoted" : "Already current"} as venture state v
+                  {canonicalPromotion.result.state.version} and Context Projection v
+                  {canonicalPromotion.result.contextProjection.version}.
+                </p>
+              ) : null}
             </>
           ) : (
             <div className="mt-4 rounded-md border border-dashed border-border p-4">

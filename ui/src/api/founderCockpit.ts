@@ -3,6 +3,7 @@ import type {
   CreateVentureContextProjection,
   CreateVentureStateRevision,
   FounderCoachSnapshot,
+  FounderCoachMemoryPromotion,
   FounderCockpitSnapshot,
   CommitSimCycleLeverage,
   CompleteSimCycleCompound,
@@ -16,6 +17,7 @@ import type {
   VentureConstitutionRevision,
   VentureContextProjection,
   VentureStateRevision,
+  PromoteFounderCoachMemory,
 } from "@paperclipai/shared";
 import { api } from "./client";
 
@@ -24,6 +26,11 @@ export const founderCockpitApi = {
     api.get<FounderCockpitSnapshot>(`/companies/${companyId}/founder-cockpit`),
   getCoach: (companyId: string) =>
     api.get<FounderCoachSnapshot>(`/companies/${companyId}/founder-coach`),
+  promoteCoachMemory: (companyId: string, data: PromoteFounderCoachMemory) =>
+    api.post<FounderCoachMemoryPromotion>(
+      `/companies/${companyId}/founder-coach/memory-promotions`,
+      data,
+    ),
   constitutionRevisions: (companyId: string) =>
     api.get<VentureConstitutionRevision[]>(
       `/companies/${companyId}/venture-constitution/revisions`,

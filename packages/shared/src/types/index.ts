@@ -562,6 +562,7 @@ export {
   SIM_CYCLE_STATUSES,
   type FounderCoachGuidance,
   type FounderCoachMemoryEntry,
+  type FounderCoachMemoryPromotion,
   type FounderCoachSnapshot,
   type FounderCockpitSnapshot,
   type DelegatedSimCycleIntervention,
