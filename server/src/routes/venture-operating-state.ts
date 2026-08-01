@@ -66,6 +66,7 @@ export function ventureOperatingStateRoutes(db: Db) {
     "/companies/:companyId/context-projections",
     validate(createVentureContextProjectionSchema),
     async (req, res) => {
+      assertBoard(req);
       const companyId = req.params.companyId as string;
       assertCompanyAccess(req, companyId);
       const actor = getActorInfo(req);

@@ -113,6 +113,22 @@ function routeDecisionOutputArtifacts(decision: ModelRouteDecisionAuditRow) {
   });
 }
 
+function routeContextProjectionEvidence(decision: ModelRouteDecisionAuditRow) {
+  const metadata = decision.metadata ?? {};
+  const id = typeof metadata.contextProjectionId === "string" ? metadata.contextProjectionId : null;
+  const version =
+    typeof metadata.contextProjectionVersion === "number" ? metadata.contextProjectionVersion : null;
+  if (!id || version === null) return null;
+  return {
+    id,
+    version,
+    constitutionRevisionId:
+      typeof metadata.constitutionRevisionId === "string" ? metadata.constitutionRevisionId : null,
+    ventureStateRevisionId:
+      typeof metadata.ventureStateRevisionId === "string" ? metadata.ventureStateRevisionId : null,
+  };
+}
+
 function routeLaneEvidence(decision: ModelRouteDecisionAuditRow): { title: string; body: string } | null {
   if (decision.lane === "deliberation_audit") {
     return {
@@ -318,6 +334,7 @@ function DecisionCard({
   const laneEvidence = routeLaneEvidence(decision);
   const executionSafety = routeExecutionSafety(decision);
   const executionReconciliation = routeExecutionReconciliation(decision);
+  const contextProjection = routeContextProjectionEvidence(decision);
 
   return (
     <Card>
@@ -397,6 +414,28 @@ function DecisionCard({
             </div>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">{laneEvidence.body}</p>
           </div>
+        ) : null}
+
+        {contextProjection ? (
+          <section
+            aria-label="Venture context projection evidence"
+            className="rounded-md border border-primary/30 bg-primary/5 px-3 py-3"
+          >
+            <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Founder-approved venture context
+            </div>
+            <p className="mt-1 text-sm leading-6">
+              Context Projection v{contextProjection.version} was pinned to this delegated run.
+            </p>
+            <details className="mt-2 text-xs text-muted-foreground">
+              <summary className="cursor-pointer font-medium text-foreground">Projection receipt</summary>
+              <dl className="mt-2 grid gap-1 font-mono">
+                <div><dt className="inline">projection </dt><dd className="inline">{contextProjection.id}</dd></div>
+                <div><dt className="inline">constitution </dt><dd className="inline">{contextProjection.constitutionRevisionId ?? "not recorded"}</dd></div>
+                <div><dt className="inline">venture state </dt><dd className="inline">{contextProjection.ventureStateRevisionId ?? "not recorded"}</dd></div>
+              </dl>
+            </details>
+          </section>
         ) : null}
 
         {executionSafety ? (

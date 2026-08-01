@@ -643,6 +643,50 @@ describe("renderPaperclipWakePrompt", () => {
     expect(prompt).toContain("named unblock owner/action");
   });
 
+  it("preserves and renders a pinned Venture Context Projection receipt", () => {
+    const payload = {
+      reason: "issue_assigned",
+      issue: {
+        id: "issue-1",
+        identifier: "SYS-101",
+        title: "Run one founder onboarding session",
+        status: "todo",
+      },
+      ventureContextProjection: {
+        id: "11111111-1111-4111-8111-111111111111",
+        version: 4,
+        constitutionRevisionId: "22222222-2222-4222-8222-222222222222",
+        ventureStateRevisionId: "33333333-3333-4333-8333-333333333333",
+        creationReason: "Founder committed the LEVERAGE intervention.",
+        createdAt: "2026-08-01T10:00:00.000Z",
+        content: {
+          purpose: "Keep the founder in control.",
+          ventureSummary: "Sysdom AI is preparing a controlled founder cohort.",
+        },
+        sourceRefs: [{ kind: "founder_session", label: "Founder review" }],
+      },
+      commentWindow: { requestedCount: 0, includedCount: 0, missingCount: 0 },
+      comments: [],
+      fallbackFetchNeeded: false,
+    };
+
+    const serialized = stringifyPaperclipWakePayload(payload);
+    expect(JSON.parse(serialized ?? "{}")).toMatchObject({
+      ventureContextProjection: {
+        id: "11111111-1111-4111-8111-111111111111",
+        version: 4,
+        content: {
+          purpose: "Keep the founder in control.",
+        },
+        sourceRefs: [{ kind: "founder_session", label: "Founder review" }],
+      },
+    });
+    const prompt = renderPaperclipWakePrompt(payload);
+    expect(prompt).toContain("venture context projection: v4");
+    expect(prompt).toContain("venture purpose: Keep the founder in control.");
+    expect(prompt).toContain("venture provenance references: 1");
+  });
+
   it("preserves Chinese, Japanese, and Hindi issue and comment text in scoped wake prompts", () => {
     const title = "验证中文任务";
     const commentBody = [

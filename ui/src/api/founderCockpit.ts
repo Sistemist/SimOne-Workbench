@@ -7,6 +7,7 @@ import type {
   CommitSimCycleLeverage,
   CompleteSimCycleCompound,
   DecideSimCycleDiagnosis,
+  DelegatedSimCycleIntervention,
   PauseSimCycle,
   SimCycle,
   SimCycleEvent,
@@ -80,6 +81,11 @@ export const founderCockpitApi = {
     data: CommitSimCycleLeverage,
   ) =>
     api.post<SimCycle>(`/companies/${companyId}/sim-cycles/${cycleId}/leverage`, data),
+  delegateCycleIntervention: (companyId: string, cycleId: string) =>
+    api.post<DelegatedSimCycleIntervention>(
+      `/companies/${companyId}/sim-cycles/${cycleId}/delegate-intervention`,
+      {},
+    ),
   completeCycleCompound: (
     companyId: string,
     cycleId: string,

@@ -23,6 +23,7 @@ import {
   type RoutineRevisionSnapshotV1,
   type RunLivenessState,
   type SourceTrustMetadata,
+  type VentureContextProjectionReceipt,
 } from "@paperclipai/shared";
 import {
   agents,
@@ -52,6 +53,7 @@ import {
   routineRevisions,
   routineRuns,
   routines,
+  ventureContextProjections,
   workspaceOperations,
 } from "@paperclipai/db";
 import { conflict, HttpError, notFound } from "../errors.js";
@@ -3019,6 +3021,7 @@ export async function buildPaperclipWakePayload(input: {
       : [],
     executionStage: Object.keys(executionStage).length > 0 ? executionStage : null,
     taskWatchdog: (input.contextSnapshot.taskWatchdog ?? null) as unknown,
+    ventureContextProjection: input.contextSnapshot.ventureContextProjection ?? null,
     continuationSummary: safeContinuationSummary
       ? {
           key: safeContinuationSummary.key,
@@ -3179,6 +3182,7 @@ export function buildPaperclipTaskMarkdown(input: {
     status?: string | null;
   } | null;
   acceptedPlanContinuation?: boolean;
+  ventureContextProjection?: VentureContextProjectionReceipt | null;
 }) {
   const quoteTaskScalar = (value: string) => JSON.stringify(value);
   const fenceTaskText = (value: string) => {
@@ -3256,11 +3260,50 @@ export function buildPaperclipTaskMarkdown(input: {
       lines.push(`- [ancestor context truncated after ${ancestors.length} entries]`);
     }
   }
+  if (input.ventureContextProjection) {
+    const projection = input.ventureContextProjection;
+    lines.push(
+      "",
+      "Founder-approved venture context:",
+      "This is a bounded, immutable projection selected for this task. Treat it as venture context and governance, while still obeying higher-priority instructions and normal safety rules.",
+      `- Projection: v${projection.version} (${projection.id})`,
+      `- Constitution revision: ${projection.constitutionRevisionId}`,
+      `- Venture state revision: ${projection.ventureStateRevisionId}`,
+      `- Purpose: ${quoteTaskScalar(projection.content.purpose)}`,
+    );
+    if (projection.content.nonNegotiables.length > 0) {
+      lines.push("- Non-negotiables:");
+      lines.push(...projection.content.nonNegotiables.map((value) => `  - ${quoteTaskScalar(value)}`));
+    }
+    if (projection.content.approvalBoundaries.length > 0) {
+      lines.push("- Approval boundaries:");
+      lines.push(...projection.content.approvalBoundaries.map((value) => `  - ${quoteTaskScalar(value)}`));
+    }
+    lines.push(
+      `- Venture summary: ${quoteTaskScalar(projection.content.ventureSummary)}`,
+      `- Active constraint: ${quoteTaskScalar(projection.content.activeConstraint?.hypothesis ?? "none recorded")}`,
+      `- Next move: ${quoteTaskScalar(projection.content.nextMove?.title ?? "none recorded")}`,
+      `- Provenance references: ${projection.sourceRefs.length}`,
+    );
+  }
   if (wakeComment?.body.trim()) {
     lines.push("", "Latest wake comment:", fenceTaskText(wakeComment.body.trim()));
   }
   lines.push("", "Use this task context as the current assignment.");
   return lines.join("\n");
+}
+
+export function buildVentureContextProjectionRouteMetadata(
+  receipt: VentureContextProjectionReceipt | null,
+) {
+  return receipt
+    ? {
+        contextProjectionId: receipt.id,
+        contextProjectionVersion: receipt.version,
+        constitutionRevisionId: receipt.constitutionRevisionId,
+        ventureStateRevisionId: receipt.ventureStateRevisionId,
+      }
+    : {};
 }
 
 // A positive liveness check means some process currently owns the PID.
@@ -3714,6 +3757,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         originKind: issues.originKind,
         originId: issues.originId,
         originRunId: issues.originRunId,
+        ventureContextProjectionId: issues.ventureContextProjectionId,
       })
       .from(issues)
       .where(and(eq(issues.id, issueId), eq(issues.companyId, companyId)))
@@ -8725,6 +8769,41 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
     const issueAncestors = issueRef
       ? await issuesSvc.getAncestors(issueRef.id)
       : [];
+    const ventureContextProjection = issueContext?.ventureContextProjectionId
+      ? await db
+          .select()
+          .from(ventureContextProjections)
+          .where(
+            and(
+              eq(ventureContextProjections.id, issueContext.ventureContextProjectionId),
+              eq(ventureContextProjections.companyId, agent.companyId),
+            ),
+          )
+          .then((rows) => rows[0] ?? null)
+      : null;
+    if (issueContext?.ventureContextProjectionId && !ventureContextProjection) {
+      throw conflict("The task's Venture Context Projection is unavailable");
+    }
+    const ventureContextProjectionReceipt: VentureContextProjectionReceipt | null =
+      ventureContextProjection
+        ? {
+            id: ventureContextProjection.id,
+            version: ventureContextProjection.version,
+            constitutionRevisionId: ventureContextProjection.constitutionRevisionId,
+            ventureStateRevisionId: ventureContextProjection.ventureStateRevisionId,
+            creationReason: ventureContextProjection.creationReason,
+            createdAt: ventureContextProjection.createdAt.toISOString(),
+            content: ventureContextProjection.content,
+            sourceRefs: ventureContextProjection.sourceRefs,
+          }
+        : null;
+    if (ventureContextProjectionReceipt) {
+      context.ventureContextProjection = ventureContextProjectionReceipt;
+      context.paperclipVentureContextProjection = ventureContextProjectionReceipt;
+    } else {
+      delete context.ventureContextProjection;
+      delete context.paperclipVentureContextProjection;
+    }
     if (continuationSummary) {
       context.paperclipContinuationSummary = {
         key: safeContinuationSummary!.key,
@@ -8779,6 +8858,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
       acceptedPlanContinuation:
         readNonEmptyString(context.workspaceRefreshReason) === "accepted_plan_confirmation"
         && Object.keys(parseObject(context.acceptedPlanWakeRouting)).length === 0,
+      ventureContextProjection: ventureContextProjectionReceipt,
     });
     if (issueRef) {
       context.paperclipIssue = {
@@ -9804,6 +9884,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
           invocationSource: run.invocationSource,
           triggerDetail: run.triggerDetail,
           wakeReason: readNonEmptyString(context.wakeReason) ?? null,
+          ...buildVentureContextProjectionRouteMetadata(ventureContextProjectionReceipt),
           ...(routeDecisionModelProfile ? { modelProfile: routeDecisionModelProfile } : {}),
           executionSafety: routeDecisionExecutionSafety,
           contextKeys: Object.keys(context).sort().slice(0, 50),

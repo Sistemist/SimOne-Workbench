@@ -2368,6 +2368,10 @@ const controlCoreWriteRoutes = [
   ["/api/companies/{companyId}/context-projections", "Create a provenance-backed context projection"],
   ["/api/companies/{companyId}/sim-cycles", "Start a founder-triggered guided SIM cycle"],
   ["/api/companies/{companyId}/sim-cycles/{id}/compound", "Complete the COMPOUND step"],
+  [
+    "/api/companies/{companyId}/sim-cycles/{id}/delegate-intervention",
+    "Create a bounded task from the LEVERAGE intervention",
+  ],
   ["/api/companies/{companyId}/sim-cycles/{id}/diagnose", "Complete the DIAGNOSE step"],
   ["/api/companies/{companyId}/sim-cycles/{id}/leverage", "Complete the LEVERAGE step"],
   ["/api/companies/{companyId}/sim-cycles/{id}/map", "Complete the MAP step"],

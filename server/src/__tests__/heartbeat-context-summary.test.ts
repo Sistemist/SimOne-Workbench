@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildPaperclipTaskMarkdown,
+  buildVentureContextProjectionRouteMetadata,
   mergeCoalescedContextSnapshot,
   summarizeHeartbeatRunContextSnapshot,
   summarizeHeartbeatRunListResultJson,
@@ -111,6 +112,79 @@ describe("buildPaperclipTaskMarkdown", () => {
 
     expect(commentWake).toContain("Update the plan only. Do not write code or perform implementation work.");
     expect(commentWake).not.toContain("Create child issues from the approved plan only");
+  });
+
+  it("renders the exact bounded Venture Context Projection pinned to delegated work", () => {
+    const assignment = buildPaperclipTaskMarkdown({
+      issue: {
+        id: "issue-1",
+        identifier: "SYS-101",
+        title: "Run one founder onboarding session",
+        workMode: "standard",
+        description: "Capture the observed outcome.",
+      },
+      ventureContextProjection: {
+        id: "11111111-1111-4111-8111-111111111111",
+        version: 4,
+        constitutionRevisionId: "22222222-2222-4222-8222-222222222222",
+        ventureStateRevisionId: "33333333-3333-4333-8333-333333333333",
+        creationReason: "Founder committed the LEVERAGE intervention.",
+        createdAt: "2026-08-01T10:00:00.000Z",
+        content: {
+          purpose: "Keep the founder in control.",
+          nonNegotiables: ["No paid model use without approval."],
+          approvalBoundaries: ["Public commitments"],
+          ventureSummary: "Sysdom AI is preparing a controlled founder cohort.",
+          engines: {
+            product: { summary: "Founder Cockpit is ready.", freshness: "2026-08-01T10:00:00.000Z" },
+            customer: { summary: "Cohort recruitment is constrained.", freshness: "2026-08-01T10:00:00.000Z" },
+            cash: { summary: "Spend is blocked.", freshness: "2026-08-01T10:00:00.000Z" },
+            skills: { summary: "Core capability is present.", freshness: "2026-08-01T10:00:00.000Z" },
+          },
+          activeConstraint: null,
+          nextMove: null,
+        },
+        sourceRefs: [{ kind: "founder_session", label: "Founder review" }],
+      },
+    });
+
+    expect(assignment).toContain("Founder-approved venture context:");
+    expect(assignment).toContain("Projection: v4");
+    expect(assignment).toContain("Keep the founder in control.");
+    expect(assignment).toContain("No paid model use without approval.");
+    expect(assignment).toContain("Public commitments");
+    expect(assignment).toContain("Provenance references: 1");
+  });
+
+  it("records exact projection identifiers in the route ledger receipt", () => {
+    expect(buildVentureContextProjectionRouteMetadata({
+      id: "11111111-1111-4111-8111-111111111111",
+      version: 4,
+      constitutionRevisionId: "22222222-2222-4222-8222-222222222222",
+      ventureStateRevisionId: "33333333-3333-4333-8333-333333333333",
+      creationReason: "Founder committed the LEVERAGE intervention.",
+      createdAt: "2026-08-01T10:00:00.000Z",
+      content: {
+        purpose: "Keep the founder in control.",
+        nonNegotiables: [],
+        approvalBoundaries: [],
+        ventureSummary: "Sysdom AI",
+        engines: {
+          product: { summary: "Ready", freshness: "2026-08-01T10:00:00.000Z" },
+          customer: { summary: "Ready", freshness: "2026-08-01T10:00:00.000Z" },
+          cash: { summary: "Ready", freshness: "2026-08-01T10:00:00.000Z" },
+          skills: { summary: "Ready", freshness: "2026-08-01T10:00:00.000Z" },
+        },
+        activeConstraint: null,
+        nextMove: null,
+      },
+      sourceRefs: [],
+    })).toEqual({
+      contextProjectionId: "11111111-1111-4111-8111-111111111111",
+      contextProjectionVersion: 4,
+      constitutionRevisionId: "22222222-2222-4222-8222-222222222222",
+      ventureStateRevisionId: "33333333-3333-4333-8333-333333333333",
+    });
   });
 });
 

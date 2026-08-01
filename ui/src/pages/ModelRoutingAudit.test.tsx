@@ -94,6 +94,10 @@ function modelRouteDecision(overrides: Record<string, unknown> = {}) {
     reviewNote: "Review before using this in a customer-facing output.",
     metadata: {
       source: "SYS-202",
+      contextProjectionId: "11111111-1111-4111-8111-111111111111",
+      contextProjectionVersion: 4,
+      constitutionRevisionId: "22222222-2222-4222-8222-222222222222",
+      ventureStateRevisionId: "33333333-3333-4333-8333-333333333333",
       executionSafety: {
         version: "sysdom_model_execution_safety_v1",
         source: "heartbeat_pre_dispatch",
@@ -251,6 +255,8 @@ describe("ModelRoutingAudit", () => {
     expect(text).toContain("Compressed task brief and acceptance criteria.");
     expect(text).toContain("Returned a draft implementation plan.");
     expect(text).toContain("Review before using this in a customer-facing output.");
+    expect(text).toContain("Founder-approved venture context");
+    expect(text).toContain("Context Projection v4 was pinned to this delegated run.");
     expect(mockModelRoutingApi.listDecisions).toHaveBeenCalledWith("company-1", { limit: 50 });
     expect(mockModelRoutingApi.listPolicies).toHaveBeenCalledWith("company-1");
     const runLink = container.querySelector<HTMLAnchorElement>('a[href="/agents/agent-1/runs/run-1"]');

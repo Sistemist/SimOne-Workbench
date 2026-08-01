@@ -7,6 +7,7 @@ import {
   activityLog,
   companies,
   createDb,
+  issues,
   simCycleEvents,
   simCycles,
   ventureConstitutionRevisions,
@@ -107,6 +108,7 @@ describeEmbeddedPostgres("guided SIM Cycle routes", () => {
 
   afterEach(async () => {
     await db.delete(activityLog);
+    await db.delete(issues);
     await db.delete(simCycleEvents);
     await db.delete(simCycles);
     await db.delete(ventureContextProjections);
@@ -272,6 +274,36 @@ describeEmbeddedPostgres("guided SIM Cycle routes", () => {
     });
     const consumedProjectionId = leveraged.body.contextProjectionId;
 
+    const delegated = await request(app)
+      .post(`/api/companies/${companyId}/sim-cycles/${cycleId}/delegate-intervention`)
+      .send({});
+    expect(delegated.status).toBe(201);
+    expect(delegated.body).toMatchObject({
+      created: true,
+      issue: {
+        title: "Run one founder onboarding session",
+        status: "backlog",
+        assigneeAgentId: null,
+        assigneeUserId: null,
+        originKind: "sim_cycle_intervention",
+        originId: cycleId,
+        ventureContextProjectionId: consumedProjectionId,
+      },
+      contextProjection: {
+        id: consumedProjectionId,
+        version: expect.any(Number),
+      },
+    });
+    const delegatedAgain = await request(app)
+      .post(`/api/companies/${companyId}/sim-cycles/${cycleId}/delegate-intervention`)
+      .send({});
+    expect(delegatedAgain.status).toBe(200);
+    expect(delegatedAgain.body).toMatchObject({
+      created: false,
+      issue: { id: delegated.body.issue.id },
+      contextProjection: { id: consumedProjectionId },
+    });
+
     const completed = await request(app)
       .post(`/api/companies/${companyId}/sim-cycles/${cycleId}/compound`)
       .send({
@@ -339,6 +371,7 @@ describeEmbeddedPostgres("guided SIM Cycle routes", () => {
       "diagnosis_rejected",
       "diagnosis_accepted",
       "intervention_committed",
+      "intervention_delegated",
       "learning_promoted",
       "cycle_completed",
     ]);

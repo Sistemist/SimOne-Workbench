@@ -3,7 +3,9 @@ import type { Db } from "@paperclipai/db";
 import {
   simCycleEvents,
   simCycles,
+  issues,
   ventureConstitutionRevisions,
+  ventureContextProjections,
 } from "@paperclipai/db";
 import type {
   CommitSimCycleLeverage,
@@ -18,6 +20,7 @@ import type {
 } from "@paperclipai/shared";
 import { conflict, notFound, unprocessable } from "../errors.js";
 import { ventureOperatingStateService } from "./venture-operating-state.js";
+import { issueService } from "./issues.js";
 
 function uniqueSourceRefs(refs: VentureSourceRef[]) {
   const seen = new Set<string>();
@@ -31,6 +34,7 @@ function uniqueSourceRefs(refs: VentureSourceRef[]) {
 
 export function simCycleService(db: Db) {
   const ventureState = ventureOperatingStateService(db);
+  const issueSvc = issueService(db);
 
   async function getCycle(companyId: string, id: string) {
     const cycle = await db
@@ -371,6 +375,88 @@ export function simCycleService(db: Db) {
         },
       });
       return cycle;
+    },
+
+    delegateIntervention: async (
+      companyId: string,
+      id: string,
+      userId: string,
+    ) => {
+      const cycle = await getCycle(companyId, id);
+      if (!cycle.leverageOutput || !cycle.contextProjectionId) {
+        throw unprocessable("Commit a LEVERAGE intervention before creating bounded delegated work");
+      }
+
+      const existing = await db
+        .select()
+        .from(issues)
+        .where(
+          and(
+            eq(issues.companyId, companyId),
+            eq(issues.originKind, "sim_cycle_intervention"),
+            eq(issues.originId, cycle.id),
+          ),
+        )
+        .then((rows) => rows[0] ?? null);
+      const projection = await db
+        .select()
+        .from(ventureContextProjections)
+        .where(
+          and(
+            eq(ventureContextProjections.id, cycle.contextProjectionId!),
+            eq(ventureContextProjections.companyId, companyId),
+          ),
+        )
+        .then((rows) => rows[0] ?? null);
+      if (!projection) {
+        throw unprocessable("The SIM Cycle context projection is unavailable");
+      }
+      if (existing) {
+        return { cycle, issue: existing, contextProjection: projection, created: false };
+      }
+
+      const intervention = cycle.leverageOutput.intervention;
+      const issue = await issueSvc.create(companyId, {
+        title: intervention.title,
+        description: [
+          "Founder-committed LEVERAGE intervention.",
+          "",
+          `Rationale: ${intervention.rationale}`,
+          `Success signal: ${intervention.successSignal}`,
+          `Engine: ${intervention.engine}`,
+          `Commitment: ${cycle.leverageOutput.commitmentNote}`,
+          "",
+          `SIM Cycle: ${cycle.id}`,
+          `Venture Context Projection: v${projection.version} (${projection.id})`,
+        ].join("\n"),
+        status: "backlog",
+        workMode: "standard",
+        priority: "high",
+        assigneeAgentId: null,
+        assigneeUserId: null,
+        originKind: "sim_cycle_intervention",
+        originId: cycle.id,
+        originFingerprint: projection.id,
+        ventureContextProjectionId: projection.id,
+        createdByUserId: userId,
+        createdByAgentId: null,
+      });
+
+      await addEvent({
+        companyId,
+        cycleId: cycle.id,
+        type: "intervention_delegated",
+        phase: cycle.phase,
+        actorUserId: userId,
+        payload: {
+          issueId: issue.id,
+          issueIdentifier: issue.identifier,
+          contextProjectionId: projection.id,
+          contextProjectionVersion: projection.version,
+        },
+      });
+
+      return { cycle, issue, contextProjection: projection, created: true };
     },
 
     completeCompound: async (

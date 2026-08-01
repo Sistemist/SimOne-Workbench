@@ -556,6 +556,7 @@ export interface Issue {
   originId?: string | null;
   originRunId?: string | null;
   originFingerprint?: string | null;
+  ventureContextProjectionId?: string | null;
   requestDepth: number;
   billingCode: string | null;
   assigneeAdapterOverrides: IssueAssigneeAdapterOverrides | null;

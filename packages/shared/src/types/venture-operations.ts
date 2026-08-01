@@ -88,6 +88,24 @@ export interface VentureContextProjection {
   supersededAt: Date | null;
 }
 
+export interface VentureContextProjectionReceipt {
+  id: string;
+  version: number;
+  constitutionRevisionId: string;
+  ventureStateRevisionId: string;
+  creationReason: string;
+  createdAt: string;
+  content: VentureContextProjectionContent;
+  sourceRefs: VentureSourceRef[];
+}
+
+export interface DelegatedSimCycleIntervention {
+  cycle: SimCycle;
+  issue: import("./issue.js").Issue;
+  contextProjection: VentureContextProjection;
+  created: boolean;
+}
+
 export interface FounderCockpitSnapshot {
   company: {
     id: string;

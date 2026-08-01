@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import {
   Check,
   Circle,
@@ -9,6 +10,7 @@ import {
 } from "lucide-react";
 import type {
   SimCycle,
+  DelegatedSimCycleIntervention,
   SimCyclePhase,
   SimEngine,
   VentureSourceRef,
@@ -415,6 +417,9 @@ function CompoundPhase({
   run: (action: () => Promise<unknown>) => Promise<void>;
   busy: boolean;
 }) {
+  const [delegated, setDelegated] = useState<DelegatedSimCycleIntervention | null>(null);
+  const [delegating, setDelegating] = useState(false);
+  const [delegationError, setDelegationError] = useState<string | null>(null);
   const [outcome, setOutcome] = useState("");
   const [sourceLabel, setSourceLabel] = useState("");
   const [learning, setLearning] = useState("");
@@ -423,6 +428,18 @@ function CompoundPhase({
   const [nextEngine, setNextEngine] = useState<SimEngine>("product");
   const [nextApproval, setNextApproval] = useState(false);
   const ready = [outcome, sourceLabel, learning, nextTitle, nextRationale].every((value) => value.trim());
+
+  async function delegateIntervention() {
+    setDelegating(true);
+    setDelegationError(null);
+    try {
+      setDelegated(await founderCockpitApi.delegateCycleIntervention(companyId, cycle.id));
+    } catch (cause) {
+      setDelegationError(cause instanceof Error ? cause.message : "The bounded task could not be created.");
+    } finally {
+      setDelegating(false);
+    }
+  }
 
   async function submit() {
     await run(() =>
@@ -446,6 +463,38 @@ function CompoundPhase({
         <p className="text-sm font-medium">Entry condition</p>
         <p className="text-sm text-muted-foreground">{PHASES[3].entry}</p>
       </div>
+      {cycle.leverageOutput ? (
+        <section aria-label="Delegate committed intervention" className="border border-border bg-muted/20 p-4">
+          <p className="font-medium">Promote the committed intervention into bounded work</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            This creates one unassigned backlog task pinned to the cycle&apos;s exact Context Projection.
+            It does not start an agent or make a model call.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy || delegating}
+              onClick={delegateIntervention}
+            >
+              {delegating ? "Creating bounded task…" : delegated ? "Refresh task link" : "Create bounded task"}
+            </Button>
+            {delegated ? (
+              <Link
+                className="text-sm font-medium text-primary underline underline-offset-4"
+                to={`/issues/${delegated.issue.identifier ?? delegated.issue.id}`}
+              >
+                Open {delegated.issue.identifier ?? "delegated task"}
+              </Link>
+            ) : null}
+          </div>
+          <div aria-live="polite" role="status" className="mt-2 text-sm">
+            {delegated
+              ? `Task ${delegated.issue.identifier ?? delegated.issue.id} is ${delegated.issue.status} and unassigned.`
+              : delegationError}
+          </div>
+        </section>
+      ) : null}
       <div className="space-y-2">
         <Label htmlFor="cycle-compound-outcome">Observed outcome</Label>
         <Textarea id="cycle-compound-outcome" value={outcome} onChange={(event) => setOutcome(event.target.value)} />

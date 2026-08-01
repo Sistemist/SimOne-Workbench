@@ -4,6 +4,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { flushSync } from "react-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MemoryRouter } from "react-router-dom";
 import type { SimCycle } from "@paperclipai/shared";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GuidedSimCycle } from "./GuidedSimCycle";
@@ -13,6 +14,7 @@ const mockFounderCockpitApi = vi.hoisted(() => ({
   submitCycleMap: vi.fn(),
   decideCycleDiagnosis: vi.fn(),
   commitCycleLeverage: vi.fn(),
+  delegateCycleIntervention: vi.fn(),
   completeCycleCompound: vi.fn(),
   pauseCycle: vi.fn(),
   resumeCycle: vi.fn(),
@@ -67,12 +69,14 @@ function renderCycle(activeCycle: SimCycle | null) {
   flushSync(() => {
     root.render(
       <QueryClientProvider client={queryClient}>
-        <GuidedSimCycle
-          companyId="company-1"
-          cycle={activeCycle}
-          currentState={null}
-          constitutionActive
-        />
+        <MemoryRouter>
+          <GuidedSimCycle
+            companyId="company-1"
+            cycle={activeCycle}
+            currentState={null}
+            constitutionActive
+          />
+        </MemoryRouter>
       </QueryClientProvider>,
     );
   });
@@ -108,6 +112,7 @@ describe("GuidedSimCycle", () => {
       mockFounderCockpitApi.submitCycleMap,
       mockFounderCockpitApi.decideCycleDiagnosis,
       mockFounderCockpitApi.commitCycleLeverage,
+      mockFounderCockpitApi.delegateCycleIntervention,
       mockFounderCockpitApi.completeCycleCompound,
       mockFounderCockpitApi.pauseCycle,
       mockFounderCockpitApi.resumeCycle,
@@ -264,7 +269,47 @@ describe("GuidedSimCycle", () => {
     expect(leverage.container.textContent).toContain("Commit intervention and continue");
     await act(async () => leverage.root.unmount());
 
-    const compound = renderCycle(cycle({ phase: "compound" }));
+    const compoundCycle = cycle({
+      phase: "compound",
+      contextProjectionId: "44444444-4444-4444-8444-444444444444",
+      leverageOutput: {
+        intervention: {
+          title: "Run one founder onboarding session",
+          rationale: "Test the controlled loop.",
+          engine: "customer",
+          successSignal: "One founder completes the path.",
+          approvalRequired: true,
+          evidence: [],
+        },
+        commitmentNote: "Founder approves this bounded intervention.",
+        committedByUserId: "founder-1",
+        committedAt: "2026-08-01T10:00:00.000Z",
+      },
+    });
+    mockFounderCockpitApi.delegateCycleIntervention.mockResolvedValue({
+      cycle: compoundCycle,
+      created: true,
+      issue: {
+        id: "55555555-5555-4555-8555-555555555555",
+        identifier: "SYS-101",
+        status: "backlog",
+        assigneeAgentId: null,
+      },
+      contextProjection: {
+        id: compoundCycle.contextProjectionId,
+        version: 4,
+      },
+    });
+    const compound = renderCycle(compoundCycle);
+    expect(compound.container.textContent).toContain("Create bounded task");
+    expect(compound.container.textContent).toContain("does not start an agent or make a model call");
+    await clickButton(compound.container, "Create bounded task");
+    expect(mockFounderCockpitApi.delegateCycleIntervention).toHaveBeenCalledWith(
+      "company-1",
+      compoundCycle.id,
+    );
+    expect(compound.container.textContent).toContain("Task SYS-101 is backlog and unassigned.");
+    expect(compound.container.querySelector('a[href="/issues/SYS-101"]')).toBeTruthy();
     expect(compound.container.textContent).toContain("Observed outcome");
     expect(compound.container.textContent).toContain("Outcome evidence");
     expect(compound.container.textContent).toContain("Learning to promote");

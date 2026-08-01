@@ -2097,6 +2097,7 @@ const issueListSelect = {
   originId: issues.originId,
   originRunId: issues.originRunId,
   originFingerprint: issues.originFingerprint,
+  ventureContextProjectionId: issues.ventureContextProjectionId,
   requestDepth: issues.requestDepth,
   billingCode: issues.billingCode,
   assigneeAdapterOverrides: issues.assigneeAdapterOverrides,

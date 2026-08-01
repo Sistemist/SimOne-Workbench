@@ -473,6 +473,17 @@ type PaperclipWakeTreeHoldSummary = {
   reason: string | null;
 };
 
+type PaperclipWakeVentureContextProjection = {
+  id: string;
+  version: number;
+  constitutionRevisionId: string;
+  ventureStateRevisionId: string;
+  creationReason: string | null;
+  createdAt: string | null;
+  content: Record<string, unknown>;
+  sourceRefs: Record<string, unknown>[];
+};
+
 type PaperclipWakePayload = {
   reason: string | null;
   issue: PaperclipWakeIssue | null;
@@ -486,6 +497,7 @@ type PaperclipWakePayload = {
   continuationSummary: PaperclipWakeContinuationSummary | null;
   livenessContinuation: PaperclipWakeLivenessContinuation | null;
   taskWatchdog: PaperclipWakeTaskWatchdogContext | null;
+  ventureContextProjection: PaperclipWakeVentureContextProjection | null;
   interactionKind: string | null;
   interactionStatus: string | null;
   childIssueSummaries: PaperclipWakeChildIssueSummary[];
@@ -499,6 +511,32 @@ type PaperclipWakePayload = {
   truncated: boolean;
   fallbackFetchNeeded: boolean;
 };
+
+function normalizePaperclipWakeVentureContextProjection(
+  value: unknown,
+): PaperclipWakeVentureContextProjection | null {
+  const projection = parseObject(value);
+  const id = asString(projection.id, "").trim();
+  const version = asNumber(projection.version, 0);
+  const constitutionRevisionId = asString(projection.constitutionRevisionId, "").trim();
+  const ventureStateRevisionId = asString(projection.ventureStateRevisionId, "").trim();
+  if (!id || version < 1 || !constitutionRevisionId || !ventureStateRevisionId) return null;
+
+  return {
+    id,
+    version,
+    constitutionRevisionId,
+    ventureStateRevisionId,
+    creationReason: asString(projection.creationReason, "").trim() || null,
+    createdAt: asString(projection.createdAt, "").trim() || null,
+    content: parseObject(projection.content),
+    sourceRefs: Array.isArray(projection.sourceRefs)
+      ? projection.sourceRefs
+          .map((entry) => parseObject(entry))
+          .filter((entry) => Object.keys(entry).length > 0)
+      : [],
+  };
+}
 
 function normalizePaperclipWakeIssue(value: unknown): PaperclipWakeIssue | null {
   const issue = parseObject(value);
@@ -761,6 +799,9 @@ export function normalizePaperclipWakePayload(value: unknown): PaperclipWakePayl
   const continuationSummary = normalizePaperclipWakeContinuationSummary(payload.continuationSummary);
   const livenessContinuation = normalizePaperclipWakeLivenessContinuation(payload.livenessContinuation);
   const taskWatchdog = normalizePaperclipWakeTaskWatchdog(payload.taskWatchdog);
+  const ventureContextProjection = normalizePaperclipWakeVentureContextProjection(
+    payload.ventureContextProjection,
+  );
   const childIssueSummaries = Array.isArray(payload.childIssueSummaries)
     ? payload.childIssueSummaries
         .map((entry) => normalizePaperclipWakeChildIssueSummary(entry))
@@ -778,7 +819,7 @@ export function normalizePaperclipWakePayload(value: unknown): PaperclipWakePayl
     : [];
 
   const activeTreeHold = normalizePaperclipWakeTreeHoldSummary(payload.activeTreeHold);
-  if (comments.length === 0 && commentIds.length === 0 && childIssueSummaries.length === 0 && unresolvedBlockerIssueIds.length === 0 && unresolvedBlockerSummaries.length === 0 && !activeTreeHold && !executionStage && !continuationSummary && !livenessContinuation && !taskWatchdog && !normalizePaperclipWakeIssue(payload.issue)) {
+  if (comments.length === 0 && commentIds.length === 0 && childIssueSummaries.length === 0 && unresolvedBlockerIssueIds.length === 0 && unresolvedBlockerSummaries.length === 0 && !activeTreeHold && !executionStage && !continuationSummary && !livenessContinuation && !taskWatchdog && !ventureContextProjection && !normalizePaperclipWakeIssue(payload.issue)) {
     return null;
   }
 
@@ -795,6 +836,7 @@ export function normalizePaperclipWakePayload(value: unknown): PaperclipWakePayl
     continuationSummary,
     livenessContinuation,
     taskWatchdog,
+    ventureContextProjection,
     interactionKind: asString(payload.interactionKind, "").trim() || null,
     interactionStatus: asString(payload.interactionStatus, "").trim() || null,
     childIssueSummaries,
@@ -882,6 +924,20 @@ export function renderPaperclipWakePrompt(
   }
   if (normalized.issue?.priority) {
     lines.push(`- issue priority: ${normalized.issue.priority}`);
+  }
+  if (normalized.ventureContextProjection) {
+    const projection = normalized.ventureContextProjection;
+    const content = projection.content;
+    const purpose = asString(content.purpose, "").trim();
+    const summary = asString(content.ventureSummary, "").trim();
+    lines.push(
+      `- venture context projection: v${projection.version} (${projection.id})`,
+      `- constitution revision: ${projection.constitutionRevisionId}`,
+      `- venture state revision: ${projection.ventureStateRevisionId}`,
+    );
+    if (purpose) lines.push(`- venture purpose: ${purpose}`);
+    if (summary) lines.push(`- venture summary: ${summary}`);
+    lines.push(`- venture provenance references: ${projection.sourceRefs.length}`);
   }
   if (normalized.issue?.workMode === "planning" && !normalized.taskWatchdog) {
     const hasWakeComments = normalized.comments.length > 0;

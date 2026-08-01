@@ -17,6 +17,7 @@ import { companies } from "./companies.js";
 import { heartbeatRuns } from "./heartbeat_runs.js";
 import { projectWorkspaces } from "./project_workspaces.js";
 import { executionWorkspaces } from "./execution_workspaces.js";
+import { ventureContextProjections } from "./venture_operating_state.js";
 import type { SourceTrustMetadata } from "@paperclipai/shared";
 
 export const issues = pgTable(
@@ -47,6 +48,8 @@ export const issues = pgTable(
     originId: text("origin_id"),
     originRunId: text("origin_run_id"),
     originFingerprint: text("origin_fingerprint").notNull().default("default"),
+    ventureContextProjectionId: uuid("venture_context_projection_id")
+      .references(() => ventureContextProjections.id, { onDelete: "restrict" }),
     requestDepth: integer("request_depth").notNull().default(0),
     billingCode: text("billing_code"),
     assigneeAdapterOverrides: jsonb("assignee_adapter_overrides").$type<Record<string, unknown>>(),
@@ -85,6 +88,13 @@ export const issues = pgTable(
     parentIdx: index("issues_company_parent_idx").on(table.companyId, table.parentId),
     projectIdx: index("issues_company_project_idx").on(table.companyId, table.projectId),
     originIdx: index("issues_company_origin_idx").on(table.companyId, table.originKind, table.originId),
+    oneSimCycleInterventionIssueUq: uniqueIndex("issues_one_sim_cycle_intervention_uq")
+      .on(table.companyId, table.originKind, table.originId)
+      .where(sql`${table.originKind} = 'sim_cycle_intervention' and ${table.originId} is not null`),
+    ventureContextProjectionIdx: index("issues_venture_context_projection_idx").on(
+      table.companyId,
+      table.ventureContextProjectionId,
+    ),
     projectWorkspaceIdx: index("issues_company_project_workspace_idx").on(table.companyId, table.projectWorkspaceId),
     executionWorkspaceIdx: index("issues_company_execution_workspace_idx").on(table.companyId, table.executionWorkspaceId),
     dueMonitorIdx: index("issues_company_monitor_due_idx").on(table.companyId, table.monitorNextCheckAt),

@@ -121,6 +121,33 @@ export function simCycleRoutes(db: Db) {
     },
   );
 
+  router.post("/companies/:companyId/sim-cycles/:id/delegate-intervention", async (req, res) => {
+    assertBoard(req);
+    const companyId = req.params.companyId as string;
+    assertCompanyAccess(req, companyId);
+    const userId = req.actor.userId ?? "board";
+    const result = await svc.delegateIntervention(companyId, req.params.id as string, userId);
+    if (result.created) {
+      await logActivity(db, {
+        companyId,
+        actorType: "user",
+        actorId: userId,
+        action: "sim_cycle.intervention_delegated",
+        entityType: "issue",
+        entityId: result.issue.id,
+        details: {
+          cycleId: result.cycle.id,
+          issueIdentifier: result.issue.identifier,
+          contextProjectionId: result.contextProjection.id,
+          contextProjectionVersion: result.contextProjection.version,
+          status: result.issue.status,
+          assigneeAgentId: result.issue.assigneeAgentId,
+        },
+      });
+    }
+    res.status(result.created ? 201 : 200).json(result);
+  });
+
   router.post(
     "/companies/:companyId/sim-cycles/:id/pause",
     validate(pauseSimCycleSchema),
