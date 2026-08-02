@@ -77,6 +77,19 @@ export const modelRouteEvidenceRequirementSchema = z.enum([
   "independent_review",
 ]);
 
+export const modelRouteTaskSignalsSchema = z.object({
+  version: z.literal("sysdom_model_route_task_signals_v1"),
+  taskClass: modelRouteTaskClassSchema,
+  criticality: z.enum(["low", "medium", "high", "critical"]),
+  reversible: z.boolean(),
+  externalEffects: z.array(modelRouteExternalEffectSchema).max(7).default([]),
+  dataSensitivity: modelRouteDataSensitivitySchema,
+  evidenceRequirement: modelRouteEvidenceRequirementSchema,
+  requiresTools: z.boolean().default(false),
+  requiresStructuredOutput: z.boolean().default(true),
+  approvalRequired: z.boolean().default(false),
+}).strict();
+
 export const modelRouteRecommendationLaneSchema = z.enum([
   "no_model",
   ...modelRouteDecisionLaneSchema.options,
@@ -150,6 +163,7 @@ export const modelRouteRecommendationInputSchema = z.object({
   }).strict().nullable().optional().default(null),
   task: z.object({
     intent: z.string().trim().min(1).max(4_000),
+    signalSource: z.enum(["explicit", "derived"]).optional().default("derived"),
     taskClass: modelRouteTaskClassSchema,
     criticality: z.enum(["low", "medium", "high", "critical"]),
     reversible: z.boolean(),
@@ -203,6 +217,7 @@ export const modelRouteRecommendationSchema = z.object({
     "founder_approval_before_external_effect",
   ]),
   signals: z.object({
+    source: z.enum(["explicit", "derived"]).optional().default("derived"),
     taskClass: modelRouteTaskClassSchema,
     criticality: z.enum(["low", "medium", "high", "critical"]),
     reversible: z.boolean(),
@@ -328,6 +343,7 @@ export type ModelRouteTaskClass = z.infer<typeof modelRouteTaskClassSchema>;
 export type ModelRouteExternalEffect = z.infer<typeof modelRouteExternalEffectSchema>;
 export type ModelRouteDataSensitivity = z.infer<typeof modelRouteDataSensitivitySchema>;
 export type ModelRouteEvidenceRequirement = z.infer<typeof modelRouteEvidenceRequirementSchema>;
+export type ModelRouteTaskSignals = z.infer<typeof modelRouteTaskSignalsSchema>;
 export type ModelRouteRecommendationLane = z.infer<typeof modelRouteRecommendationLaneSchema>;
 export type ModelRouteCandidateEvidence = z.infer<typeof modelRouteCandidateEvidenceSchema>;
 export type ModelRouteCandidateCatalog = z.infer<typeof modelRouteCandidateCatalogSchema>;

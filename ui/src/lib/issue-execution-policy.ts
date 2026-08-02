@@ -1,4 +1,9 @@
-import type { IssueExecutionPolicy, IssueExecutionStageParticipant, IssueExecutionStagePrincipal } from "@paperclipai/shared";
+import type {
+  IssueExecutionPolicy,
+  IssueExecutionStageParticipant,
+  IssueExecutionStagePrincipal,
+  ModelRouteTaskSignals,
+} from "@paperclipai/shared";
 import { parseAssigneeValue } from "./assignees";
 
 type StageType = "review" | "approval";
@@ -63,6 +68,9 @@ export function buildExecutionPolicy(input: {
   const mode = input.existingPolicy?.mode ?? "normal";
   const stages: IssueExecutionPolicy["stages"] = [];
   const monitor = input.existingPolicy?.monitor ?? null;
+  const reviewPreset = input.existingPolicy?.reviewPreset;
+  const authorizationPolicy = input.existingPolicy?.authorizationPolicy;
+  const modelRouteSignals = input.existingPolicy?.modelRouteSignals ?? null;
 
   const existingReviewStage = input.existingPolicy?.stages.find((stage) => stage.type === "review");
   const reviewParticipants = mergeParticipants(existingReviewStage?.participants, input.reviewerValues);
@@ -86,12 +94,43 @@ export function buildExecutionPolicy(input: {
     });
   }
 
-  if (stages.length === 0 && !monitor) return null;
+  if (stages.length === 0 && !monitor && !reviewPreset && !authorizationPolicy && !modelRouteSignals) return null;
 
   return {
     mode,
     commentRequired: true,
     stages,
     ...(monitor ? { monitor } : {}),
+    ...(reviewPreset ? { reviewPreset } : {}),
+    ...(authorizationPolicy ? { authorizationPolicy } : {}),
+    ...(modelRouteSignals ? { modelRouteSignals } : {}),
+  };
+}
+
+export function withModelRouteSignals(
+  existingPolicy: IssueExecutionPolicy | null | undefined,
+  modelRouteSignals: ModelRouteTaskSignals | null,
+): IssueExecutionPolicy | null {
+  const stages = existingPolicy?.stages ?? [];
+  const monitor = existingPolicy?.monitor ?? null;
+  const reviewPreset = existingPolicy?.reviewPreset;
+  const authorizationPolicy = existingPolicy?.authorizationPolicy;
+  if (
+    !modelRouteSignals
+    && stages.length === 0
+    && !monitor
+    && !reviewPreset
+    && !authorizationPolicy
+  ) {
+    return null;
+  }
+  return {
+    mode: existingPolicy?.mode ?? "normal",
+    commentRequired: true,
+    stages,
+    ...(monitor ? { monitor } : {}),
+    ...(reviewPreset ? { reviewPreset } : {}),
+    ...(authorizationPolicy ? { authorizationPolicy } : {}),
+    ...(modelRouteSignals ? { modelRouteSignals } : {}),
   };
 }

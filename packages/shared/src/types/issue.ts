@@ -35,6 +35,7 @@ import type {
   SourceTrustMetadata,
   TrustAuthorizationPolicy,
 } from "../trust-policy.js";
+import type { ModelRouteTaskSignals } from "../validators/model-route-decision.js";
 
 export type { IssueWorkMode };
 
@@ -449,6 +450,7 @@ export interface IssueExecutionPolicy {
   monitor?: IssueExecutionMonitorPolicy | null;
   reviewPreset?: LowTrustReviewPresetPolicy;
   authorizationPolicy?: TrustAuthorizationPolicy;
+  modelRouteSignals?: ModelRouteTaskSignals | null;
 }
 
 export interface IssueExecutionMonitorState {

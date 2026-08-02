@@ -220,6 +220,7 @@ export function recommendModelRoute(rawInput: ModelRouteRecommendationInput): Mo
       reason: recommendationReason(lane, riskLevel, null, input.portfolio),
       approvalGate: deriveApprovalGate(input, riskLevel),
       signals: {
+        source: input.task.signalSource,
         taskClass: input.task.taskClass,
         criticality: input.task.criticality,
         reversible: input.task.reversible,
@@ -286,6 +287,7 @@ export function recommendModelRoute(rawInput: ModelRouteRecommendationInput): Mo
     reason: recommendationReason(lane, riskLevel, selectedCandidate, input.portfolio),
     approvalGate: deriveApprovalGate(input, riskLevel),
     signals: {
+      source: input.task.signalSource,
       taskClass: input.task.taskClass,
       criticality: input.task.criticality,
       reversible: input.task.reversible,

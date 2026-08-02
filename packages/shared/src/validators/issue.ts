@@ -30,6 +30,7 @@ import {
 } from "../constants.js";
 import { multilineTextSchema } from "./text.js";
 import { lowTrustReviewPresetPolicySchema, trustAuthorizationPolicySchema } from "./trust-policy.js";
+import { modelRouteTaskSignalsSchema } from "./model-route-decision.js";
 
 export const issueBlockedInboxStateSchema = z.enum([
   "needs_attention",
@@ -202,6 +203,7 @@ export const issueExecutionPolicySchema = z.object({
   monitor: issueExecutionMonitorPolicySchema.optional().nullable(),
   reviewPreset: lowTrustReviewPresetPolicySchema.optional(),
   authorizationPolicy: trustAuthorizationPolicySchema.optional(),
+  modelRouteSignals: modelRouteTaskSignalsSchema.optional().nullable(),
 });
 
 export const issueExecutionMonitorStateSchema = z.object({

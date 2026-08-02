@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { pickTextColorForPillBg } from "@/lib/color-contrast";
 import { Link } from "@/lib/router";
-import type { Issue, IssueLabel, Project } from "@paperclipai/shared";
+import type { Issue, IssueLabel, ModelRouteTaskSignals, Project } from "@paperclipai/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AdapterModel } from "../api/agents";
 import { accessApi } from "../api/access";
@@ -25,7 +25,11 @@ import {
 import { getRecentProjectIds, trackRecentProject } from "../lib/recent-projects";
 import { orderItemsBySelectedAndRecent } from "../lib/recent-selections";
 import { formatAssigneeUserLabel } from "../lib/assignees";
-import { buildExecutionPolicy, stageParticipantValues } from "../lib/issue-execution-policy";
+import {
+  buildExecutionPolicy,
+  stageParticipantValues,
+  withModelRouteSignals,
+} from "../lib/issue-execution-policy";
 import { formatMonitorOffset } from "../lib/issue-monitor";
 import { formatRetryReason } from "../lib/runRetryState";
 import { useRetryNowMutation } from "../hooks/useRetryNowMutation";
@@ -632,6 +636,7 @@ export function IssueProperties({
   const [scheduledRetryOpen, setScheduledRetryOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
   const [assigneeOptionsOpen, setAssigneeOptionsOpen] = useState(false);
+  const [modelRouteOpen, setModelRouteOpen] = useState(false);
   const [labelSearch, setLabelSearch] = useState("");
   const [newLabelName, setNewLabelName] = useState("");
   const [newLabelColor, setNewLabelColor] = useState("#6366f1");
@@ -1069,6 +1074,162 @@ export function IssueProperties({
     : issue.assigneeUserId
       ? `user:${issue.assigneeUserId}`
       : "";
+  const explicitModelRouteSignals = issue.executionPolicy?.modelRouteSignals ?? null;
+  const editableModelRouteSignals: ModelRouteTaskSignals = explicitModelRouteSignals ?? {
+    version: "sysdom_model_route_task_signals_v1",
+    taskClass: issue.workMode === "planning" ? "strategy" : "analysis",
+    criticality: issue.priority,
+    reversible: true,
+    externalEffects: [],
+    dataSensitivity: "internal",
+    evidenceRequirement: "standard",
+    requiresTools: false,
+    requiresStructuredOutput: true,
+    approvalRequired: false,
+  };
+  const updateModelRouteSignals = (patch: Partial<ModelRouteTaskSignals>) => {
+    onUpdate({
+      executionPolicy: withModelRouteSignals(issue.executionPolicy, {
+        ...editableModelRouteSignals,
+        ...patch,
+        version: "sysdom_model_route_task_signals_v1",
+      }),
+    });
+  };
+  const toggleModelRouteEffect = (
+    effect: ModelRouteTaskSignals["externalEffects"][number],
+  ) => {
+    const current = editableModelRouteSignals.externalEffects;
+    updateModelRouteSignals({
+      externalEffects: current.includes(effect)
+        ? current.filter((candidate) => candidate !== effect)
+        : [...current, effect],
+    });
+  };
+  const modelRouteTrigger = explicitModelRouteSignals ? (
+    <span className="text-sm">
+      Explicit · {explicitModelRouteSignals.criticality} · {explicitModelRouteSignals.dataSensitivity}
+    </span>
+  ) : (
+    <span className="text-sm text-muted-foreground">Auto-derived</span>
+  );
+  const modelRouteContent = (
+    <div className="space-y-3 p-2 text-xs">
+      <p className="text-muted-foreground">
+        Explicit task facts override conservative title, priority, and SIM-context inference.
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        <label className="space-y-1">
+          <span className="text-muted-foreground">Task class</span>
+          <select
+            aria-label="Model routing task class"
+            className="w-full rounded border border-border bg-background px-2 py-1"
+            value={editableModelRouteSignals.taskClass}
+            onChange={(event) => updateModelRouteSignals({
+              taskClass: event.target.value as ModelRouteTaskSignals["taskClass"],
+            })}
+          >
+            {["deterministic", "triage", "synthesis", "analysis", "strategy", "specialist"].map((value) => (
+              <option key={value} value={value}>{value}</option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-1">
+          <span className="text-muted-foreground">Criticality</span>
+          <select
+            aria-label="Model routing criticality"
+            className="w-full rounded border border-border bg-background px-2 py-1"
+            value={editableModelRouteSignals.criticality}
+            onChange={(event) => updateModelRouteSignals({
+              criticality: event.target.value as ModelRouteTaskSignals["criticality"],
+            })}
+          >
+            {["low", "medium", "high", "critical"].map((value) => (
+              <option key={value} value={value}>{value}</option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-1">
+          <span className="text-muted-foreground">Data</span>
+          <select
+            aria-label="Model routing data sensitivity"
+            className="w-full rounded border border-border bg-background px-2 py-1"
+            value={editableModelRouteSignals.dataSensitivity}
+            onChange={(event) => updateModelRouteSignals({
+              dataSensitivity: event.target.value as ModelRouteTaskSignals["dataSensitivity"],
+            })}
+          >
+            {["public", "internal", "confidential", "restricted"].map((value) => (
+              <option key={value} value={value}>{value}</option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-1">
+          <span className="text-muted-foreground">Evidence</span>
+          <select
+            aria-label="Model routing evidence requirement"
+            className="w-full rounded border border-border bg-background px-2 py-1"
+            value={editableModelRouteSignals.evidenceRequirement}
+            onChange={(event) => updateModelRouteSignals({
+              evidenceRequirement: event.target.value as ModelRouteTaskSignals["evidenceRequirement"],
+            })}
+          >
+            {["none", "standard", "provenance_required", "independent_review"].map((value) => (
+              <option key={value} value={value}>{value}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <div>
+        <p className="mb-1 text-muted-foreground">External effects</p>
+        <div className="flex flex-wrap gap-1">
+          {(["public", "customer", "financial", "security", "privacy", "deletion", "governance"] as const).map((effect) => (
+            <button
+              key={effect}
+              type="button"
+              className={cn(
+                "rounded-full border px-2 py-0.5",
+                editableModelRouteSignals.externalEffects.includes(effect)
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border text-muted-foreground",
+              )}
+              onClick={() => toggleModelRouteEffect(effect)}
+            >
+              {effect}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-1">
+        {([
+          ["reversible", "Reversible"],
+          ["requiresTools", "Needs tools"],
+          ["requiresStructuredOutput", "Structured output"],
+          ["approvalRequired", "Founder approval"],
+        ] as const).map(([key, label]) => (
+          <label key={key} className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={editableModelRouteSignals[key]}
+              onChange={(event) => updateModelRouteSignals({ [key]: event.target.checked })}
+            />
+            {label}
+          </label>
+        ))}
+      </div>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={!explicitModelRouteSignals}
+        onClick={() => onUpdate({
+          executionPolicy: withModelRouteSignals(issue.executionPolicy, null),
+        })}
+      >
+        Use Auto-derived signals
+      </Button>
+    </div>
+  );
 
   // --- Interrupt-handoff clarity for the assignee picker (design surface 2) ---
   const handoffResolvers: HandoffChipResolvers = useMemo(
@@ -1368,6 +1529,9 @@ export function IssueProperties({
         commentRequired: true,
         stages: basePolicy?.stages ?? [],
         ...(nextMonitor ? { monitor: nextMonitor } : {}),
+        ...(issue.executionPolicy?.reviewPreset ? { reviewPreset: issue.executionPolicy.reviewPreset } : {}),
+        ...(issue.executionPolicy?.authorizationPolicy ? { authorizationPolicy: issue.executionPolicy.authorizationPolicy } : {}),
+        ...(issue.executionPolicy?.modelRouteSignals ? { modelRouteSignals: issue.executionPolicy.modelRouteSignals } : {}),
       },
     });
   };
@@ -2379,6 +2543,18 @@ export function IssueProperties({
             {assigneeOptionsContent}
           </PropertyPicker>
         ) : null}
+
+        <PropertyPicker
+          inline={inline}
+          label="Routing"
+          open={modelRouteOpen}
+          onOpenChange={setModelRouteOpen}
+          triggerContent={modelRouteTrigger}
+          triggerClassName="min-w-0 max-w-full"
+          popoverClassName={cn("max-w-full", inline ? "w-full" : "w-80")}
+        >
+          {modelRouteContent}
+        </PropertyPicker>
 
         <PropertyPicker
           inline={inline}

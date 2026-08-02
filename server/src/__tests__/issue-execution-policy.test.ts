@@ -132,6 +132,34 @@ describe("normalizeIssueExecutionPolicy", () => {
       },
     });
   });
+
+  it("keeps a versioned model-routing-signals-only policy", () => {
+    const result = normalizeIssueExecutionPolicy({
+      stages: [],
+      modelRouteSignals: {
+        version: "sysdom_model_route_task_signals_v1",
+        taskClass: "analysis",
+        criticality: "high",
+        reversible: false,
+        externalEffects: ["financial"],
+        dataSensitivity: "confidential",
+        evidenceRequirement: "provenance_required",
+        requiresTools: true,
+        requiresStructuredOutput: true,
+        approvalRequired: true,
+      },
+    });
+
+    expect(result).toMatchObject({
+      stages: [],
+      modelRouteSignals: {
+        version: "sysdom_model_route_task_signals_v1",
+        taskClass: "analysis",
+        criticality: "high",
+        externalEffects: ["financial"],
+      },
+    });
+  });
 });
 
 describe("parseIssueExecutionState", () => {

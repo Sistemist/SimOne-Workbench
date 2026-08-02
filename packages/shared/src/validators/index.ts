@@ -576,6 +576,7 @@ export {
   modelRouteRecommendationLaneSchema,
   modelRouteRecommendationSchema,
   modelRouteTaskClassSchema,
+  modelRouteTaskSignalsSchema,
   updateModelExecutionPolicySchema,
   updateModelRouteDecisionReviewSchema,
   type CreateModelRouteDecision,
@@ -598,6 +599,7 @@ export {
   type ModelRouteRecommendationInput,
   type ModelRouteRecommendationLane,
   type ModelRouteTaskClass,
+  type ModelRouteTaskSignals,
   type UpdateModelExecutionPolicy,
   type UpdateModelRouteDecisionReview,
 } from "./model-route-decision.js";

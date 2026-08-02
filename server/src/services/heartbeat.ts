@@ -9,6 +9,7 @@ import {
   AGENT_DEFAULT_MAX_CONCURRENT_RUNS,
   ISSUE_CONTINUATION_SUMMARY_DOCUMENT_KEY,
   MODEL_PROFILE_KEYS,
+  modelRouteTaskSignalsSchema,
   envBindingSchema,
   isEnvironmentDriverSupportedForAdapter,
   type BillingType,
@@ -20,6 +21,7 @@ import {
   type IssueExecutionMonitorPolicy,
   type IssueExecutionMonitorRecoveryPolicy,
   type ModelRouteCandidate,
+  type ModelRouteTaskSignals,
   type ModelProfileKey,
   type RoutineRevisionSnapshotV1,
   type RunLivenessState,
@@ -3328,6 +3330,7 @@ export function buildHeartbeatRouteRecommendation(input: {
     title: string;
     priority: string;
     workMode: string;
+    executionPolicy?: unknown;
   } | null;
   contextProjection: VentureContextProjectionReceipt | null;
   evaluatedAt: string;
@@ -3338,13 +3341,32 @@ export function buildHeartbeatRouteRecommendation(input: {
   } | null;
   posture?: unknown;
 }) {
-  const approvalRequired =
+  const explicitSignals = modelRouteTaskSignalsSchema.safeParse(
+    parseObject(input.issue?.executionPolicy).modelRouteSignals,
+  );
+  const derivedApprovalRequired =
     input.contextProjection?.content.nextMove?.approvalRequired === true;
-  const taskClass = input.issue?.workMode === "planning"
+  const derivedTaskClass = input.issue?.workMode === "planning"
     ? "strategy"
     : input.issue
       ? "analysis"
       : "triage";
+  const taskSignals: ModelRouteTaskSignals = explicitSignals.success
+    ? explicitSignals.data
+    : {
+        version: "sysdom_model_route_task_signals_v1" as const,
+        taskClass: derivedTaskClass as ModelRouteTaskSignals["taskClass"],
+        criticality: routeRecommendationCriticality(input.issue?.priority),
+        reversible: !derivedApprovalRequired,
+        externalEffects: [],
+        dataSensitivity: "internal" as const,
+        evidenceRequirement: input.contextProjection?.sourceRefs.length
+          ? "provenance_required" as const
+          : "standard" as const,
+        requiresTools: false,
+        requiresStructuredOutput: true,
+        approvalRequired: derivedApprovalRequired,
+      };
   return recommendModelRoute({
     policyVersion: "sysdom-auto-alpha-1",
     evaluatedAt: input.evaluatedAt,
@@ -3359,17 +3381,16 @@ export function buildHeartbeatRouteRecommendation(input: {
       intent: input.issue
         ? `Work on ${input.issue.title}`
         : "Run the configured agent heartbeat.",
-      taskClass,
-      criticality: routeRecommendationCriticality(input.issue?.priority),
-      reversible: !approvalRequired,
-      externalEffects: [],
-      dataSensitivity: "internal",
-      evidenceRequirement: input.contextProjection?.sourceRefs.length
-        ? "provenance_required"
-        : "standard",
-      requiresTools: false,
-      requiresStructuredOutput: true,
-      approvalRequired,
+      signalSource: explicitSignals.success ? "explicit" : "derived",
+      taskClass: taskSignals.taskClass,
+      criticality: taskSignals.criticality,
+      reversible: taskSignals.reversible,
+      externalEffects: taskSignals.externalEffects,
+      dataSensitivity: taskSignals.dataSensitivity,
+      evidenceRequirement: taskSignals.evidenceRequirement,
+      requiresTools: taskSignals.requiresTools,
+      requiresStructuredOutput: taskSignals.requiresStructuredOutput,
+      approvalRequired: taskSignals.approvalRequired,
     },
     simContext: input.contextProjection
       ? {
@@ -3381,7 +3402,7 @@ export function buildHeartbeatRouteRecommendation(input: {
             ?? null,
           activeConstraintDecision:
             input.contextProjection.content.activeConstraint?.decision ?? null,
-          nextMoveApprovalRequired: approvalRequired,
+          nextMoveApprovalRequired: derivedApprovalRequired,
           approvalBoundaries: input.contextProjection.content.approvalBoundaries,
         }
       : null,
@@ -9945,6 +9966,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
               title: issueRef.title,
               priority: issueRef.priority,
               workMode: issueRef.workMode,
+              executionPolicy: issueContext?.executionPolicy ?? null,
             }
           : null,
         contextProjection: ventureContextProjectionReceipt,

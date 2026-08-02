@@ -274,12 +274,54 @@ describe("buildPaperclipTaskMarkdown", () => {
       selectedCandidate: null,
       approvalGate: "founder_review_before_execution",
       signals: {
+        source: "derived",
         activeEngine: "customer",
         projectionVersion: 4,
         approvalRequired: true,
       },
     });
     expect(recommendation.reason).toContain("no permitted exact model");
+  });
+
+  it("uses versioned explicit task signals instead of issue heuristics", () => {
+    const recommendation = buildHeartbeatRouteRecommendation({
+      issue: {
+        title: "Publish a customer commitment",
+        priority: "low",
+        workMode: "standard",
+        executionPolicy: {
+          stages: [],
+          modelRouteSignals: {
+            version: "sysdom_model_route_task_signals_v1",
+            taskClass: "specialist",
+            criticality: "critical",
+            reversible: false,
+            externalEffects: ["public", "customer"],
+            dataSensitivity: "confidential",
+            evidenceRequirement: "independent_review",
+            requiresTools: true,
+            requiresStructuredOutput: false,
+            approvalRequired: true,
+          },
+        },
+      },
+      contextProjection: null,
+      evaluatedAt: "2026-08-02T10:00:00.000Z",
+      portfolio: null,
+    });
+
+    expect(recommendation.signals).toMatchObject({
+      source: "explicit",
+      taskClass: "specialist",
+      criticality: "critical",
+      reversible: false,
+      externalEffects: ["public", "customer"],
+      dataSensitivity: "confidential",
+      evidenceRequirement: "independent_review",
+      approvalRequired: true,
+    });
+    expect(recommendation.riskLevel).toBe("critical");
+    expect(recommendation.approvalGate).toBe("founder_approval_before_external_effect");
   });
 });
 
