@@ -31,6 +31,12 @@ test("requires clean pushed release evidence and records rollback metadata", () 
   assert.match(script, /rollback_remote_deploy/);
 });
 
+test("smokes the current Sysdom AI app brand while leaving the landing root independently owned", () => {
+  assert.match(script, /"https:\/\/\$public_host\/app" \| rg -q '<title>Sysdom AI'/);
+  assert.match(script, /"https:\/\/\$public_host\/scanner" \| rg -q '<title>Sysdom AI'/);
+  assert.match(script, /"https:\/\/\$public_host\/" \| rg -q '<title>SimOne \\\\?\| The conscious agent company'/);
+});
+
 test("limits runtime mutation and cache cleanup to the SimOne service", () => {
   assert.doesNotMatch(script, /docker compose[^\n]* down/);
   assert.match(script, /compose build paperclip/);
