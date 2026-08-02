@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "SimOne",
-  "short_name": "SimOne",
-  "description": "Systems Intelligence workbench for agent-native builders",
+  "name": "Sysdom AI",
+  "short_name": "Sysdom AI",
+  "description": "The agentic venture builder for founder-led companies",
   "start_url": "/app",
   "scope": "/",
   "display": "browser",

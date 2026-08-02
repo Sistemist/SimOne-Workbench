@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AdapterEnvironmentTestResult } from "@paperclipai/shared";
 import { useLocation, useNavigate, useParams } from "@/lib/router";
@@ -228,15 +228,19 @@ Use the founder context above to draft a first Venture Architecture Map:
 Bring decisions back to the human before agents act on customers, money, public claims, or company structure.`;
 }
 
-function loadSavedState(): Record<string, unknown> | null {
+type ScannerStarterState = {
+  handoffKey: string;
+  state: Record<string, unknown>;
+};
+
+function loadScannerStarterState(): ScannerStarterState | null {
   try {
-    const raw = localStorage.getItem(ONBOARDING_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
     const scanRaw = localStorage.getItem(BOTTLENECK_SCAN_STORAGE_KEY);
     if (!scanRaw) return null;
     const scan = JSON.parse(scanRaw) as {
       input?: { founderNote?: unknown };
       result?: { headline?: unknown; engine?: unknown; nextAction?: unknown };
+      savedAt?: unknown;
     };
     const headline = typeof scan.result?.headline === "string" ? scan.result.headline.trim() : "";
     const engine = typeof scan.result?.engine === "string" ? scan.result.engine.trim() : "";
@@ -249,13 +253,29 @@ function loadSavedState(): Record<string, unknown> | null {
     ].filter(Boolean);
     if (missionParts.length === 0) return null;
     return {
-      step: 1,
-      onboardingPath: "starter",
-      missionPath: "direct",
-      companyGoal: missionParts.join(" "),
-      q1: founderNote,
-      q3: headline,
+      handoffKey:
+        typeof scan.savedAt === "string" && scan.savedAt.trim()
+          ? scan.savedAt.trim()
+          : JSON.stringify([headline, engine, nextAction, founderNote]),
+      state: {
+        step: 1,
+        onboardingPath: "starter",
+        missionPath: "direct",
+        companyGoal: missionParts.join(" "),
+        q1: founderNote,
+        q3: headline,
+      },
     };
+  } catch {
+    return null;
+  }
+}
+
+function loadSavedState(): Record<string, unknown> | null {
+  try {
+    const raw = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+    return loadScannerStarterState()?.state ?? null;
   } catch {
     return null;
   }
@@ -296,6 +316,7 @@ export function OnboardingWizard() {
 
   const initialStep = effectiveOnboardingOptions.initialStep ?? 0;
   const existingCompanyId = effectiveOnboardingOptions.companyId;
+  const appliedScannerHandoffKey = useRef<string | null>(null);
 
   // Restore saved state from localStorage (read once on mount)
   const saved = useMemo(loadSavedState, []);
@@ -362,6 +383,39 @@ export function OnboardingWizard() {
   useEffect(() => {
     setRouteDismissed(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const arrivedFromScanner =
+      new URLSearchParams(location.search ?? "").get("from") === "scanner";
+    if (!effectiveOnboardingOpen || !arrivedFromScanner) {
+      appliedScannerHandoffKey.current = null;
+      return;
+    }
+
+    const handoff = loadScannerStarterState();
+    if (!handoff || appliedScannerHandoffKey.current === handoff.handoffKey) return;
+
+    appliedScannerHandoffKey.current = handoff.handoffKey;
+    localStorage.removeItem(ONBOARDING_STORAGE_KEY);
+    setStep(1);
+    setOnboardingPath("starter");
+    setCompanyName("");
+    setCompanyGoal((handoff.state.companyGoal as string) ?? "");
+    setMissionPath("direct");
+    setMissionConfirmed(false);
+    setQ1((handoff.state.q1 as string) ?? "");
+    setQ2("");
+    setQ3((handoff.state.q3 as string) ?? "");
+    setQ4("");
+    setCreatedCompanyId(null);
+    setCreatedCompanyPrefix(null);
+    setCreatedAgentId(null);
+    setCreatedCompanyGoalId(null);
+    setCreatedProjectId(null);
+    setCreatedIssueRef(null);
+    setLoading(false);
+    setError(null);
+  }, [effectiveOnboardingOpen, location.search]);
 
   useEffect(() => {
     if (!effectiveOnboardingOpen || !location.search?.includes("from=scanner")) return;

@@ -11,6 +11,10 @@ const mockNavigate = vi.hoisted(() => vi.fn());
 const mockSetSelectedCompanyId = vi.hoisted(() => vi.fn());
 const mockCloseOnboarding = vi.hoisted(() => vi.fn());
 const mockSetOnboardingRouteDismissed = vi.hoisted(() => vi.fn());
+const mockLocation = vi.hoisted(() => ({
+  pathname: "/onboarding",
+  search: "",
+}));
 const mockCompaniesApi = vi.hoisted(() => ({
   create: vi.fn(),
 }));
@@ -26,7 +30,7 @@ const mockIssuesApi = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/router", () => ({
-  useLocation: () => ({ pathname: "/onboarding" }),
+  useLocation: () => mockLocation,
   useNavigate: () => mockNavigate,
   useParams: () => ({}),
 }));
@@ -120,6 +124,8 @@ describe("OnboardingWizard SIM Starter path", () => {
 
   beforeEach(() => {
     localStorage.clear();
+    mockLocation.pathname = "/onboarding";
+    mockLocation.search = "";
     container = document.createElement("div");
     document.body.appendChild(container);
     mockCompaniesApi.create.mockResolvedValue({
@@ -395,5 +401,64 @@ describe("OnboardingWizard SIM Starter path", () => {
         description: expect.stringContaining("- Approve the next customer-facing reply or offer before agents act."),
       })
     );
+  });
+
+  it("lets a new scanner handoff supersede a stale onboarding draft", async () => {
+    mockLocation.search = "?from=scanner&focus=product-engine";
+    localStorage.setItem(
+      "paperclip-onboarding-state",
+      JSON.stringify({
+        step: 2,
+        onboardingPath: "starter",
+        companyName: "Old venture",
+        companyGoal:
+          "Customer loop is leaking Primary constraint: Customer Engine. First move: Review customer replies.",
+        missionPath: "direct",
+        createdCompanyId: "stale-company",
+      }),
+    );
+    localStorage.setItem(
+      "simone:bottleneck-scan",
+      JSON.stringify({
+        savedAt: "2026-08-02T13:31:33.000Z",
+        input: {
+          founderNote:
+            "The roadmap has too many feature ideas and we need one promise we can prove.",
+        },
+        result: {
+          headline: "Product direction is diffused",
+          engine: "Product Engine",
+          nextAction:
+            "Pick one user promise and one proof point that would make it believable.",
+        },
+      }),
+    );
+
+    root = renderWizard(container);
+    await flushReact();
+
+    expect(document.body.textContent ?? "").toContain("Name your company");
+    expect(document.body.textContent ?? "").toContain("Setup choice: SIM Starter");
+    expect(document.body.textContent ?? "").not.toContain("Old venture");
+
+    const companyInput = document.body.querySelector<HTMLInputElement>(
+      'input[placeholder="Acme Corp"]'
+    );
+    expect(companyInput?.value).toBe("");
+    updateTextField(companyInput!, "Latest Scan Venture");
+
+    flushSync(() => {
+      findButton(document.body, "Next").dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const missionInput = document.body.querySelector<HTMLTextAreaElement>(
+      'textarea[placeholder="Paste the messy version: what are you building, selling, teaching, or trying to fix?"]'
+    );
+    expect(missionInput?.value).toContain("Product direction is diffused");
+    expect(missionInput?.value).toContain("Primary constraint: Product Engine.");
+    expect(missionInput?.value).toContain(
+      "Pick one user promise and one proof point that would make it believable."
+    );
+    expect(missionInput?.value).not.toContain("Customer loop is leaking");
   });
 });

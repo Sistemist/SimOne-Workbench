@@ -59,20 +59,20 @@ describe("BreadcrumbContext", () => {
     expect(renderCounts).toHaveLength(2);
   });
 
-  it("builds page titles with the selected company name before SimOne", () => {
+  it("builds page titles with the selected company name before Sysdom AI", () => {
     expect(buildDocumentTitle([{ label: "Inbox" }], "Anachronist Wiki")).toBe(
-      "Inbox • Anachronist Wiki • SimOne",
+      "Inbox • Anachronist Wiki • Sysdom AI",
     );
     expect(
       buildDocumentTitle(
         [{ label: "Issues", href: "/issues" }, { label: "PAP-3515" }],
         "Anachronist Wiki",
       ),
-    ).toBe("PAP-3515 • Issues • Anachronist Wiki • SimOne");
+    ).toBe("PAP-3515 • Issues • Anachronist Wiki • Sysdom AI");
   });
 
   it("omits blank company names from page titles", () => {
-    expect(buildDocumentTitle([{ label: "Inbox" }], "  ")).toBe("Inbox • SimOne");
-    expect(buildDocumentTitle([], null)).toBe("SimOne");
+    expect(buildDocumentTitle([{ label: "Inbox" }], "  ")).toBe("Inbox • Sysdom AI");
+    expect(buildDocumentTitle([], null)).toBe("Sysdom AI");
   });
 });
