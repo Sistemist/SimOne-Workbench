@@ -160,6 +160,20 @@ describe("Sidebar", () => {
     });
   });
 
+  it("keeps Help & Recovery reachable from company navigation", async () => {
+    mockInstanceSettingsApi.getExperimental.mockResolvedValue({ enableIsolatedWorkspaces: false });
+    const root = await renderSidebar();
+
+    const supportLink = [...container.querySelectorAll("nav a")].find(
+      (anchor) => anchor.textContent?.trim() === "Help & Recovery",
+    );
+    expect(supportLink?.getAttribute("href")).toBe("/support");
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
   it("renders plugin sidebar launchers inside the Work section", async () => {
     mockInstanceSettingsApi.getExperimental.mockResolvedValue({
       enableIsolatedWorkspaces: false,
