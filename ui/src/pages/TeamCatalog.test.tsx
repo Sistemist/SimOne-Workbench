@@ -335,7 +335,7 @@ describe("TeamCatalog install preview path", () => {
 
     expect(document.body.textContent).toContain("How agents run");
     expect(document.body.textContent).toContain("Claude Code");
-    expect(document.body.textContent).toContain("SimOne applies the recommended runtime");
+    expect(document.body.textContent).toContain("Sysdom AI applies the recommended runtime");
   });
 
   it("requires and submits Step 4 secret values", async () => {

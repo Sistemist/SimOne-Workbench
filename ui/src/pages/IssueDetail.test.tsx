@@ -1229,7 +1229,7 @@ describe("IssueDetail", () => {
         wikiId: "default",
         spaceSlug: "default",
         path: expect.stringMatching(/^wiki\/synthesis\/sprint-zero-.+-reviewed-venture-architecture-map\.md$/),
-        summary: "Promoted reviewed Sprint Zero first map from SimOne",
+        summary: "Promoted reviewed Sprint Zero first map from Sysdom AI",
       }),
       "company-1",
     );

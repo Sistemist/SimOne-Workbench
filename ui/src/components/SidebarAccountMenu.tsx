@@ -130,7 +130,7 @@ export function SidebarAccountMenu({
   const secondaryLabel =
     session?.user.email?.trim() || (deploymentMode === "authenticated" ? "Signed in" : "Local workspace board");
   const accountBadge = deploymentMode === "authenticated" ? "Account" : "Local";
-  const workspaceLabel = workspaceName?.trim() || "SimOne workspace";
+  const workspaceLabel = workspaceName?.trim() || "Sysdom AI workspace";
   const workspaceStatus = deploymentMode === "authenticated"
     ? "Signed in · changes are saved to this hosted workspace"
     : "Local mode · changes stay on this instance";
@@ -183,7 +183,7 @@ export function SidebarAccountMenu({
                 </div>
                 <p className="truncate text-sm text-muted-foreground">{secondaryLabel}</p>
                 {version ? (
-                  <p className="mt-1 text-xs text-muted-foreground">SimOne v{version}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Sysdom AI v{version}</p>
                 ) : null}
               </div>
             </div>

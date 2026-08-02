@@ -34,6 +34,7 @@ test("requires clean pushed release evidence and records rollback metadata", () 
 test("smokes the current Sysdom AI app brand while leaving the landing root independently owned", () => {
   assert.match(script, /"https:\/\/\$public_host\/app" \| rg -q '<title>Sysdom AI'/);
   assert.match(script, /"https:\/\/\$public_host\/scanner" \| rg -q '<title>Sysdom AI'/);
+  assert.match(script, /"https:\/\/\$public_host\/auth\/forgot-password" \| rg -q '<title>Sysdom AI'/);
   assert.match(script, /"https:\/\/\$public_host\/" \| rg -q '<title>SimOne \\\\?\| The conscious agent company'/);
 });
 

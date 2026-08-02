@@ -136,7 +136,7 @@ describe("CustomerEngine", () => {
     expect(text).toContain("Demand Proof");
     expect(text).toContain("Company Memory");
     expect(text).toContain("Human-promoted");
-    expect(text).toContain("Why SimOne stops here");
+    expect(text).toContain("Why Sysdom AI stops here");
     expect(text).toContain("Customer replies and proof points can change the company map");
     expect(text).toContain("Ops check: engine healthy across 1 observed job.");
     expect(text).toContain("First bridge rule");
@@ -256,7 +256,7 @@ describe("CustomerEngine", () => {
         wikiId: "default",
         spaceSlug: "default",
         path: "wiki/synthesis/customer-engine-2026-07-08-123456-customer-engine-proof-readout.md",
-        summary: "Promoted Customer Engine readout from SimOne",
+        summary: "Promoted Customer Engine readout from Sysdom AI",
       }),
       "company-1"
     );

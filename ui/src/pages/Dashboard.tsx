@@ -185,7 +185,7 @@ export function Dashboard() {
       return (
         <EmptyState
           icon={LayoutDashboard}
-          message="Welcome to SimOne. Set up your first company and agent to get started."
+          message="Welcome to Sysdom AI. Set up your first company and agent to get started."
           action="Get Started"
           onAction={openOnboarding}
         />

@@ -207,6 +207,7 @@ remote_deployed=true
 
 curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/app" | rg -q '<title>Sysdom AI'
 curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/scanner" | rg -q '<title>Sysdom AI'
+curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/auth/forgot-password" | rg -q '<title>Sysdom AI'
 curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/" | rg -q '<title>SimOne \| The conscious agent company'
 
 signup_status="$(

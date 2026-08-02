@@ -1863,7 +1863,7 @@ export function StepPreview({
             );
           })}
           <li className="px-3 py-1.5 text-[11px] text-muted-foreground">
-            SimOne applies the recommended runtime unless you change it here.
+            Sysdom AI applies the recommended runtime unless you change it here.
             Advanced model settings remain editable on each agent after install.
           </li>
         </PreviewSection>

@@ -59,9 +59,9 @@ function StateChrome({ children }: { children: ReactNode }) {
 function SignedOutPrivate() {
   return (
     <StateChrome>
-      <h1 className="text-xl font-semibold">Finish setting up SimOne</h1>
+      <h1 className="text-xl font-semibold">Finish setting up Sysdom AI</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Create your account to claim the first SimOne workspace for this installation.
+        Create your account to claim the first Sysdom AI workspace for this installation.
       </p>
       <div className="mt-5">
         <Button asChild>
@@ -76,7 +76,7 @@ function SignedOutPrivate() {
 function SignedInPrivate() {
   return (
     <StateChrome>
-      <h1 className="text-xl font-semibold">Finish setting up SimOne</h1>
+      <h1 className="text-xl font-semibold">Finish setting up Sysdom AI</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Claim this workspace to become the first admin and start onboarding.
       </p>
@@ -101,7 +101,7 @@ function SignedInPrivate() {
 function ClaimingPrivate() {
   return (
     <StateChrome>
-      <h1 className="text-xl font-semibold">Finish setting up SimOne</h1>
+      <h1 className="text-xl font-semibold">Finish setting up Sysdom AI</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Claim this workspace to become the first admin and start onboarding.
       </p>
@@ -122,7 +122,7 @@ function ClaimingPrivate() {
 function ClaimErrorPrivate() {
   return (
     <StateChrome>
-      <h1 className="text-xl font-semibold">Finish setting up SimOne</h1>
+      <h1 className="text-xl font-semibold">Finish setting up Sysdom AI</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Claim this workspace to become the first admin and start onboarding.
       </p>
@@ -180,9 +180,9 @@ function ClaimSuccess() {
 function PublicInviteOnly() {
   return (
     <StateChrome>
-      <h1 className="text-xl font-semibold">This SimOne workspace is waiting on its first admin</h1>
+      <h1 className="text-xl font-semibold">This Sysdom AI workspace is waiting on its first admin</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        This SimOne workspace is invite-only. Ask the workspace owner for an invite link, then open it
+        This Sysdom AI workspace is invite-only. Ask the workspace owner for an invite link, then open it
         from this browser to finish setup.
       </p>
       <CliFallback hasActiveInvite />

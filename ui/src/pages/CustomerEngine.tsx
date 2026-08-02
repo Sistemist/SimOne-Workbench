@@ -157,7 +157,7 @@ export function CustomerEngine() {
           spaceSlug: "default",
           path: page.path,
           contents: page.contents,
-          summary: "Promoted Customer Engine readout from SimOne",
+          summary: "Promoted Customer Engine readout from Sysdom AI",
           sourceRefs: [{ kind: "tissuu-customer-engine-bridge", generatedAt: liveSnapshot.generatedAt }],
         },
         selectedCompanyId
@@ -185,7 +185,7 @@ export function CustomerEngine() {
               Turn customer signal into company judgment.
             </h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Keep Tissuu as the live discovery system and use SimOne to review what changed, what needs approval,
+              Keep Tissuu as the live discovery system and use Sysdom AI to review what changed, what needs approval,
               and which assumptions should become SIM memory.
             </p>
           </div>
@@ -254,9 +254,9 @@ export function CustomerEngine() {
           <div className="flex items-start gap-3">
             <HeartPulse className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <div>
-              <h2 className="text-sm font-semibold">Why SimOne stops here</h2>
+              <h2 className="text-sm font-semibold">Why Sysdom AI stops here</h2>
               <p className="mt-1 text-sm leading-5 text-emerald-950/80 dark:text-emerald-50/80">
-                Customer replies and proof points can change the company map. SimOne can surface the pattern,
+                Customer replies and proof points can change the company map. Sysdom AI can surface the pattern,
                 but the relationship move stays with a human before anything is posted, promoted, or remembered.
               </p>
               <p className="mt-2 text-sm leading-5 text-emerald-950/80 dark:text-emerald-50/80">
@@ -324,7 +324,7 @@ export function CustomerEngine() {
           <div>
             <h2 className="text-sm font-semibold">First bridge rule</h2>
             <p className="mt-1 text-sm leading-5 text-amber-900/80 dark:text-amber-100/80">
-              SimOne reads customer signal first. Posting, publishing, following, and prospect changes stay in Tissuu
+              Sysdom AI reads customer signal first. Posting, publishing, following, and prospect changes stay in Tissuu
               until there is an explicit reviewed action.
             </p>
           </div>

@@ -97,7 +97,7 @@ const coachNotes = [
 
 const setupOptions = [
   {
-    title: "SimOne starter",
+    title: "SIM Starter",
     label: "Recommended",
     body: "Four engines, four drivers, approval boundaries, and a SIM Wiki-ready Sprint Zero.",
     action: "Open starter",
@@ -133,7 +133,7 @@ const coachFlow = [
   },
   {
     title: "Coach judgment",
-    body: "SimOne flags risks, missing loops, and approval moments before agents run too far.",
+    body: "Sysdom AI flags risks, missing loops, and approval moments before agents run too far.",
     icon: MessageCircleQuestion,
   },
 ];
@@ -1198,7 +1198,7 @@ export function SimCoach() {
             <div>
               <h3 className="text-sm font-medium text-foreground">Why SIM cares</h3>
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                SimOne keeps the useful question close to the work: what should move, who says yes,
+                Sysdom AI keeps the useful question close to the work: what should move, who says yes,
                 and where the decision becomes memory for the team.
               </p>
               <Button asChild variant="link" size="sm" className="mt-1 h-auto px-0 text-xs">

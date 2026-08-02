@@ -116,7 +116,7 @@ describe("SidebarAccountMenu", () => {
     expect(document.body.textContent).toContain("Sysdom");
     expect(document.body.textContent).toContain("changes are saved to this hosted workspace");
     expect(document.body.querySelector('a[href="/sim-coach"]')).not.toBeNull();
-    expect(document.body.textContent).toContain("SimOne v1.2.3");
+    expect(document.body.textContent).toContain("Sysdom AI v1.2.3");
     expect(document.body.textContent).not.toContain("Paperclip v1.2.3");
     expect(document.body.textContent).toContain("jane@example.com");
     expect(document.body.querySelector('[data-slot="popover-content"]')?.className)

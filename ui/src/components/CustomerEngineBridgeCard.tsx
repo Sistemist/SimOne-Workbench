@@ -37,7 +37,7 @@ const defaultState: CustomerEngineBridgeState = {
   status: "pending",
   statusLabel: "Signal pending",
   headline: "Customer Signal",
-  summary: "Customer discovery can keep running in Tissuu while SimOne turns the signal into review prompts, assumptions, and durable SIM memory.",
+  summary: "Customer discovery can keep running in Tissuu while Sysdom AI turns the signal into review prompts, assumptions, and durable SIM memory.",
   signals: [
     { label: "Digest", value: "Waiting for readout", tone: "muted" },
     { label: "Review", value: "Approval stays human", tone: "attention" },

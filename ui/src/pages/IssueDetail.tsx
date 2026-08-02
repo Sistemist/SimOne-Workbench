@@ -2036,7 +2036,7 @@ export function IssueDetail() {
           spaceSlug: "default",
           path: page.path,
           contents: page.contents,
-          summary: "Promoted reviewed Sprint Zero first map from SimOne",
+          summary: "Promoted reviewed Sprint Zero first map from Sysdom AI",
           sourceRefs: [
             {
               kind: "simone-sprint-zero-first-map",
