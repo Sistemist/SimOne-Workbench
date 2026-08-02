@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { mkdirSync, mkdtempSync, readdirSync, statSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -63,6 +63,70 @@ const serializedServerVitestArgs = [
   "--no-file-parallelism",
   "--maxWorkers=1",
 ];
+const runStartedAt = Date.now();
+const groupOutcomes = [];
+const invocationOutcomes = [];
+let activeChild = null;
+let forceKillTimer = null;
+let interruptionSignal = null;
+
+class TestRunFailure extends Error {
+  constructor(message, { exitCode = 1, label = null } = {}) {
+    super(message);
+    this.name = "TestRunFailure";
+    this.exitCode = exitCode;
+    this.label = label;
+  }
+}
+
+class TestRunInterrupted extends Error {
+  constructor(signal, label = null) {
+    super(`Test run interrupted by ${signal}`);
+    this.name = "TestRunInterrupted";
+    this.signal = signal;
+    this.label = label;
+  }
+}
+
+function signalExitCode(signal) {
+  return signal === "SIGINT" ? 130 : signal === "SIGTERM" ? 143 : 1;
+}
+
+function clearForceKillTimer() {
+  if (forceKillTimer !== null) {
+    clearTimeout(forceKillTimer);
+    forceKillTimer = null;
+  }
+}
+
+function requestInterruption(signal) {
+  if (interruptionSignal !== null) {
+    if (activeChild && activeChild.exitCode === null && activeChild.signalCode === null) {
+      activeChild.kill("SIGKILL");
+    }
+    return;
+  }
+
+  interruptionSignal = signal;
+  console.error(`[test:run] interruption requested: ${signal}`);
+  if (activeChild && activeChild.exitCode === null && activeChild.signalCode === null) {
+    activeChild.kill(signal);
+    forceKillTimer = setTimeout(() => {
+      if (activeChild && activeChild.exitCode === null && activeChild.signalCode === null) {
+        activeChild.kill("SIGKILL");
+      }
+    }, 5_000);
+    forceKillTimer.unref();
+  }
+}
+
+const signalHandlers = new Map([
+  ["SIGINT", () => requestInterruption("SIGINT")],
+  ["SIGTERM", () => requestInterruption("SIGTERM")],
+]);
+for (const [signal, handler] of signalHandlers) {
+  process.on(signal, handler);
+}
 
 function walk(dir) {
   const entries = readdirSync(dir);
@@ -96,8 +160,7 @@ function isRouteOrAuthzTest(file) {
 }
 
 function fail(message) {
-  console.error(`[test:run] ${message}`);
-  process.exit(1);
+  throw new TestRunFailure(message);
 }
 
 function readOptionValue(argv, index, argName) {
@@ -246,9 +309,57 @@ function selectSerializedSuites(routeTests, shardIndex, shardCount) {
   return routeTests.filter((_, index) => index % shardCount === shardIndex);
 }
 
-function runVitest(args, label) {
+function recordInvocationOutcome(outcome) {
+  invocationOutcomes.push(outcome);
+  console.log(`[test:run] outcome ${JSON.stringify(outcome)}`);
+}
+
+async function runTrackedGroup(group, run) {
+  const startedAt = Date.now();
+  const firstInvocationIndex = invocationOutcomes.length;
+  let caughtError = null;
+  try {
+    await run();
+  } catch (error) {
+    caughtError = error;
+  }
+
+  const invocations = invocationOutcomes.slice(firstInvocationIndex);
+  const status = caughtError instanceof TestRunInterrupted
+    ? "interrupted"
+    : caughtError !== null || invocations.some((outcome) => outcome.status === "failed")
+      ? "failed"
+      : invocations.length > 0 && invocations.every((outcome) => outcome.status === "skipped")
+        ? "skipped"
+        : "passed";
+  const outcome = {
+    group,
+    status,
+    invocationCount: invocations.length,
+    passedCount: invocations.filter((invocation) => invocation.status === "passed").length,
+    failedCount: invocations.filter((invocation) => invocation.status === "failed").length,
+    interruptedCount: invocations.filter(
+      (invocation) => invocation.status === "interrupted",
+    ).length,
+    skippedCount: invocations.filter((invocation) => invocation.status === "skipped").length,
+    durationMs: Date.now() - startedAt,
+  };
+  groupOutcomes.push(outcome);
+  console.log(`[test:run] group-outcome ${JSON.stringify(outcome)}`);
+
+  if (caughtError !== null) {
+    throw caughtError;
+  }
+}
+
+async function runVitest(args, label, group) {
+  if (interruptionSignal !== null) {
+    throw new TestRunInterrupted(interruptionSignal, label);
+  }
+
   console.log(`\n[test:run] ${label}`);
   invocationIndex += 1;
+  const startedAt = Date.now();
   const tempRootParent = process.platform === "win32" ? os.tmpdir() : "/tmp";
   const testRoot = mkdtempSync(path.join(tempRootParent, `pcvt-${process.pid}-${invocationIndex}-`));
   // Keep per-run paths compact so Unix socket fixtures stay under macOS path limits.
@@ -261,33 +372,67 @@ function runVitest(args, label) {
   };
   mkdirSync(env.PAPERCLIP_HOME, { recursive: true });
   mkdirSync(env.TMPDIR, { recursive: true });
-  const result = spawnSync("pnpm", ["exec", "vitest", "run", ...args], {
+  const testChildFixture = process.env.NODE_ENV === "test"
+    ? process.env.PAPERCLIP_TEST_RUNNER_CHILD_FIXTURE
+    : null;
+  const command = testChildFixture ? process.execPath : "pnpm";
+  const commandArgs = testChildFixture
+    ? [testChildFixture, ...args]
+    : ["exec", "vitest", "run", ...args];
+  const child = spawn(command, commandArgs, {
     cwd: repoRoot,
     env,
     stdio: "inherit",
   });
+  activeChild = child;
+  const result = await new Promise((resolve) => {
+    child.once("error", (error) => resolve({ error, status: null, signal: null }));
+    child.once("close", (status, signal) => resolve({ error: null, status, signal }));
+  });
+  activeChild = null;
+  clearForceKillTimer();
+
+  const status = interruptionSignal !== null
+    ? "interrupted"
+    : result.error || result.status !== 0
+      ? "failed"
+      : "passed";
+  recordInvocationOutcome({
+    group,
+    label,
+    status,
+    exitCode: result.status,
+    signal: result.signal,
+    durationMs: Date.now() - startedAt,
+  });
+
+  if (interruptionSignal !== null) {
+    throw new TestRunInterrupted(interruptionSignal, label);
+  }
   if (result.error) {
-    console.error(`[test:run] Failed to start Vitest: ${result.error.message}`);
-    process.exit(1);
+    throw new TestRunFailure(`Failed to start Vitest: ${result.error.message}`, { label });
   }
   if (result.status !== 0) {
-    process.exit(result.status ?? 1);
+    throw new TestRunFailure(`Vitest child failed for ${label}`, {
+      exitCode: result.status ?? 1,
+      label,
+    });
   }
 }
 
-function runGeneralSuites(routeTests) {
+async function runGeneralSuites(routeTests) {
   for (const groupName of generalGroupNames) {
-    runGeneralGroup(routeTests, groupName);
+    await runTrackedGroup(groupName, () => runGeneralGroup(routeTests, groupName));
   }
 }
 
-function runProjectGroup(projects, groupName) {
+async function runProjectGroup(projects, groupName) {
   for (const project of projects) {
-    runVitest(["--project", project], `${groupName} project ${project}`);
+    await runVitest(["--project", project], `${groupName} project ${project}`, groupName);
   }
 }
 
-function runGeneralGroup(routeTests, groupName, shardIndex = null, shardCount = null) {
+async function runGeneralGroup(routeTests, groupName, shardIndex = null, shardCount = null) {
   if (groupName === generalServerGroupName) {
     if (shardCount !== null && shardCount > 1) {
       const shardFiles = generalServerTestFiles.filter(
@@ -297,10 +442,18 @@ function runGeneralGroup(routeTests, groupName, shardIndex = null, shardCount = 
         `\n[test:run] general-server shard ${shardIndex + 1}/${shardCount} running ${shardFiles.length} of ${generalServerTestFiles.length} suites`,
       );
       if (shardFiles.length === 0) {
+        recordInvocationOutcome({
+          group: `${groupName}-shard-${shardIndex + 1}-of-${shardCount}`,
+          label: `${groupName} shard ${shardIndex + 1}/${shardCount}`,
+          status: "skipped",
+          exitCode: 0,
+          signal: null,
+          durationMs: 0,
+        });
         return;
       }
 
-      runVitest(
+      await runVitest(
         [
           "--project",
           "@paperclipai/server",
@@ -308,12 +461,13 @@ function runGeneralGroup(routeTests, groupName, shardIndex = null, shardCount = 
           ...shardFiles,
         ],
         `${groupName} shard ${shardIndex + 1}/${shardCount}`,
+        `${groupName}-shard-${shardIndex + 1}-of-${shardCount}`,
       );
       return;
     }
 
     const excludeRouteArgs = routeTests.flatMap((file) => ["--exclude", file.serverPath]);
-    runVitest(
+    await runVitest(
       [
         "--project",
         "@paperclipai/server",
@@ -321,31 +475,44 @@ function runGeneralGroup(routeTests, groupName, shardIndex = null, shardCount = 
         ...excludeRouteArgs,
       ],
       `${groupName} server suites excluding ${routeTests.length} serialized suites`,
+      groupName,
     );
     return;
   }
 
   if (groupName === generalWorkspacesAGroupName) {
-    runProjectGroup(generalWorkspacesAProjects, groupName);
+    await runProjectGroup(generalWorkspacesAProjects, groupName);
     return;
   }
 
   if (groupName === generalWorkspacesBGroupName) {
-    runProjectGroup(generalWorkspacesBProjects, groupName);
+    await runProjectGroup(generalWorkspacesBProjects, groupName);
     return;
   }
 
   fail(`Unknown group "${groupName}".`);
 }
 
-function runSerializedSuites(routeTests, shardIndex, shardCount) {
+async function runSerializedSuites(routeTests, shardIndex, shardCount) {
   const shardTests = selectSerializedSuites(routeTests, shardIndex, shardCount);
+  const group = `serialized-shard-${shardIndex + 1}-of-${shardCount}`;
   console.log(
     `\n[test:run] serialized shard ${shardIndex + 1}/${shardCount} running ${shardTests.length} of ${routeTests.length} suites`,
   );
+  if (shardTests.length === 0) {
+    recordInvocationOutcome({
+      group,
+      label: `serialized shard ${shardIndex + 1}/${shardCount}`,
+      status: "skipped",
+      exitCode: 0,
+      signal: null,
+      durationMs: 0,
+    });
+    return;
+  }
 
   for (const routeTest of shardTests) {
-    runVitest(
+    await runVitest(
       [
         "--project",
         "@paperclipai/server",
@@ -354,6 +521,7 @@ function runSerializedSuites(routeTests, shardIndex, shardCount) {
         "--isolate",
       ],
       routeTest.repoPath,
+      group,
     );
   }
 }
@@ -377,47 +545,122 @@ const generalServerTestFiles = walk(serverSrcDir)
   .filter((repoPath) => !isRouteOrAuthzTest(repoPath))
   .sort((a, b) => a.localeCompare(b));
 
-const options = parseCliOptions(process.argv.slice(2));
-if (options.dryRun) {
-  const serializedSuites =
-    options.mode === serializedModeName
-      ? selectSerializedSuites(routeTests, options.shardIndex, options.shardCount)
-      : routeTests;
-  console.log(
-    JSON.stringify(
-      {
-        mode: options.mode,
-        shardIndex: options.shardIndex,
-        shardCount: options.shardCount,
-        group: options.group,
-        availableGeneralGroups: generalGroupNames,
-        serializedSuiteCount: routeTests.length,
-        selectedSerializedSuites: serializedSuites.map((routeTest) => routeTest.repoPath),
-        generalServerSuiteCount: generalServerTestFiles.length,
-        selectedGeneralServerSuites:
-          options.mode === generalModeName &&
-          options.group === generalServerGroupName &&
-          options.shardCount !== null
-            ? generalServerTestFiles.filter(
-                (_, index) => index % options.shardCount === options.shardIndex,
-              )
-            : null,
-      },
-      null,
-      2,
-    ),
-  );
-  process.exit(0);
+function terminalSummary(status, exitCode, signal, failureLabel) {
+  const counts = {
+    passed: invocationOutcomes.filter((outcome) => outcome.status === "passed").length,
+    failed: invocationOutcomes.filter((outcome) => outcome.status === "failed").length,
+    interrupted: invocationOutcomes.filter((outcome) => outcome.status === "interrupted").length,
+    skipped: invocationOutcomes.filter((outcome) => outcome.status === "skipped").length,
+  };
+  const groupCounts = {
+    passed: groupOutcomes.filter((outcome) => outcome.status === "passed").length,
+    failed: groupOutcomes.filter((outcome) => outcome.status === "failed").length,
+    interrupted: groupOutcomes.filter((outcome) => outcome.status === "interrupted").length,
+    skipped: groupOutcomes.filter((outcome) => outcome.status === "skipped").length,
+  };
+  return {
+    version: "paperclip_test_run_summary_v1",
+    status,
+    exitCode,
+    signal,
+    invocationCount: invocationOutcomes.length,
+    counts,
+    groupCount: groupOutcomes.length,
+    groupCounts,
+    failureLabel,
+    durationMs: Date.now() - runStartedAt,
+  };
 }
 
-if (options.mode === generalModeName || options.mode === allModeName) {
-  if (options.group) {
-    runGeneralGroup(routeTests, options.group, options.shardIndex, options.shardCount);
-  } else {
-    runGeneralSuites(routeTests);
+function removeSignalHandlers() {
+  clearForceKillTimer();
+  for (const [signal, handler] of signalHandlers) {
+    process.off(signal, handler);
   }
 }
 
-if (options.mode === serializedModeName || options.mode === allModeName) {
-  runSerializedSuites(routeTests, options.shardIndex ?? 0, options.shardCount ?? 1);
+let shouldEmitTerminalSummary = true;
+let finalStatus = "completed";
+let finalExitCode = 0;
+let finalSignal = null;
+let failureLabel = null;
+
+try {
+  const options = parseCliOptions(process.argv.slice(2));
+  if (options.dryRun) {
+    const serializedSuites =
+      options.mode === serializedModeName
+        ? selectSerializedSuites(routeTests, options.shardIndex, options.shardCount)
+        : routeTests;
+    console.log(
+      JSON.stringify(
+        {
+          mode: options.mode,
+          shardIndex: options.shardIndex,
+          shardCount: options.shardCount,
+          group: options.group,
+          availableGeneralGroups: generalGroupNames,
+          serializedSuiteCount: routeTests.length,
+          selectedSerializedSuites: serializedSuites.map((routeTest) => routeTest.repoPath),
+          generalServerSuiteCount: generalServerTestFiles.length,
+          selectedGeneralServerSuites:
+            options.mode === generalModeName &&
+            options.group === generalServerGroupName &&
+            options.shardCount !== null
+              ? generalServerTestFiles.filter(
+                  (_, index) => index % options.shardCount === options.shardIndex,
+                )
+              : null,
+        },
+        null,
+        2,
+      ),
+    );
+    shouldEmitTerminalSummary = false;
+  } else {
+    if (options.mode === generalModeName || options.mode === allModeName) {
+      if (options.group) {
+        const group = options.group === generalServerGroupName && options.shardCount !== null
+          ? `${options.group}-shard-${options.shardIndex + 1}-of-${options.shardCount}`
+          : options.group;
+        await runTrackedGroup(group, () =>
+          runGeneralGroup(routeTests, options.group, options.shardIndex, options.shardCount)
+        );
+      } else {
+        await runGeneralSuites(routeTests);
+      }
+    }
+
+    if (options.mode === serializedModeName || options.mode === allModeName) {
+      const shardIndex = options.shardIndex ?? 0;
+      const shardCount = options.shardCount ?? 1;
+      const group = `serialized-shard-${shardIndex + 1}-of-${shardCount}`;
+      await runTrackedGroup(group, () =>
+        runSerializedSuites(routeTests, shardIndex, shardCount)
+      );
+    }
+  }
+} catch (error) {
+  if (error instanceof TestRunInterrupted) {
+    finalStatus = "interrupted";
+    finalSignal = error.signal;
+    finalExitCode = signalExitCode(error.signal);
+    failureLabel = error.label;
+  } else {
+    finalStatus = "failed";
+    finalExitCode = error instanceof TestRunFailure ? error.exitCode : 1;
+    failureLabel = error instanceof TestRunFailure ? error.label : null;
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[test:run] ${message}`);
+  }
+} finally {
+  removeSignalHandlers();
+  if (shouldEmitTerminalSummary) {
+    console.log(
+      `[test:run] terminal-summary ${JSON.stringify(
+        terminalSummary(finalStatus, finalExitCode, finalSignal, failureLabel),
+      )}`,
+    );
+  }
+  process.exitCode = finalExitCode;
 }
