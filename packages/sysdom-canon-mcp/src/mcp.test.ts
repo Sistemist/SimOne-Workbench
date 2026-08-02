@@ -17,7 +17,7 @@ const config: SysdomCanonConfig = {
 };
 
 describe("Sysdom canon MCP protocol", () => {
-  it("advertises and executes the read-only canon tool", async () => {
+  it("advertises and executes the read-only canon and destination tools", async () => {
     const retriever: CanonRetriever = {
       query: async (input) => ({
         query: input.query,
@@ -42,7 +42,7 @@ describe("Sysdom canon MCP protocol", () => {
 
     try {
       const listed = await client.listTools();
-      expect(listed.tools).toEqual([
+      expect(listed.tools).toEqual(expect.arrayContaining([
         expect.objectContaining({
           name: "query_sysdom_canon",
           annotations: expect.objectContaining({
@@ -50,7 +50,14 @@ describe("Sysdom canon MCP protocol", () => {
             destructiveHint: false,
           }),
         }),
-      ]);
+        expect.objectContaining({
+          name: "get_sysdom_destinations",
+          annotations: expect.objectContaining({
+            readOnlyHint: true,
+            destructiveHint: false,
+          }),
+        }),
+      ]));
 
       const result = await client.callTool({
         name: "query_sysdom_canon",
@@ -61,6 +68,18 @@ describe("Sysdom canon MCP protocol", () => {
         expect.objectContaining({
           type: "text",
           text: expect.stringContaining("chunk-1"),
+        }),
+      ]);
+
+      const destinations = await client.callTool({
+        name: "get_sysdom_destinations",
+        arguments: { category: "book" },
+      });
+      expect(destinations.isError).not.toBe(true);
+      expect(destinations.content).toEqual([
+        expect.objectContaining({
+          type: "text",
+          text: expect.stringContaining("https://www.amazon.com/dp/B0H3WSLJDZ"),
         }),
       ]);
     } finally {

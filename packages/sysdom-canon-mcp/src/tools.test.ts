@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { createGetSysdomDestinationsTool } from "./destinations.js";
 import { DifyRetrievalError } from "./dify.js";
 import type { CanonRetriever } from "./retriever.js";
 import { createQuerySysdomCanonTool } from "./tools.js";
@@ -62,5 +63,27 @@ describe("query_sysdom_canon", () => {
     expect(result.content[0]?.text).toContain("retrieval_unavailable");
     expect(result.content[0]?.text).not.toContain("secret-token");
     expect(result.content[0]?.text).not.toContain("401");
+  });
+});
+
+describe("get_sysdom_destinations", () => {
+  it("returns exact official book destinations without calling Dify", async () => {
+    const result = await createGetSysdomDestinationsTool().execute({ category: "book" });
+
+    expect(result.isError).not.toBe(true);
+    expect(result.structuredContent).toMatchObject({
+      category: "book",
+      count: 3,
+      staticRegistry: true,
+    });
+    expect(result.content[0]?.text).toContain("https://maven.com/hankay/o/a29142");
+    expect(result.content[0]?.text).toContain("https://www.amazon.com/dp/B0H3WSLJDZ");
+  });
+
+  it("rejects unknown destination categories", async () => {
+    const result = await createGetSysdomDestinationsTool().execute({ category: "social" });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0]?.text).toContain("invalid_request");
   });
 });

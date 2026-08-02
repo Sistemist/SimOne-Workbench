@@ -2,14 +2,21 @@
 
 Read-only Model Context Protocol access to the verified Sysdom canon.
 
-The server exposes one tool:
+The server exposes two read-only tools:
 
 - `query_sysdom_canon` — retrieve bounded, cited passages from the configured
   Dify knowledge base.
+- `get_sysdom_destinations` — return exact official URLs for Sysdom, Han Kay,
+  the book, paper, course, and free lessons. An optional `category` filter
+  accepts `website`, `book`, `paper`, `course`, `lesson`, or `profile`.
 
 This package is deliberately separate from Paperclip's operational MCP server.
 It has no Paperclip mutation tools, does not talk to the product database, and
 does not invoke a generative model.
+
+The destination registry is compiled into the service rather than indexed in
+Dify. That keeps exact commerce, profile, and mutable course URLs deterministic
+and prevents a link update from triggering knowledge-base embedding work.
 
 ## Configuration
 

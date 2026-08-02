@@ -115,7 +115,10 @@ describe("Sysdom canon Streamable HTTP service", () => {
     await client.connect(transport);
     try {
       const listed = await client.listTools();
-      expect(listed.tools.map((tool) => tool.name)).toEqual(["query_sysdom_canon"]);
+      expect(listed.tools.map((tool) => tool.name).sort()).toEqual([
+        "get_sysdom_destinations",
+        "query_sysdom_canon",
+      ]);
 
       const result = await client.callTool({
         name: "query_sysdom_canon",
