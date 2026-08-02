@@ -15,6 +15,7 @@ import { costsApi } from "../api/costs";
 import { BillerSpendCard } from "../components/BillerSpendCard";
 import { BudgetIncidentCard } from "../components/BudgetIncidentCard";
 import { BudgetPolicyCard } from "../components/BudgetPolicyCard";
+import { CostControlSummaryCard } from "../components/CostControlSummaryCard";
 import { EmptyState } from "../components/EmptyState";
 import { FinanceBillerCard } from "../components/FinanceBillerCard";
 import { FinanceKindCard } from "../components/FinanceKindCard";
@@ -232,13 +233,14 @@ export function Costs() {
   const { data: spendData, isLoading: spendLoading, error: spendError } = useQuery({
     queryKey: queryKeys.costs(companyId, from || undefined, to || undefined),
     queryFn: async () => {
-      const [summary, byAgent, byProject, byAgentModel] = await Promise.all([
+      const [summary, controlSummary, byAgent, byProject, byAgentModel] = await Promise.all([
         costsApi.summary(companyId, from || undefined, to || undefined),
+        costsApi.controlSummary(companyId, from || undefined, to || undefined),
         costsApi.byAgent(companyId, from || undefined, to || undefined),
         costsApi.byProject(companyId, from || undefined, to || undefined),
         costsApi.byAgentModel(companyId, from || undefined, to || undefined),
       ]);
-      return { summary, byAgent, byProject, byAgentModel };
+      return { summary, controlSummary, byAgent, byProject, byAgentModel };
     },
     enabled: !!selectedCompanyId && customReady,
   });
@@ -652,6 +654,10 @@ export function Costs() {
                     />
                   ))}
                 </div>
+              ) : null}
+
+              {spendData?.controlSummary ? (
+                <CostControlSummaryCard summary={spendData.controlSummary} />
               ) : null}
 
               <div className="grid gap-4 xl:grid-cols-[1.3fr,1fr]">

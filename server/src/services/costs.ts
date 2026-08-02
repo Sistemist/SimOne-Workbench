@@ -20,7 +20,9 @@ export interface CostDateRange {
 }
 
 const METERED_BILLING_TYPE = "metered_api";
+const METERED_EXPOSURE_BILLING_TYPES = ["metered_api", "subscription_overage"] as const;
 const SUBSCRIPTION_BILLING_TYPES = ["subscription_included", "subscription_overage"] as const;
+const INCLUDED_OR_PREPAID_BILLING_TYPES = ["subscription_included", "credits", "fixed"] as const;
 
 function sumAsNumber(column: typeof costEvents.costCents | typeof costEvents.inputTokens | typeof costEvents.cachedInputTokens | typeof costEvents.outputTokens) {
   return sql<number>`coalesce(sum(${column}), 0)::double precision`;
@@ -158,6 +160,94 @@ export function costService(db: Db, budgetHooks: BudgetServiceHooks = {}) {
         spendCents,
         budgetCents: company.budgetMonthlyCents,
         utilizationPercent: Number(utilization.toFixed(2)),
+      };
+    },
+
+    controlSummary: async (companyId: string, range?: CostDateRange) => {
+      const company = await db
+        .select({ id: companies.id })
+        .from(companies)
+        .where(eq(companies.id, companyId))
+        .then((rows) => rows[0] ?? null);
+
+      if (!company) throw notFound("Company not found");
+
+      const conditions: ReturnType<typeof eq>[] = [eq(costEvents.companyId, companyId)];
+      if (range?.from) conditions.push(gte(costEvents.occurredAt, range.from));
+      if (range?.to) conditions.push(lte(costEvents.occurredAt, range.to));
+
+      const tokenTotal = sql<number>`
+        ${costEvents.inputTokens} + ${costEvents.cachedInputTokens} + ${costEvents.outputTokens}
+      `;
+      const meteredExposure = sql<boolean>`
+        ${costEvents.billingType} in (
+          ${sql.join(METERED_EXPOSURE_BILLING_TYPES.map((value) => sql`${value}`), sql`, `)}
+        )
+      `;
+      const includedOrPrepaid = sql<boolean>`
+        ${costEvents.billingType} in (
+          ${sql.join(INCLUDED_OR_PREPAID_BILLING_TYPES.map((value) => sql`${value}`), sql`, `)}
+        )
+      `;
+      const unreconciled = sql<boolean>`
+        ${costEvents.billingType} = 'unknown'
+        or (
+          ${meteredExposure}
+          and ${costEvents.costCents} = 0
+          and ${tokenTotal} > 0
+        )
+      `;
+
+      const [row] = await db
+        .select({
+          eventCount: sql<number>`count(*)::int`,
+          recordedCostCents: sumAsNumber(costEvents.costCents),
+          tokenCount: sql<number>`coalesce(sum(${tokenTotal}), 0)::double precision`,
+          meteredEventCount: sql<number>`count(*) filter (where ${meteredExposure})::int`,
+          meteredCostCents:
+            sql<number>`coalesce(sum(case when ${meteredExposure} then ${costEvents.costCents} else 0 end), 0)::double precision`,
+          meteredTokenCount:
+            sql<number>`coalesce(sum(case when ${meteredExposure} then ${tokenTotal} else 0 end), 0)::double precision`,
+          includedOrPrepaidEventCount:
+            sql<number>`count(*) filter (where ${includedOrPrepaid})::int`,
+          includedOrPrepaidTokenCount:
+            sql<number>`coalesce(sum(case when ${includedOrPrepaid} then ${tokenTotal} else 0 end), 0)::double precision`,
+          unreconciledEventCount: sql<number>`count(*) filter (where ${unreconciled})::int`,
+          unreconciledTokenCount:
+            sql<number>`coalesce(sum(case when ${unreconciled} then ${tokenTotal} else 0 end), 0)::double precision`,
+          governedRouteEventCount:
+            sql<number>`count(*) filter (where ${costEvents.modelRouteDecisionId} is not null)::int`,
+        })
+        .from(costEvents)
+        .where(and(...conditions));
+
+      const eventCount = Number(row?.eventCount ?? 0);
+      const unreconciledEventCount = Number(row?.unreconciledEventCount ?? 0);
+      const governedRouteEventCount = Number(row?.governedRouteEventCount ?? 0);
+
+      return {
+        companyId,
+        status:
+          eventCount === 0
+            ? "no_usage" as const
+            : unreconciledEventCount > 0
+              ? "needs_reconciliation" as const
+              : "clear" as const,
+        eventCount,
+        recordedCostCents: Number(row?.recordedCostCents ?? 0),
+        tokenCount: Number(row?.tokenCount ?? 0),
+        meteredEventCount: Number(row?.meteredEventCount ?? 0),
+        meteredCostCents: Number(row?.meteredCostCents ?? 0),
+        meteredTokenCount: Number(row?.meteredTokenCount ?? 0),
+        includedOrPrepaidEventCount: Number(row?.includedOrPrepaidEventCount ?? 0),
+        includedOrPrepaidTokenCount: Number(row?.includedOrPrepaidTokenCount ?? 0),
+        unreconciledEventCount,
+        unreconciledTokenCount: Number(row?.unreconciledTokenCount ?? 0),
+        governedRouteEventCount,
+        governedRoutePercent:
+          eventCount > 0
+            ? Number(((governedRouteEventCount / eventCount) * 100).toFixed(2))
+            : 0,
       };
     },
 

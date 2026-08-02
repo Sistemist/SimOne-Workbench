@@ -12,6 +12,7 @@ import {
   financeEvents,
   heartbeatRuns,
   issues,
+  modelRouteDecisions,
   projects,
 } from "@paperclipai/db";
 import { costService } from "../services/costs.ts";
@@ -67,6 +68,22 @@ const mockFetchAllQuotaWindows = vi.hoisted(() => vi.fn());
 const mockCostService = vi.hoisted(() => ({
   createEvent: vi.fn(),
   summary: vi.fn().mockResolvedValue({ spendCents: 0 }),
+  controlSummary: vi.fn().mockResolvedValue({
+    companyId: "company-1",
+    status: "no_usage",
+    eventCount: 0,
+    recordedCostCents: 0,
+    tokenCount: 0,
+    meteredEventCount: 0,
+    meteredCostCents: 0,
+    meteredTokenCount: 0,
+    includedOrPrepaidEventCount: 0,
+    includedOrPrepaidTokenCount: 0,
+    unreconciledEventCount: 0,
+    unreconciledTokenCount: 0,
+    governedRouteEventCount: 0,
+    governedRoutePercent: 0,
+  }),
   byAgent: vi.fn().mockResolvedValue([]),
   byAgentModel: vi.fn().mockResolvedValue([]),
   byProvider: vi.fn().mockResolvedValue([]),
@@ -254,6 +271,20 @@ describe("cost routes", () => {
     });
   });
 
+  it("returns the date-bounded founder cost-control summary", async () => {
+    const app = await createApp();
+    const res = await request(app)
+      .get("/api/companies/company-1/costs/control-summary")
+      .query({ from: "2026-02-01T00:00:00.000Z", to: "2026-02-28T23:59:59.999Z" });
+
+    expect(res.status).toBe(200);
+    expect(mockCostService.controlSummary).toHaveBeenCalledWith("company-1", {
+      from: new Date("2026-02-01T00:00:00.000Z"),
+      to: new Date("2026-02-28T23:59:59.999Z"),
+    });
+    expect(res.body.status).toBe("no_usage");
+  });
+
   it("returns issue subtree cost summaries for issue refs", async () => {
     const app = await createApp();
     const res = await request(app).get("/api/issues/pc1a2-1/cost-summary");
@@ -426,6 +457,7 @@ describeEmbeddedPostgres("cost and finance aggregate overflow handling", () => {
   afterEach(async () => {
     await db.delete(financeEvents);
     await db.delete(costEvents);
+    await db.delete(modelRouteDecisions);
     await db.delete(activityLog);
     await db.delete(heartbeatRuns);
     await db.delete(issues);
@@ -511,6 +543,116 @@ describeEmbeddedPostgres("cost and finance aggregate overflow handling", () => {
     expect(byAgentRow?.inputTokens).toBe(4_000_000_000);
     expect(byProjectRow?.costCents).toBe(4_000_000_000);
     expect(byAgentModelRow?.costCents).toBe(4_000_000_000);
+  });
+
+  it("classifies metered exposure, included usage, route coverage, and unreconciled cost", async () => {
+    const companyId = randomUUID();
+    const agentId = randomUUID();
+    const routeDecisionId = randomUUID();
+
+    await db.insert(companies).values({
+      id: companyId,
+      name: "Sysdom AI",
+      issuePrefix: `T${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
+      requireBoardApprovalForNewAgents: false,
+    });
+    await db.insert(agents).values({
+      id: agentId,
+      companyId,
+      name: "Cost Control Agent",
+      role: "engineer",
+      status: "active",
+      adapterType: "codex_local",
+      adapterConfig: {},
+      runtimeConfig: {},
+      permissions: {},
+    });
+    await db.insert(modelRouteDecisions).values({
+      id: routeDecisionId,
+      companyId,
+      agentId,
+      lane: "standard",
+      provider: "openrouter",
+      model: "openai/gpt-5-mini",
+      reason: "Deterministic route policy",
+    });
+    await db.insert(costEvents).values([
+      {
+        companyId,
+        agentId,
+        modelRouteDecisionId: routeDecisionId,
+        provider: "openrouter",
+        biller: "openrouter",
+        billingType: "metered_api",
+        model: "openai/gpt-5-mini",
+        inputTokens: 100,
+        cachedInputTokens: 10,
+        outputTokens: 20,
+        costCents: 25,
+        occurredAt: new Date("2026-04-10T00:00:00.000Z"),
+      },
+      {
+        companyId,
+        agentId,
+        provider: "codex",
+        biller: "openai",
+        billingType: "subscription_included",
+        model: "gpt-5",
+        inputTokens: 200,
+        cachedInputTokens: 20,
+        outputTokens: 30,
+        costCents: 0,
+        occurredAt: new Date("2026-04-10T00:01:00.000Z"),
+      },
+      {
+        companyId,
+        agentId,
+        provider: "openrouter",
+        biller: "openrouter",
+        billingType: "metered_api",
+        model: "unknown-priced-model",
+        inputTokens: 300,
+        cachedInputTokens: 30,
+        outputTokens: 40,
+        costCents: 0,
+        occurredAt: new Date("2026-04-10T00:02:00.000Z"),
+      },
+      {
+        companyId,
+        agentId,
+        provider: "legacy",
+        biller: "unknown",
+        billingType: "unknown",
+        model: "legacy-model",
+        inputTokens: 50,
+        cachedInputTokens: 0,
+        outputTokens: 5,
+        costCents: 0,
+        occurredAt: new Date("2026-04-10T00:03:00.000Z"),
+      },
+    ]);
+
+    const summary = await costs.controlSummary(companyId, {
+      from: new Date("2026-04-01T00:00:00.000Z"),
+      to: new Date("2026-04-15T23:59:59.999Z"),
+    });
+
+    expect(summary).toEqual({
+      companyId,
+      status: "needs_reconciliation",
+      eventCount: 4,
+      recordedCostCents: 25,
+      tokenCount: 805,
+      meteredEventCount: 2,
+      meteredCostCents: 25,
+      meteredTokenCount: 500,
+      includedOrPrepaidEventCount: 1,
+      includedOrPrepaidTokenCount: 250,
+      unreconciledEventCount: 2,
+      unreconciledTokenCount: 425,
+      governedRouteEventCount: 1,
+      governedRoutePercent: 25,
+    });
   });
 
   it("aggregates issue costs across recursive descendants only", async () => {

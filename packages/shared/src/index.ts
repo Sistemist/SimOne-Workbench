@@ -703,6 +703,8 @@ export type {
   BudgetIncidentResolutionInput,
   CostEvent,
   CostSummary,
+  CostControlStatus,
+  CostControlSummary,
   IssueCostSummary,
   CostByAgent,
   CostByProviderModel,

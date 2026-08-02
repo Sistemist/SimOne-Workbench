@@ -29,6 +29,31 @@ export interface CostSummary {
   utilizationPercent: number;
 }
 
+export type CostControlStatus = "no_usage" | "clear" | "needs_reconciliation";
+
+/**
+ * Founder-facing control view over recorded inference events.
+ *
+ * This is deliberately an operational ledger summary, not a provider invoice
+ * or an independent provider-side spending cap.
+ */
+export interface CostControlSummary {
+  companyId: string;
+  status: CostControlStatus;
+  eventCount: number;
+  recordedCostCents: number;
+  tokenCount: number;
+  meteredEventCount: number;
+  meteredCostCents: number;
+  meteredTokenCount: number;
+  includedOrPrepaidEventCount: number;
+  includedOrPrepaidTokenCount: number;
+  unreconciledEventCount: number;
+  unreconciledTokenCount: number;
+  governedRouteEventCount: number;
+  governedRoutePercent: number;
+}
+
 export interface IssueCostSummary {
   issueId: string;
   issueCount: number;

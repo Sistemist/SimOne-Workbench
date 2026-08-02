@@ -385,6 +385,15 @@ export function costRoutes(
     res.json(summary);
   });
 
+  router.get("/companies/:companyId/costs/control-summary", async (req, res) => {
+    const companyId = req.params.companyId as string;
+    assertCompanyAccess(req, companyId);
+    if (!(await assertCompanyCostReadAllowed(req, res, companyId))) return;
+    const range = parseCostDateRange(req.query);
+    const summary = await costs.controlSummary(companyId, range);
+    res.json(summary);
+  });
+
   router.get("/issues/:id/cost-summary", async (req, res) => {
     const rawId = req.params.id as string;
     const issue = await resolveIssueByRef(rawId);
