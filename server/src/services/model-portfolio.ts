@@ -23,6 +23,19 @@ type DbTransaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 const PLACEHOLDER_IDENTITIES = new Set(["adapter-default", "auto", "default", "unknown"]);
 
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map((entry) => canonicalJson(entry)).join(",")}]`;
+  }
+  if (value && typeof value === "object") {
+    const object = value as Record<string, unknown>;
+    return `{${Object.keys(object).sort().map((key) =>
+      `${JSON.stringify(key)}:${canonicalJson(object[key])}`
+    ).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
 async function lockCompany(tx: DbTransaction, companyId: string) {
   await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${companyId}))`);
 }
@@ -179,6 +192,55 @@ export function modelPortfolioService(db: Db) {
           })
           .returning()
           .then((rows) => rows[0]!);
+      }),
+
+    createEvidenceRefreshDraft: (
+      companyId: string,
+      data: CreateModelPortfolioRevision,
+      actor: ModelPortfolioActor,
+    ) =>
+      db.transaction(async (tx) => {
+        await lockCompany(tx, companyId);
+        const baseline = await tx
+          .select()
+          .from(modelPortfolioRevisions)
+          .where(eq(modelPortfolioRevisions.companyId, companyId))
+          .orderBy(desc(modelPortfolioRevisions.version))
+          .limit(1)
+          .then((rows) => rows[0] ?? null);
+        const unchanged = baseline
+          && canonicalJson({
+            candidates: baseline.candidates,
+            changeReason: baseline.changeReason,
+            sourceRefs: baseline.sourceRefs,
+          }) === canonicalJson(data);
+        if (unchanged) {
+          return {
+            status: "unchanged" as const,
+            baseline,
+            revision: null,
+          };
+        }
+        const version = await nextVersion(tx, companyId);
+        const revision = await tx
+          .insert(modelPortfolioRevisions)
+          .values({
+            companyId,
+            version,
+            status: "draft",
+            candidates: data.candidates,
+            changeReason: data.changeReason,
+            sourceRefs: data.sourceRefs,
+            createdByAgentId: actor.agentId,
+            createdByUserId: actor.userId,
+          })
+          .returning()
+          .then((rows) => rows[0]!);
+        return {
+          status: "draft_created" as const,
+          baseline,
+          revision,
+        };
       }),
 
     activate: (

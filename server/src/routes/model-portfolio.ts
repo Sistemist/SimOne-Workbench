@@ -3,10 +3,15 @@ import type { Db } from "@paperclipai/db";
 import {
   activateModelPortfolioRevisionSchema,
   createModelPortfolioRevisionSchema,
+  modelPortfolioEvidenceRefreshSchema,
   restoreModelPortfolioRevisionSchema,
 } from "@paperclipai/shared";
 import { validate } from "../middleware/validate.js";
-import { logActivity, modelPortfolioService } from "../services/index.js";
+import {
+  buildReviewedModelPortfolioRefresh,
+  logActivity,
+  modelPortfolioService,
+} from "../services/index.js";
 import { assertBoard, assertCompanyAccess, getActorInfo } from "./authz.js";
 
 export function modelPortfolioRoutes(db: Db) {
@@ -54,6 +59,55 @@ export function modelPortfolioRoutes(db: Db) {
         },
       });
       res.status(201).json(revision);
+    },
+  );
+
+  router.post(
+    "/companies/:companyId/model-portfolios/evidence-refresh",
+    validate(modelPortfolioEvidenceRefreshSchema),
+    async (req, res) => {
+      const companyId = req.params.companyId as string;
+      assertCompanyAccess(req, companyId);
+      assertBoard(req);
+      const actor = getActorInfo(req);
+      const reviewed = buildReviewedModelPortfolioRefresh(req.body);
+      const result = await portfolios.createEvidenceRefreshDraft(
+        companyId,
+        reviewed.draft,
+        {
+          agentId: actor.agentId,
+          userId: actor.actorType === "user" ? actor.actorId : null,
+        },
+      );
+      await logActivity(db, {
+        companyId,
+        actorType: actor.actorType,
+        actorId: actor.actorId,
+        agentId: actor.agentId,
+        action: "model_portfolio.evidence_refreshed",
+        entityType: "model_portfolio_revision",
+        entityId: result.revision?.id ?? result.baseline?.id ?? companyId,
+        details: {
+          status: result.status,
+          baselineVersion: result.baseline?.version ?? null,
+          draftVersion: result.revision?.version ?? null,
+          reviewedCandidateCount: reviewed.reviews.filter(
+            (review) => review.status === "passed" || review.status === "failed",
+          ).length,
+          unresolvedGapCount: reviewed.unresolvedGaps.length,
+          activationAttempted: false,
+        },
+      });
+      res.status(result.status === "draft_created" ? 201 : 200).json({
+        version: "sysdom_model_portfolio_evidence_refresh_v1",
+        status: result.status,
+        reviewRequired: true,
+        activationAttempted: false,
+        baselineRevision: result.baseline,
+        draftRevision: result.revision,
+        reviews: reviewed.reviews,
+        unresolvedGaps: reviewed.unresolvedGaps,
+      });
     },
   );
 

@@ -132,6 +132,46 @@ export const modelRouteEngineBenchmarkSuiteSchema = z.object({
   }
 });
 
+export const modelPortfolioCandidateBenchmarkOutcomeSchema = z.object({
+  provider: z.string().trim().min(1).max(200),
+  model: z.string().trim().min(1).max(300),
+  fixtureId: z.string().trim().min(1).max(200),
+  output: modelRouteEngineBenchmarkOutputSchema,
+}).strict();
+
+export const modelPortfolioEvidenceRefreshSchema = z.object({
+  proposal: modelPortfolioResearchProposalSchema,
+  benchmarkSuite: modelRouteEngineBenchmarkSuiteSchema,
+  outcomes: z.array(modelPortfolioCandidateBenchmarkOutcomeSchema).max(400).default([]),
+  reviewSource: modelPortfolioSourceRefSchema.extend({
+    kind: z.literal("benchmark"),
+  }),
+  reviewExpiresAt: z.string().datetime(),
+}).strict().superRefine((refresh, ctx) => {
+  if (
+    new Date(refresh.reviewExpiresAt).getTime()
+    <= new Date(refresh.reviewSource.capturedAt).getTime()
+  ) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Reviewed benchmark evidence must expire after capture",
+      path: ["reviewExpiresAt"],
+    });
+  }
+  const keys = new Set<string>();
+  refresh.outcomes.forEach((outcome, index) => {
+    const key = `${outcome.provider.toLowerCase()}/${outcome.model.toLowerCase()}/${outcome.fixtureId}`;
+    if (keys.has(key)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Duplicate candidate benchmark outcome",
+        path: ["outcomes", index],
+      });
+    }
+    keys.add(key);
+  });
+});
+
 export type ModelPortfolioRevisionStatus = z.infer<typeof modelPortfolioRevisionStatusSchema>;
 export type ModelPortfolioSourceRef = z.infer<typeof modelPortfolioSourceRefSchema>;
 export type CreateModelPortfolioRevision = z.infer<typeof createModelPortfolioRevisionSchema>;
@@ -141,3 +181,5 @@ export type ModelPortfolioResearchProposal = z.infer<typeof modelPortfolioResear
 export type ModelRouteEngineBenchmarkOutput = z.infer<typeof modelRouteEngineBenchmarkOutputSchema>;
 export type ModelRouteEngineBenchmarkFixture = z.infer<typeof modelRouteEngineBenchmarkFixtureSchema>;
 export type ModelRouteEngineBenchmarkSuite = z.infer<typeof modelRouteEngineBenchmarkSuiteSchema>;
+export type ModelPortfolioCandidateBenchmarkOutcome = z.infer<typeof modelPortfolioCandidateBenchmarkOutcomeSchema>;
+export type ModelPortfolioEvidenceRefresh = z.infer<typeof modelPortfolioEvidenceRefreshSchema>;

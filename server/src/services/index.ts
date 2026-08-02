@@ -60,6 +60,11 @@ export {
   modelPortfolioActivationBlockers,
   modelPortfolioService,
 } from "./model-portfolio.js";
+export {
+  buildReviewedModelPortfolioRefresh,
+  type ModelPortfolioCandidateReview,
+  type ReviewedModelPortfolioRefresh,
+} from "./model-portfolio-evidence.js";
 export { scoreModelRouteEngineBenchmark } from "./model-route-engine-benchmark.js";
 export { governedIntakeService } from "./governed-intake.js";
 export { financeService } from "./finance.js";

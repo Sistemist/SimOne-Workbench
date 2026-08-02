@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import express from "express";
 import request from "supertest";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
@@ -9,7 +10,11 @@ import {
   createDb,
   modelPortfolioRevisions,
 } from "@paperclipai/db";
-import type { ModelRouteCandidate } from "@paperclipai/shared";
+import {
+  modelPortfolioResearchProposalSchema,
+  modelRouteEngineBenchmarkSuiteSchema,
+  type ModelRouteCandidate,
+} from "@paperclipai/shared";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -19,6 +24,41 @@ import { modelPortfolioRoutes } from "../routes/model-portfolio.js";
 
 const embeddedPostgresSupport = await getEmbeddedPostgresTestSupport();
 const describeEmbeddedPostgres = embeddedPostgresSupport.supported ? describe : describe.skip;
+const researchProposal = modelPortfolioResearchProposalSchema.parse(JSON.parse(await readFile(
+  new URL("../../../evals/fixtures/sysdom-model-portfolio.proposal.v1.json", import.meta.url),
+  "utf8",
+)));
+const benchmarkSuite = modelRouteEngineBenchmarkSuiteSchema.parse(JSON.parse(await readFile(
+  new URL("../../../evals/fixtures/sysdom-engine-benchmarks.v1.json", import.meta.url),
+  "utf8",
+)));
+
+function evidenceRefreshPayload() {
+  return {
+    proposal: researchProposal,
+    benchmarkSuite,
+    outcomes: benchmarkSuite.fixtures
+      .filter((fixture) => fixture.expected.lane === "workhorse" || fixture.expected.lane === "frontier")
+      .map((fixture) => {
+        const reviewedCandidate = researchProposal.candidates.find(
+          (value) => value.lane === fixture.expected.lane,
+        )!;
+        return {
+          provider: reviewedCandidate.provider,
+          model: reviewedCandidate.model,
+          fixtureId: fixture.id,
+          output: fixture.referenceOutput,
+        };
+      }),
+    reviewSource: {
+      kind: "benchmark",
+      label: "Synthetic deterministic route evaluation",
+      url: "https://example.com/review",
+      capturedAt: "2026-08-02T10:00:00.000Z",
+    },
+    reviewExpiresAt: "2026-08-16T10:00:00.000Z",
+  };
+}
 
 if (!embeddedPostgresSupport.supported) {
   console.warn(
@@ -218,6 +258,52 @@ describeEmbeddedPostgres("model portfolio routes", () => {
     expect(activation.body.error).toContain(
       "adoption_evidence_not_reviewed:synthetic-provider/synthetic/catalog-only",
     );
+  });
+
+  it("creates one review-only evidence draft and never activates it", async () => {
+    const companyId = await seedCompany();
+    const app = createApp(db, boardActor([companyId]));
+    const first = await request(app)
+      .post(`/api/companies/${companyId}/model-portfolios/evidence-refresh`)
+      .send(evidenceRefreshPayload());
+
+    expect(first.status).toBe(201);
+    expect(first.body).toMatchObject({
+      version: "sysdom_model_portfolio_evidence_refresh_v1",
+      status: "draft_created",
+      reviewRequired: true,
+      activationAttempted: false,
+      baselineRevision: null,
+      draftRevision: {
+        version: 1,
+        status: "draft",
+      },
+    });
+    expect(first.body.reviews).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        model: "google/gemini-3.6-flash",
+        status: "passed",
+      }),
+    ]));
+    expect(
+      (await request(app).get(`/api/companies/${companyId}/model-portfolios/active`)).body,
+    ).toBeNull();
+
+    const repeated = await request(app)
+      .post(`/api/companies/${companyId}/model-portfolios/evidence-refresh`)
+      .send(evidenceRefreshPayload());
+    expect(repeated.status).toBe(200);
+    expect(repeated.body).toMatchObject({
+      status: "unchanged",
+      reviewRequired: true,
+      activationAttempted: false,
+      baselineRevision: { version: 1, status: "draft" },
+      draftRevision: null,
+    });
+    const revisions = await request(app).get(
+      `/api/companies/${companyId}/model-portfolios/revisions`,
+    );
+    expect(revisions.body).toHaveLength(1);
   });
 
   it("blocks placeholder identities, unknown billing, duplicates, and stale evidence", async () => {
