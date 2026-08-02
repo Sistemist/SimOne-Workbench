@@ -1,0 +1,267 @@
+{
+  "version": "sysdom_context_preservation_corpus_v1",
+  "fixtures": [
+    {
+      "id": "venture-context-projection",
+      "payload": {
+        "sourceKind": "venture-context-projection",
+        "sourceRefs": [
+          {
+            "kind": "venture_context_projection",
+            "id": "22222222-2222-4222-8222-222222222222",
+            "label": "Founder-approved Context Projection v4",
+            "capturedAt": "2026-08-02T00:00:00.000Z"
+          },
+          {
+            "kind": "venture_state_revision",
+            "id": "33333333-3333-4333-8333-333333333333",
+            "label": "Canonical venture state v7",
+            "capturedAt": "2026-08-02T00:00:00.000Z"
+          }
+        ],
+        "preservationRequirements": [
+          {
+            "id": "active-constraint",
+            "pointer": "/content/activeConstraint/summary"
+          },
+          {
+            "id": "approved-next-move",
+            "pointer": "/content/nextMove/summary"
+          },
+          {
+            "id": "approval-boundary",
+            "pointer": "/content/approvalBoundaries/0"
+          }
+        ],
+        "content": {
+          "purpose": "Help controlled-cohort founders turn evidence into one governed next move.",
+          "activeConstraint": {
+            "summary": "The founder lacks a repeatable qualified-customer interview loop.",
+            "evidence": "Eight scanner and interview observations point to inconsistent customer learning. This supporting narrative is intentionally long so the fixture exercises deterministic truncation without sacrificing the declared constraint."
+          },
+          "nextMove": {
+            "summary": "Schedule and review five permissioned customer interviews.",
+            "detail": "Use the existing interview guide, preserve consent boundaries, capture observed language, and review the resulting evidence before changing positioning. This supporting detail can be shortened because the approved next move remains separately protected."
+          },
+          "approvalBoundaries": [
+            "Founder approval is required before external outreach.",
+            "No public claim may be published without evidence review.",
+            "No spend may be committed without founder approval."
+          ],
+          "engines": {
+            "product": "Alpha path is operable and awaiting lived evidence.",
+            "customer": "Interview loop is the current constraint.",
+            "cash": "No immediate cash constraint is evidenced.",
+            "skills": "Founder can run interviews with the supplied guide."
+          }
+        }
+      }
+    },
+    {
+      "id": "customer-engine-bridge",
+      "payload": {
+        "sourceKind": "tissuu-customer-engine-bridge",
+        "sourceRefs": [
+          {
+            "kind": "customer_engine_snapshot",
+            "id": "customer-snapshot-42",
+            "label": "Read-only Customer Engine snapshot",
+            "capturedAt": "2026-08-02T00:05:00.000Z"
+          }
+        ],
+        "preservationRequirements": [
+          {
+            "id": "open-review-count",
+            "pointer": "/content/summary/openReviewCount"
+          },
+          {
+            "id": "first-action-id",
+            "pointer": "/content/actions/0/id"
+          }
+        ],
+        "content": {
+          "summary": {
+            "openReviewCount": 7,
+            "qualifiedSignalCount": 12,
+            "staleSignalCount": 2
+          },
+          "actions": [
+            {
+              "id": "review-001",
+              "title": "Review the first qualified reply",
+              "notes": "The supporting conversation is deliberately verbose. The action identifier and aggregate count are the decision-critical facts; the raw reply remains in the Customer Engine source."
+            },
+            {
+              "id": "review-002",
+              "title": "Review the second qualified reply",
+              "notes": "Supporting detail remains available through the source reference."
+            },
+            {
+              "id": "review-003",
+              "title": "Review the third qualified reply",
+              "notes": "Supporting detail remains available through the source reference."
+            },
+            {
+              "id": "review-004",
+              "title": "Review the fourth qualified reply",
+              "notes": "This item may be omitted from the bounded context sample."
+            },
+            {
+              "id": "review-005",
+              "title": "Review the fifth qualified reply",
+              "notes": "This item may be omitted from the bounded context sample."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "sim-wiki-retrieval",
+      "payload": {
+        "sourceKind": "sim-wiki-retrieval",
+        "sourceRefs": [
+          {
+            "kind": "wiki_page",
+            "id": "wiki/sim/engines.md",
+            "label": "SIM engines method page",
+            "capturedAt": "2026-08-02T00:10:00.000Z"
+          }
+        ],
+        "preservationRequirements": [
+          {
+            "id": "primary-source-path",
+            "pointer": "/content/chunks/0/sourcePath"
+          },
+          {
+            "id": "primary-retrieval-fact",
+            "pointer": "/content/chunks/0/text"
+          }
+        ],
+        "content": {
+          "question": "Which engine owns the current customer-learning constraint?",
+          "chunks": [
+            {
+              "sourcePath": "wiki/sim/engines.md",
+              "text": "The Customer Engine owns demand evidence, conversations, conversion, retention, and the learning loop."
+            },
+            {
+              "sourcePath": "wiki/synthesis/customer-loop.md",
+              "text": "The latest synthesis identifies inconsistent interview learning as the active bottleneck."
+            },
+            {
+              "sourcePath": "wiki/sim/governance.md",
+              "text": "External outreach remains founder-approved."
+            },
+            {
+              "sourcePath": "wiki/archive/older-customer-loop.md",
+              "text": "This older retrieval chunk is retained at the source but can be omitted from the bounded prompt."
+            },
+            {
+              "sourcePath": "wiki/archive/older-product-loop.md",
+              "text": "This older retrieval chunk is retained at the source but can be omitted from the bounded prompt."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "run-transcript",
+      "payload": {
+        "sourceKind": "run-transcript",
+        "sourceRefs": [
+          {
+            "kind": "heartbeat_run",
+            "id": "44444444-4444-4444-8444-444444444444",
+            "label": "Bounded intervention run transcript",
+            "capturedAt": "2026-08-02T00:15:00.000Z"
+          }
+        ],
+        "preservationRequirements": [
+          {
+            "id": "founder-instruction",
+            "pointer": "/content/entries/0/text"
+          },
+          {
+            "id": "tool-result-status",
+            "pointer": "/content/entries/1/tool/status"
+          }
+        ],
+        "content": {
+          "entries": [
+            {
+              "role": "user",
+              "text": "Draft the interview plan only; do not contact anyone."
+            },
+            {
+              "role": "tool",
+              "tool": {
+                "name": "write_plan",
+                "status": "completed",
+                "summary": "Created a five-interview plan for founder review."
+              }
+            },
+            {
+              "role": "assistant",
+              "text": "The draft remains review-only and no outreach occurred."
+            },
+            {
+              "role": "tool",
+              "tool": {
+                "name": "read_archive",
+                "status": "completed",
+                "summary": "Older supporting context can be omitted from the bounded transcript."
+              }
+            },
+            {
+              "role": "assistant",
+              "text": "Additional verbose reasoning remains in the immutable run log and is not required in the next model context."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "scanner-context",
+      "payload": {
+        "sourceKind": "scanner-context",
+        "sourceRefs": [
+          {
+            "kind": "simone_bottleneck_scan",
+            "id": "scanner-artifact-17",
+            "label": "Founder bottleneck scan result",
+            "capturedAt": "2026-08-02T00:20:00.000Z"
+          }
+        ],
+        "preservationRequirements": [
+          {
+            "id": "scanner-engine",
+            "pointer": "/content/result/engine"
+          },
+          {
+            "id": "scanner-constraint",
+            "pointer": "/content/result/constraint"
+          },
+          {
+            "id": "scanner-next-move",
+            "pointer": "/content/result/nextMove"
+          }
+        ],
+        "content": {
+          "result": {
+            "engine": "customer",
+            "constraint": "Customer learning is episodic rather than repeatable.",
+            "nextMove": "Run five permissioned interviews and compare the evidence.",
+            "confidence": "early pattern match"
+          },
+          "answers": [
+            "Founder has spoken to two prospects in the last month.",
+            "Interview notes are not compared through a stable rubric.",
+            "Positioning changes are currently based on isolated conversations.",
+            "A large amount of supporting answer detail may be omitted after the declared result facts are retained.",
+            "The original scanner artifact remains the source of truth."
+          ]
+        }
+      }
+    }
+  ]
+}

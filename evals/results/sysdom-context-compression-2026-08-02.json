@@ -1,0 +1,114 @@
+{
+  "version": "sysdom_context_compression_comparison_v1",
+  "evaluatedAt": "2026-08-02T00:00:00.000Z",
+  "corpus": {
+    "version": "sysdom_context_preservation_corpus_v1",
+    "path": "evals/fixtures/sysdom-context-preservation.v1.json",
+    "sha256": "4f639e67f611c4365375c27fb8197af18cb91920428127722d92add2403ad9cc",
+    "contextFamilies": [
+      "venture-context-projection",
+      "tissuu-customer-engine-bridge",
+      "sim-wiki-retrieval",
+      "run-transcript",
+      "scanner-context"
+    ]
+  },
+  "sysdomBaseline": {
+    "strategy": "sysdom_context_compression_v1",
+    "compressor": "simone_json_headroom_v0",
+    "aggregate": {
+      "inputBytes": 5272,
+      "outputBytes": 4224,
+      "compressionRatio": 0.8012,
+      "savingsPercent": 19.9,
+      "requiredFacts": 12,
+      "preservedFacts": 12,
+      "status": "passed"
+    },
+    "fixtures": [
+      {
+        "id": "venture-context-projection",
+        "inputBytes": 1609,
+        "outputBytes": 1596,
+        "savingsPercent": 0.8,
+        "requiredFacts": 3,
+        "preservedFacts": 3,
+        "status": "passed"
+      },
+      {
+        "id": "customer-engine-bridge",
+        "inputBytes": 1109,
+        "outputBytes": 846,
+        "savingsPercent": 23.7,
+        "requiredFacts": 2,
+        "preservedFacts": 2,
+        "status": "passed"
+      },
+      {
+        "id": "sim-wiki-retrieval",
+        "inputBytes": 975,
+        "outputBytes": 658,
+        "savingsPercent": 32.5,
+        "requiredFacts": 2,
+        "preservedFacts": 2,
+        "status": "passed"
+      },
+      {
+        "id": "run-transcript",
+        "inputBytes": 806,
+        "outputBytes": 518,
+        "savingsPercent": 35.7,
+        "requiredFacts": 2,
+        "preservedFacts": 2,
+        "status": "passed"
+      },
+      {
+        "id": "scanner-context",
+        "inputBytes": 773,
+        "outputBytes": 606,
+        "savingsPercent": 21.6,
+        "requiredFacts": 3,
+        "preservedFacts": 3,
+        "status": "passed"
+      }
+    ]
+  },
+  "headroomChallenger": {
+    "installedVersion": "0.31.0",
+    "latestVerifiedPyPiVersion": "0.32.1",
+    "mode": "localhost MCP compression with a loopback-only proxy",
+    "proxyControls": {
+      "host": "127.0.0.1",
+      "workers": 1,
+      "maxConnections": 1,
+      "compressionWorkers": 1,
+      "kompressEnabled": false,
+      "codeAwareEnabled": false,
+      "cacheEnabled": false,
+      "telemetryEnabled": false,
+      "subscriptionTrackingEnabled": false
+    },
+    "observed": {
+      "apiRequests": 0,
+      "originalTokens": 1860,
+      "compressedTokens": 1860,
+      "tokensSaved": 0,
+      "savingsPercent": 0,
+      "transforms": [
+        "router:noop"
+      ],
+      "proxyStoppedAfterEvaluation": true
+    }
+  },
+  "decision": {
+    "status": "defer",
+    "adoptHeadroom": false,
+    "reason": "The current bounded synthetic corpus produced no Headroom compression signal, while the deterministic Sysdom baseline retained all declared facts and reduced aggregate bytes. Byte and token metrics are not treated as directly interchangeable.",
+    "revisitWhen": [
+      "larger lived alpha payloads are available",
+      "the currently published Headroom release is installed in an isolated evaluator",
+      "the same path-and-hash preservation gate can judge its output",
+      "proxy and retrieval failure behavior is proven fail-closed"
+    ]
+  }
+}

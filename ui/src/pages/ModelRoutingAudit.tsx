@@ -80,6 +80,28 @@ interface RouteRecommendationEvidence {
   } | null;
 }
 
+interface ContextCompressionEvidence {
+  sourceKind: string;
+  compressionRatio: number;
+  truncatedStrings: number;
+  omittedArrayItems: number;
+  omittedObjectKeys: number;
+  redactedKeys: string[];
+  redactedValues: number;
+  preservation: {
+    status: "passed" | "blocked" | "not_requested";
+    requiredFacts: number;
+    preservedFacts: number;
+    sourceRefCount: number;
+    blockers: string[];
+    facts: Array<{
+      id: string;
+      pointer: string;
+      status: string;
+    }>;
+  };
+}
+
 const REVIEW_FILTERS: Array<{ value: ReviewFilter; label: string }> = [
   { value: "all", label: "All" },
   { value: "pending", label: "Pending" },
@@ -147,6 +169,55 @@ function routeContextProjectionEvidence(decision: ModelRouteDecisionAuditRow) {
       typeof metadata.constitutionRevisionId === "string" ? metadata.constitutionRevisionId : null,
     ventureStateRevisionId:
       typeof metadata.ventureStateRevisionId === "string" ? metadata.ventureStateRevisionId : null,
+  };
+}
+
+function routeContextCompressionEvidence(
+  decision: ModelRouteDecisionAuditRow,
+): ContextCompressionEvidence | null {
+  const raw = decision.metadata?.contextCompression;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const envelope = raw as Record<string, unknown>;
+  if (envelope.strategy !== "sysdom_context_compression_v1") return null;
+  const preservationRaw = envelope.preservation;
+  if (!preservationRaw || typeof preservationRaw !== "object" || Array.isArray(preservationRaw)) {
+    return null;
+  }
+  const preservation = preservationRaw as Record<string, unknown>;
+  if (preservation.version !== "sysdom_context_preservation_v1") return null;
+  if (!["passed", "blocked", "not_requested"].includes(String(preservation.status))) return null;
+  const facts = Array.isArray(preservation.facts)
+    ? preservation.facts.flatMap((item) => {
+        if (!item || typeof item !== "object" || Array.isArray(item)) return [];
+        const fact = item as Record<string, unknown>;
+        return typeof fact.id === "string"
+          && typeof fact.pointer === "string"
+          && typeof fact.status === "string"
+          ? [{ id: fact.id, pointer: fact.pointer, status: fact.status }]
+          : [];
+      })
+    : [];
+
+  return {
+    sourceKind: typeof envelope.sourceKind === "string" ? envelope.sourceKind : "unknown",
+    compressionRatio: typeof envelope.compressionRatio === "number" ? envelope.compressionRatio : 1,
+    truncatedStrings: typeof envelope.truncatedStrings === "number" ? envelope.truncatedStrings : 0,
+    omittedArrayItems: typeof envelope.omittedArrayItems === "number" ? envelope.omittedArrayItems : 0,
+    omittedObjectKeys: typeof envelope.omittedObjectKeys === "number" ? envelope.omittedObjectKeys : 0,
+    redactedKeys: Array.isArray(envelope.redactedKeys)
+      ? envelope.redactedKeys.filter((value): value is string => typeof value === "string")
+      : [],
+    redactedValues: typeof envelope.redactedValues === "number" ? envelope.redactedValues : 0,
+    preservation: {
+      status: preservation.status as ContextCompressionEvidence["preservation"]["status"],
+      requiredFacts: typeof preservation.requiredFacts === "number" ? preservation.requiredFacts : 0,
+      preservedFacts: typeof preservation.preservedFacts === "number" ? preservation.preservedFacts : 0,
+      sourceRefCount: Array.isArray(preservation.sourceRefs) ? preservation.sourceRefs.length : 0,
+      blockers: Array.isArray(preservation.blockers)
+        ? preservation.blockers.filter((value): value is string => typeof value === "string")
+        : [],
+      facts,
+    },
   };
 }
 
@@ -526,6 +597,58 @@ function ExecutionSafetyEvidenceCard({
   );
 }
 
+function ContextCompressionEvidenceCard({
+  evidence,
+}: {
+  evidence: ContextCompressionEvidence;
+}) {
+  const status = evidence.preservation.status;
+  const reductionPercent = Math.max(0, Math.round((1 - evidence.compressionRatio) * 100));
+  const tone = status === "passed"
+    ? "border-emerald-500/30 bg-emerald-500/5"
+    : status === "blocked"
+      ? "border-destructive/30 bg-destructive/5"
+      : "border-border bg-muted/20";
+
+  return (
+    <section aria-label="Context compression evidence" className={`rounded-md border px-3 py-3 ${tone}`}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Context preservation: {humanize(status)}
+        </div>
+        <Badge variant="outline">{titleCase(evidence.sourceKind)}</Badge>
+      </div>
+      <p className="mt-1 text-sm leading-6">
+        {evidence.preservation.preservedFacts}/{evidence.preservation.requiredFacts} declared facts retained
+        {" · "}{evidence.preservation.sourceRefCount} provenance receipts
+        {" · "}{reductionPercent}% smaller
+      </p>
+      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+        {evidence.truncatedStrings} strings truncated · {evidence.omittedArrayItems} array items omitted
+        {" · "}{evidence.omittedObjectKeys} object keys omitted
+        {" · "}{evidence.redactedKeys.length + evidence.redactedValues} secret-bearing values redacted
+      </p>
+      {evidence.preservation.blockers.length > 0 ? (
+        <p className="mt-2 text-xs leading-5 text-destructive">
+          {evidence.preservation.blockers.map(titleCase).join(" · ")}
+        </p>
+      ) : null}
+      {evidence.preservation.facts.length > 0 ? (
+        <details className="mt-2 text-xs text-muted-foreground">
+          <summary className="cursor-pointer font-medium text-foreground">Preservation receipt</summary>
+          <ul className="mt-2 space-y-1 font-mono">
+            {evidence.preservation.facts.map((fact) => (
+              <li key={`${fact.id}:${fact.pointer}`}>
+                {fact.id} · {fact.status} · {fact.pointer}
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+    </section>
+  );
+}
+
 function DecisionCard({
   decision,
   isReviewing,
@@ -545,6 +668,7 @@ function DecisionCard({
   const executionSafety = routeExecutionSafety(decision);
   const executionReconciliation = routeExecutionReconciliation(decision);
   const contextProjection = routeContextProjectionEvidence(decision);
+  const contextCompression = routeContextCompressionEvidence(decision);
 
   return (
     <Card>
@@ -646,6 +770,9 @@ function DecisionCard({
               </dl>
             </details>
           </section>
+        ) : null}
+        {contextCompression ? (
+          <ContextCompressionEvidenceCard evidence={contextCompression} />
         ) : null}
 
         {routeRecommendation ? (

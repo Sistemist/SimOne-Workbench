@@ -27,7 +27,7 @@ import {
 import { assertBoard, assertCompanyAccess, getActorInfo } from "./authz.js";
 import { fetchAllQuotaWindows } from "../services/quota-windows.js";
 import { compressJsonContextPayload } from "../services/context-compression.js";
-import { badRequest } from "../errors.js";
+import { badRequest, unprocessable } from "../errors.js";
 import type { PluginWorkerManager } from "../services/plugin-worker-manager.js";
 import {
   buildModelExecutionPolicyPatch,
@@ -196,11 +196,17 @@ export function costRoutes(
       const actor = getActorInfo(req);
       const { contextPayload, ...decisionInput } = req.body;
       assertModelRouteMetadataSafe(decisionInput.metadata);
+      const contextCompression = contextPayload === undefined
+        ? null
+        : compressJsonContextPayload(contextPayload);
+      if (contextCompression?.preservation.status === "blocked") {
+        throw unprocessable(
+          `Context compression blocked: ${contextCompression.preservation.blockers.join(", ")}`,
+        );
+      }
       const metadata = {
         ...(decisionInput.metadata ?? {}),
-        ...(contextPayload === undefined
-          ? {}
-          : { contextCompression: compressJsonContextPayload(contextPayload) }),
+        ...(contextCompression ? { contextCompression } : {}),
       };
       const decision = await modelRouteDecisions.create(companyId, { ...decisionInput, metadata }, {
         createdByAgentId: actor.agentId,

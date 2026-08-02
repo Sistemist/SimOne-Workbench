@@ -95,6 +95,62 @@ function modelRouteDecision(overrides: Record<string, unknown> = {}) {
     reviewNote: "Review before using this in a customer-facing output.",
     metadata: {
       source: "SYS-202",
+      contextCompression: {
+        strategy: "sysdom_context_compression_v1",
+        compressor: "simone_json_headroom_v0",
+        sourceKind: "venture-context-projection",
+        lossy: true,
+        inputBytes: 2000,
+        outputBytes: 800,
+        inputSha256: "input-hash",
+        outputSha256: "output-hash",
+        compressionRatio: 0.4,
+        truncatedStrings: 2,
+        omittedArrayItems: 7,
+        omittedObjectKeys: 3,
+        redactedKeys: ["authorization"],
+        redactedValues: 1,
+        preservation: {
+          version: "sysdom_context_preservation_v1",
+          status: "passed",
+          requiredFacts: 3,
+          preservedFacts: 3,
+          retentionRatio: 1,
+          sourceRefs: [
+            {
+              kind: "venture_context_projection",
+              id: "11111111-1111-4111-8111-111111111111",
+              capturedAt: "2026-07-08T10:00:00.000Z",
+              labelSha256: "label-hash",
+            },
+          ],
+          facts: [
+            {
+              id: "active-constraint",
+              pointer: "/content/activeConstraint/summary",
+              status: "preserved",
+              inputSha256: "fact-hash",
+              outputSha256: "fact-hash",
+            },
+            {
+              id: "approved-next-move",
+              pointer: "/content/nextMove/summary",
+              status: "preserved",
+              inputSha256: "next-move-hash",
+              outputSha256: "next-move-hash",
+            },
+            {
+              id: "approval-boundary",
+              pointer: "/content/approvalBoundaries/0",
+              status: "preserved",
+              inputSha256: "approval-hash",
+              outputSha256: "approval-hash",
+            },
+          ],
+          blockers: [],
+        },
+        compressedJson: "{}",
+      },
       contextProjectionId: "11111111-1111-4111-8111-111111111111",
       contextProjectionVersion: 4,
       constitutionRevisionId: "22222222-2222-4222-8222-222222222222",
@@ -360,6 +416,14 @@ describe("ModelRoutingAudit", () => {
     expect(text).toContain("Review before using this in a customer-facing output.");
     expect(text).toContain("Founder-approved venture context");
     expect(text).toContain("Context Projection v4 was pinned to this delegated run.");
+    expect(text).toContain("Context preservation: passed");
+    expect(text).toContain("3/3 declared facts retained");
+    expect(text).toContain("1 provenance receipts");
+    expect(text).toContain("60% smaller");
+    expect(text).toContain("2 strings truncated");
+    expect(text).toContain("7 array items omitted");
+    expect(text).toContain("3 object keys omitted");
+    expect(text).toContain("2 secret-bearing values redacted");
     expect(text).toContain("Sysdom Auto shadow recommendation");
     expect(text).toContain("synthetic-provider / synthetic/workhorse-v1");
     expect(text).toContain("Shadow mode only—this recommendation did not change execution.");

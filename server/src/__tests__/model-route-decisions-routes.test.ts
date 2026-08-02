@@ -478,6 +478,20 @@ describeEmbeddedPostgres("model route decision routes", () => {
         metadata: { source: "SYS-202" },
         contextPayload: {
           sourceKind: "tissuu-customer-engine-bridge",
+          sourceRefs: [
+            {
+              kind: "customer_engine_snapshot",
+              id: "snapshot-1",
+              label: "Read-only Customer Engine snapshot",
+              capturedAt: "2026-07-08T00:00:00Z",
+            },
+          ],
+          preservationRequirements: [
+            {
+              id: "first-review-action",
+              pointer: "/actions/0/id",
+            },
+          ],
           generatedAt: "2026-07-08T00:00:00Z",
           actions: repeatedActions,
         },
@@ -486,21 +500,56 @@ describeEmbeddedPostgres("model route decision routes", () => {
     expect(createRes.status).toBe(201);
     expect(createRes.body.metadata.source).toBe("SYS-202");
     expect(createRes.body.metadata.contextCompression).toMatchObject({
-      strategy: "simone_json_headroom_v0",
+      strategy: "sysdom_context_compression_v1",
+      compressor: "simone_json_headroom_v0",
       sourceKind: "tissuu-customer-engine-bridge",
       lossy: true,
       redactedKeys: ["authorization"],
       omittedArrayItems: 17,
+      preservation: {
+        version: "sysdom_context_preservation_v1",
+        status: "passed",
+        requiredFacts: 1,
+        preservedFacts: 1,
+        retentionRatio: 1,
+        blockers: [],
+      },
     });
     expect(createRes.body.metadata.contextCompression.inputBytes).toBeGreaterThan(
       createRes.body.metadata.contextCompression.outputBytes,
     );
     expect(createRes.body.metadata.contextCompression.inputSha256).toEqual(expect.any(String));
     expect(createRes.body.metadata.contextCompression.outputSha256).toEqual(expect.any(String));
-    expect(createRes.body.metadata.contextCompression.compressedJson).toContain("__simoneCompressedArray");
+    expect(createRes.body.metadata.contextCompression.compressedJson).not.toContain("reply:19");
     expect(createRes.body.metadata.contextCompression.compressedJson).toContain("[redacted]");
     expect(createRes.body.metadata.contextCompression.compressedJson).not.toContain("do-not-store");
-    expect(createRes.body.metadata.contextCompression.compressedJson).not.toContain("reply:19");
+  });
+
+  it("blocks governed context when preservation requirements are missing", async () => {
+    const { companyId, agentId } = await seed();
+    const app = createApp(db, boardActor(companyId));
+
+    const createRes = await request(app)
+      .post(`/api/companies/${companyId}/model-route-decisions`)
+      .send({
+        agentId,
+        lane: "workhorse",
+        provider: "synthetic-provider",
+        model: "synthetic-workhorse",
+        reason: "Attempt to route unverified scanner context.",
+        contextPayload: {
+          sourceKind: "scanner-context",
+          content: {
+            result: {
+              engine: "customer",
+            },
+          },
+        },
+      });
+
+    expect(createRes.status).toBe(422);
+    expect(createRes.body.error).toContain("requirements_missing");
+    expect(createRes.body.error).toContain("source_refs_missing");
   });
 
   it("redacts obvious secret values and bounds wide context payloads", async () => {
@@ -531,7 +580,7 @@ describeEmbeddedPostgres("model route decision routes", () => {
     const envelope = createRes.body.metadata.contextCompression;
     expect(envelope.redactedValues).toBeGreaterThanOrEqual(2);
     expect(envelope.omittedObjectKeys).toBeGreaterThan(0);
-    expect(envelope.compressedJson).toContain("__simoneCompressedObject");
+    expect(envelope.compressedJson).toContain("__sysdomOmittedKeys");
     expect(envelope.compressedJson).toContain("[redacted]");
     expect(envelope.compressedJson).not.toContain("live-secret-value");
     expect(envelope.compressedJson).not.toContain("live-cookie-value");
