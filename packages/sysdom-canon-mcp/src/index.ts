@@ -43,4 +43,6 @@ export async function runServer(config: SysdomCanonConfig = readConfigFromEnv())
 export type { CanonPassage, CanonQuery, CanonQueryResult, CanonRetriever } from "./retriever.js";
 export { DifyKnowledgeRetriever, DifyRetrievalError } from "./dify.js";
 export { readConfigFromEnv } from "./config.js";
+export { readHttpConfigFromEnv } from "./http-config.js";
+export { createSysdomCanonHttpService } from "./http-server.js";
 export { createQuerySysdomCanonTool } from "./tools.js";

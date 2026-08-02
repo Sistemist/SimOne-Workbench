@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "bin": {
-    "sysdom-canon-mcp": "./dist/stdio.js"
+    "sysdom-canon-mcp": "./dist/stdio.js",
+    "sysdom-canon-mcp-http": "./dist/http.js"
   },
   "exports": {
     ".": "./src/index.ts"
@@ -16,6 +17,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "clean": "rm -rf dist",
+    "start:http": "node dist/http.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

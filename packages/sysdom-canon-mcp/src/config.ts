@@ -60,7 +60,7 @@ export function readConfigFromEnv(env: NodeJS.ProcessEnv = process.env): SysdomC
   }
 
   const searchMethod = searchMethodSchema.parse(
-    nonEmpty(env.DIFY_RETRIEVAL_SEARCH_METHOD) ?? "keyword_search",
+    nonEmpty(env.DIFY_RETRIEVAL_SEARCH_METHOD) ?? "full_text_search",
   );
 
   return {

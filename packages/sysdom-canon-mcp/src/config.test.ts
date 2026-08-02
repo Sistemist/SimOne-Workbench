@@ -9,7 +9,7 @@ describe("Sysdom canon MCP config", () => {
     });
 
     expect(config.apiUrl).toBe("https://api.dify.ai/v1");
-    expect(config.searchMethod).toBe("keyword_search");
+    expect(config.searchMethod).toBe("full_text_search");
     expect(config.defaultTopK).toBe(5);
     expect(config.timeoutMs).toBe(10_000);
   });

@@ -1,0 +1,19 @@
+services:
+  sysdom-canon-mcp:
+    image: ${SYSDOM_CANON_IMAGE:?Set SYSDOM_CANON_IMAGE in .deploy.env}
+    container_name: sysdom-canon-mcp
+    restart: unless-stopped
+    env_file:
+      - .env.service
+    ports:
+      - "127.0.0.1:3215:3215"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 384m
+    cpus: 0.50
