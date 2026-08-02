@@ -4,6 +4,7 @@
   "references": [
     { "path": "./packages/adapter-utils" },
     { "path": "./packages/mcp-server" },
+    { "path": "./packages/sysdom-canon-mcp" },
     { "path": "./packages/shared" },
     { "path": "./packages/db" },
     { "path": "./packages/adapters/claude-local" },
