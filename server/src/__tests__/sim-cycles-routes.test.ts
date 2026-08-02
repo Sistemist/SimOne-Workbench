@@ -177,6 +177,30 @@ describeEmbeddedPostgres("guided SIM Cycle routes", () => {
     expect(duplicate.body.error).toContain("open SIM Cycle");
   });
 
+  it("rejects secret-bearing MAP evidence without advancing or persisting the cycle", async () => {
+    const companyId = await seedCompany();
+    await seedActiveConstitution(companyId);
+    const app = createApp(db, boardActor([companyId]));
+    const started = await request(app)
+      .post(`/api/companies/${companyId}/sim-cycles`)
+      .send({ startReason: "Run a safe founder-triggered loop." });
+    const secret = "founder-bearer-token-value";
+    const unsafeMap = mapContent();
+    unsafeMap.engines.customer.summary = `Authorization: Bearer ${secret}`;
+
+    const response = await request(app)
+      .post(`/api/companies/${companyId}/sim-cycles/${started.body.id}/map`)
+      .send({ content: unsafeMap, sourceRefs: [] });
+
+    expect(response.status).toBe(422);
+    expect(response.body.error).toContain("$.content.engines.customer.summary");
+    expect(response.body.error).not.toContain(secret);
+    const active = await request(app).get(`/api/companies/${companyId}/sim-cycles/active`);
+    expect(active.body).toMatchObject({ id: started.body.id, status: "active", phase: "map" });
+    expect(await db.select().from(ventureStateRevisions)).toHaveLength(0);
+    expect(await db.select().from(ventureContextProjections)).toHaveLength(0);
+  });
+
   it("runs MAP → DIAGNOSE → LEVERAGE → COMPOUND with pause/resume and promoted learning", async () => {
     const companyId = await seedCompany();
     const constitution = await seedActiveConstitution(companyId);

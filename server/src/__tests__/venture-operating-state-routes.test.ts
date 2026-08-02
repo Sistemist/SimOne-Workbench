@@ -186,6 +186,27 @@ describeEmbeddedPostgres("venture operating state routes", () => {
     expect(response.body.error).toContain("Activate a Venture Constitution");
   });
 
+  it("rejects secret-bearing founder state before it can be persisted or projected", async () => {
+    const companyId = await seedCompany();
+    await seedActiveConstitution(companyId);
+    const secret = "sk-abcdefghijklmnopqrstuvwxyz123456";
+    const unsafeContent = stateContent();
+    unsafeContent.ventureSummary = `Accidentally pasted credential: ${secret}`;
+
+    const response = await request(createApp(db, boardActor([companyId])))
+      .post(`/api/companies/${companyId}/venture-state/revisions`)
+      .send({
+        content: unsafeContent,
+        creationReason: "Attempt unsafe canonical map.",
+      });
+
+    expect(response.status).toBe(422);
+    expect(response.body.error).toContain("$.content.ventureSummary");
+    expect(response.body.error).not.toContain(secret);
+    expect(await db.select().from(ventureStateRevisions)).toHaveLength(0);
+    expect(await db.select().from(ventureContextProjections)).toHaveLength(0);
+  });
+
   it("creates versioned canonical state and a bounded provenance-backed projection", async () => {
     const companyId = await seedCompany();
     const constitution = await seedActiveConstitution(companyId);
@@ -597,6 +618,32 @@ describeEmbeddedPostgres("venture operating state routes", () => {
     expect(firstCompanyStates[0]?.id).toBe(firstState.body.id);
     expect(firstCompanyProjections).toHaveLength(1);
     expect(firstCompanyProjections[0]?.id).toBe(firstProjection.body.id);
+  });
+
+  it("denies cross-company reads across the founder state surface", async () => {
+    const firstCompanyId = await seedCompany("First venture");
+    const secondCompanyId = await seedCompany("Second venture");
+    await seedActiveConstitution(secondCompanyId);
+    const secondCompanyApp = createApp(db, boardActor([secondCompanyId]));
+    const state = await request(secondCompanyApp)
+      .post(`/api/companies/${secondCompanyId}/venture-state/revisions`)
+      .send({ content: stateContent(), creationReason: "Initialize second venture." });
+    await request(secondCompanyApp)
+      .post(`/api/companies/${secondCompanyId}/context-projections`)
+      .send({ ventureStateRevisionId: state.body.id, creationReason: "Project second venture." });
+
+    const firstCompanyApp = createApp(db, boardActor([firstCompanyId]));
+    for (const path of [
+      "founder-cockpit",
+      "founder-coach",
+      "venture-state/revisions",
+      "context-projections",
+    ]) {
+      const response = await request(firstCompanyApp).get(
+        `/api/companies/${secondCompanyId}/${path}`,
+      );
+      expect(response.status, path).toBe(403);
+    }
   });
 
   it("keeps Coach memory promotion behind the board boundary", async () => {

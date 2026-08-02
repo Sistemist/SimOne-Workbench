@@ -10,6 +10,7 @@ import {
 } from "@paperclipai/shared";
 import { validate } from "../middleware/validate.js";
 import { logActivity, simCycleService } from "../services/index.js";
+import { assertNoSecretBearingVentureInput } from "../services/venture-input-safety.js";
 import { assertBoard, assertCompanyAccess } from "./authz.js";
 
 export function simCycleRoutes(db: Db) {
@@ -58,6 +59,7 @@ export function simCycleRoutes(db: Db) {
       assertBoard(req);
       const companyId = req.params.companyId as string;
       assertCompanyAccess(req, companyId);
+      assertNoSecretBearingVentureInput(req.body);
       const userId = req.actor.userId ?? "board";
       const cycle = await svc.start(companyId, req.body, userId);
       await logCycleMutation(companyId, cycle, userId, "sim_cycle.started");
@@ -72,6 +74,7 @@ export function simCycleRoutes(db: Db) {
       assertBoard(req);
       const companyId = req.params.companyId as string;
       assertCompanyAccess(req, companyId);
+      assertNoSecretBearingVentureInput(req.body);
       const userId = req.actor.userId ?? "board";
       const cycle = await svc.submitMap(companyId, req.params.id as string, req.body, userId);
       await logCycleMutation(companyId, cycle, userId, "sim_cycle.map_completed");
@@ -86,6 +89,7 @@ export function simCycleRoutes(db: Db) {
       assertBoard(req);
       const companyId = req.params.companyId as string;
       assertCompanyAccess(req, companyId);
+      assertNoSecretBearingVentureInput(req.body);
       const userId = req.actor.userId ?? "board";
       const cycle = await svc.decideDiagnosis(companyId, req.params.id as string, req.body, userId);
       await logCycleMutation(companyId, cycle, userId, `sim_cycle.diagnosis_${req.body.decision}`);
@@ -100,6 +104,7 @@ export function simCycleRoutes(db: Db) {
       assertBoard(req);
       const companyId = req.params.companyId as string;
       assertCompanyAccess(req, companyId);
+      assertNoSecretBearingVentureInput(req.body);
       const userId = req.actor.userId ?? "board";
       const cycle = await svc.commitLeverage(companyId, req.params.id as string, req.body, userId);
       await logCycleMutation(companyId, cycle, userId, "sim_cycle.intervention_committed");
@@ -114,6 +119,7 @@ export function simCycleRoutes(db: Db) {
       assertBoard(req);
       const companyId = req.params.companyId as string;
       assertCompanyAccess(req, companyId);
+      assertNoSecretBearingVentureInput(req.body);
       const userId = req.actor.userId ?? "board";
       const cycle = await svc.completeCompound(companyId, req.params.id as string, req.body, userId);
       await logCycleMutation(companyId, cycle, userId, "sim_cycle.completed");
@@ -155,6 +161,7 @@ export function simCycleRoutes(db: Db) {
       assertBoard(req);
       const companyId = req.params.companyId as string;
       assertCompanyAccess(req, companyId);
+      assertNoSecretBearingVentureInput(req.body);
       const userId = req.actor.userId ?? "board";
       const cycle = await svc.pause(companyId, req.params.id as string, req.body, userId);
       await logCycleMutation(companyId, cycle, userId, "sim_cycle.paused");

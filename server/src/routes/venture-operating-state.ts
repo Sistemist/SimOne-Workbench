@@ -7,6 +7,7 @@ import {
 } from "@paperclipai/shared";
 import { validate } from "../middleware/validate.js";
 import { logActivity, ventureOperatingStateService } from "../services/index.js";
+import { assertNoSecretBearingVentureInput } from "../services/venture-input-safety.js";
 import { assertBoard, assertCompanyAccess, getActorInfo } from "./authz.js";
 
 export function ventureOperatingStateRoutes(db: Db) {
@@ -32,6 +33,7 @@ export function ventureOperatingStateRoutes(db: Db) {
       assertBoard(req);
       const companyId = req.params.companyId as string;
       assertCompanyAccess(req, companyId);
+      assertNoSecretBearingVentureInput(req.body);
       const actor = getActorInfo(req);
       const result = await svc.promoteCoachMemory(companyId, req.body, {
         actorType: "user",
@@ -56,6 +58,7 @@ export function ventureOperatingStateRoutes(db: Db) {
       assertBoard(req);
       const companyId = req.params.companyId as string;
       assertCompanyAccess(req, companyId);
+      assertNoSecretBearingVentureInput(req.body);
       const actor = getActorInfo(req);
       const state = await svc.createState(companyId, req.body, {
         agentId: actor.agentId,
@@ -88,6 +91,7 @@ export function ventureOperatingStateRoutes(db: Db) {
       assertBoard(req);
       const companyId = req.params.companyId as string;
       assertCompanyAccess(req, companyId);
+      assertNoSecretBearingVentureInput(req.body);
       const actor = getActorInfo(req);
       const projection = await svc.createProjection(companyId, req.body, {
         agentId: actor.agentId,

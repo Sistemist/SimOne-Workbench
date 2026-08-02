@@ -7,6 +7,7 @@ import {
 } from "@paperclipai/shared";
 import { validate } from "../middleware/validate.js";
 import { logActivity, ventureConstitutionService } from "../services/index.js";
+import { assertNoSecretBearingVentureInput } from "../services/venture-input-safety.js";
 import { assertBoard, assertCompanyAccess, getActorInfo } from "./authz.js";
 
 export function ventureConstitutionRoutes(db: Db) {
@@ -31,6 +32,7 @@ export function ventureConstitutionRoutes(db: Db) {
     async (req, res) => {
       const companyId = req.params.companyId as string;
       assertCompanyAccess(req, companyId);
+      assertNoSecretBearingVentureInput(req.body);
       const actor = getActorInfo(req);
       const revision = await svc.createDraft(companyId, req.body, {
         agentId: actor.agentId,
@@ -58,6 +60,7 @@ export function ventureConstitutionRoutes(db: Db) {
       const companyId = req.params.companyId as string;
       const id = req.params.id as string;
       assertCompanyAccess(req, companyId);
+      assertNoSecretBearingVentureInput(req.body);
       const revision = await svc.activate(
         companyId,
         id,
@@ -84,6 +87,7 @@ export function ventureConstitutionRoutes(db: Db) {
       const companyId = req.params.companyId as string;
       const id = req.params.id as string;
       assertCompanyAccess(req, companyId);
+      assertNoSecretBearingVentureInput(req.body);
       const actor = getActorInfo(req);
       const revision = await svc.restoreDraft(companyId, id, req.body, {
         agentId: actor.agentId,

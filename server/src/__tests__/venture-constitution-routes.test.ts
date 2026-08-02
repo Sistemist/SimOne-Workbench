@@ -183,6 +183,29 @@ describeEmbeddedPostgres("Venture Constitution routes", () => {
     expect(current.body).toMatchObject({ id: created.body.id, status: "active", version: 1 });
   });
 
+  it("rejects secret-bearing canonical input before version history is created", async () => {
+    const companyId = await seedCompany();
+    const secret = "founder-private-token-value";
+    const response = await request(createApp(db, boardActor([companyId])))
+      .post(`/api/companies/${companyId}/venture-constitution/revisions`)
+      .send({
+        content: content("Keep canonical purpose safe."),
+        changeReason: "Initialize safe founder governance.",
+        sourceRefs: [
+          {
+            kind: "founder_note",
+            label: "Founder setup interview",
+            url: `https://example.com/evidence?access_token=${secret}`,
+          },
+        ],
+      });
+
+    expect(response.status).toBe(422);
+    expect(response.body.error).toContain("$.sourceRefs[0].url");
+    expect(response.body.error).not.toContain(secret);
+    expect(await db.select().from(ventureConstitutionRevisions)).toHaveLength(0);
+  });
+
   it("preserves superseded history and restores old content through a new draft", async () => {
     const companyId = await seedCompany();
     const app = createApp(db, boardActor([companyId]));
