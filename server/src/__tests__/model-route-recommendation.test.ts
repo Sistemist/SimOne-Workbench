@@ -128,6 +128,34 @@ describe("recommendModelRoute", () => {
     });
   });
 
+  it("prioritizes reviewed latency rank for an urgent task", () => {
+    const recommendation = recommendModelRoute(input({
+      task: {
+        ...input().task,
+        latencyNeed: "urgent",
+      },
+      candidates: [
+        candidate({
+          model: "vendor/workhorse-slower",
+          costRank: 1,
+          qualityRank: 1,
+          latencyRank: 3,
+        }),
+        candidate({
+          model: "vendor/workhorse-fast",
+          costRank: 3,
+          qualityRank: 2,
+          latencyRank: 1,
+        }),
+      ],
+    }));
+
+    expect(recommendation).toMatchObject({
+      selectedCandidate: { model: "vendor/workhorse-fast" },
+      signals: { latencyNeed: "urgent" },
+    });
+  });
+
   it("escalates financial external effects to a deliberation audit and founder approval", () => {
     const recommendation = recommendModelRoute(input({
       posture: "cost_conscious",

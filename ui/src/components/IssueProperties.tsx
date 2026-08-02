@@ -1083,6 +1083,7 @@ export function IssueProperties({
     externalEffects: [],
     dataSensitivity: "internal",
     evidenceRequirement: "standard",
+    latencyNeed: "interactive",
     requiresTools: false,
     requiresStructuredOutput: true,
     approvalRequired: false,
@@ -1175,6 +1176,21 @@ export function IssueProperties({
             })}
           >
             {["none", "standard", "provenance_required", "independent_review"].map((value) => (
+              <option key={value} value={value}>{value}</option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-1">
+          <span className="text-muted-foreground">Latency</span>
+          <select
+            aria-label="Model routing latency need"
+            className="w-full rounded border border-border bg-background px-2 py-1"
+            value={editableModelRouteSignals.latencyNeed}
+            onChange={(event) => updateModelRouteSignals({
+              latencyNeed: event.target.value as ModelRouteTaskSignals["latencyNeed"],
+            })}
+          >
+            {["batch", "interactive", "urgent"].map((value) => (
               <option key={value} value={value}>{value}</option>
             ))}
           </select>

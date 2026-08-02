@@ -152,19 +152,35 @@ function candidateExclusionReason(
   return null;
 }
 
-function candidateRank(candidate: ModelRouteCandidate, posture: ModelRouteRecommendationInput["posture"]) {
+function candidateRank(
+  candidate: ModelRouteCandidate,
+  posture: ModelRouteRecommendationInput["posture"],
+  latencyNeed: ModelRouteRecommendationInput["task"]["latencyNeed"],
+) {
+  if (latencyNeed === "urgent") {
+    return [candidate.latencyRank, candidate.qualityRank, candidate.costRank] as const;
+  }
   if (posture === "cost_conscious") return [candidate.costRank, candidate.qualityRank] as const;
   if (posture === "quality_first") return [candidate.qualityRank, candidate.costRank] as const;
-  return [candidate.costRank + candidate.qualityRank, candidate.qualityRank, candidate.costRank] as const;
+  if (latencyNeed === "batch") {
+    return [candidate.costRank + candidate.qualityRank, candidate.qualityRank, candidate.costRank] as const;
+  }
+  return [
+    candidate.costRank + candidate.qualityRank + candidate.latencyRank,
+    candidate.qualityRank,
+    candidate.latencyRank,
+    candidate.costRank,
+  ] as const;
 }
 
 function compareCandidates(
   left: ModelRouteCandidate,
   right: ModelRouteCandidate,
   posture: ModelRouteRecommendationInput["posture"],
+  latencyNeed: ModelRouteRecommendationInput["task"]["latencyNeed"],
 ) {
-  const leftRank = candidateRank(left, posture);
-  const rightRank = candidateRank(right, posture);
+  const leftRank = candidateRank(left, posture, latencyNeed);
+  const rightRank = candidateRank(right, posture, latencyNeed);
   for (let index = 0; index < Math.max(leftRank.length, rightRank.length); index += 1) {
     const delta = (leftRank[index] ?? 0) - (rightRank[index] ?? 0);
     if (delta !== 0) return delta;
@@ -227,6 +243,7 @@ export function recommendModelRoute(rawInput: ModelRouteRecommendationInput): Mo
         externalEffects: input.task.externalEffects,
         dataSensitivity: input.task.dataSensitivity,
         evidenceRequirement: input.task.evidenceRequirement,
+        latencyNeed: input.task.latencyNeed,
         approvalRequired,
         activeEngine: input.simContext?.activeEngine ?? null,
         projectionId: input.simContext?.projectionId ?? null,
@@ -242,7 +259,9 @@ export function recommendModelRoute(rawInput: ModelRouteRecommendationInput): Mo
     if (reason) assessments.set(`${candidate.provider}/${candidate.model}`, reason);
     return reason === null;
   });
-  eligible.sort((left, right) => compareCandidates(left, right, input.posture));
+  eligible.sort((left, right) =>
+    compareCandidates(left, right, input.posture, input.task.latencyNeed)
+  );
   const selectedCandidate = eligible[0] ?? null;
 
   const candidateAssessments: ModelRouteCandidateAssessment[] = input.candidates.map((candidate) => {
@@ -294,6 +313,7 @@ export function recommendModelRoute(rawInput: ModelRouteRecommendationInput): Mo
       externalEffects: input.task.externalEffects,
       dataSensitivity: input.task.dataSensitivity,
       evidenceRequirement: input.task.evidenceRequirement,
+      latencyNeed: input.task.latencyNeed,
       approvalRequired,
       activeEngine: input.simContext?.activeEngine ?? null,
       projectionId: input.simContext?.projectionId ?? null,

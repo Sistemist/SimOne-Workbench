@@ -77,6 +77,12 @@ export const modelRouteEvidenceRequirementSchema = z.enum([
   "independent_review",
 ]);
 
+export const modelRouteLatencyNeedSchema = z.enum([
+  "batch",
+  "interactive",
+  "urgent",
+]);
+
 export const modelRouteTaskSignalsSchema = z.object({
   version: z.literal("sysdom_model_route_task_signals_v1"),
   taskClass: modelRouteTaskClassSchema,
@@ -85,6 +91,7 @@ export const modelRouteTaskSignalsSchema = z.object({
   externalEffects: z.array(modelRouteExternalEffectSchema).max(7).default([]),
   dataSensitivity: modelRouteDataSensitivitySchema,
   evidenceRequirement: modelRouteEvidenceRequirementSchema,
+  latencyNeed: modelRouteLatencyNeedSchema.default("interactive"),
   requiresTools: z.boolean().default(false),
   requiresStructuredOutput: z.boolean().default(true),
   approvalRequired: z.boolean().default(false),
@@ -137,6 +144,36 @@ export const modelRouteCandidateCatalogSchema = z.object({
   }).strict(),
 }).strict();
 
+export const modelRouteCandidateEvaluationSchema = z.object({
+  version: z.literal("sysdom_model_candidate_evaluation_v1"),
+  suiteVersion: z.string().trim().min(1).max(200),
+  reviewedAt: z.string().datetime(),
+  passed: z.boolean(),
+  fixtureResults: z.array(z.object({
+    fixtureId: z.string().trim().min(1).max(200),
+    score: z.number().int().min(0).max(100),
+    passed: z.boolean(),
+    latencyMs: z.number().int().nonnegative(),
+    costUsd: z.number().nonnegative(),
+    inputTokens: z.number().int().nonnegative(),
+    outputTokens: z.number().int().nonnegative(),
+    toolCalls: z.number().int().nonnegative(),
+    contextTokens: z.number().int().nonnegative(),
+    toolUseSucceeded: z.boolean(),
+    contextHandled: z.boolean(),
+    reviewOutcome: z.enum(["accepted", "needs_revision", "rejected"]),
+  }).strict()).min(1).max(100),
+  aggregate: z.object({
+    qualityScore: z.number().int().min(0).max(100),
+    averageLatencyMs: z.number().int().nonnegative(),
+    totalCostUsd: z.number().nonnegative(),
+    totalInputTokens: z.number().int().nonnegative(),
+    totalOutputTokens: z.number().int().nonnegative(),
+    totalToolCalls: z.number().int().nonnegative(),
+    maxContextTokens: z.number().int().nonnegative(),
+  }).strict(),
+}).strict();
+
 export const modelRouteCandidateSchema = z.object({
   provider: z.string().trim().min(1).max(200),
   model: z.string().trim().min(1).max(300),
@@ -144,6 +181,7 @@ export const modelRouteCandidateSchema = z.object({
   billingType: modelExecutionBillingTypeSchema,
   costRank: z.number().int().min(1).max(1_000),
   qualityRank: z.number().int().min(1).max(1_000),
+  latencyRank: z.number().int().min(1).max(1_000).optional().default(1),
   enabled: z.boolean().optional().default(true),
   supportsTools: z.boolean().optional().default(false),
   supportsStructuredOutput: z.boolean().optional().default(true),
@@ -151,6 +189,7 @@ export const modelRouteCandidateSchema = z.object({
   supportsRestrictedData: z.boolean().optional().default(false),
   evidence: modelRouteCandidateEvidenceSchema.nullable().optional().default(null),
   catalog: modelRouteCandidateCatalogSchema.nullable().optional().default(null),
+  evaluation: modelRouteCandidateEvaluationSchema.nullable().optional().default(null),
 }).strict();
 
 export const modelRouteRecommendationInputSchema = z.object({
@@ -170,6 +209,7 @@ export const modelRouteRecommendationInputSchema = z.object({
     externalEffects: z.array(modelRouteExternalEffectSchema).max(7).optional().default([]),
     dataSensitivity: modelRouteDataSensitivitySchema,
     evidenceRequirement: modelRouteEvidenceRequirementSchema,
+    latencyNeed: modelRouteLatencyNeedSchema.optional().default("interactive"),
     requiresTools: z.boolean().optional().default(false),
     requiresStructuredOutput: z.boolean().optional().default(true),
     approvalRequired: z.boolean().optional().default(false),
@@ -224,6 +264,7 @@ export const modelRouteRecommendationSchema = z.object({
     externalEffects: z.array(modelRouteExternalEffectSchema).max(7),
     dataSensitivity: modelRouteDataSensitivitySchema,
     evidenceRequirement: modelRouteEvidenceRequirementSchema,
+    latencyNeed: modelRouteLatencyNeedSchema.optional().default("interactive"),
     approvalRequired: z.boolean(),
     activeEngine: z.enum(["product", "customer", "cash", "skills"]).nullable(),
     projectionId: z.string().uuid().nullable(),
@@ -343,10 +384,12 @@ export type ModelRouteTaskClass = z.infer<typeof modelRouteTaskClassSchema>;
 export type ModelRouteExternalEffect = z.infer<typeof modelRouteExternalEffectSchema>;
 export type ModelRouteDataSensitivity = z.infer<typeof modelRouteDataSensitivitySchema>;
 export type ModelRouteEvidenceRequirement = z.infer<typeof modelRouteEvidenceRequirementSchema>;
+export type ModelRouteLatencyNeed = z.infer<typeof modelRouteLatencyNeedSchema>;
 export type ModelRouteTaskSignals = z.infer<typeof modelRouteTaskSignalsSchema>;
 export type ModelRouteRecommendationLane = z.infer<typeof modelRouteRecommendationLaneSchema>;
 export type ModelRouteCandidateEvidence = z.infer<typeof modelRouteCandidateEvidenceSchema>;
 export type ModelRouteCandidateCatalog = z.infer<typeof modelRouteCandidateCatalogSchema>;
+export type ModelRouteCandidateEvaluation = z.infer<typeof modelRouteCandidateEvaluationSchema>;
 export type ModelRouteCandidate = z.infer<typeof modelRouteCandidateSchema>;
 export type ModelRouteRecommendationInput = z.infer<typeof modelRouteRecommendationInputSchema>;
 export type ModelRouteCandidateAssessment = z.infer<typeof modelRouteCandidateAssessmentSchema>;

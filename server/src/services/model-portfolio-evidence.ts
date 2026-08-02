@@ -16,6 +16,8 @@ export interface ModelPortfolioCandidateReview {
   lane: ModelRouteCandidate["lane"];
   status: "passed" | "failed" | "missing" | "not_covered";
   score: number | null;
+  averageLatencyMs: number | null;
+  totalCostUsd: number | null;
   fixtureIds: string[];
   blockers: string[];
 }
@@ -53,7 +55,10 @@ export function buildReviewedModelPortfolioRefresh(
       candidate,
     ]),
   );
-  const scoredOutcomes = new Map<string, ModelRouteEngineBenchmarkScore>();
+  const scoredOutcomes = new Map<string, {
+    score: ModelRouteEngineBenchmarkScore;
+    observed: ModelPortfolioEvidenceRefresh["outcomes"][number]["observed"];
+  }>();
 
   for (const outcome of input.outcomes) {
     const candidate = proposalCandidates.get(candidateKey(outcome.provider, outcome.model));
@@ -73,7 +78,10 @@ export function buildReviewedModelPortfolioRefresh(
     }
     scoredOutcomes.set(
       outcomeKey(outcome.provider, outcome.model, outcome.fixtureId),
-      scoreModelRouteEngineBenchmark(fixture, outcome.output),
+      {
+        score: scoreModelRouteEngineBenchmark(fixture, outcome.output),
+        observed: outcome.observed,
+      },
     );
   }
 
@@ -88,6 +96,8 @@ export function buildReviewedModelPortfolioRefresh(
         lane: candidate.lane,
         status: "not_covered",
         score: null,
+        averageLatencyMs: null,
+        totalCostUsd: null,
         fixtureIds: [],
         blockers: ["lane_has_no_engine_fixture"],
       };
@@ -102,20 +112,41 @@ export function buildReviewedModelPortfolioRefresh(
         lane: candidate.lane,
         status: "missing",
         score: null,
+        averageLatencyMs: null,
+        totalCostUsd: null,
         fixtureIds: applicable.map((fixture) => fixture.id),
         blockers: ["required_fixture_output_missing"],
       };
     }
     const completeScores = scores.filter(
-      (score): score is ModelRouteEngineBenchmarkScore => Boolean(score),
+      (score): score is NonNullable<typeof score> => Boolean(score),
     );
-    const blockers = [...new Set(completeScores.flatMap((score) => score.blockers))];
+    const blockers = [...new Set([
+      ...completeScores.flatMap((outcome) => outcome.score.blockers),
+      ...completeScores.flatMap((outcome) => [
+        ...(!outcome.observed.toolUseSucceeded ? ["tool_use_failed"] : []),
+        ...(!outcome.observed.contextHandled ? ["context_handling_failed"] : []),
+        ...(outcome.observed.reviewOutcome === "needs_revision"
+          ? ["review_needs_revision"]
+          : outcome.observed.reviewOutcome === "rejected"
+            ? ["review_rejected"]
+            : []),
+      ]),
+    ])];
     return {
       provider: candidate.provider,
       model: candidate.model,
       lane: candidate.lane,
-      status: completeScores.every((score) => score.passed) ? "passed" : "failed",
-      score: average(completeScores.map((score) => score.score)),
+      status: completeScores.every((outcome) => outcome.score.passed)
+        && blockers.length === 0
+        ? "passed"
+        : "failed",
+      score: average(completeScores.map((outcome) => outcome.score.score)),
+      averageLatencyMs: average(completeScores.map((outcome) => outcome.observed.latencyMs)),
+      totalCostUsd: completeScores.reduce(
+        (total, outcome) => total + outcome.observed.costUsd,
+        0,
+      ),
       fixtureIds: applicable.map((fixture) => fixture.id),
       blockers,
     };
@@ -124,13 +155,54 @@ export function buildReviewedModelPortfolioRefresh(
   const reviewsByCandidate = new Map(
     reviews.map((review) => [candidateKey(review.provider, review.model), review]),
   );
+  function reviewedRank(
+    review: ModelPortfolioCandidateReview,
+    metric: "score" | "averageLatencyMs" | "totalCostUsd",
+    descending: boolean,
+  ) {
+    const peers = reviews
+      .filter((candidate) =>
+        candidate.lane === review.lane
+        && (candidate.status === "passed" || candidate.status === "failed")
+        && candidate[metric] !== null
+      )
+      .sort((left, right) => {
+        const delta = (left[metric] ?? 0) - (right[metric] ?? 0);
+        return descending ? -delta : delta;
+      });
+    const index = peers.findIndex((candidate) =>
+      candidate.provider === review.provider && candidate.model === review.model
+    );
+    return index >= 0 ? index + 1 : 1;
+  }
   const candidates = input.proposal.candidates.map((candidate) => {
     const review = reviewsByCandidate.get(candidateKey(candidate.provider, candidate.model))!;
     if (review.status !== "passed" && review.status !== "failed") return candidate;
+    const results = input.outcomes
+      .filter((outcome) =>
+        candidateKey(outcome.provider, outcome.model)
+        === candidateKey(candidate.provider, candidate.model)
+      )
+      .map((outcome) => {
+        const score = scoredOutcomes.get(
+          outcomeKey(outcome.provider, outcome.model, outcome.fixtureId),
+        )!.score;
+        return {
+          fixtureId: outcome.fixtureId,
+          score: score.score,
+          passed: score.passed
+            && outcome.observed.toolUseSucceeded
+            && outcome.observed.contextHandled
+            && outcome.observed.reviewOutcome === "accepted",
+          ...outcome.observed,
+        };
+      });
     return {
       ...candidate,
       enabled: review.status === "passed" && candidate.enabled,
-      qualityRank: review.score === null ? candidate.qualityRank : 101 - review.score,
+      qualityRank: reviewedRank(review, "score", true),
+      costRank: reviewedRank(review, "totalCostUsd", false),
+      latencyRank: reviewedRank(review, "averageLatencyMs", false),
       evidence: {
         sourceKind: "benchmark" as const,
         authority: "sysdom_review" as const,
@@ -138,6 +210,22 @@ export function buildReviewedModelPortfolioRefresh(
         sourceUrl: input.reviewSource.url ?? null,
         verifiedAt: input.reviewSource.capturedAt,
         expiresAt: input.reviewExpiresAt,
+      },
+      evaluation: {
+        version: "sysdom_model_candidate_evaluation_v1" as const,
+        suiteVersion: input.benchmarkSuite.version,
+        reviewedAt: input.reviewSource.capturedAt,
+        passed: review.status === "passed",
+        fixtureResults: results,
+        aggregate: {
+          qualityScore: review.score ?? 0,
+          averageLatencyMs: review.averageLatencyMs ?? 0,
+          totalCostUsd: review.totalCostUsd ?? 0,
+          totalInputTokens: results.reduce((total, result) => total + result.inputTokens, 0),
+          totalOutputTokens: results.reduce((total, result) => total + result.outputTokens, 0),
+          totalToolCalls: results.reduce((total, result) => total + result.toolCalls, 0),
+          maxContextTokens: Math.max(0, ...results.map((result) => result.contextTokens)),
+        },
       },
     };
   });

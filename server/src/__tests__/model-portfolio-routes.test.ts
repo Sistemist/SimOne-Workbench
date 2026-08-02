@@ -48,6 +48,17 @@ function evidenceRefreshPayload() {
           model: reviewedCandidate.model,
           fixtureId: fixture.id,
           output: fixture.referenceOutput,
+          observed: {
+            latencyMs: fixture.expected.lane === "frontier" ? 4_000 : 1_000,
+            costUsd: fixture.expected.lane === "frontier" ? 0.08 : 0.01,
+            inputTokens: 2_000,
+            outputTokens: 500,
+            toolCalls: 0,
+            contextTokens: 2_000,
+            toolUseSucceeded: true,
+            contextHandled: true,
+            reviewOutcome: "accepted",
+          },
         };
       }),
     reviewSource: {

@@ -136,6 +136,13 @@ export function modelPortfolioActivationBlockers(
     ) {
       blockers.push(`adoption_evidence_not_reviewed:${identity}`);
     }
+    if (
+      candidate.evidence.sourceKind === "benchmark"
+      && candidate.evidence.authority === "sysdom_review"
+      && (!candidate.evaluation || !candidate.evaluation.passed)
+    ) {
+      blockers.push(`reviewed_benchmark_not_passed:${identity}`);
+    }
     const verifiedAt = new Date(candidate.evidence.verifiedAt);
     const expiresAt = new Date(candidate.evidence.expiresAt);
     if (verifiedAt.getTime() > evaluatedAt.getTime()) {

@@ -3363,6 +3363,7 @@ export function buildHeartbeatRouteRecommendation(input: {
         evidenceRequirement: input.contextProjection?.sourceRefs.length
           ? "provenance_required" as const
           : "standard" as const,
+        latencyNeed: "interactive",
         requiresTools: false,
         requiresStructuredOutput: true,
         approvalRequired: derivedApprovalRequired,
@@ -3388,6 +3389,7 @@ export function buildHeartbeatRouteRecommendation(input: {
       externalEffects: taskSignals.externalEffects,
       dataSensitivity: taskSignals.dataSensitivity,
       evidenceRequirement: taskSignals.evidenceRequirement,
+      latencyNeed: taskSignals.latencyNeed,
       requiresTools: taskSignals.requiresTools,
       requiresStructuredOutput: taskSignals.requiresStructuredOutput,
       approvalRequired: taskSignals.approvalRequired,

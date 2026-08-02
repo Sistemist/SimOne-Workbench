@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   modelPortfolioResearchProposalSchema,
   modelRouteEngineBenchmarkSuiteSchema,
+  type ModelPortfolioEvidenceRefresh,
 } from "@paperclipai/shared";
 import { buildReviewedModelPortfolioRefresh } from "../services/model-portfolio-evidence.js";
+import { modelPortfolioActivationBlockers } from "../services/model-portfolio.js";
 
 const proposal = modelPortfolioResearchProposalSchema.parse(JSON.parse(await readFile(
   new URL("../../../evals/fixtures/sysdom-model-portfolio.proposal.v1.json", import.meta.url),
@@ -15,7 +17,7 @@ const suite = modelRouteEngineBenchmarkSuiteSchema.parse(JSON.parse(await readFi
   "utf8",
 )));
 
-function passingOutcomes() {
+function passingOutcomes(): ModelPortfolioEvidenceRefresh["outcomes"] {
   return suite.fixtures
     .filter((fixture) => fixture.expected.lane === "workhorse" || fixture.expected.lane === "frontier")
     .map((fixture) => {
@@ -27,6 +29,17 @@ function passingOutcomes() {
         model: candidate.model,
         fixtureId: fixture.id,
         output: fixture.referenceOutput,
+        observed: {
+          latencyMs: fixture.expected.lane === "frontier" ? 4_000 : 1_000,
+          costUsd: fixture.expected.lane === "frontier" ? 0.08 : 0.01,
+          inputTokens: 2_000,
+          outputTokens: 500,
+          toolCalls: 0,
+          contextTokens: 2_000,
+          toolUseSucceeded: true,
+          contextHandled: true,
+          reviewOutcome: "accepted",
+        },
       };
     });
 }
@@ -75,9 +88,17 @@ describe("reviewed model portfolio evidence refresh", () => {
       expect.objectContaining({
         model: "google/gemini-3.6-flash",
         qualityRank: 1,
+        costRank: 1,
+        latencyRank: 1,
         evidence: expect.objectContaining({
           sourceKind: "benchmark",
           authority: "sysdom_review",
+        }),
+        evaluation: expect.objectContaining({
+          passed: true,
+          aggregate: expect.objectContaining({
+            qualityScore: 100,
+          }),
         }),
       }),
     ]));
@@ -112,6 +133,45 @@ describe("reviewed model portfolio evidence refresh", () => {
     )?.enabled).toBe(false);
   });
 
+  it("records latency, cost, context, tools, and review disposition as adoption evidence", () => {
+    const outcomes = passingOutcomes();
+    const workhorseOutcomes = outcomes.filter((outcome) =>
+      suite.fixtures.find((fixture) => fixture.id === outcome.fixtureId)?.expected.lane === "workhorse"
+    );
+    workhorseOutcomes[0]!.observed.reviewOutcome = "needs_revision";
+
+    const result = buildReviewedModelPortfolioRefresh(refresh({ outcomes }));
+    const workhorse = result.draft.candidates.find(
+      (candidate) => candidate.model === "google/gemini-3.6-flash",
+    )!;
+
+    expect(workhorse.enabled).toBe(false);
+    expect(workhorse.evaluation).toMatchObject({
+      passed: false,
+      aggregate: {
+        averageLatencyMs: 1_000,
+        totalCostUsd: 0.02,
+        totalInputTokens: 4_000,
+        totalOutputTokens: 1_000,
+        totalToolCalls: 0,
+        maxContextTokens: 2_000,
+      },
+    });
+    expect(result.reviews).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        model: workhorse.model,
+        status: "failed",
+        blockers: expect.arrayContaining(["review_needs_revision"]),
+      }),
+    ]));
+    expect(modelPortfolioActivationBlockers(
+      result.draft.candidates,
+      new Date("2026-08-02T10:00:00.000Z"),
+    )).toEqual(expect.arrayContaining([
+      expect.stringContaining("reviewed_benchmark_not_passed:openrouter/google/gemini-3.6-flash"),
+    ]));
+  });
+
   it("rejects outcomes evaluated against the wrong routing lane", () => {
     const productFixture = suite.fixtures.find((fixture) => fixture.engine === "product")!;
     const workhorse = proposal.candidates.find((candidate) => candidate.lane === "workhorse")!;
@@ -121,6 +181,17 @@ describe("reviewed model portfolio evidence refresh", () => {
         model: workhorse.model,
         fixtureId: productFixture.id,
         output: productFixture.referenceOutput,
+        observed: {
+          latencyMs: 1_000,
+          costUsd: 0.01,
+          inputTokens: 1_000,
+          outputTokens: 200,
+          toolCalls: 0,
+          contextTokens: 1_000,
+          toolUseSucceeded: true,
+          contextHandled: true,
+          reviewOutcome: "accepted",
+        },
       }],
     }))).toThrow("does not evaluate the workhorse lane");
   });

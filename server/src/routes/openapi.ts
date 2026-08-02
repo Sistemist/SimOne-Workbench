@@ -64,6 +64,7 @@ import {
   createModelRouteDecisionSchema,
   activateModelPortfolioRevisionSchema,
   createModelPortfolioRevisionSchema,
+  modelPortfolioEvidenceRefreshSchema,
   createFinanceEventSchema,
   restoreModelPortfolioRevisionSchema,
   updateModelExecutionPolicySchema,
@@ -829,6 +830,25 @@ registry.registerPath({
     body: jsonBody(createModelPortfolioRevisionSchema),
   },
   responses: { 201: r.ok(), 400: r.badRequest, 401: r.unauthorized, 403: r.forbidden },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/companies/{companyId}/model-portfolios/evidence-refresh",
+  tags: ["costs"],
+  summary: "Score reviewed model evidence and create a review-only draft",
+  request: {
+    params: z.object({ companyId: z.string() }),
+    body: jsonBody(modelPortfolioEvidenceRefreshSchema),
+  },
+  responses: {
+    200: r.ok(),
+    201: r.ok(),
+    400: r.badRequest,
+    401: r.unauthorized,
+    403: r.forbidden,
+    422: r.unprocessable,
+  },
 });
 
 registry.registerPath({

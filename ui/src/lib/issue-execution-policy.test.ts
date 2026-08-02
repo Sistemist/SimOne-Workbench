@@ -9,6 +9,7 @@ const routeSignals = {
   externalEffects: ["financial" as const],
   dataSensitivity: "confidential" as const,
   evidenceRequirement: "provenance_required" as const,
+  latencyNeed: "interactive" as const,
   requiresTools: true,
   requiresStructuredOutput: true,
   approvalRequired: true,

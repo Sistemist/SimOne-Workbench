@@ -137,6 +137,17 @@ export const modelPortfolioCandidateBenchmarkOutcomeSchema = z.object({
   model: z.string().trim().min(1).max(300),
   fixtureId: z.string().trim().min(1).max(200),
   output: modelRouteEngineBenchmarkOutputSchema,
+  observed: z.object({
+    latencyMs: z.number().int().nonnegative(),
+    costUsd: z.number().nonnegative(),
+    inputTokens: z.number().int().nonnegative(),
+    outputTokens: z.number().int().nonnegative(),
+    toolCalls: z.number().int().nonnegative(),
+    contextTokens: z.number().int().nonnegative(),
+    toolUseSucceeded: z.boolean(),
+    contextHandled: z.boolean(),
+    reviewOutcome: z.enum(["accepted", "needs_revision", "rejected"]),
+  }).strict(),
 }).strict();
 
 export const modelPortfolioEvidenceRefreshSchema = z.object({
