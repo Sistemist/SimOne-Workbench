@@ -229,6 +229,7 @@ export const modelRouteExecutionContractSchema = z.object({
   provider: z.string().trim().min(1).max(200),
   model: z.string().trim().min(1).max(300),
   billingType: modelExecutionBillingTypeSchema,
+  maxOutputTokens: z.number().int().positive(),
   providerRouting: modelRouteCandidateCatalogSchema.shape.providerRouting.nullable(),
 }).strict();
 

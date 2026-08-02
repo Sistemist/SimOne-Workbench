@@ -19,6 +19,7 @@ function contract(providerRouting: Record<string, unknown> | null = null) {
     provider: "openrouter",
     model: "vendor/workhorse-v1",
     billingType: "metered_api",
+    maxOutputTokens: 10_000,
     providerRouting,
   };
 }

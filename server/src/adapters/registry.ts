@@ -136,6 +136,7 @@ import { buildExternalAdapters } from "./plugin-loader.js";
 import { getDisabledAdapterTypes } from "../services/adapter-plugin-store.js";
 import { processAdapter } from "./process/index.js";
 import { httpAdapter } from "./http/index.js";
+import { openRouterAdapter } from "./openrouter/index.js";
 
 function readConfiguredCommand(config: Record<string, unknown>, fallback: string): string {
   const value = typeof config.command === "string" ? config.command.trim() : "";
@@ -427,6 +428,7 @@ function registerBuiltInAdapters() {
     openclawGatewayAdapter,
     processAdapter,
     httpAdapter,
+    openRouterAdapter,
   ]) {
     adaptersByType.set(adapter.type, adapter);
   }
@@ -529,7 +531,11 @@ export function registerServerAdapter(adapter: ServerAdapterModule): void {
 }
 
 export function unregisterServerAdapter(type: string): void {
-  if (type === processAdapter.type || type === httpAdapter.type) return;
+  if (
+    type === processAdapter.type
+    || type === httpAdapter.type
+    || type === openRouterAdapter.type
+  ) return;
   if (builtinFallbacks.has(type)) {
     pausedOverrides.delete(type);
     const fallback = builtinFallbacks.get(type);
