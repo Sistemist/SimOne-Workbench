@@ -1,7 +1,7 @@
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "@/lib/router";
-import { ArrowUpDown, Check, ChevronDown, ChevronRight, Layers, Plus, Repeat } from "lucide-react";
+import { ArrowUpDown, Check, ChevronDown, ChevronRight, Layers, Plus, Repeat, Sparkles } from "lucide-react";
 import { routinesApi } from "../api/routines";
 import { agentsApi } from "../api/agents";
 import { projectsApi } from "../api/projects";
@@ -58,6 +58,95 @@ const catchUpPolicyDescriptions: Record<string, string> = {
   enqueue_missed_with_cap: "Catch up missed schedule windows in capped batches after recovery.",
 };
 
+type RoutineDraft = {
+  title: string;
+  description: string;
+  projectId: string;
+  assigneeAgentId: string;
+  priority: string;
+  status: "active" | "paused";
+  concurrencyPolicy: string;
+  catchUpPolicy: string;
+  variables: RoutineVariable[];
+};
+
+const EMPTY_ROUTINE_DRAFT: RoutineDraft = {
+  title: "",
+  description: "",
+  projectId: "",
+  assigneeAgentId: "",
+  priority: "medium",
+  status: "active",
+  concurrencyPolicy: "coalesce_if_active",
+  catchUpPolicy: "skip_missed",
+  variables: [],
+};
+
+export const SIM_PRACTICE_ROUTINE_DRAFT: RoutineDraft = {
+  title: "Run a founder-led SIM practice",
+  description: [
+    "Use this as a deliberate founder operating practice. It does not run on a schedule unless the founder later adds and enables a trigger.",
+    "",
+    "## MAP",
+    "State the current focus, constraint, and relevant venture evidence.",
+    "",
+    "## DIAGNOSE",
+    "Name the highest-leverage bottleneck and what makes it decisive now.",
+    "",
+    "## LEVERAGE",
+    "Choose one bounded intervention, its owner, approval boundary, and evidence of completion.",
+    "",
+    "## COMPOUND",
+    "Record what changed, what should become reusable venture state, and the founder's next decision.",
+    "",
+    "Current focus: {{currentFocus}}",
+    "New evidence: {{newEvidence}}",
+    "Founder decision: {{founderDecision}}",
+  ].join("\n"),
+  projectId: "",
+  assigneeAgentId: "",
+  priority: "high",
+  status: "paused",
+  concurrencyPolicy: "coalesce_if_active",
+  catchUpPolicy: "skip_missed",
+  variables: [
+    {
+      name: "currentFocus",
+      label: "Current focus",
+      type: "textarea",
+      defaultValue: null,
+      required: true,
+      options: [],
+    },
+    {
+      name: "newEvidence",
+      label: "New evidence",
+      type: "textarea",
+      defaultValue: null,
+      required: false,
+      options: [],
+    },
+    {
+      name: "founderDecision",
+      label: "Founder decision",
+      type: "textarea",
+      defaultValue: null,
+      required: true,
+      options: [],
+    },
+  ],
+};
+
+function cloneRoutineDraft(draft: RoutineDraft): RoutineDraft {
+  return {
+    ...draft,
+    variables: draft.variables.map((variable) => ({
+      ...variable,
+      options: [...variable.options],
+    })),
+  };
+}
+
 function autoResizeTextarea(element: HTMLTextAreaElement | null) {
   if (!element) return;
   element.style.height = "auto";
@@ -113,16 +202,7 @@ function compareNullableText(left: string | null | undefined, right: string | nu
   return (left ?? "").localeCompare(right ?? "", undefined, { sensitivity: "base" });
 }
 
-function buildRoutineMutationPayload(input: {
-  title: string;
-  description: string;
-  projectId: string;
-  assigneeAgentId: string;
-  priority: string;
-  concurrencyPolicy: string;
-  catchUpPolicy: string;
-  variables: RoutineVariable[];
-}) {
+export function buildRoutineMutationPayload(input: RoutineDraft) {
   return {
     ...input,
     description: input.description.trim() || null,
@@ -215,26 +295,10 @@ export function Routines() {
   const [runDialogRoutine, setRunDialogRoutine] = useState<RoutineListItem | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const starterAppliedRef = useRef(false);
   const activeTab: RoutinesTab = searchParams.get("tab") === "runs" ? "runs" : "routines";
-  const [draft, setDraft] = useState<{
-    title: string;
-    description: string;
-    projectId: string;
-    assigneeAgentId: string;
-    priority: string;
-    concurrencyPolicy: string;
-    catchUpPolicy: string;
-    variables: RoutineVariable[];
-  }>({
-    title: "",
-    description: "",
-    projectId: "",
-    assigneeAgentId: "",
-    priority: "medium",
-    concurrencyPolicy: "coalesce_if_active",
-    catchUpPolicy: "skip_missed",
-    variables: [],
-  });
+  const starterRequested = searchParams.get("starter") === "sim-practice";
+  const [draft, setDraft] = useState<RoutineDraft>(() => cloneRoutineDraft(EMPTY_ROUTINE_DRAFT));
   const routineViewStateKey = selectedCompanyId
     ? `paperclip:routines-view:${selectedCompanyId}`
     : "paperclip:routines-view";
@@ -284,6 +348,14 @@ export function Routines() {
     autoResizeTextarea(titleInputRef.current);
   }, [draft.title, composerOpen]);
 
+  useEffect(() => {
+    if (!starterRequested || starterAppliedRef.current) return;
+    starterAppliedRef.current = true;
+    setDraft(cloneRoutineDraft(SIM_PRACTICE_ROUTINE_DRAFT));
+    setAdvancedOpen(false);
+    setComposerOpen(true);
+  }, [starterRequested]);
+
   const mentionOptions = useMemo<MentionOption[]>(() => {
     return buildMarkdownMentionOptions({
       agents,
@@ -296,27 +368,20 @@ export function Routines() {
     mutationFn: () =>
       routinesApi.create(selectedCompanyId!, buildRoutineMutationPayload(draft)),
     onSuccess: async (routine) => {
-      setDraft({
-        title: "",
-        description: "",
-        projectId: "",
-        assigneeAgentId: "",
-        priority: "medium",
-        concurrencyPolicy: "coalesce_if_active",
-        catchUpPolicy: "skip_missed",
-        variables: [],
-      });
+      setDraft(cloneRoutineDraft(EMPTY_ROUTINE_DRAFT));
       setComposerOpen(false);
       setAdvancedOpen(false);
       await queryClient.invalidateQueries({ queryKey: queryKeys.routines.list(selectedCompanyId!) });
       pushToast({
         title: "Routine created",
-        body: routine.assigneeAgentId
-          ? "Add the first trigger to turn it into a live workflow."
-          : "Draft saved. Add a default agent before enabling automation.",
+        body: routine.status === "paused"
+          ? "Saved paused and manual-first. Review it, choose an agent when ready, then run it yourself."
+          : routine.assigneeAgentId
+            ? "Add the first trigger to turn it into a live workflow."
+            : "Draft saved. Add a default agent before enabling automation.",
         tone: "success",
       });
-      navigate(`/routines/${routine.id}?tab=triggers`);
+      navigate(routine.status === "paused" ? `/routines/${routine.id}` : `/routines/${routine.id}?tab=triggers`);
     },
   });
   const updateIssue = useMutation({
@@ -460,6 +525,12 @@ export function Routines() {
     setRunDialogRoutine(routine);
   }
 
+  function openSimPracticeStarter() {
+    setDraft(cloneRoutineDraft(SIM_PRACTICE_ROUTINE_DRAFT));
+    setAdvancedOpen(false);
+    setComposerOpen(true);
+  }
+
   function handleToggleEnabled(routine: RoutineListItem, enabled: boolean) {
     if (!enabled && !routine.assigneeAgentId) {
       pushToast({
@@ -518,6 +589,26 @@ export function Routines() {
           ]}
         />
         <TabsContent value="routines" className="space-y-4">
+          <Card className="border-primary/30 bg-primary/[0.03]">
+            <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-primary/30 bg-background">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Make the SIM practice repeatable</p>
+                  <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+                    Start from a paused MAP → DIAGNOSE → LEVERAGE → COMPOUND routine. No schedule or AI run is
+                    created; you review it and trigger each practice yourself.
+                  </p>
+                </div>
+              </div>
+              <Button variant="outline" className="shrink-0" onClick={openSimPracticeStarter}>
+                Use SIM practice starter
+              </Button>
+            </CardContent>
+          </Card>
+
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm text-muted-foreground">
               {visibleRoutines.length} routine{visibleRoutines.length === 1 ? "" : "s"}
@@ -628,7 +719,9 @@ export function Routines() {
             <div>
               <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">New routine</p>
               <p className="text-sm text-muted-foreground">
-                Define the recurring work first. Default project and agent are optional for draft routines.
+                {draft.status === "paused"
+                  ? "Review this manual-first practice. It will be saved paused with no trigger."
+                  : "Define the recurring work first. Default project and agent are optional for draft routines."}
               </p>
             </div>
             <Button
@@ -844,7 +937,9 @@ export function Routines() {
 
           <div className="shrink-0 flex flex-col gap-3 border-t border-border/60 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm text-muted-foreground">
-              After creation, Paperclip takes you straight to trigger setup. Draft routines stay paused until you add a default agent.
+              {draft.status === "paused"
+                ? "No schedule or automatic AI run will be created. You decide when to run or later enable it."
+                : "After creation, Sysdom takes you straight to trigger setup. Draft routines stay paused until you add a default agent."}
             </div>
             <div className="flex flex-col gap-2 sm:items-end">
               <Button

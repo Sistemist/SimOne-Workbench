@@ -10,6 +10,7 @@ import {
   Fingerprint,
   PauseCircle,
   RefreshCw,
+  Repeat,
   ShieldCheck,
 } from "lucide-react";
 import type {
@@ -220,19 +221,29 @@ function FounderPracticePath({
               Govern → map → run one deliberate SIM Cycle → reflect. You trigger every gate.
             </p>
           </div>
-          <Button asChild size="sm">
-            {action.route ? (
-              <Link to={action.href}>
-                {action.label}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            ) : (
-              <a href={action.href}>
-                {action.label}
-                <ArrowRight className="h-4 w-4" />
-              </a>
-            )}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            {completedCycle ? (
+              <Button asChild size="sm" variant="outline">
+                <Link to="/routines?starter=sim-practice">
+                  Make repeatable
+                  <Repeat className="h-4 w-4" />
+                </Link>
+              </Button>
+            ) : null}
+            <Button asChild size="sm">
+              {action.route ? (
+                <Link to={action.href}>
+                  {action.label}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              ) : (
+                <a href={action.href}>
+                  {action.label}
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+              )}
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>

@@ -6,7 +6,13 @@ import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { Issue, RoutineListItem } from "@paperclipai/shared";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { Routines, buildRoutineGroups, sortRoutines } from "./Routines";
+import {
+  Routines,
+  SIM_PRACTICE_ROUTINE_DRAFT,
+  buildRoutineGroups,
+  buildRoutineMutationPayload,
+  sortRoutines,
+} from "./Routines";
 
 let currentSearch = "";
 
@@ -372,6 +378,61 @@ describe("Routines page", () => {
     expect(groups.map((group) => group.label)).toEqual(["Project Alpha", "Project Beta"]);
     expect(groups[0]?.items.map((item) => item.title)).toEqual(["Morning sync"]);
     expect(groups[1]?.items.map((item) => item.title)).toEqual(["Weekly digest"]);
+  });
+
+  it("builds the SIM practice starter as a paused routine without any automatic trigger", () => {
+    const payload = buildRoutineMutationPayload(SIM_PRACTICE_ROUTINE_DRAFT);
+
+    expect(payload).toMatchObject({
+      title: "Run a founder-led SIM practice",
+      status: "paused",
+      priority: "high",
+      concurrencyPolicy: "coalesce_if_active",
+      catchUpPolicy: "skip_missed",
+    });
+    expect(payload.description).toContain("MAP");
+    expect(payload.description).toContain("DIAGNOSE");
+    expect(payload.description).toContain("LEVERAGE");
+    expect(payload.description).toContain("COMPOUND");
+    expect(payload).not.toHaveProperty("trigger");
+    expect(payload).not.toHaveProperty("cronExpression");
+  });
+
+  it("opens the manual-first SIM practice starter from the founder handoff", async () => {
+    currentSearch = "starter=sim-practice";
+    routinesListMock.mockResolvedValue([]);
+    issuesListMock.mockResolvedValue([]);
+
+    const root = createRoot(container);
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+      },
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <Routines />
+        </QueryClientProvider>,
+      );
+      await flush();
+    });
+
+    for (let attempts = 0; attempts < 5 && !document.body.textContent?.includes("saved paused with no trigger"); attempts += 1) {
+      await act(async () => {
+        await flush();
+      });
+    }
+
+    const titleInput = document.querySelector<HTMLTextAreaElement>('textarea[placeholder="Routine title"]');
+    expect(titleInput?.value).toBe("Run a founder-led SIM practice");
+    expect(document.body.textContent).toContain("saved paused with no trigger");
+    expect(document.body.textContent).toContain("No schedule or automatic AI run will be created");
+
+    await act(async () => {
+      root.unmount();
+    });
   });
 
   it("sorts routines by selected field and direction without mutating the source list", () => {

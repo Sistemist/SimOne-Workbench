@@ -444,8 +444,13 @@ describe("FounderCockpit", () => {
 
     expect(container.textContent).toContain("MAP → DIAGNOSE → LEVERAGE → COMPOUND complete");
     expect(container.textContent).toContain("Open SIM Coach");
+    expect(container.textContent).toContain("Make repeatable");
     const coachLinks = Array.from(container.querySelectorAll<HTMLAnchorElement>('a[href="/sim-coach"]'));
     expect(coachLinks).toHaveLength(2);
+    const routineLinks = Array.from(
+      container.querySelectorAll<HTMLAnchorElement>('a[href="/routines?starter=sim-practice"]'),
+    );
+    expect(routineLinks).toHaveLength(1);
 
     await act(async () => root.unmount());
   });
