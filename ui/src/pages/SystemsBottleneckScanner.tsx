@@ -1,8 +1,13 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, ClipboardCheck, Gauge, Radar, Route, ShieldCheck } from "lucide-react";
+import { ArrowRight, ClipboardCheck, Download, Gauge, Radar, Route, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { scannerResultCategory, trackPublicFunnelEvent } from "@/lib/publicFunnel";
+import {
+  buildScannerShareCardSvg,
+  buildScannerShareCopy,
+  scannerShareCardFilename,
+} from "@/lib/scanner-share";
 
 type ScannerResult = {
   headline: string;
@@ -449,6 +454,7 @@ export function SystemsBottleneckScanner() {
   const [founderNote, setFounderNote] = useState("");
   const [result, setResult] = useState<ScannerResult | null>(null);
   const [shareSummaryStatus, setShareSummaryStatus] = useState<"idle" | "copied" | "manual">("idle");
+  const [shareCardStatus, setShareCardStatus] = useState<"idle" | "downloaded" | "blocked">("idle");
   const [scanStorageStatus, setScanStorageStatus] = useState<"idle" | "saved" | "blocked">("idle");
   const scannerViewEventKey = useRef(crypto.randomUUID());
   const canScan = useMemo(
@@ -473,6 +479,7 @@ export function SystemsBottleneckScanner() {
     });
     setResult(nextResult);
     setShareSummaryStatus("idle");
+    setShareCardStatus("idle");
     try {
       window.localStorage.setItem(
         SCAN_STORAGE_KEY,
@@ -801,7 +808,12 @@ export function SystemsBottleneckScanner() {
                         size="sm"
                         onClick={() => {
                           if (navigator.clipboard?.writeText) {
-                            void navigator.clipboard.writeText(result.shareSummary.publicText);
+                            void navigator.clipboard.writeText(
+                              buildScannerShareCopy(
+                                result.shareSummary.publicText,
+                                window.location.origin,
+                              ),
+                            );
                             setShareSummaryStatus("copied");
                           } else {
                             setShareSummaryStatus("manual");
@@ -813,12 +825,50 @@ export function SystemsBottleneckScanner() {
                       >
                         Copy share summary
                       </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          try {
+                            const svg = buildScannerShareCardSvg(
+                              {
+                                headline: result.headline,
+                                engine: result.engine,
+                                nextAction: result.nextAction,
+                              },
+                              window.location.origin,
+                            );
+                            const objectUrl = URL.createObjectURL(
+                              new Blob([svg], { type: "image/svg+xml;charset=utf-8" }),
+                            );
+                            const link = document.createElement("a");
+                            link.href = objectUrl;
+                            link.download = scannerShareCardFilename(result.engine);
+                            link.click();
+                            URL.revokeObjectURL(objectUrl);
+                            setShareCardStatus("downloaded");
+                            trackPublicFunnelEvent("scanner_share", {
+                              resultCategory: scannerResultCategory(result.engine),
+                            });
+                          } catch {
+                            setShareCardStatus("blocked");
+                          }
+                        }}
+                      >
+                        <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                        Download result card
+                      </Button>
                       <span className="text-xs">
                         {shareSummaryStatus === "copied"
-                          ? "Copied. Safe to share: raw notes and URLs stay out."
+                          ? "Copied with an attributable Scanner link. Raw notes and URLs stay out."
                           : shareSummaryStatus === "manual"
                             ? "Summary ready to copy. Select the text above."
-                          : "The share version leaves out raw notes and URLs."}
+                          : shareCardStatus === "downloaded"
+                            ? "Downloaded a public-safe SVG card. Raw notes and URLs stay out."
+                            : shareCardStatus === "blocked"
+                              ? "Card download was blocked. You can still copy the public-safe summary."
+                              : "Both share formats leave out raw notes and URLs."}
                       </span>
                     </div>
                   </div>

@@ -203,7 +203,7 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain(
       "Built with Sysdom AI: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points.",
     );
-    expect(text).toContain("The share version leaves out raw notes and URLs.");
+    expect(text).toContain("Both share formats leave out raw notes and URLs.");
     expect(text).toContain("Ask SIM Coach why");
     expect(text).toContain("Coach explains the method before you assign work.");
     expect(text).toContain("Saved in this browser");
@@ -368,7 +368,8 @@ describe("SystemsBottleneckScanner", () => {
       "Built with Sysdom AI: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points.",
     );
     expect(text).toContain("Copy share summary");
-    expect(text).toContain("The share version leaves out raw notes and URLs.");
+    expect(text).toContain("Download result card");
+    expect(text).toContain("Both share formats leave out raw notes and URLs.");
     expect(text).not.toContain("https://example.com/private");
 
     const copyButton = Array.from(container.querySelectorAll("button")).find((candidate) =>
@@ -378,10 +379,19 @@ describe("SystemsBottleneckScanner", () => {
     await act(async () => {
       copyButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
-    expect(writeText).toHaveBeenCalledWith(
-      "Built with Sysdom AI: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points.",
+    expect(writeText).toHaveBeenCalledOnce();
+    const copiedSummary = String(writeText.mock.calls[0]?.[0]);
+    expect(copiedSummary).toContain(
+      "Built with Sysdom AI: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points."
     );
-    expect(container.textContent).toContain("Copied. Safe to share: raw notes and URLs stay out.");
+    const copiedScannerUrl = new URL(copiedSummary.split("Run your own scan: ")[1]);
+    expect(copiedScannerUrl.pathname).toBe("/scanner");
+    expect(copiedScannerUrl.searchParams.get("utm_source")).toBe("sysdom_scanner_share");
+    expect(copiedScannerUrl.searchParams.get("utm_medium")).toBe("organic");
+    expect(copiedScannerUrl.searchParams.get("utm_campaign")).toBe("bottleneck_summary");
+    expect(container.textContent).toContain(
+      "Copied with an attributable Scanner link. Raw notes and URLs stay out."
+    );
 
     const storedScan = window.localStorage.getItem("simone:bottleneck-scan");
     expect(storedScan).not.toBeNull();
@@ -434,8 +444,59 @@ describe("SystemsBottleneckScanner", () => {
     });
 
     expect(container.textContent).toContain("Summary ready to copy. Select the text above.");
-    expect(container.textContent).not.toContain("Copied. Safe to share: raw notes and URLs stay out.");
+    expect(container.textContent).not.toContain("Copied with an attributable Scanner link.");
 
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
+  it("downloads a public-safe result card without raw founder input", async () => {
+    const createObjectURL = vi.fn((_blob: Blob) => "blob:scanner-card");
+    const revokeObjectURL = vi.fn();
+    Object.defineProperty(window.URL, "createObjectURL", {
+      value: createObjectURL,
+      configurable: true,
+    });
+    Object.defineProperty(window.URL, "revokeObjectURL", {
+      value: revokeObjectURL,
+      configurable: true,
+    });
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderScanner(container);
+    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
+    await updateField(
+      noteInput!,
+      "Private founder detail: waitlist replies are scattered and approvals sit in my inbox.",
+    );
+
+    const scanButton = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Scan"),
+    );
+    await act(async () => {
+      scanButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const downloadButton = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Download result card"),
+    );
+    await act(async () => {
+      downloadButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(createObjectURL).toHaveBeenCalledOnce();
+    const blob = createObjectURL.mock.calls[0]?.[0] as Blob;
+    expect(blob.type).toBe("image/svg+xml;charset=utf-8");
+    expect(click).toHaveBeenCalledOnce();
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:scanner-card");
+    expect(container.textContent).toContain(
+      "Downloaded a public-safe SVG card. Raw notes and URLs stay out."
+    );
+
+    click.mockRestore();
     flushSync(() => {
       root.unmount();
     });
