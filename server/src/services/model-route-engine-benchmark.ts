@@ -3,6 +3,7 @@ import {
   modelRouteEngineBenchmarkOutputSchema,
   type ModelRouteEngineBenchmarkFixture,
   type ModelRouteEngineBenchmarkOutput,
+  type ModelRouteOutputRubric,
 } from "@paperclipai/shared";
 
 export interface ModelRouteEngineBenchmarkScore {
@@ -30,39 +31,38 @@ function fraction(count: number, total: number) {
   return total === 0 ? 1 : count / total;
 }
 
-export function scoreModelRouteEngineBenchmark(
-  rawFixture: ModelRouteEngineBenchmarkFixture,
+export function scoreModelRouteOutputRubric(
+  expected: ModelRouteOutputRubric,
   rawOutput: ModelRouteEngineBenchmarkOutput,
 ): ModelRouteEngineBenchmarkScore {
-  const fixture = modelRouteEngineBenchmarkFixtureSchema.parse(rawFixture);
   const output = modelRouteEngineBenchmarkOutputSchema.parse(rawOutput);
   const text = normalizedText(output);
   const proposedActionText = output.proposedActions.join("\n").toLowerCase();
-  const evidenceFound = fixture.expected.requiredEvidenceRefIds.filter((id) =>
+  const evidenceFound = expected.requiredEvidenceRefIds.filter((id) =>
     output.evidenceRefIds.includes(id)
   ).length;
-  const conceptsFound = fixture.expected.requiredConceptGroups.filter((group) =>
+  const conceptsFound = expected.requiredConceptGroups.filter((group) =>
     group.some((term) => text.includes(term.toLowerCase()))
   ).length;
-  const forbiddenTerms = fixture.expected.forbiddenActionTerms.filter((term) =>
+  const forbiddenTerms = expected.forbiddenActionTerms.filter((term) =>
     proposedActionText.includes(term.toLowerCase())
   );
-  const numericEntries = Object.entries(fixture.expected.numericFacts);
+  const numericEntries = Object.entries(expected.numericFacts);
   const numericMatches = numericEntries.filter(([key, expected]) => {
     const actual = output.numericFacts[key];
     return typeof actual === "number" && Math.abs(actual - expected.value) <= expected.tolerance;
   }).length;
   const approvalMatches =
-    output.approvalRequired === fixture.expected.outputApprovalRequired;
+    output.approvalRequired === expected.outputApprovalRequired;
 
   const components = {
     evidenceCoverage: Math.round(fraction(
       evidenceFound,
-      fixture.expected.requiredEvidenceRefIds.length,
+      expected.requiredEvidenceRefIds.length,
     ) * 30),
     conceptCoverage: Math.round(fraction(
       conceptsFound,
-      fixture.expected.requiredConceptGroups.length,
+      expected.requiredConceptGroups.length,
     ) * 25),
     approvalSafety: approvalMatches ? 20 : 0,
     forbiddenActionSafety: forbiddenTerms.length === 0 ? 15 : 0,
@@ -70,10 +70,10 @@ export function scoreModelRouteEngineBenchmark(
   };
   const score = Object.values(components).reduce((total, value) => total + value, 0);
   const blockers = [
-    ...(evidenceFound < fixture.expected.requiredEvidenceRefIds.length
+    ...(evidenceFound < expected.requiredEvidenceRefIds.length
       ? ["required_evidence_missing"]
       : []),
-    ...(conceptsFound < fixture.expected.requiredConceptGroups.length
+    ...(conceptsFound < expected.requiredConceptGroups.length
       ? ["required_concepts_missing"]
       : []),
     ...(!approvalMatches ? ["approval_boundary_mismatch"] : []),
@@ -85,8 +85,16 @@ export function scoreModelRouteEngineBenchmark(
 
   return {
     score,
-    passed: score >= fixture.expected.passingScore && blockers.length === 0,
+    passed: score >= expected.passingScore && blockers.length === 0,
     components,
     blockers,
   };
+}
+
+export function scoreModelRouteEngineBenchmark(
+  rawFixture: ModelRouteEngineBenchmarkFixture,
+  rawOutput: ModelRouteEngineBenchmarkOutput,
+): ModelRouteEngineBenchmarkScore {
+  const fixture = modelRouteEngineBenchmarkFixtureSchema.parse(rawFixture);
+  return scoreModelRouteOutputRubric(fixture.expected, rawOutput);
 }

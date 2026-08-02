@@ -13,6 +13,7 @@ import {
 import {
   modelPortfolioResearchProposalSchema,
   modelRouteEngineBenchmarkSuiteSchema,
+  modelRouteExperimentEvaluationInputSchema,
   type ModelRouteCandidate,
 } from "@paperclipai/shared";
 import {
@@ -30,6 +31,10 @@ const researchProposal = modelPortfolioResearchProposalSchema.parse(JSON.parse(a
 )));
 const benchmarkSuite = modelRouteEngineBenchmarkSuiteSchema.parse(JSON.parse(await readFile(
   new URL("../../../evals/fixtures/sysdom-engine-benchmarks.v1.json", import.meta.url),
+  "utf8",
+)));
+const experimentInput = modelRouteExperimentEvaluationInputSchema.parse(JSON.parse(await readFile(
+  new URL("../../../evals/fixtures/sysdom-experiment-lanes.v1.json", import.meta.url),
   "utf8",
 )));
 
@@ -315,6 +320,70 @@ describeEmbeddedPostgres("model portfolio routes", () => {
       `/api/companies/${companyId}/model-portfolios/revisions`,
     );
     expect(revisions.body).toHaveLength(1);
+  });
+
+  it("evaluates synthetic experiment lanes without dispatching or granting adoption authority", async () => {
+    const companyId = await seedCompany();
+    const app = createApp(db, boardActor([companyId]));
+
+    const response = await request(app)
+      .post(`/api/companies/${companyId}/model-portfolios/experiment-evaluations`)
+      .send(experimentInput);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      version: "sysdom_model_route_experiment_evaluation_v1",
+      evidenceClass: "synthetic_fixture",
+      status: "passed",
+      reviewRequired: true,
+      eligibleForAdoption: false,
+      activationAttempted: false,
+      providerDispatchAttempted: false,
+      aggregate: {
+        comparisonCount: 2,
+        blockedCount: 0,
+        simulationPassCount: 2,
+        challengerNominationCount: 0,
+      },
+    });
+    expect(
+      (await request(app).get(`/api/companies/${companyId}/model-portfolios/active`)).body,
+    ).toBeNull();
+
+    const activities = await db.select().from(activityLog);
+    expect(activities).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        companyId,
+        action: "model_portfolio.experiment_evaluated",
+        entityType: "model_route_experiment",
+        details: expect.objectContaining({
+          evidenceClass: "synthetic_fixture",
+          status: "passed",
+          challengerNominationCount: 0,
+          eligibleForAdoption: false,
+          activationAttempted: false,
+          providerDispatchAttempted: false,
+        }),
+      }),
+    ]));
+  });
+
+  it("keeps experiment evaluation board-only", async () => {
+    const companyId = await seedCompany();
+    const app = createApp(db, {
+      type: "agent",
+      agentId: randomUUID(),
+      companyId,
+      runId: randomUUID(),
+    });
+
+    const response = await request(app)
+      .post(`/api/companies/${companyId}/model-portfolios/experiment-evaluations`)
+      .send(experimentInput);
+
+    expect(response.status).toBe(403);
+    expect(response.body.error).toContain("Board access required");
+    expect(await db.select().from(activityLog)).toEqual([]);
   });
 
   it("blocks placeholder identities, unknown billing, duplicates, and stale evidence", async () => {

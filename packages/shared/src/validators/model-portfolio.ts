@@ -67,6 +67,23 @@ export const modelRouteEngineBenchmarkOutputSchema = z.object({
   numericFacts: z.record(z.string().trim().min(1).max(200), z.number()).optional().default({}),
 }).strict();
 
+export const modelRouteOutputRubricSchema = z.object({
+  outputApprovalRequired: z.boolean(),
+  requiredEvidenceRefIds: z.array(z.string().trim().min(1).max(200)).max(100),
+  requiredConceptGroups: z.array(z.array(
+    z.string().trim().min(1).max(200),
+  ).min(1).max(20)).max(50),
+  forbiddenActionTerms: z.array(z.string().trim().min(1).max(200)).max(50),
+  numericFacts: z.record(
+    z.string().trim().min(1).max(200),
+    z.object({
+      value: z.number(),
+      tolerance: z.number().nonnegative(),
+    }).strict(),
+  ).optional().default({}),
+  passingScore: z.number().int().min(1).max(100),
+}).strict();
+
 export const modelRouteEngineBenchmarkFixtureSchema = z.object({
   id: z.string().trim().min(1).max(200),
   engine: z.enum(["product", "customer", "cash", "skills"]),
@@ -90,27 +107,13 @@ export const modelRouteEngineBenchmarkFixtureSchema = z.object({
     id: z.string().trim().min(1).max(200),
     statement: z.string().trim().min(1).max(4_000),
   }).strict()).min(1).max(100),
-  expected: z.object({
+  expected: modelRouteOutputRubricSchema.extend({
     lane: z.enum(["no_model", ...modelRouteDecisionLaneSchema.options]),
     approvalGate: z.enum([
       "none",
       "founder_review_before_execution",
       "founder_approval_before_external_effect",
     ]),
-    outputApprovalRequired: z.boolean(),
-    requiredEvidenceRefIds: z.array(z.string().trim().min(1).max(200)).max(100),
-    requiredConceptGroups: z.array(z.array(
-      z.string().trim().min(1).max(200),
-    ).min(1).max(20)).max(50),
-    forbiddenActionTerms: z.array(z.string().trim().min(1).max(200)).max(50),
-    numericFacts: z.record(
-      z.string().trim().min(1).max(200),
-      z.object({
-        value: z.number(),
-        tolerance: z.number().nonnegative(),
-      }).strict(),
-    ).optional().default({}),
-    passingScore: z.number().int().min(1).max(100),
   }).strict(),
   referenceOutput: modelRouteEngineBenchmarkOutputSchema,
 }).strict();
@@ -190,6 +193,7 @@ export type ActivateModelPortfolioRevision = z.infer<typeof activateModelPortfol
 export type RestoreModelPortfolioRevision = z.infer<typeof restoreModelPortfolioRevisionSchema>;
 export type ModelPortfolioResearchProposal = z.infer<typeof modelPortfolioResearchProposalSchema>;
 export type ModelRouteEngineBenchmarkOutput = z.infer<typeof modelRouteEngineBenchmarkOutputSchema>;
+export type ModelRouteOutputRubric = z.infer<typeof modelRouteOutputRubricSchema>;
 export type ModelRouteEngineBenchmarkFixture = z.infer<typeof modelRouteEngineBenchmarkFixtureSchema>;
 export type ModelRouteEngineBenchmarkSuite = z.infer<typeof modelRouteEngineBenchmarkSuiteSchema>;
 export type ModelPortfolioCandidateBenchmarkOutcome = z.infer<typeof modelPortfolioCandidateBenchmarkOutcomeSchema>;

@@ -619,6 +619,7 @@ export {
   modelRouteEngineBenchmarkFixtureSchema,
   modelRouteEngineBenchmarkOutputSchema,
   modelRouteEngineBenchmarkSuiteSchema,
+  modelRouteOutputRubricSchema,
   restoreModelPortfolioRevisionSchema,
   type ActivateModelPortfolioRevision,
   type CreateModelPortfolioRevision,
@@ -630,8 +631,22 @@ export {
   type ModelRouteEngineBenchmarkFixture,
   type ModelRouteEngineBenchmarkOutput,
   type ModelRouteEngineBenchmarkSuite,
+  type ModelRouteOutputRubric,
   type RestoreModelPortfolioRevision,
 } from "./model-portfolio.js";
+
+export {
+  modelRouteExperimentEvaluationInputSchema,
+  modelRouteExperimentEvidenceClassSchema,
+  modelRouteExperimentFixtureSchema,
+  modelRouteExperimentOutcomeSchema,
+  modelRouteExperimentSuiteSchema,
+  type ModelRouteExperimentEvaluationInput,
+  type ModelRouteExperimentEvidenceClass,
+  type ModelRouteExperimentFixture,
+  type ModelRouteExperimentOutcome,
+  type ModelRouteExperimentSuite,
+} from "./model-route-experiment.js";
 
 export {
   createFinanceEventSchema,

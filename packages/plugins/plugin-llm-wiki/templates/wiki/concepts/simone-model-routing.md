@@ -4,7 +4,7 @@ type: concept
 tags: [simone, routing, models, auditability]
 sources: []
 created: 2026-07-08
-updated: 2026-07-08
+updated: 2026-08-02
 ---
 
 # SimOne Model Routing Strategy
@@ -26,6 +26,11 @@ the decision when usage or cost is reported.
 The first operator-facing audit page lives in instance settings and shows recent
 decisions, review state, approval boundary, context/output summaries, linked
 cost evidence, run links, output artifact links, and review filters/actions.
+The provider-free Experiment Lane compares one sovereign frontier control with
+one challenger over the same readable task, context, and hashes. Missing
+telemetry, unsafe action, context/tool failure, or rejected review blocks the
+comparison. Synthetic evidence can validate the harness only; it cannot
+nominate, adopt, activate, or dispatch a model.
 
 The default order is:
 
@@ -59,6 +64,9 @@ Good uses: public positioning, security/privacy review, architecture tradeoffs,
 conflicting source interpretation, model-router audits, and final review before
 paid or customer-facing output.
 
+Fusion is an example candidate, not a pinned default. Its live performance must
+be compared with the then-current alternatives before adoption.
+
 ## Fugu And Fugu Ultra
 
 Fugu/Fugu Ultra is an external specialist lane. Use it later for bounded hard
@@ -68,6 +76,9 @@ explicit frontier routes.
 Do not put Fugu at the root of SimOne in dev mode. SimOne should judge the
 returned work through its own evidence, evaluation, fallback, and human approval
 gates.
+
+Fugu is also an example candidate, not a permanent selection. The same
+same-task/context experiment contract applies to any replacement specialist.
 
 ## Headroom
 

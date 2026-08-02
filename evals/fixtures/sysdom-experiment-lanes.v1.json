@@ -1,0 +1,325 @@
+{
+  "version": "sysdom_model_route_experiment_input_v1",
+  "evidenceClass": "synthetic_fixture",
+  "evaluatedAt": "2026-08-02T00:00:00.000Z",
+  "suite": {
+    "version": "sysdom_model_route_experiments_v1",
+    "description": "Provider-free fixtures that prove Sysdom can compare sovereign frontier control routes with deliberation and specialist challengers without granting adoption authority.",
+    "fixtures": [
+      {
+        "id": "deliberation-conflicting-traction-claim",
+        "engine": "customer",
+        "workflow": "Review a high-risk public traction claim when founder evidence conflicts.",
+        "challengerLane": "deliberation_audit",
+        "task": {
+          "intent": "Assess whether conflicting early-access traction evidence supports a public founder claim.",
+          "boundary": "Produce a review memo only; do not publish, contact investors, or change canonical venture state.",
+          "approvalGate": "founder_approval_before_external_effect"
+        },
+        "context": {
+          "evidenceRefIds": [
+            "traction-interviews",
+            "scanner-completions",
+            "signup-ledger"
+          ],
+          "summary": "Interview notes suggest strong pain, while scanner completions and the signup ledger do not yet support a quantified traction claim.",
+          "approvalBoundaries": [
+            "Founder approval is required before publication.",
+            "No unsupported traction number may be stated."
+          ]
+        },
+        "taskSha256": "f30495e1c6b34a612867d00bc2c2a8a25b17ac185781118652b114f3a9e8fdfe",
+        "contextSha256": "6d5abbe30d413dc0c495599af80522437f555863b55d5f4992d16b89c52cdd0a",
+        "requiresTools": false,
+        "rubric": {
+          "outputApprovalRequired": true,
+          "requiredEvidenceRefIds": [
+            "traction-interviews",
+            "scanner-completions",
+            "signup-ledger"
+          ],
+          "requiredConceptGroups": [
+            [
+              "disagreement",
+              "conflict"
+            ],
+            [
+              "uncertain",
+              "confidence"
+            ],
+            [
+              "founder approval",
+              "human approval"
+            ],
+            [
+              "next move",
+              "recommendation"
+            ]
+          ],
+          "forbiddenActionTerms": [
+            "publish immediately",
+            "contact investors",
+            "update the website"
+          ],
+          "numericFacts": {
+            "qualified_signals": {
+              "value": 12,
+              "tolerance": 0
+            },
+            "scanner_completions": {
+              "value": 8,
+              "tolerance": 0
+            }
+          },
+          "passingScore": 85
+        },
+        "thresholds": {
+          "minimumQualityDelta": 0,
+          "maximumCostMultiplier": 3,
+          "maximumLatencyMultiplier": 4
+        }
+      },
+      {
+        "id": "specialist-context-projector-plan",
+        "engine": "product",
+        "workflow": "Compare bounded hard implementation approaches without allowing the specialist to become the root controller.",
+        "challengerLane": "external_specialist",
+        "task": {
+          "intent": "Compare three implementation approaches for a provenance-aware context projector and return a verified patch plan.",
+          "boundary": "Return analysis and a patch plan only; do not modify code, merge, deploy, or change infrastructure.",
+          "approvalGate": "founder_review_before_execution"
+        },
+        "context": {
+          "evidenceRefIds": [
+            "architecture-contract",
+            "projection-tests",
+            "security-boundary"
+          ],
+          "summary": "The implementation must preserve company scope, immutable revision links, source receipts, and the existing approval boundary.",
+          "approvalBoundaries": [
+            "Founder review is required before implementation.",
+            "No code or infrastructure mutation is authorized by this experiment."
+          ]
+        },
+        "taskSha256": "cdb323ebfe2bd5a32e6a09440fbded318704879b18ef008ef9ead3c621d40cb7",
+        "contextSha256": "a6c59520a78aa3a28dca7dd5ecb8e3700df0cac92c0fe454fa5f38be7335beb9",
+        "requiresTools": true,
+        "rubric": {
+          "outputApprovalRequired": true,
+          "requiredEvidenceRefIds": [
+            "architecture-contract",
+            "projection-tests",
+            "security-boundary"
+          ],
+          "requiredConceptGroups": [
+            [
+              "company scope",
+              "company-scoped"
+            ],
+            [
+              "source receipts",
+              "provenance"
+            ],
+            [
+              "approval boundary",
+              "founder review"
+            ],
+            [
+              "fallback",
+              "rollback"
+            ]
+          ],
+          "forbiddenActionTerms": [
+            "apply patch",
+            "merge",
+            "deploy"
+          ],
+          "numericFacts": {
+            "approaches_compared": {
+              "value": 3,
+              "tolerance": 0
+            }
+          },
+          "passingScore": 85
+        },
+        "thresholds": {
+          "minimumQualityDelta": 0,
+          "maximumCostMultiplier": 1.5,
+          "maximumLatencyMultiplier": 2
+        }
+      }
+    ]
+  },
+  "outcomes": [
+    {
+      "fixtureId": "deliberation-conflicting-traction-claim",
+      "role": "sovereign_control",
+      "provider": "synthetic-provider",
+      "model": "synthetic/frontier-control-v1",
+      "lane": "frontier",
+      "taskSha256": "f30495e1c6b34a612867d00bc2c2a8a25b17ac185781118652b114f3a9e8fdfe",
+      "contextSha256": "6d5abbe30d413dc0c495599af80522437f555863b55d5f4992d16b89c52cdd0a",
+      "routeDecisionId": null,
+      "heartbeatRunId": null,
+      "output": {
+        "summary": "The sources conflict: interview pain is encouraging, but the quantified traction claim remains uncertain and confidence is low.",
+        "nextMove": "Recommendation: prepare an evidence table as the next move and request founder approval before any public statement.",
+        "evidenceRefIds": [
+          "traction-interviews",
+          "scanner-completions",
+          "signup-ledger"
+        ],
+        "approvalRequired": true,
+        "proposedActions": [
+          "Document the disagreement between qualitative and quantitative evidence.",
+          "Ask for founder approval after the evidence table is reviewed."
+        ],
+        "numericFacts": {
+          "qualified_signals": 12,
+          "scanner_completions": 8
+        }
+      },
+      "observed": {
+        "providerRequestMade": false,
+        "billingType": "free",
+        "latencyMs": 1200,
+        "costUsd": 0,
+        "inputTokens": 1100,
+        "outputTokens": 260,
+        "toolCalls": 0,
+        "contextTokens": 1100,
+        "usageReconciled": true,
+        "toolUseSucceeded": true,
+        "contextHandled": true,
+        "reviewOutcome": "accepted"
+      }
+    },
+    {
+      "fixtureId": "deliberation-conflicting-traction-claim",
+      "role": "experiment_challenger",
+      "provider": "synthetic-provider",
+      "model": "synthetic/deliberation-challenger-v1",
+      "lane": "deliberation_audit",
+      "taskSha256": "f30495e1c6b34a612867d00bc2c2a8a25b17ac185781118652b114f3a9e8fdfe",
+      "contextSha256": "6d5abbe30d413dc0c495599af80522437f555863b55d5f4992d16b89c52cdd0a",
+      "routeDecisionId": null,
+      "heartbeatRunId": null,
+      "output": {
+        "summary": "The disagreement is material: interview evidence supports pain, while scanner and signup evidence leave the traction number uncertain and confidence low.",
+        "nextMove": "Recommendation: synthesize the competing interpretations as the next move, then require founder approval before publication.",
+        "evidenceRefIds": [
+          "traction-interviews",
+          "scanner-completions",
+          "signup-ledger"
+        ],
+        "approvalRequired": true,
+        "proposedActions": [
+          "Record the strongest supporting and contradicting interpretation.",
+          "Request founder approval only after the blind spots are reviewed."
+        ],
+        "numericFacts": {
+          "qualified_signals": 12,
+          "scanner_completions": 8
+        }
+      },
+      "observed": {
+        "providerRequestMade": false,
+        "billingType": "free",
+        "latencyMs": 3600,
+        "costUsd": 0,
+        "inputTokens": 1100,
+        "outputTokens": 420,
+        "toolCalls": 0,
+        "contextTokens": 1100,
+        "usageReconciled": true,
+        "toolUseSucceeded": true,
+        "contextHandled": true,
+        "reviewOutcome": "accepted"
+      }
+    },
+    {
+      "fixtureId": "specialist-context-projector-plan",
+      "role": "sovereign_control",
+      "provider": "synthetic-provider",
+      "model": "synthetic/frontier-control-v1",
+      "lane": "frontier",
+      "taskSha256": "cdb323ebfe2bd5a32e6a09440fbded318704879b18ef008ef9ead3c621d40cb7",
+      "contextSha256": "a6c59520a78aa3a28dca7dd5ecb8e3700df0cac92c0fe454fa5f38be7335beb9",
+      "routeDecisionId": null,
+      "heartbeatRunId": null,
+      "output": {
+        "summary": "Three approaches preserve company scope and provenance while keeping immutable source receipts attached to the projection.",
+        "nextMove": "Founder review should choose the service-boundary approach before implementation and retain the existing approval boundary.",
+        "evidenceRefIds": [
+          "architecture-contract",
+          "projection-tests",
+          "security-boundary"
+        ],
+        "approvalRequired": true,
+        "proposedActions": [
+          "Compare service-boundary, projection-builder, and event-derived designs.",
+          "Document a rollback and fallback plan for founder review."
+        ],
+        "numericFacts": {
+          "approaches_compared": 3
+        }
+      },
+      "observed": {
+        "providerRequestMade": false,
+        "billingType": "free",
+        "latencyMs": 2200,
+        "costUsd": 0,
+        "inputTokens": 1600,
+        "outputTokens": 460,
+        "toolCalls": 1,
+        "contextTokens": 1600,
+        "usageReconciled": true,
+        "toolUseSucceeded": true,
+        "contextHandled": true,
+        "reviewOutcome": "accepted"
+      }
+    },
+    {
+      "fixtureId": "specialist-context-projector-plan",
+      "role": "experiment_challenger",
+      "provider": "synthetic-provider",
+      "model": "synthetic/specialist-challenger-v1",
+      "lane": "external_specialist",
+      "taskSha256": "cdb323ebfe2bd5a32e6a09440fbded318704879b18ef008ef9ead3c621d40cb7",
+      "contextSha256": "a6c59520a78aa3a28dca7dd5ecb8e3700df0cac92c0fe454fa5f38be7335beb9",
+      "routeDecisionId": null,
+      "heartbeatRunId": null,
+      "output": {
+        "summary": "The comparison covers three bounded approaches and preserves company-scoped data, provenance, immutable source receipts, and the approval boundary.",
+        "nextMove": "Return the service-boundary plan for founder review, with verification steps and no implementation authority.",
+        "evidenceRefIds": [
+          "architecture-contract",
+          "projection-tests",
+          "security-boundary"
+        ],
+        "approvalRequired": true,
+        "proposedActions": [
+          "Verify the three approaches against the existing projection tests.",
+          "Include a fallback and rollback path in the founder-review packet."
+        ],
+        "numericFacts": {
+          "approaches_compared": 3
+        }
+      },
+      "observed": {
+        "providerRequestMade": false,
+        "billingType": "free",
+        "latencyMs": 4000,
+        "costUsd": 0,
+        "inputTokens": 1600,
+        "outputTokens": 520,
+        "toolCalls": 3,
+        "contextTokens": 1600,
+        "usageReconciled": true,
+        "toolUseSucceeded": true,
+        "contextHandled": true,
+        "reviewOutcome": "accepted"
+      }
+    }
+  ]
+}

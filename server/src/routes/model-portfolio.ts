@@ -4,11 +4,13 @@ import {
   activateModelPortfolioRevisionSchema,
   createModelPortfolioRevisionSchema,
   modelPortfolioEvidenceRefreshSchema,
+  modelRouteExperimentEvaluationInputSchema,
   restoreModelPortfolioRevisionSchema,
 } from "@paperclipai/shared";
 import { validate } from "../middleware/validate.js";
 import {
   buildReviewedModelPortfolioRefresh,
+  evaluateModelRouteExperiment,
   logActivity,
   modelPortfolioService,
 } from "../services/index.js";
@@ -59,6 +61,48 @@ export function modelPortfolioRoutes(db: Db) {
         },
       });
       res.status(201).json(revision);
+    },
+  );
+
+  router.post(
+    "/companies/:companyId/model-portfolios/experiment-evaluations",
+    validate(modelRouteExperimentEvaluationInputSchema),
+    async (req, res) => {
+      const companyId = req.params.companyId as string;
+      assertCompanyAccess(req, companyId);
+      assertBoard(req);
+      const actor = getActorInfo(req);
+      const evaluation = evaluateModelRouteExperiment(req.body);
+      await logActivity(db, {
+        companyId,
+        actorType: actor.actorType,
+        actorId: actor.actorId,
+        agentId: actor.agentId,
+        action: "model_portfolio.experiment_evaluated",
+        entityType: "model_route_experiment",
+        entityId: companyId,
+        details: {
+          version: evaluation.version,
+          suiteVersion: evaluation.suiteVersion,
+          evidenceClass: evaluation.evidenceClass,
+          status: evaluation.status,
+          comparisonCount: evaluation.aggregate.comparisonCount,
+          blockedCount: evaluation.aggregate.blockedCount,
+          simulationPassCount: evaluation.aggregate.simulationPassCount,
+          challengerNominationCount: evaluation.aggregate.challengerNominationCount,
+          decisions: evaluation.comparisons.map((comparison) => ({
+            fixtureId: comparison.fixtureId,
+            challengerLane: comparison.challengerLane,
+            decision: comparison.decision,
+            blockerCount: comparison.blockers.length,
+          })),
+          reviewRequired: true,
+          eligibleForAdoption: false,
+          activationAttempted: false,
+          providerDispatchAttempted: false,
+        },
+      });
+      res.json(evaluation);
     },
   );
 

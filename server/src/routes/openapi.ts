@@ -65,6 +65,7 @@ import {
   activateModelPortfolioRevisionSchema,
   createModelPortfolioRevisionSchema,
   modelPortfolioEvidenceRefreshSchema,
+  modelRouteExperimentEvaluationInputSchema,
   createFinanceEventSchema,
   restoreModelPortfolioRevisionSchema,
   updateModelExecutionPolicySchema,
@@ -830,6 +831,23 @@ registry.registerPath({
     body: jsonBody(createModelPortfolioRevisionSchema),
   },
   responses: { 201: r.ok(), 400: r.badRequest, 401: r.unauthorized, 403: r.forbidden },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/companies/{companyId}/model-portfolios/experiment-evaluations",
+  tags: ["costs"],
+  summary: "Compare sovereign control routes with review-only experiment challengers",
+  request: {
+    params: z.object({ companyId: z.string() }),
+    body: jsonBody(modelRouteExperimentEvaluationInputSchema),
+  },
+  responses: {
+    200: r.ok(),
+    400: r.badRequest,
+    401: r.unauthorized,
+    403: r.forbidden,
+  },
 });
 
 registry.registerPath({

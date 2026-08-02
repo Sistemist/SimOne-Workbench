@@ -6,7 +6,29 @@ See [the evals framework plan](../doc/plans/2026-03-13-agent-evals-framework.md)
 
 ## Quick Start
 
+### Deterministic Sysdom routing and experiment checks
+
+The default Sysdom evaluation path is provider-free. It uses versioned fixtures
+and makes no model or provider request:
+
+```bash
+pnpm exec vitest run \
+  server/src/__tests__/model-route-engine-benchmark.test.ts \
+  server/src/services/model-route-experiment.test.ts \
+  --project @paperclipai/server
+```
+
+The Experiment Lane corpus compares a sovereign frontier control with one
+deliberation/audit challenger and one external-specialist challenger. Synthetic
+results prove only that the comparison and safety gates work. They cannot
+nominate a model, create adoption authority, activate a portfolio, or dispatch
+a provider.
+
 ### Prerequisites
+
+Promptfoo is an optional live-provider path, not the default check. Running it
+requires the repository's current paid-AI approval and hard-cap rules, an exact
+pinned provider/model configuration, and separate authorization for that run.
 
 ```bash
 pnpm add -g promptfoo
@@ -51,9 +73,11 @@ Phase 0 covers narrow behavior evals for the Paperclip heartbeat skill:
 | No work exit | `core` | Agent exits cleanly with no assignments |
 | Checkout before work | `core` | Agent always checks out before modifying |
 | 409 conflict handling | `core` | Agent stops on 409, picks different task |
-| Fusion high-risk routing | `model_routing` | Router chooses deliberation/audit for critical uncertain public claims |
-| Fugu bounded specialist routing | `model_routing` | Router chooses external specialist only for bounded hard execution |
+| Fusion-style high-risk routing | `model_routing` | Router chooses deliberation/audit for critical uncertain public claims |
+| Fugu-style bounded specialist routing | `model_routing` | Router chooses external specialist only for bounded hard execution |
 | Hidden root router rejection | `model_routing` | Router preserves the route ledger and human approval gates |
+| Experiment fairness | `model_routing` | Control and challenger share task/context hashes and complete telemetry |
+| Synthetic authority boundary | `model_routing` | Provider-free fixtures cannot nominate, adopt, activate, or dispatch |
 
 ### Adding new cases
 
@@ -65,6 +89,6 @@ Phase 0 covers narrow behavior evals for the Paperclip heartbeat skill:
 
 - **Phase 0 (current):** Promptfoo bootstrap - narrow behavior evals with deterministic assertions, now including initial SimOne model-routing boundary cases
 - **Phase 1:** TypeScript eval harness with seeded scenarios and hard checks
-- **Phase 2:** Pairwise and rubric scoring layer
+- **Phase 2:** Pairwise and rubric scoring layer (provider-free M5 baseline complete)
 - **Phase 3:** Efficiency metrics integration
 - **Phase 4:** Production-case ingestion

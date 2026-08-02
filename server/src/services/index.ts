@@ -65,7 +65,15 @@ export {
   type ModelPortfolioCandidateReview,
   type ReviewedModelPortfolioRefresh,
 } from "./model-portfolio-evidence.js";
-export { scoreModelRouteEngineBenchmark } from "./model-route-engine-benchmark.js";
+export {
+  scoreModelRouteEngineBenchmark,
+  scoreModelRouteOutputRubric,
+} from "./model-route-engine-benchmark.js";
+export {
+  evaluateModelRouteExperiment,
+  type ModelRouteExperimentComparison,
+  type ModelRouteExperimentEvaluation,
+} from "./model-route-experiment.js";
 export { governedIntakeService } from "./governed-intake.js";
 export { financeService } from "./finance.js";
 export { heartbeatService } from "./heartbeat.js";

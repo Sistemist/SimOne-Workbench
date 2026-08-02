@@ -1,0 +1,60 @@
+{
+  "version": "sysdom_model_route_experiment_evaluation_v1",
+  "suiteVersion": "sysdom_model_route_experiments_v1",
+  "evidenceClass": "synthetic_fixture",
+  "evaluatedAt": "2026-08-02T00:00:00.000Z",
+  "status": "passed",
+  "reviewRequired": true,
+  "eligibleForAdoption": false,
+  "activationAttempted": false,
+  "providerDispatchAttempted": false,
+  "comparisons": [
+    {
+      "fixtureId": "deliberation-conflicting-traction-claim",
+      "challengerLane": "deliberation_audit",
+      "status": "passed",
+      "decision": "simulation_passed",
+      "control": {
+        "provider": "synthetic-provider",
+        "model": "synthetic/frontier-control-v1",
+        "score": 100
+      },
+      "challenger": {
+        "provider": "synthetic-provider",
+        "model": "synthetic/deliberation-challenger-v1",
+        "score": 100
+      },
+      "qualityDelta": 0,
+      "costMultiplier": 1,
+      "latencyMultiplier": 3,
+      "blockers": []
+    },
+    {
+      "fixtureId": "specialist-context-projector-plan",
+      "challengerLane": "external_specialist",
+      "status": "passed",
+      "decision": "simulation_passed",
+      "control": {
+        "provider": "synthetic-provider",
+        "model": "synthetic/frontier-control-v1",
+        "score": 100
+      },
+      "challenger": {
+        "provider": "synthetic-provider",
+        "model": "synthetic/specialist-challenger-v1",
+        "score": 100
+      },
+      "qualityDelta": 0,
+      "costMultiplier": 1,
+      "latencyMultiplier": 1.8182,
+      "blockers": []
+    }
+  ],
+  "aggregate": {
+    "comparisonCount": 2,
+    "blockedCount": 0,
+    "simulationPassCount": 2,
+    "challengerNominationCount": 0
+  },
+  "blockers": []
+}
