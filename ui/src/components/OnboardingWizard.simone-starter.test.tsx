@@ -308,7 +308,53 @@ describe("OnboardingWizard SIM Starter path", () => {
     );
     expect(messyContextInput).not.toBeNull();
     expect(document.body.textContent ?? "").toContain("Messy venture context");
+    expect(document.body.textContent ?? "").toContain(
+      "Keep API keys, passwords, tokens, and private credential URLs out of this context."
+    );
     expect(document.body.textContent ?? "").not.toContain("MissionBuild a SaaS product");
+  });
+
+  it("rejects recognizable credentials before creating any starter state", async () => {
+    root = renderWizard(container);
+
+    flushSync(() => {
+      findButton(document.body, "Start with SIM Starter").dispatchEvent(
+        new MouseEvent("click", { bubbles: true })
+      );
+    });
+
+    const companyInput = document.body.querySelector<HTMLInputElement>(
+      'input[placeholder="Acme Corp"]'
+    );
+    updateTextField(companyInput!, "Credential-safe venture");
+
+    flushSync(() => {
+      findButton(document.body, "Next").dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const missionInput = document.body.querySelector<HTMLTextAreaElement>(
+      'textarea[placeholder="Paste the messy version: what are you building, selling, teaching, or trying to fix?"]'
+    );
+    updateTextField(
+      missionInput!,
+      "We need to improve onboarding. api_key=founder-secret-value"
+    );
+
+    flushSync(() => {
+      findButton(document.body, "Create SIM Starter").dispatchEvent(
+        new MouseEvent("click", { bubbles: true })
+      );
+    });
+    await flushReact();
+
+    const error = document.body.querySelector(".text-destructive")?.textContent ?? "";
+    expect(error).toContain("Remove credentials from founder context before continuing.");
+    expect(error).toContain("Settings → Secrets");
+    expect(error).not.toContain("founder-secret-value");
+    expect(mockCompaniesApi.create).not.toHaveBeenCalled();
+    expect(mockGoalsApi.create).not.toHaveBeenCalled();
+    expect(mockTeamCatalogApi.install).not.toHaveBeenCalled();
+    expect(mockIssuesApi.update).not.toHaveBeenCalled();
   });
 
   it("starts the SIM Starter path from a saved public bottleneck scan", async () => {

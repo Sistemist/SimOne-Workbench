@@ -285,6 +285,22 @@ describe("cost routes", () => {
     expect(res.body.status).toBe("no_usage");
   });
 
+  it("blocks founder cost-control summary reads across company scope", async () => {
+    const app = await createAppWithActor({
+      type: "board",
+      userId: "board-user",
+      source: "session",
+      isInstanceAdmin: false,
+      companyIds: ["company-2"],
+    });
+
+    const res = await request(app)
+      .get("/api/companies/company-1/costs/control-summary");
+
+    expect(res.status).toBe(403);
+    expect(mockCostService.controlSummary).not.toHaveBeenCalled();
+  });
+
   it("returns issue subtree cost summaries for issue refs", async () => {
     const app = await createApp();
     const res = await request(app).get("/api/issues/pc1a2-1/cost-summary");

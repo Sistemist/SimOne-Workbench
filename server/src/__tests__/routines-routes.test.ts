@@ -325,6 +325,21 @@ describe("routine routes", () => {
     expect(mockRoutineService.list).toHaveBeenCalledWith(companyId, { projectId });
   });
 
+  it("blocks company routine list reads across company scope", async () => {
+    const app = await createApp({
+      type: "board",
+      userId: "board-user",
+      source: "session",
+      isInstanceAdmin: false,
+      companyIds: ["99999999-9999-4999-8999-999999999999"],
+    });
+
+    const res = await request(app).get(`/api/companies/${companyId}/routines`);
+
+    expect(res.status).toBe(403);
+    expect(mockRoutineService.list).not.toHaveBeenCalled();
+  });
+
   it("lists routine revisions for a board member in newest-first service order", async () => {
     const app = await createApp({
       type: "board",

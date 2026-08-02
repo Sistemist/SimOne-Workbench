@@ -33,6 +33,7 @@ import { useAdapterCapabilities } from "../adapters/use-adapter-capabilities";
 import { getAdapterDisplay } from "../adapters/adapter-display-registry";
 import { defaultCreateValues } from "./agent-config-defaults";
 import { parseOnboardingGoalInput } from "../lib/onboarding-goal";
+import { hasRecognizableCredentialMaterial } from "../lib/founder-context-safety";
 import { composeCeoInstructions } from "../lib/ceo-instructions";
 import {
   buildOnboardingIssuePayload,
@@ -95,6 +96,8 @@ const DEFAULT_TASK_DESCRIPTION = `You are the CEO. You set the direction for the
 - break the roadmap into concrete tasks and start delegating work`;
 const INCOMPLETE_ONBOARDING_STATE_MESSAGE =
   "Onboarding state is incomplete. Please restart onboarding and try again.";
+const SENSITIVE_FOUNDER_CONTEXT_MESSAGE =
+  "Remove credentials from founder context before continuing. Store them in Settings → Secrets, then include only safe context or provenance here.";
 
 type SimStarterSourceProvenance = {
   source: string;
@@ -668,8 +671,12 @@ export function OnboardingWizard() {
 
   async function handleLaunchStarterTemplate() {
     if (!companyName.trim() || !companyGoal.trim()) return;
-    setLoading(true);
     setError(null);
+    if (hasRecognizableCredentialMaterial(companyGoal)) {
+      setError(SENSITIVE_FOUNDER_CONTEXT_MESSAGE);
+      return;
+    }
+    setLoading(true);
     try {
       const { companyId, companyPrefix, goalId } = await ensureCompanyAndGoal();
       const result = await teamCatalogApi.install(companyId, SIMONE_STARTER_CATALOG_REF, {
@@ -1454,6 +1461,11 @@ export function OnboardingWizard() {
                           onChange={(e) => setCompanyGoal(e.target.value)}
                           autoFocus
                         />
+                        {onboardingPath === "starter" && (
+                          <p className="mt-1.5 text-[11px] leading-4 text-muted-foreground">
+                            Keep API keys, passwords, tokens, and private credential URLs out of this context. Add them later in Settings → Secrets.
+                          </p>
+                        )}
                       </div>
                       {/* Prompt chips for inspiration */}
                       {onboardingPath !== "starter" && (
