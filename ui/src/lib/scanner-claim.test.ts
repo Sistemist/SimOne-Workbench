@@ -26,7 +26,10 @@ describe("assignLatestClaimedScanToCompany", () => {
       id: "scan-1",
       algorithmVersion: "scanner-rules-v1",
       savedAt: "2026-08-03T15:00:00.000Z",
-      input: { founderNote: "Customer follow-up is scattered." },
+      input: {
+        startupUrl: "",
+        founderNote: "Customer follow-up is scattered.",
+      },
       result: {
         engine: "Customer Engine",
         headline: "Customer loop is leaking",
