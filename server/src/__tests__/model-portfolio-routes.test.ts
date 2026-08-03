@@ -297,8 +297,12 @@ describeEmbeddedPostgres("model portfolio routes", () => {
     });
     expect(first.body.reviews).toEqual(expect.arrayContaining([
       expect.objectContaining({
-        model: "google/gemini-3.6-flash",
+        model: "openai/gpt-5.6-luna",
         status: "passed",
+      }),
+      expect.objectContaining({
+        model: "google/gemini-3.6-flash",
+        status: "missing",
       }),
     ]));
     expect(
