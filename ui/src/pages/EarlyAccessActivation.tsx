@@ -23,7 +23,8 @@ export function EarlyAccessActivationPage() {
   });
   const mutation = useMutation({
     mutationFn: () => earlyAccessApi.activate(token),
-    onSuccess: () => navigate("/onboarding?from=early-access", { replace: true }),
+    onSuccess: () =>
+      navigate("/onboarding?from=scanner&via=early-access", { replace: true }),
   });
 
   const grant = grantQuery.data;

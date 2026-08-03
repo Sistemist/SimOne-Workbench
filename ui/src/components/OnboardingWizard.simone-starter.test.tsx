@@ -457,7 +457,7 @@ describe("OnboardingWizard SIM Starter path", () => {
   });
 
   it("lets a new scanner handoff supersede a stale onboarding draft", async () => {
-    mockLocation.search = "?from=scanner&focus=product-engine";
+    mockLocation.search = "?from=scanner&via=early-access";
     localStorage.setItem(
       "paperclip-onboarding-state",
       JSON.stringify({
