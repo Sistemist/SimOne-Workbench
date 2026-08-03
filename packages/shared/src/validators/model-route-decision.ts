@@ -38,6 +38,16 @@ export const modelExecutionBillingTypeSchema = z.enum([
   "unknown",
 ]);
 
+export const modelReasoningEffortSchema = z.enum([
+  "none",
+  "minimal",
+  "low",
+  "medium",
+  "high",
+  "xhigh",
+  "max",
+]);
+
 export const modelRoutePostureSchema = z.enum([
   "cost_conscious",
   "balanced",
@@ -179,6 +189,7 @@ export const modelRouteCandidateSchema = z.object({
   model: z.string().trim().min(1).max(300),
   lane: modelRouteDecisionLaneSchema,
   billingType: modelExecutionBillingTypeSchema,
+  reasoningEffort: modelReasoningEffortSchema.optional().default("none"),
   costRank: z.number().int().min(1).max(1_000),
   qualityRank: z.number().int().min(1).max(1_000),
   latencyRank: z.number().int().min(1).max(1_000).optional().default(1),
@@ -285,6 +296,7 @@ export const modelRouteExecutionContractSchema = z.object({
   provider: z.string().trim().min(1).max(200),
   model: z.string().trim().min(1).max(300),
   billingType: modelExecutionBillingTypeSchema,
+  reasoningEffort: modelReasoningEffortSchema,
   maxOutputTokens: z.number().int().positive(),
   providerRouting: modelRouteCandidateCatalogSchema.shape.providerRouting.nullable(),
 }).strict();
@@ -379,6 +391,7 @@ export type ModelRouteDecisionOutputConfidence = z.infer<typeof modelRouteDecisi
 export type ModelRouteDecisionReviewStatus = z.infer<typeof modelRouteDecisionReviewStatusSchema>;
 export type ModelRouteDecisionOutputArtifact = z.infer<typeof modelRouteDecisionOutputArtifactSchema>;
 export type ModelExecutionBillingTypeInput = z.infer<typeof modelExecutionBillingTypeSchema>;
+export type ModelReasoningEffort = z.infer<typeof modelReasoningEffortSchema>;
 export type ModelRoutePosture = z.infer<typeof modelRoutePostureSchema>;
 export type ModelRouteTaskClass = z.infer<typeof modelRouteTaskClassSchema>;
 export type ModelRouteExternalEffect = z.infer<typeof modelRouteExternalEffectSchema>;

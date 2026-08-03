@@ -27,6 +27,7 @@ async function updateField(element: HTMLInputElement | HTMLTextAreaElement, valu
 
 describe("SystemsBottleneckScanner", () => {
   afterEach(() => {
+    vi.unstubAllGlobals();
     document.body.innerHTML = "";
   });
 
@@ -134,6 +135,127 @@ describe("SystemsBottleneckScanner", () => {
           status: "early_pattern_match",
           reviewNeeded: true,
           publicSummaryExcludes: ["founderNote", "startupUrl"],
+        },
+      },
+    });
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
+  it("upgrades the local result only after a governed model capability is enabled", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const path = String(input);
+      if (path.endsWith("/model-capability")) {
+        return new Response(JSON.stringify({
+          version: "sysdom_scanner_model_capability_v1",
+          enabled: true,
+          mode: "model_assisted",
+          rawNotesTransmitted: true,
+          maxFounderNoteChars: 8_000,
+        }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      if (path === "/api/public/funnel-events") {
+        return new Response(JSON.stringify({ accepted: true }), {
+          status: 202,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      expect(path).toBe("/api/public/scanner/model-analysis");
+      const requestBody = JSON.parse(String(init?.body));
+      expect(requestBody).toEqual({
+        founderNote:
+          "We keep changing the homepage, but almost nobody completes signup or returns for a second session.",
+        deterministicAssessment: {
+          primaryEngine: "Product Engine",
+          secondaryEngine: null,
+          primaryMatches: 0,
+          secondaryMatches: 0,
+        },
+      });
+      expect(requestBody).not.toHaveProperty("startupUrl");
+      return new Response(JSON.stringify({
+        version: "sysdom_scanner_model_analysis_v1",
+        analysisId: "11111111-1111-4111-8111-111111111111",
+        assessment: {
+          version: "sysdom_scanner_model_assessment_v1",
+          primaryEngine: "Customer Engine",
+          secondaryEngine: "Product Engine",
+          confidence: "medium",
+          summary: "Signup and return behavior make the customer loop the primary hypothesis.",
+          clarificationQuestion: "Where do people abandon signup?",
+          evidenceCues: ["almost nobody completes signup", "nobody returns"],
+        },
+        provenance: {
+          policyVersion: "sysdom-auto-alpha-1",
+          portfolio: {
+            revisionId: "33333333-3333-4333-8333-333333333333",
+            version: 2,
+          },
+          provider: "openrouter",
+          model: "openai/gpt-5.6-luna",
+          reasoningEffort: "low",
+          inputTokens: 120,
+          outputTokens: 80,
+          costUsd: 0.00006,
+          completedAt: "2026-08-03T20:00:00.000Z",
+        },
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderScanner(container);
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(container.textContent).toContain(
+      "Model-assisted read is on. Your note—not the URL—is sent to the governed provider",
+    );
+
+    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
+    await updateField(
+      noteInput!,
+      "We keep changing the homepage, but almost nobody completes signup or returns for a second session.",
+    );
+    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Scan"),
+    );
+    await act(async () => {
+      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      if ((container.textContent ?? "").includes("Model-assisted hypothesis")) break;
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+    }
+
+    expect(fetchMock.mock.calls.filter(([input]) =>
+      String(input).includes("/api/public/scanner/model-")
+    )).toHaveLength(2);
+    expect(container.textContent).toContain("Customer loop is leaking");
+    expect(container.textContent).toContain("Model-assisted hypothesis");
+    expect(container.textContent).toContain("Founder review still needed.");
+    expect(container.textContent).toContain("Where do people abandon signup?");
+    const storedScan = JSON.parse(window.localStorage.getItem("simone:bottleneck-scan")!);
+    expect(storedScan).toMatchObject({
+      algorithmVersion: "scanner-patterns-v1+sysdom_scanner_model_analysis_v1",
+      result: {
+        engine: "Customer Engine",
+        analysisProvenance: {
+          analysisId: "11111111-1111-4111-8111-111111111111",
+          provider: "openrouter",
+          model: "openai/gpt-5.6-luna",
+          reasoningEffort: "low",
         },
       },
     });

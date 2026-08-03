@@ -9,8 +9,14 @@ import {
   scannerShareCardFilename,
 } from "@/lib/scanner-share";
 import { saveScannerSnapshot } from "@/lib/scanner-storage";
+import {
+  scannerModelAnalysisResponseSchema,
+  scannerModelCapabilitySchema,
+  type ScannerModelAnalysisResponse,
+  type ScannerModelAssessment,
+} from "@paperclipai/shared";
 
-type ScannerResult = {
+export type ScannerResult = {
   headline: string;
   engine: "Product Engine" | "Customer Engine" | "Cash Engine" | "Skills Engine";
   severity: "medium" | "high";
@@ -29,7 +35,7 @@ type ScannerResult = {
     secondarySummary?: string;
   };
   calibration: {
-    status: "early_pattern_match";
+    status: "early_pattern_match" | "model_assisted_hypothesis";
     label: string;
     summary: string;
     reviewNeeded: boolean;
@@ -76,6 +82,9 @@ type ScannerResult = {
     canSee: string;
     cannotSee: string;
     stillUseful: string;
+  };
+  analysisProvenance?: ScannerModelAnalysisResponse["provenance"] & {
+    analysisId: string;
   };
 };
 
@@ -324,7 +333,10 @@ function engineLoopLabel(engine: ScannerResult["engine"]) {
   return "product loop";
 }
 
-function scanBottleneck(input: string): ScannerResult {
+export function scanBottleneck(
+  input: string,
+  modelAssessment?: ScannerModelAssessment,
+): ScannerResult {
   const normalized = input.toLowerCase();
   const scored = patterns
     .map((pattern) => ({
@@ -335,13 +347,30 @@ function scanBottleneck(input: string): ScannerResult {
       ),
     }))
     .sort((a, b) => b.score - a.score);
-  const best = scored[0];
+  const deterministicBest = scored[0];
+  const modelPattern = modelAssessment
+    ? patterns.find((pattern) => pattern.engine === modelAssessment.primaryEngine)
+    : null;
+  const best = modelPattern
+    ? {
+        pattern: modelPattern,
+        score: scored.find((candidate) => candidate.pattern.engine === modelPattern.engine)?.score ?? 0,
+      }
+    : deterministicBest;
 
-  if (!best || best.score === 0) return fallbackResult;
+  if (!best || (!modelAssessment && best.score === 0)) return fallbackResult;
 
-  const secondary = scored.find(
-    (candidate) => candidate.score > 0 && candidate.pattern.engine !== best.pattern.engine,
-  );
+  const modelSecondary = modelAssessment?.secondaryEngine
+    ? patterns.find((pattern) => pattern.engine === modelAssessment.secondaryEngine)
+    : null;
+  const secondary = modelSecondary
+    ? {
+        pattern: modelSecondary,
+        score: scored.find((candidate) => candidate.pattern.engine === modelSecondary.engine)?.score ?? 0,
+      }
+    : scored.find(
+        (candidate) => candidate.score > 0 && candidate.pattern.engine !== best.pattern.engine,
+      );
   const severity: ScannerResult["severity"] = best.score > 2 ? "high" : "medium";
   const result: Omit<
     ScannerResult,
@@ -365,22 +394,34 @@ function scanBottleneck(input: string): ScannerResult {
     },
     signalStrength: {
       primaryMatches: best.score,
-      summary: `${best.score} ${best.score === 1 ? "sign" : "signs"} pointed to ${best.pattern.engine}.`,
+      summary: modelAssessment?.summary
+        ?? `${best.score} ${best.score === 1 ? "sign" : "signs"} pointed to ${best.pattern.engine}.`,
       secondaryEngine: secondary?.pattern.engine,
       secondaryMatches: secondary?.score,
       secondarySummary: secondary
-        ? `${secondary.score} ${secondary.score === 1 ? "sign" : "signs"} pointed there.`
+        ? modelSecondary
+          ? "Model-assisted secondary signal."
+          : `${secondary.score} ${secondary.score === 1 ? "sign" : "signs"} pointed there.`
         : undefined,
     },
     calibration: {
-      status: "early_pattern_match",
-      label: "Early pattern match",
-      summary: "Early pattern match. Real submission review still needed.",
+      status: modelAssessment ? "model_assisted_hypothesis" : "early_pattern_match",
+      label: modelAssessment ? "Model-assisted hypothesis" : "Early pattern match",
+      summary: modelAssessment
+        ? "Model-assisted hypothesis. Founder review still needed."
+        : "Early pattern match. Real submission review still needed.",
       reviewNeeded: true,
       publicSummaryExcludes: ["founderNote", "startupUrl"],
     },
-    diagnosisSignals: best.pattern.diagnosisSignals,
-    questions: best.pattern.questions,
+    diagnosisSignals: modelAssessment?.evidenceCues.length
+      ? modelAssessment.evidenceCues
+      : best.pattern.diagnosisSignals,
+    questions: modelAssessment?.clarificationQuestion
+      ? [
+          modelAssessment.clarificationQuestion,
+          ...best.pattern.questions.filter((question) => question !== modelAssessment.clarificationQuestion),
+        ].slice(0, 3)
+      : best.pattern.questions,
     mapPreview: {
       artifact: "Venture Architecture Map",
       primaryEngine: best.pattern.engine,
@@ -458,7 +499,9 @@ export function SystemsBottleneckScanner() {
   const [shareCardStatus, setShareCardStatus] = useState<"idle" | "downloaded" | "blocked">("idle");
   const [scanStorageStatus, setScanStorageStatus] = useState<"idle" | "saved" | "blocked">("idle");
   const [currentScanId, setCurrentScanId] = useState<string | null>(null);
+  const [modelAnalysisAvailable, setModelAnalysisAvailable] = useState(false);
   const scannerViewEventKey = useRef(crypto.randomUUID());
+  const activeAnalysisId = useRef<string | null>(null);
   const canScan = useMemo(
     () => startupUrl.trim().length > 0 || founderNote.trim().length > 0,
     [startupUrl, founderNote],
@@ -466,9 +509,44 @@ export function SystemsBottleneckScanner() {
 
   useEffect(() => {
     trackPublicFunnelEvent("scanner_view", { eventKey: scannerViewEventKey.current });
+    if (typeof fetch !== "function") return;
+    void fetch("/api/public/scanner/model-capability", {
+      credentials: "include",
+    })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return scannerModelCapabilitySchema.parse(await response.json());
+      })
+      .then((capability) => {
+        setModelAnalysisAvailable(Boolean(
+          capability?.enabled
+          && capability.mode === "model_assisted"
+          && capability.rawNotesTransmitted,
+        ));
+      })
+      .catch(() => {
+        setModelAnalysisAvailable(false);
+      });
   }, []);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function persistResult(
+    scanId: string,
+    nextResult: ScannerResult,
+    algorithmVersion = SCANNER_ALGORITHM_VERSION,
+  ) {
+    saveScannerSnapshot({
+      id: scanId,
+      algorithmVersion,
+      input: {
+        startupUrl: startupUrl.trim(),
+        founderNote: founderNote.trim(),
+      },
+      result: nextResult as unknown as Record<string, unknown>,
+      savedAt: new Date().toISOString(),
+    });
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canScan) return;
     trackPublicFunnelEvent("scanner_start");
@@ -481,24 +559,59 @@ export function SystemsBottleneckScanner() {
     });
     setResult(nextResult);
     const scanId = crypto.randomUUID();
+    activeAnalysisId.current = scanId;
     setCurrentScanId(scanId);
     setShareSummaryStatus("idle");
     setShareCardStatus("idle");
     try {
-      saveScannerSnapshot({
-        id: scanId,
-        algorithmVersion: SCANNER_ALGORITHM_VERSION,
-        input: {
-          startupUrl: startupUrl.trim(),
-          founderNote: founderNote.trim(),
-        },
-        result: nextResult as unknown as Record<string, unknown>,
-        savedAt: new Date().toISOString(),
-      });
+      persistResult(scanId, nextResult);
       setScanStorageStatus("saved");
     } catch {
       setScanStorageStatus("blocked");
       // The scan remains useful even when private browsing or storage policy blocks persistence.
+    }
+
+    if (!modelAnalysisAvailable || !founderNote.trim()) return;
+    try {
+      const response = await fetch("/api/public/scanner/model-analysis", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          founderNote: founderNote.trim().slice(0, 8_000),
+          deterministicAssessment: {
+            primaryEngine: nextResult.engine,
+            secondaryEngine: nextResult.signalStrength.secondaryEngine ?? null,
+            primaryMatches: nextResult.signalStrength.primaryMatches,
+            secondaryMatches: nextResult.signalStrength.secondaryMatches ?? 0,
+          },
+        }),
+      });
+      if (!response.ok) return;
+      const modelAnalysis = scannerModelAnalysisResponseSchema.parse(await response.json());
+      if (activeAnalysisId.current !== scanId) return;
+      const assistedResult = {
+        ...scanBottleneck(`${startupUrl}\n${founderNote}`, modelAnalysis.assessment),
+        analysisProvenance: {
+          analysisId: modelAnalysis.analysisId,
+          ...modelAnalysis.provenance,
+        },
+      };
+      setResult(assistedResult);
+      try {
+        persistResult(
+          scanId,
+          assistedResult,
+          `${SCANNER_ALGORITHM_VERSION}+${modelAnalysis.version}`,
+        );
+        setScanStorageStatus("saved");
+      } catch {
+        setScanStorageStatus("blocked");
+      }
+    } catch {
+      // Keep the already-rendered deterministic result when the governed model rail is unavailable.
     }
   }
 
@@ -509,6 +622,7 @@ export function SystemsBottleneckScanner() {
     setShareSummaryStatus("idle");
     setScanStorageStatus("idle");
     setCurrentScanId(null);
+    activeAnalysisId.current = null;
   }
 
   return (
@@ -603,7 +717,9 @@ export function SystemsBottleneckScanner() {
                 <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
               </Button>
               <span className="text-xs text-muted-foreground">
-                Bounded first pass. No crawl, posting, or account setup.
+                {modelAnalysisAvailable
+                  ? "Model-assisted read is on. Your note—not the URL—is sent to the governed provider for this analysis and is not retained unless you request access."
+                  : "Bounded first pass. No crawl, posting, or account setup."}
               </span>
             </div>
           </form>
@@ -650,7 +766,7 @@ export function SystemsBottleneckScanner() {
                   </div>
                   <p className="mt-1 text-sm font-medium">{result.calibration.label}</p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Real submission review still needed.
+                    {result.calibration.summary.replace(`${result.calibration.label}. `, "")}
                   </p>
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">
                     Public summary excludes raw notes and URLs.

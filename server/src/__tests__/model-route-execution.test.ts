@@ -16,6 +16,7 @@ function candidate(
     model: "vendor/workhorse-v1",
     lane: "workhorse",
     billingType: "metered_api",
+    reasoningEffort: "low",
     costRank: 1,
     qualityRank: 1,
     enabled: true,
@@ -119,6 +120,7 @@ describe("model route execution contract", () => {
         version: "sysdom_model_route_execution_v1",
         provider: "openrouter",
         model: "vendor/workhorse-v1",
+        reasoningEffort: "low",
         maxOutputTokens: 10_000,
         providerRouting: {
           dataCollection: "deny",

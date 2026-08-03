@@ -83,6 +83,7 @@ export function assessModelRouteExecution(input: {
     provider: selected.provider,
     model: selected.model,
     billingType: selected.billingType,
+    reasoningEffort: selected.reasoningEffort,
     maxOutputTokens: selected.catalog?.maxOutputTokens ?? 1,
     providerRouting: selected.catalog?.providerRouting ?? null,
   });

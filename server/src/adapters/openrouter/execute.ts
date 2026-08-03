@@ -53,6 +53,19 @@ function readOpenRouterApiKey(config: Record<string, unknown>) {
   return asString(env.OPENROUTER_API_KEY, "").trim();
 }
 
+function readStructuredResponseFormat(config: Record<string, unknown>) {
+  if (config.responseFormat === undefined) return undefined;
+  const responseFormat = parseObject(config.responseFormat);
+  const name = asString(responseFormat.name, "").trim();
+  const schema = parseObject(responseFormat.schema);
+  if (!name || Object.keys(schema).length === 0) {
+    throw new Error(
+      "configuration incomplete: OpenRouter structured response format requires a name and JSON schema",
+    );
+  }
+  return { name, schema };
+}
+
 function readResponseContent(payload: Record<string, unknown>) {
   const choices = Array.isArray(payload.choices) ? payload.choices : [];
   const first = parseObject(choices[0]);
@@ -98,6 +111,7 @@ export async function execute(
     maxOutputTokens: config.maxOutputTokens,
     temperature: config.temperature,
     maxRunCostCents: policy.maxRunCostCents,
+    responseFormat: readStructuredResponseFormat(config),
   });
   await ctx.onMeta?.({
     adapterType: "openrouter",

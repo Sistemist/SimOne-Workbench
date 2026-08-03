@@ -14,14 +14,31 @@ type OpenRouterMessage = {
   content: string;
 };
 
+export interface OpenRouterStructuredResponseFormat {
+  name: string;
+  schema: Record<string, unknown>;
+}
+
 export interface OpenRouterGovernedRequest {
   contract: ModelRouteExecutionContract;
   body: {
     model: string;
     messages: OpenRouterMessage[];
+    reasoning: {
+      effort: ModelRouteExecutionContract["reasoningEffort"];
+      exclude: true;
+    };
     max_tokens: number;
-    temperature: number;
+    temperature?: number;
     stream: false;
+    response_format?: {
+      type: "json_schema";
+      json_schema: {
+        name: string;
+        strict: true;
+        schema: Record<string, unknown>;
+      };
+    };
     provider: {
       sort: "price" | "throughput" | "latency";
       allow_fallbacks: boolean;
@@ -44,6 +61,8 @@ export interface OpenRouterGovernedRequest {
     portfolio: ModelRouteExecutionContract["portfolio"];
     provider: "openrouter";
     model: string;
+    reasoningEffort: ModelRouteExecutionContract["reasoningEffort"];
+    responseFormatName: string | null;
     bodySha256: string;
     messageBytes: number;
     conservativeInputTokenLimit: number;
@@ -80,6 +99,7 @@ export function buildOpenRouterGovernedRequest(input: {
   maxOutputTokens: unknown;
   temperature?: unknown;
   maxRunCostCents: unknown;
+  responseFormat?: OpenRouterStructuredResponseFormat;
 }): OpenRouterGovernedRequest {
   const contract = modelRouteExecutionContractSchema.parse(input.rawContract);
   if (!sameIdentity(contract.provider, "openrouter")) {
@@ -111,12 +131,26 @@ export function buildOpenRouterGovernedRequest(input: {
   if (!maxRunCostCents) {
     throw new Error("configuration incomplete: governed OpenRouter requests require maxRunCostCents");
   }
-  const temperature = readFiniteNumber(input.temperature) ?? 0;
-  if (temperature < 0 || temperature > 2) {
+  const temperature = input.temperature === undefined
+    ? null
+    : readFiniteNumber(input.temperature);
+  if (
+    input.temperature !== undefined
+    && (temperature === null || temperature < 0 || temperature > 2)
+  ) {
     throw new Error("configuration incomplete: OpenRouter temperature must be between 0 and 2");
   }
   if (input.messages.length === 0 || input.messages.some((message) => !message.content.trim())) {
     throw new Error("configuration incomplete: OpenRouter messages must contain non-empty content");
+  }
+  if (
+    input.responseFormat
+    && (
+      !input.responseFormat.name.trim()
+      || Object.keys(input.responseFormat.schema).length === 0
+    )
+  ) {
+    throw new Error("configuration incomplete: OpenRouter structured response format is invalid");
   }
 
   const providerRouting = contract.providerRouting;
@@ -142,9 +176,25 @@ export function buildOpenRouterGovernedRequest(input: {
   const body = {
     model: contract.model,
     messages: input.messages,
+    reasoning: {
+      effort: contract.reasoningEffort,
+      exclude: true as const,
+    },
     max_tokens: maxOutputTokens,
-    temperature,
+    ...(temperature === null ? {} : { temperature }),
     stream: false as const,
+    ...(input.responseFormat
+      ? {
+          response_format: {
+            type: "json_schema" as const,
+            json_schema: {
+              name: input.responseFormat.name,
+              strict: true as const,
+              schema: input.responseFormat.schema,
+            },
+          },
+        }
+      : {}),
     provider: {
       sort: providerRouting.sort,
       allow_fallbacks: providerRouting.allowFallbacks,
@@ -172,6 +222,8 @@ export function buildOpenRouterGovernedRequest(input: {
       portfolio: contract.portfolio,
       provider: "openrouter",
       model: contract.model,
+      reasoningEffort: contract.reasoningEffort,
+      responseFormatName: input.responseFormat?.name ?? null,
       bodySha256: createHash("sha256").update(serializedBody).digest("hex"),
       messageBytes,
       conservativeInputTokenLimit: providerRouting.maxInputTokensPerRequest,

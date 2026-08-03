@@ -1,4 +1,60 @@
 import { z } from "zod";
+import { modelReasoningEffortSchema } from "./model-route-decision.js";
+
+export const scannerEngineSchema = z.enum([
+  "Product Engine",
+  "Customer Engine",
+  "Cash Engine",
+  "Skills Engine",
+]);
+
+export const scannerModelAnalysisRequestSchema = z.object({
+  founderNote: z.string().trim().min(1).max(8_000),
+  deterministicAssessment: z.object({
+    primaryEngine: scannerEngineSchema,
+    secondaryEngine: scannerEngineSchema.nullable(),
+    primaryMatches: z.number().int().nonnegative().max(100),
+    secondaryMatches: z.number().int().nonnegative().max(100),
+  }).strict(),
+}).strict();
+
+export const scannerModelAssessmentSchema = z.object({
+  version: z.literal("sysdom_scanner_model_assessment_v1"),
+  primaryEngine: scannerEngineSchema,
+  secondaryEngine: scannerEngineSchema.nullable(),
+  confidence: z.enum(["low", "medium", "high"]),
+  summary: z.string().trim().min(1).max(500),
+  clarificationQuestion: z.string().trim().min(1).max(500).nullable(),
+  evidenceCues: z.array(z.string().trim().min(1).max(300)).max(5),
+}).strict();
+
+export const scannerModelAnalysisResponseSchema = z.object({
+  version: z.literal("sysdom_scanner_model_analysis_v1"),
+  analysisId: z.string().uuid(),
+  assessment: scannerModelAssessmentSchema,
+  provenance: z.object({
+    policyVersion: z.string().trim().min(1).max(200),
+    portfolio: z.object({
+      revisionId: z.string().uuid(),
+      version: z.number().int().positive(),
+    }).strict(),
+    provider: z.string().trim().min(1).max(200),
+    model: z.string().trim().min(1).max(300),
+    reasoningEffort: modelReasoningEffortSchema,
+    inputTokens: z.number().int().nonnegative(),
+    outputTokens: z.number().int().nonnegative(),
+    costUsd: z.number().nonnegative().nullable(),
+    completedAt: z.string().datetime(),
+  }).strict(),
+}).strict();
+
+export const scannerModelCapabilitySchema = z.object({
+  version: z.literal("sysdom_scanner_model_capability_v1"),
+  enabled: z.boolean(),
+  mode: z.enum(["deterministic_only", "model_assisted"]),
+  rawNotesTransmitted: z.boolean(),
+  maxFounderNoteChars: z.literal(8_000),
+}).strict();
 
 export const scannerSnapshotSchema = z.object({
   id: z.string().uuid(),
@@ -12,6 +68,11 @@ export const scannerSnapshotSchema = z.object({
 }).strict();
 
 export type ScannerSnapshot = z.infer<typeof scannerSnapshotSchema>;
+export type ScannerEngine = z.infer<typeof scannerEngineSchema>;
+export type ScannerModelAnalysisRequest = z.infer<typeof scannerModelAnalysisRequestSchema>;
+export type ScannerModelAssessment = z.infer<typeof scannerModelAssessmentSchema>;
+export type ScannerModelAnalysisResponse = z.infer<typeof scannerModelAnalysisResponseSchema>;
+export type ScannerModelCapability = z.infer<typeof scannerModelCapabilitySchema>;
 
 export const createEarlyAccessRequestSchema = z.object({
   requestKey: z.string().uuid(),

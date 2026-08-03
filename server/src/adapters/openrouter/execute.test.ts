@@ -20,6 +20,7 @@ function contract() {
     provider: "openrouter",
     model: "vendor/workhorse-v1",
     billingType: "metered_api",
+    reasoningEffort: "low",
     maxOutputTokens: 2_000,
     providerRouting: {
       sort: "price",
@@ -92,6 +93,10 @@ describe("governed OpenRouter request boundary", () => {
     expect(request.body).toEqual({
       model: "vendor/workhorse-v1",
       messages: [{ role: "user", content: "Synthetic fixture" }],
+      reasoning: {
+        effort: "low",
+        exclude: true,
+      },
       max_tokens: 500,
       temperature: 0,
       stream: false,
@@ -111,6 +116,7 @@ describe("governed OpenRouter request boundary", () => {
       endpoint: OPENROUTER_CHAT_COMPLETIONS_URL,
       provider: "openrouter",
       model: "vendor/workhorse-v1",
+      reasoningEffort: "low",
       maxOutputTokens: 500,
       maxInputUsdPerMillion: 1,
       maxOutputUsdPerMillion: 5,
@@ -169,6 +175,21 @@ describe("governed OpenRouter request boundary", () => {
           completion: 5,
         },
       });
+      expect(body.reasoning).toEqual({
+        effort: "low",
+        exclude: true,
+      });
+      expect(body.response_format).toEqual({
+        type: "json_schema",
+        json_schema: {
+          name: "synthetic_assessment",
+          strict: true,
+          schema: {
+            type: "object",
+            additionalProperties: false,
+          },
+        },
+      });
       return new Response(JSON.stringify({
         id: "gen-synthetic",
         model: "vendor/workhorse-v1",
@@ -193,7 +214,15 @@ describe("governed OpenRouter request boundary", () => {
       });
     });
     vi.stubGlobal("fetch", fetchMock);
-    const ctx = context();
+    const ctx = context({
+      responseFormat: {
+        name: "synthetic_assessment",
+        schema: {
+          type: "object",
+          additionalProperties: false,
+        },
+      },
+    });
 
     const result = await execute(ctx);
 
@@ -215,6 +244,7 @@ describe("governed OpenRouter request boundary", () => {
       resultJson: {
         modelRouteRequest: {
           version: "sysdom_openrouter_request_receipt_v1",
+          responseFormatName: "synthetic_assessment",
         },
         openRouter: {
           responseId: "gen-synthetic",

@@ -39,6 +39,7 @@ import { customerEngineBridgeRoutes } from "./routes/customer-engine-bridge.js";
 import { ventureShareRoutes } from "./routes/venture-shares.js";
 import { publicFunnelEventRoutes } from "./routes/public-funnel-events.js";
 import { earlyAccessRoutes } from "./routes/early-access.js";
+import { scannerModelAnalysisRoutes } from "./routes/scanner-model-analysis.js";
 import { userProfileRoutes } from "./routes/user-profiles.js";
 import { sidebarBadgeRoutes } from "./routes/sidebar-badges.js";
 import { sidebarPreferenceRoutes } from "./routes/sidebar-preferences.js";
@@ -75,6 +76,7 @@ import { createPluginHostServiceCleanup } from "./services/plugin-host-service-c
 import { pluginRegistryService } from "./services/plugin-registry.js";
 import { createHostClientHandlers } from "@paperclipai/plugin-sdk";
 import type { BetterAuthSessionResult } from "./auth/better-auth.js";
+import type { ScannerModelAnalyzer } from "./services/scanner-model-analysis.js";
 import { createCachedViteHtmlRenderer } from "./vite-html-renderer.js";
 import { DEFAULT_JSON_BODY_LIMIT, PORTABLE_JSON_BODY_LIMIT } from "./http/body-limits.js";
 import { COMPANY_IMPORT_API_PATH } from "./routes/company-import-paths.js";
@@ -164,6 +166,7 @@ export async function createApp(
     pluginWorkerManager?: PluginWorkerManager;
     betterAuthHandler?: express.RequestHandler;
     resolveSession?: (req: ExpressRequest) => Promise<BetterAuthSessionResult | null>;
+    scannerModelAnalyzer?: ScannerModelAnalyzer;
   },
 ) {
   const app = express();
@@ -260,6 +263,9 @@ export async function createApp(
   api.use(ventureShareRoutes(db));
   api.use(publicFunnelEventRoutes(db));
   api.use(earlyAccessRoutes(db));
+  api.use(scannerModelAnalysisRoutes({
+    analyzer: opts.scannerModelAnalyzer,
+  }));
   api.use(userProfileRoutes(db));
   api.use(sidebarBadgeRoutes(db));
   api.use(sidebarPreferenceRoutes(db));
