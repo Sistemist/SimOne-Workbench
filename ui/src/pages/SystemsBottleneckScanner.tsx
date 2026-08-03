@@ -34,6 +34,11 @@ export type ScannerResult = {
     secondaryMatches?: number;
     secondarySummary?: string;
   };
+  clarification?: {
+    status: "weak_signal" | "close_call";
+    summary: string;
+    question: string;
+  };
   calibration: {
     status: "early_pattern_match" | "model_assisted_hypothesis";
     label: string;
@@ -227,7 +232,18 @@ const patterns: Array<{
   {
     engine: "Customer Engine",
     headline: "Customer loop is leaking",
-    keywords: ["lead", "customer", "reply", "waitlist", "prospect", "follow-up", "follow up", "inbox"],
+    keywords: [
+      "lead",
+      "customer",
+      "reply",
+      "waitlist",
+      "prospect",
+      "follow-up",
+      "follow up",
+      "inbox",
+      "signup",
+      "sign up",
+    ],
     reason: "Customer signal exists, but it is not moving through one trusted review loop.",
     nextAction: "Make one review queue for replies, prospects, and proof points.",
     watches: "Sysdom AI would watch the handoff from signal to human approval to durable memory.",
@@ -333,6 +349,27 @@ function engineLoopLabel(engine: ScannerResult["engine"]) {
   return "product loop";
 }
 
+function signalClarification(
+  primary: { pattern: (typeof patterns)[number]; score: number },
+  secondary?: { pattern: (typeof patterns)[number]; score: number },
+): ScannerResult["clarification"] {
+  if (secondary && primary.score - secondary.score <= 1) {
+    return {
+      status: "close_call",
+      summary: `The ${engineLoopLabel(primary.pattern.engine)} and ${engineLoopLabel(secondary.pattern.engine)} are close. Treat the first result as a hypothesis, not a settled diagnosis.`,
+      question: `Which needs a decision first: the ${engineLoopLabel(primary.pattern.engine)} or the ${engineLoopLabel(secondary.pattern.engine)}?`,
+    };
+  }
+  if (primary.score <= 1) {
+    return {
+      status: "weak_signal",
+      summary: `Only one direct cue selected ${primary.pattern.engine}. Treat this result as tentative.`,
+      question: `What observable evidence would confirm that the ${engineLoopLabel(primary.pattern.engine)} is the active constraint rather than a symptom?`,
+    };
+  }
+  return undefined;
+}
+
 export function scanBottleneck(
   input: string,
   modelAssessment?: ScannerModelAssessment,
@@ -404,6 +441,18 @@ export function scanBottleneck(
           : `${secondary.score} ${secondary.score === 1 ? "sign" : "signs"} pointed there.`
         : undefined,
     },
+    clarification: modelAssessment
+      ? modelAssessment.confidence === "low" || modelAssessment.secondaryEngine
+        ? {
+            status: modelAssessment.secondaryEngine ? "close_call" : "weak_signal",
+            summary: modelAssessment.secondaryEngine
+              ? `The model-assisted read also found ${modelAssessment.secondaryEngine}. Founder judgment is still required.`
+              : "The model-assisted read has low confidence. Founder judgment is still required.",
+            question: modelAssessment.clarificationQuestion
+              ?? `What evidence would confirm that the ${engineLoopLabel(best.pattern.engine)} is the active constraint?`,
+          }
+        : undefined
+      : signalClarification(best, secondary),
     calibration: {
       status: modelAssessment ? "model_assisted_hypothesis" : "early_pattern_match",
       label: modelAssessment ? "Model-assisted hypothesis" : "Early pattern match",
@@ -760,6 +809,17 @@ export function SystemsBottleneckScanner() {
                     </p>
                   ) : null}
                 </div>
+                {result.clarification ? (
+                  <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3">
+                    <div className="text-xs font-medium uppercase text-amber-800 dark:text-amber-100">
+                      Clarify before acting
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {result.clarification.summary}
+                    </p>
+                    <p className="mt-2 text-sm font-medium">{result.clarification.question}</p>
+                  </div>
+                ) : null}
                 <div className="rounded-md border border-border bg-background/60 p-3">
                   <div className="text-xs font-medium uppercase text-muted-foreground">
                     Calibration status

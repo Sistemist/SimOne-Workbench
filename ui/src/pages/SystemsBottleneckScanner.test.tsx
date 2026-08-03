@@ -144,6 +144,78 @@ describe("SystemsBottleneckScanner", () => {
     });
   });
 
+  it("flags the live mixed Product and Customer calibration case before the founder acts", async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderScanner(container);
+
+    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
+    await updateField(
+      noteInput!,
+      "We have plenty of product demos and people say the idea is interesting, but almost nobody finishes signup or returns for a second session. I keep changing the homepage instead of learning why.",
+    );
+
+    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Scan"),
+    );
+    await act(async () => {
+      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Customer loop is leaking");
+    expect(text).toContain("1 sign pointed to Customer Engine.");
+    expect(text).toContain("Also watch Product Engine");
+    expect(text).toContain("Clarify before acting");
+    expect(text).toContain("The customer loop and product loop are close.");
+    expect(text).toContain("Which needs a decision first: the customer loop or the product loop?");
+
+    const storedScan = JSON.parse(window.localStorage.getItem("simone:bottleneck-scan")!);
+    expect(storedScan.result).toMatchObject({
+      engine: "Customer Engine",
+      signalStrength: {
+        primaryMatches: 1,
+        secondaryEngine: "Product Engine",
+        secondaryMatches: 1,
+      },
+      clarification: {
+        status: "close_call",
+      },
+    });
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
+  it("keeps the clear customer-loop rehearsal case focused without a false ambiguity warning", async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = renderScanner(container);
+
+    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
+    await updateField(
+      noteInput!,
+      "Three founders completed the scanner. I promised to follow up, but their notes are in different places and I do not know who needs a reply or what they said. Nobody returned for a second session.",
+    );
+
+    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
+      candidate.textContent?.includes("Scan"),
+    );
+    await act(async () => {
+      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const text = container.textContent ?? "";
+    expect(text).toContain("Customer loop is leaking");
+    expect(text).toContain("2 signs pointed to Customer Engine.");
+    expect(text).not.toContain("Clarify before acting");
+
+    flushSync(() => {
+      root.unmount();
+    });
+  });
+
   it("upgrades the local result only after a governed model capability is enabled", async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const path = String(input);
@@ -171,9 +243,9 @@ describe("SystemsBottleneckScanner", () => {
         founderNote:
           "We keep changing the homepage, but almost nobody completes signup or returns for a second session.",
         deterministicAssessment: {
-          primaryEngine: "Product Engine",
+          primaryEngine: "Customer Engine",
           secondaryEngine: null,
-          primaryMatches: 0,
+          primaryMatches: 1,
           secondaryMatches: 0,
         },
       });
