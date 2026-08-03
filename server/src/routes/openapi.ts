@@ -39,6 +39,10 @@ import {
   companyArtifactsQuerySchema,
   companyArtifactsResponseSchema,
   createPublicFunnelEventSchema,
+  assignScannerRunSchema,
+  claimScannerRunSchema,
+  createEarlyAccessGrantSchema,
+  createEarlyAccessRequestSchema,
   // Routine
   createRoutineSchema,
   updateRoutineSchema,
@@ -543,6 +547,8 @@ const PUBLIC_OPERATIONS = new Set([
   "POST /api/invites/{token}/accept",
   "GET /api/venture-shares/{shareId}",
   "POST /api/public/funnel-events",
+  "POST /api/public/early-access/requests",
+  "GET /api/public/early-access/activate/{token}",
   "POST /api/join-requests/{requestId}/claim-api-key",
 ]);
 
@@ -557,6 +563,10 @@ const BOARD_ONLY_PREFIXES = [
 const BOARD_ONLY_OPERATIONS = new Set([
   "GET /api/companies",
   "GET /api/public/funnel-events/summary",
+  "POST /api/early-access/activate/{token}",
+  "GET /api/early-access/me",
+  "POST /api/early-access/scans/claim",
+  "POST /api/early-access/scans/{scanId}/assign",
   "POST /api/companies",
   "GET /api/companies/stats",
   "GET /api/companies/issues",
@@ -610,6 +620,9 @@ const INSTANCE_ADMIN_OPERATIONS = new Set([
   "POST /api/admin/users/{userId}/promote-instance-admin",
   "POST /api/admin/users/{userId}/demote-instance-admin",
   "PUT /api/admin/users/{userId}/company-access",
+  "GET /api/early-access/admin",
+  "POST /api/early-access/admin/grants",
+  "POST /api/early-access/admin/requests/{requestId}/approve",
 ]);
 
 const CREATED_OPERATIONS = new Set([
@@ -2364,6 +2377,7 @@ const costSummaryPaths = [
   "summary", "by-agent", "by-agent-model", "by-provider",
   "by-biller", "by-project", "finance-summary", "finance-by-biller",
   "finance-by-kind", "finance-events", "window-spend", "quota-windows",
+  "control-summary",
 ] as const;
 
 for (const segment of costSummaryPaths) {
@@ -2534,6 +2548,101 @@ registry.registerPath({
     body: jsonBody(createPublicFunnelEventSchema),
   },
   responses: { 202: r.ok(), 400: r.badRequest },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/public/early-access/requests",
+  tags: ["early-access"],
+  summary: "Request invite-only founder access",
+  request: {
+    body: jsonBody(createEarlyAccessRequestSchema),
+  },
+  responses: { 202: r.ok(), 400: r.badRequest },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/public/early-access/activate/{token}",
+  tags: ["early-access"],
+  summary: "Inspect a founder activation grant",
+  request: { params: z.object({ token: z.string() }) },
+  responses: { 200: r.ok(), 404: r.notFound },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/early-access/activate/{token}",
+  tags: ["early-access"],
+  summary: "Activate founder access for the signed-in user",
+  request: { params: z.object({ token: z.string() }) },
+  responses: { 200: r.ok(), 401: r.unauthorized, 403: r.forbidden, 404: r.notFound },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/early-access/me",
+  tags: ["early-access"],
+  summary: "Get the signed-in founder grant and retained scans",
+  responses: { 200: r.ok(), 401: r.unauthorized, 403: r.forbidden },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/early-access/scans/claim",
+  tags: ["early-access"],
+  summary: "Claim a retained Scanner result",
+  request: {
+    body: jsonBody(claimScannerRunSchema),
+  },
+  responses: { 201: r.ok(), 400: r.badRequest, 401: r.unauthorized, 403: r.forbidden },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/early-access/scans/{scanId}/assign",
+  tags: ["early-access"],
+  summary: "Assign a claimed Scanner result to a founder venture",
+  request: {
+    params: z.object({ scanId: z.string().uuid() }),
+    body: jsonBody(assignScannerRunSchema),
+  },
+  responses: { 200: r.ok(), 400: r.badRequest, 401: r.unauthorized, 403: r.forbidden, 404: r.notFound },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/early-access/admin",
+  tags: ["early-access"],
+  summary: "List founder access requests and grants",
+  responses: { 200: r.ok(), 401: r.unauthorized, 403: r.forbidden },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/early-access/admin/grants",
+  tags: ["early-access"],
+  summary: "Create a founder activation grant",
+  request: {
+    body: jsonBody(createEarlyAccessGrantSchema),
+  },
+  responses: { 201: r.ok(), 400: r.badRequest, 401: r.unauthorized, 403: r.forbidden },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/early-access/admin/requests/{requestId}/approve",
+  tags: ["early-access"],
+  summary: "Approve a founder access request",
+  request: {
+    params: z.object({ requestId: z.string().uuid() }),
+    body: jsonBody(createEarlyAccessGrantSchema.omit({
+      founderName: true,
+      email: true,
+      accessRequestId: true,
+    })),
+  },
+  responses: { 201: r.ok(), 400: r.badRequest, 401: r.unauthorized, 403: r.forbidden, 404: r.notFound },
 });
 
 registerCurrentRoute({

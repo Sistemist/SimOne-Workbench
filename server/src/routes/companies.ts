@@ -42,7 +42,6 @@ export function companyRoutes(db: Db, storage?: StorageService) {
   const budgets = budgetService(db);
   const artifacts = companyArtifactsService(db, storage);
   const feedback = feedbackService(db);
-  const earlyAccess = earlyAccessService(db);
   const importJobs = new Map<string, ImportJobRecord>();
   const importJobTerminalRetentionMs = 5 * 60 * 1000;
 
@@ -300,6 +299,7 @@ export function companyRoutes(db: Db, storage?: StorageService) {
     assertBoard(req);
     if (!(req.actor.source === "local_implicit" || req.actor.isInstanceAdmin)) {
       if (!req.actor.userId) throw forbidden("A user session is required");
+      const earlyAccess = earlyAccessService(db);
       const founderGrant = await earlyAccess.userGrant(req.actor.userId);
       if (!founderGrant || founderGrant.remainingVentures <= 0) {
         throw forbidden("An active founder invitation with an available venture slot is required");
