@@ -44,9 +44,19 @@ install -m 0644 "$staged_config" "$site_available"
 nginx -t
 systemctl reload nginx
 
-root_status="$(curl -sS -o /dev/null -w '%{http_code}' https://app.sysdom.ai/)"
-root_location="$(curl -sSI https://app.sysdom.ai/ | tr -d '\r' | sed -n 's/^[Ll]ocation: //p')"
-if [ "$root_status" != "302" ] || [ "$root_location" != "/app" ]; then
+root_ready=false
+root_status=""
+root_location=""
+for _ in $(seq 1 15); do
+  root_status="$(curl -sS -o /dev/null -w '%{http_code}' https://app.sysdom.ai/)"
+  root_location="$(curl -sSI https://app.sysdom.ai/ | tr -d '\r' | sed -n 's/^[Ll]ocation: //p')"
+  if [ "$root_status" = "302" ] && [ "$root_location" = "/app" ]; then
+    root_ready=true
+    break
+  fi
+  sleep 1
+done
+if [ "$root_ready" != true ]; then
   echo "App root must redirect to /app; received status=$root_status location=$root_location." >&2
   exit 1
 fi

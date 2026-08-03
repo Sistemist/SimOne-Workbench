@@ -37,6 +37,7 @@ test("TLS activation waits for exact DNS and routes the product-only host", () =
   assert.match(activateScript, /https:\/\/app\.sysdom\.ai\/scanner/);
   assert.match(activateScript, /https:\/\/app\.sysdom\.ai\/request-access/);
   assert.match(activateScript, /App root must redirect to \/app/);
+  assert.match(activateScript, /for _ in \$\(seq 1 15\)/);
 });
 
 test("deploy smoke supports both the legacy split host and product-only app host", () => {
