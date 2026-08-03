@@ -8,6 +8,7 @@ import {
   buildScannerShareCopy,
   scannerShareCardFilename,
 } from "@/lib/scanner-share";
+import { saveScannerSnapshot } from "@/lib/scanner-storage";
 
 type ScannerResult = {
   headline: string;
@@ -78,7 +79,7 @@ type ScannerResult = {
   };
 };
 
-const SCAN_STORAGE_KEY = "simone:bottleneck-scan";
+const SCANNER_ALGORITHM_VERSION = "scanner-patterns-v1";
 function signUpHref(next: string) {
   return `/auth?mode=sign_up&next=${encodeURIComponent(next)}`;
 }
@@ -456,6 +457,7 @@ export function SystemsBottleneckScanner() {
   const [shareSummaryStatus, setShareSummaryStatus] = useState<"idle" | "copied" | "manual">("idle");
   const [shareCardStatus, setShareCardStatus] = useState<"idle" | "downloaded" | "blocked">("idle");
   const [scanStorageStatus, setScanStorageStatus] = useState<"idle" | "saved" | "blocked">("idle");
+  const [currentScanId, setCurrentScanId] = useState<string | null>(null);
   const scannerViewEventKey = useRef(crypto.randomUUID());
   const canScan = useMemo(
     () => startupUrl.trim().length > 0 || founderNote.trim().length > 0,
@@ -478,20 +480,21 @@ export function SystemsBottleneckScanner() {
       resultCategory: scannerResultCategory(nextResult.engine),
     });
     setResult(nextResult);
+    const scanId = crypto.randomUUID();
+    setCurrentScanId(scanId);
     setShareSummaryStatus("idle");
     setShareCardStatus("idle");
     try {
-      window.localStorage.setItem(
-        SCAN_STORAGE_KEY,
-        JSON.stringify({
-          input: {
-            startupUrl: startupUrl.trim(),
-            founderNote: founderNote.trim(),
-          },
-          result: nextResult,
-          savedAt: new Date().toISOString(),
-        }),
-      );
+      saveScannerSnapshot({
+        id: scanId,
+        algorithmVersion: SCANNER_ALGORITHM_VERSION,
+        input: {
+          startupUrl: startupUrl.trim(),
+          founderNote: founderNote.trim(),
+        },
+        result: nextResult as unknown as Record<string, unknown>,
+        savedAt: new Date().toISOString(),
+      });
       setScanStorageStatus("saved");
     } catch {
       setScanStorageStatus("blocked");
@@ -505,6 +508,7 @@ export function SystemsBottleneckScanner() {
     setResult(null);
     setShareSummaryStatus("idle");
     setScanStorageStatus("idle");
+    setCurrentScanId(null);
   }
 
   return (
@@ -541,10 +545,10 @@ export function SystemsBottleneckScanner() {
               Sign in
             </a>
             <a
-              href={signUpHref("/onboarding")}
+              href="/request-access"
               className="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent"
             >
-              Create full map
+              Request early access
             </a>
           </div>
         </header>
@@ -913,30 +917,32 @@ export function SystemsBottleneckScanner() {
                     </div>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
                       {scanStorageStatus === "blocked"
-                        ? "Sign up now to keep this readout with your full Sysdom AI map."
-                        : "Sign up to keep this readout with your full Sysdom AI map."}
+                        ? "Request access to keep this readout with your full Sysdom AI map."
+                        : "Request access to keep this readout with your full Sysdom AI map."}
                     </p>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Coach explains the method before you assign work.
                   </p>
                   <a
-                    href={SCANNER_COACH_HREF}
+                    href={currentScanId ? `/request-access?scan=${encodeURIComponent(currentScanId)}&intent=coach` : SCANNER_COACH_HREF}
                     className="inline-flex h-9 w-fit items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent"
                   >
                     Ask SIM Coach why
                   </a>
                   <p className="text-xs text-muted-foreground">
-                    Your scan will carry into SIM Starter after sign-in.
+                    If invited, your retained scan will carry into SIM Starter after activation.
                   </p>
                   <a
-                    href={result.conversionPath.onboardingHref}
+                    href={currentScanId
+                      ? `/request-access?scan=${encodeURIComponent(currentScanId)}`
+                      : "/request-access"}
                     onClick={() => trackPublicFunnelEvent("scanner_signup_click", {
                       resultCategory: scannerResultCategory(result.engine),
                     })}
                     className="inline-flex h-9 w-fit items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                   >
-                    {result.conversionPath.primaryCta}
+                    Request access to save this map
                     <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                   </a>
                   <Button type="button" variant="outline" size="sm" onClick={handleRunAnotherScan}>
@@ -967,7 +973,7 @@ export function SystemsBottleneckScanner() {
                   <div className="rounded-md border border-border bg-background/60 p-3">
                     <h3 className="font-medium text-foreground">Protected full map</h3>
                     <p className="mt-1">
-                      Sign in when you want Sysdom AI to save the scan, draft the starter map, and carry its review boundaries forward.
+                      Request invite-only access when you want Sysdom AI to save the scan, draft the starter map, and carry its review boundaries forward.
                     </p>
                   </div>
                 </div>

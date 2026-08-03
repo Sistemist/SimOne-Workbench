@@ -18,6 +18,7 @@ export {
 } from "./venture_operating_state.js";
 export { simCycleEvents, simCycles } from "./sim_cycles.js";
 export { publicFunnelEvents } from "./public_funnel_events.js";
+export { earlyAccessRequests, earlyAccessGrants, scannerRuns } from "./early_access.js";
 export { companyUserSidebarPreferences } from "./company_user_sidebar_preferences.js";
 export { principalPermissionGrants } from "./principal_permission_grants.js";
 export { invites } from "./invites.js";

@@ -960,6 +960,13 @@
       "when": 1785620000000,
       "tag": "0136_model_portfolio_revisions",
       "breakpoints": true
+    },
+    {
+      "idx": 137,
+      "version": "7",
+      "when": 1785740400000,
+      "tag": "0137_early_access_scan_claims",
+      "breakpoints": true
     }
   ]
 }

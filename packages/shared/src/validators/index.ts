@@ -196,6 +196,18 @@ export {
   type PublicFunnelResultCategory,
   type CreatePublicFunnelEvent,
 } from "./public-funnel-event.js";
+export {
+  scannerSnapshotSchema,
+  createEarlyAccessRequestSchema,
+  createEarlyAccessGrantSchema,
+  claimScannerRunSchema,
+  assignScannerRunSchema,
+  type ScannerSnapshot,
+  type CreateEarlyAccessRequest,
+  type CreateEarlyAccessGrant,
+  type ClaimScannerRun,
+  type AssignScannerRun,
+} from "./early-access.js";
 
 export {
   trustPresetSchema,

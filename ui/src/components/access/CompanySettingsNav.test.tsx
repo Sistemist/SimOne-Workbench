@@ -78,6 +78,7 @@ describe("CompanySettingsNav", () => {
     expect(getCompanySettingsTab("/PAP/company/settings/instance/general")).toBe("instance-general");
     expect(getCompanySettingsTab("/company/settings/instance/environments")).toBe("instance-environments");
     expect(getCompanySettingsTab("/company/settings/instance/access")).toBe("instance-access");
+    expect(getCompanySettingsTab("/company/settings/instance/early-access")).toBe("instance-early-access");
     expect(getCompanySettingsTab("/company/settings/instance/heartbeats")).toBe("instance-heartbeats");
     expect(getCompanySettingsTab("/company/settings/instance/experimental")).toBe("instance-experimental");
     expect(getCompanySettingsTab("/PAP/company/settings/instance/plugins/example")).toBe("instance-plugins");
@@ -106,6 +107,7 @@ describe("CompanySettingsNav", () => {
           { value: "instance-general", label: "Instance general" },
           { value: "instance-environments", label: "Instance environments" },
           { value: "instance-access", label: "Instance access" },
+          { value: "instance-early-access", label: "Early access" },
           { value: "instance-heartbeats", label: "Instance heartbeats" },
           { value: "instance-experimental", label: "Instance experimental" },
           { value: "instance-plugins", label: "Instance plugins" },

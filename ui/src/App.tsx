@@ -12,6 +12,9 @@ import { FounderCockpit } from "./pages/FounderCockpit";
 import { SimCoach } from "./pages/SimCoach";
 import { CustomerEngine } from "./pages/CustomerEngine";
 import { SystemsBottleneckScanner } from "./pages/SystemsBottleneckScanner";
+import { EarlyAccessRequestPage } from "./pages/EarlyAccessRequest";
+import { EarlyAccessActivationPage } from "./pages/EarlyAccessActivation";
+import { EarlyAccessAdmin } from "./pages/EarlyAccessAdmin";
 import { VentureShare } from "./pages/VentureShare";
 import { Companies } from "./pages/Companies";
 import { Agents } from "./pages/Agents";
@@ -109,6 +112,7 @@ function boardRoutes() {
       <Route path="company/settings/instance/general" element={<InstanceGeneralSettings />} />
       <Route path="company/settings/instance/environments" element={<CompanyEnvironments />} />
       <Route path="company/settings/instance/access" element={<InstanceAccess />} />
+      <Route path="company/settings/instance/early-access" element={<EarlyAccessAdmin />} />
       <Route path="company/settings/instance/heartbeats" element={<InstanceSettings />} />
       <Route path="company/settings/instance/experimental" element={<InstanceExperimentalSettings />} />
       <Route path="company/settings/instance/plugins" element={<PluginManager />} />
@@ -413,6 +417,8 @@ export function App() {
         <Route path="invite/:token" element={<InviteLandingPage />} />
         <Route path="scanner" element={<SystemsBottleneckScanner />} />
         <Route path="systems-bottleneck-scanner" element={<SystemsBottleneckScanner />} />
+        <Route path="request-access" element={<EarlyAccessRequestPage />} />
+        <Route path="activate/:token" element={<EarlyAccessActivationPage />} />
         <Route path="share/venture/:shareId" element={<VentureShare />} />
         <Route path="tests/perf/long-thread" element={<IssueChatLongThreadPerf />} />
         <Route path="ux-lab/cloud-upstream" element={<CloudUpstreamUxLab />} />

@@ -392,12 +392,12 @@ describe("OnboardingWizard SIM Starter path", () => {
 
     expect(document.body.textContent ?? "").toContain("Name your company");
     expect(document.body.textContent ?? "").toContain("Setup choice: SIM Starter");
-    expect(document.body.textContent ?? "").not.toContain("Welcome to SimOne");
+    expect(document.body.textContent ?? "").not.toContain("Welcome to Sysdom AI");
 
     flushSync(() => {
       findButton(document.body, "Change").dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
-    expect(document.body.textContent ?? "").toContain("Welcome to SimOne");
+    expect(document.body.textContent ?? "").toContain("Welcome to Sysdom AI");
     expect(document.body.textContent ?? "").toContain("Blank setup");
 
     flushSync(() => {

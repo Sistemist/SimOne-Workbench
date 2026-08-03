@@ -15,6 +15,7 @@ import {
   Shield,
   SlidersHorizontal,
   UserRoundPen,
+  UserPlus,
   Users,
 } from "lucide-react";
 import type { PluginRecord } from "@paperclipai/shared";
@@ -162,6 +163,12 @@ export function CompanySettingsSidebar() {
             to={`${INSTANCE_SETTINGS_PATH_PREFIX}/access`}
             label="Access"
             icon={Shield}
+            end
+          />
+          <SidebarNavItem
+            to={`${INSTANCE_SETTINGS_PATH_PREFIX}/early-access`}
+            label="Early access"
+            icon={UserPlus}
             end
           />
           <SidebarNavItem

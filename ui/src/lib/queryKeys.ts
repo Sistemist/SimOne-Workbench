@@ -234,6 +234,10 @@ export const queryKeys = {
   auth: {
     session: ["auth", "session"] as const,
   },
+  earlyAccess: {
+    admin: ["early-access", "admin"] as const,
+    me: ["early-access", "me"] as const,
+  },
   sidebarPreferences: {
     companyOrder: (userId: string) => ["sidebar-preferences", "company-order", userId] as const,
     projectOrder: (companyId: string, userId: string) =>

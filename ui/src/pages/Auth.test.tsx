@@ -158,7 +158,7 @@ describe("AuthPage", () => {
   });
 
   it("uses new-password autocomplete in sign-up mode", async () => {
-    const root = await mount();
+    const root = await mount("/auth?next=%2Factivate%2Ffounder-token");
 
     const createOne = Array.from(container.querySelectorAll("button")).find(
       (button) => button.textContent === "Create one",
@@ -182,14 +182,30 @@ describe("AuthPage", () => {
     });
   });
 
-  it("opens directly in sign-up mode from the public landing CTA", async () => {
-    const root = await mount("/auth?mode=sign_up&next=%2Fapp");
+  it("opens directly in sign-up mode from a founder activation link", async () => {
+    const root = await mount(
+      "/auth?mode=sign_up&next=%2Factivate%2Ffounder-token&email=founder%40example.com",
+    );
 
     expect(container.textContent).toContain("Create your Sysdom AI account");
     expect(container.querySelector('input[name="name"]')).not.toBeNull();
+    expect((container.querySelector('input[name="email"]') as HTMLInputElement).value)
+      .toBe("founder@example.com");
 
     const passwordInput = container.querySelector('input[name="password"]') as HTMLInputElement;
     expect(passwordInput.getAttribute("autocomplete")).toBe("new-password");
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
+
+  it("does not expose public self-signup without an invitation path", async () => {
+    const root = await mount("/auth?mode=sign_up&next=%2Fapp");
+
+    expect(container.textContent).toContain("Sign in to Sysdom AI");
+    expect(container.textContent).toContain("Request early access");
+    expect(container.querySelector('input[name="name"]')).toBeNull();
 
     await act(async () => {
       root.unmount();

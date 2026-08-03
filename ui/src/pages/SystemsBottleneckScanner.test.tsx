@@ -41,7 +41,7 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Public first read");
     expect(text).toContain("No account needed. Get one bottleneck and one next move from the note you provide.");
     expect(text).toContain("Protected full map");
-    expect(text).toContain("Sign in when you want Sysdom AI to save the scan, draft the starter map, and carry its review boundaries forward.");
+    expect(text).toContain("Request invite-only access when you want Sysdom AI to save the scan, draft the starter map, and carry its review boundaries forward.");
     expect(text).toContain("Customer follow-up");
     expect(text).toContain("Cash runway");
     expect(text).toContain("Skills capacity");
@@ -56,8 +56,8 @@ describe("SystemsBottleneckScanner", () => {
     expect(
       links.some(
         (link) =>
-          link.textContent?.includes("Create full map") &&
-          link.getAttribute("href") === "/auth?mode=sign_up&next=%2Fonboarding",
+          link.textContent?.includes("Request early access") &&
+          link.getAttribute("href") === "/request-access",
       ),
     ).toBe(true);
 
@@ -207,9 +207,9 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Ask SIM Coach why");
     expect(text).toContain("Coach explains the method before you assign work.");
     expect(text).toContain("Saved in this browser");
-    expect(text).toContain("Sign up to keep this readout with your full Sysdom AI map.");
-    expect(text).toContain("Your scan will carry into SIM Starter after sign-in.");
-    expect(text).toContain("Save the full Customer Engine map");
+    expect(text).toContain("Request access to keep this readout with your full Sysdom AI map.");
+    expect(text).toContain("If invited, your retained scan will carry into SIM Starter after activation.");
+    expect(text).toContain("Request access to save this map");
     const generatedSummary = text.slice(text.indexOf("Why this scan picked Customer Engine"));
     expect(generatedSummary).not.toContain("https://example.com");
     expect(generatedSummary).not.toContain("interested leads and waitlist replies");
@@ -275,10 +275,12 @@ describe("SystemsBottleneckScanner", () => {
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
     expect(
-      links.some((link) => link.getAttribute("href") === "/auth?mode=sign_up&next=%2Fsim-coach%3Ffrom%3Dscanner"),
+      links.some((link) => link.getAttribute("href")?.startsWith("/request-access?scan=")
+        && link.getAttribute("href")?.includes("&intent=coach")),
     ).toBe(true);
     expect(
-      links.some((link) => link.getAttribute("href") === "/auth?mode=sign_up&next=%2Fonboarding%3Ffrom%3Dscanner%26focus%3Dcustomer-engine"),
+      links.some((link) => link.getAttribute("href")?.startsWith("/request-access?scan=")
+        && !link.getAttribute("href")?.includes("intent=coach")),
     ).toBe(true);
 
     flushSync(() => {
@@ -573,7 +575,7 @@ describe("SystemsBottleneckScanner", () => {
 
     const text = container.textContent ?? "";
     expect(text).toContain("Ready to continue");
-    expect(text).toContain("Sign up now to keep this readout with your full Sysdom AI map.");
+    expect(text).toContain("Request access to keep this readout with your full Sysdom AI map.");
     expect(text).not.toContain("Saved in this browser");
 
     flushSync(() => {
@@ -610,7 +612,7 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Sysdom AI will keep the customer loop, proof question, and approval boundary together after sign-in.");
     expect(text).toContain("What happens after sign-in");
     expect(text).toContain("Saved in this browser");
-    expect(text).toContain("Sign up to keep this readout with your full Sysdom AI map.");
+    expect(text).toContain("Request access to keep this readout with your full Sysdom AI map.");
     expect(text).toContain("Prefill the starter map with this customer loop readout.");
     expect(text).toContain("Create the first setup task: Make one review queue for replies, prospects, and proof points.");
     expect(text).toContain("Keep any customer, money, public-claim, or structure decision behind your approval.");
@@ -619,15 +621,15 @@ describe("SystemsBottleneckScanner", () => {
     expect(text).toContain("Nothing posts publicly.");
     expect(text).toContain("Customer, money, public-claim, and company-structure decisions still require your explicit approval.");
     expect(text).not.toContain("Agents wait for your approval before they act.");
-    expect(text).toContain("Save the full Customer Engine map");
+    expect(text).toContain("Request access to save this map");
     expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
     expect(
       links.some(
         (link) =>
-          link.textContent?.includes("Save the full Customer Engine map") &&
-          link.getAttribute("href") === "/auth?mode=sign_up&next=%2Fonboarding%3Ffrom%3Dscanner%26focus%3Dcustomer-engine",
+          link.textContent?.includes("Request access to save this map") &&
+          link.getAttribute("href")?.startsWith("/request-access?scan="),
       ),
     ).toBe(true);
 

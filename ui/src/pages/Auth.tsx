@@ -16,19 +16,21 @@ export function AuthPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const requestedMode: AuthMode = searchParams.get("mode") === "sign_up" ? "sign_up" : "sign_in";
+  const nextPath = useMemo(
+    () => searchParams.get("next") || getRememberedInvitePath() || "/",
+    [searchParams],
+  );
+  const signUpAllowed = /^\/(?:activate|invite|board-claim)\//.test(nextPath);
+  const requestedMode: AuthMode =
+    searchParams.get("mode") === "sign_up" && signUpAllowed ? "sign_up" : "sign_in";
   const [mode, setMode] = useState<AuthMode>(requestedMode);
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(searchParams.get("email") ?? "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const errorId = "auth-error";
   const passwordResetComplete = searchParams.get("passwordReset") === "success";
 
-  const nextPath = useMemo(
-    () => searchParams.get("next") || getRememberedInvitePath() || "/",
-    [searchParams],
-  );
   const { data: session, isLoading: isSessionLoading } = useQuery({
     queryKey: queryKeys.auth.session,
     queryFn: () => authApi.getSession(),
@@ -200,19 +202,31 @@ export function AuthPage() {
             </Button>
           </form>
 
-          <div className="mt-5 text-sm text-muted-foreground">
-            {mode === "sign_in" ? "Need an account?" : "Already have an account?"}{" "}
-            <button
-              type="button"
-              className="font-medium text-foreground underline underline-offset-2"
-              onClick={() => {
-                setError(null);
-                setMode(mode === "sign_in" ? "sign_up" : "sign_in");
-              }}
-            >
-              {mode === "sign_in" ? "Create one" : "Sign in"}
-            </button>
-          </div>
+          {mode === "sign_in" && !signUpAllowed ? (
+            <div className="mt-5 text-sm text-muted-foreground">
+              Need founder access?{" "}
+              <a
+                href="/request-access"
+                className="font-medium text-foreground underline underline-offset-2"
+              >
+                Request early access
+              </a>
+            </div>
+          ) : (
+            <div className="mt-5 text-sm text-muted-foreground">
+              {mode === "sign_in" ? "Need an account?" : "Already have an account?"}{" "}
+              <button
+                type="button"
+                className="font-medium text-foreground underline underline-offset-2"
+                onClick={() => {
+                  setError(null);
+                  setMode(mode === "sign_in" ? "sign_up" : "sign_in");
+                }}
+              >
+                {mode === "sign_in" ? "Create one" : "Sign in"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
