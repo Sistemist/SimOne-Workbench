@@ -36,7 +36,7 @@ test("TLS activation waits for exact DNS and routes the product-only host", () =
   assert.doesNotMatch(tlsNginx, /127\.0\.0\.1:3200/);
   assert.match(activateScript, /https:\/\/app\.sysdom\.ai\/scanner/);
   assert.match(activateScript, /https:\/\/app\.sysdom\.ai\/request-access/);
-  assert.match(activateScript, /App root must redirect to \/app/);
+  assert.match(activateScript, /App root must redirect to https:\/\/app\.sysdom\.ai\/app/);
   assert.match(activateScript, /for _ in \$\(seq 1 15\)/);
 });
 
@@ -45,5 +45,5 @@ test("deploy smoke supports both the legacy split host and product-only app host
   assert.match(deployScript, /if \[ "\$public_host" = "sim\.sysdom\.org" \]/);
   assert.match(deployScript, /<title>SimOne \\\| The conscious agent company/);
   assert.match(deployScript, /Product-only root smoke failed/);
-  assert.match(deployScript, /\[ "\$root_location" != "\/app" \]/);
+  assert.match(deployScript, /\[ "\$root_location" != "https:\/\/\$public_host\/app" \]/);
 });

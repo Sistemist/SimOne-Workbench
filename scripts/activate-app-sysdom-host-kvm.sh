@@ -50,14 +50,14 @@ root_location=""
 for _ in $(seq 1 15); do
   root_status="$(curl -sS -o /dev/null -w '%{http_code}' https://app.sysdom.ai/)"
   root_location="$(curl -sSI https://app.sysdom.ai/ | tr -d '\r' | sed -n 's/^[Ll]ocation: //p')"
-  if [ "$root_status" = "302" ] && [ "$root_location" = "/app" ]; then
+  if [ "$root_status" = "302" ] && [ "$root_location" = "https://app.sysdom.ai/app" ]; then
     root_ready=true
     break
   fi
   sleep 1
 done
 if [ "$root_ready" != true ]; then
-  echo "App root must redirect to /app; received status=$root_status location=$root_location." >&2
+  echo "App root must redirect to https://app.sysdom.ai/app; received status=$root_status location=$root_location." >&2
   exit 1
 fi
 curl -fsS https://app.sysdom.ai/app | grep -q '<title>Sysdom AI'

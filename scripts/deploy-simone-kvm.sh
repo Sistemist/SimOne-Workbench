@@ -224,7 +224,7 @@ else
       | tr -d '\r' \
       | sed -n 's/^[Ll]ocation: //p'
   )"
-  if [ "$root_status" != "302" ] || [ "$root_location" != "/app" ]; then
+  if [ "$root_status" != "302" ] || [ "$root_location" != "https://$public_host/app" ]; then
     echo "Product-only root smoke failed: status=$root_status location=$root_location" >&2
     exit 1
   fi
