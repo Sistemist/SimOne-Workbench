@@ -61,6 +61,13 @@ export {
   modelPortfolioService,
 } from "./model-portfolio.js";
 export {
+  alphaWorkloadEconomicsPlanSchema,
+  evaluateAlphaWorkloadEconomics,
+  type AlphaWorkloadEconomicsEstimate,
+  type AlphaWorkloadEconomicsPlan,
+  type AlphaWorkloadEconomicsReport,
+} from "./model-portfolio-economics.js";
+export {
   buildReviewedModelPortfolioRefresh,
   type ModelPortfolioCandidateReview,
   type ReviewedModelPortfolioRefresh,

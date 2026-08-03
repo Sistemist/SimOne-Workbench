@@ -51,14 +51,17 @@ function recommendationInput(
   };
 }
 
-describe("Sysdom first exact-model portfolio proposal", () => {
+describe("Sysdom refreshed exact-model portfolio proposal", () => {
   it("is review-only, fresh, exact, and blocked from activation pending quality evidence", () => {
     expect(proposal.status).toBe("review_required");
     expect(proposal.candidates.map((candidate) => `${candidate.lane}:${candidate.model}`))
       .toEqual([
         "background:google/gemini-3.5-flash-lite",
+        "workhorse:openai/gpt-5.6-luna",
         "workhorse:google/gemini-3.6-flash",
+        "frontier:openai/gpt-5.6-terra",
         "frontier:openai/gpt-5.6-sol",
+        "deliberation_audit:anthropic/claude-opus-5",
         "deliberation_audit:anthropic/claude-fable-5",
       ]);
     expect(modelPortfolioActivationBlockers(
@@ -66,29 +69,35 @@ describe("Sysdom first exact-model portfolio proposal", () => {
       new Date(proposal.researchedAt),
     )).toEqual([
       "adoption_evidence_not_reviewed:openrouter/google/gemini-3.5-flash-lite",
+      "adoption_evidence_not_reviewed:openrouter/openai/gpt-5.6-luna",
       "adoption_evidence_not_reviewed:openrouter/google/gemini-3.6-flash",
+      "adoption_evidence_not_reviewed:openrouter/openai/gpt-5.6-terra",
       "adoption_evidence_not_reviewed:openrouter/openai/gpt-5.6-sol",
+      "adoption_evidence_not_reviewed:openrouter/anthropic/claude-opus-5",
       "adoption_evidence_not_reviewed:openrouter/anthropic/claude-fable-5",
     ]);
     expect(proposal.unresolvedGaps).toEqual(expect.arrayContaining([
-      expect.stringContaining("No candidate has produced output-quality"),
+      expect.stringContaining("No candidate has produced reviewed output-quality"),
       expect.stringContaining("confidential and restricted context remain disabled"),
     ]));
   });
 
   it("records bounded comparable text-cost estimates without making model calls", () => {
     const estimates = Object.fromEntries(proposal.candidates.map((candidate) => [
-      candidate.lane,
+      candidate.model,
       estimateModelCandidateTextCostUsd(candidate, {
         inputTokens: 100_000,
         outputTokens: 10_000,
       }),
     ]));
     expect(estimates).toEqual({
-      background: 0.055,
-      workhorse: 0.225,
-      frontier: 0.8,
-      deliberation_audit: 1.5,
+      "google/gemini-3.5-flash-lite": 0.055,
+      "openai/gpt-5.6-luna": 0.016,
+      "google/gemini-3.6-flash": 0.225,
+      "openai/gpt-5.6-terra": 0.16,
+      "openai/gpt-5.6-sol": 0.8,
+      "anthropic/claude-opus-5": 0.75,
+      "anthropic/claude-fable-5": 1.5,
     });
   });
 
@@ -188,7 +197,7 @@ describe("Sysdom first exact-model portfolio proposal", () => {
     expect(audit).toMatchObject({
       lane: "deliberation_audit",
       status: "ready",
-      selectedCandidate: { model: "anthropic/claude-fable-5" },
+      selectedCandidate: { model: "anthropic/claude-opus-5" },
       approvalGate: "founder_approval_before_external_effect",
     });
   });

@@ -53,9 +53,9 @@ function refresh(overrides: Record<string, unknown> = {}) {
       kind: "benchmark" as const,
       label: "Synthetic deterministic engine-fixture review",
       url: "https://example.com/review",
-      capturedAt: "2026-08-02T10:00:00.000Z",
+      capturedAt: "2026-08-04T10:00:00.000Z",
     },
-    reviewExpiresAt: "2026-08-16T10:00:00.000Z",
+    reviewExpiresAt: "2026-08-18T10:00:00.000Z",
     ...overrides,
   };
 }
@@ -66,12 +66,12 @@ describe("reviewed model portfolio evidence refresh", () => {
 
     expect(result.reviews).toEqual(expect.arrayContaining([
       expect.objectContaining({
-        model: "google/gemini-3.6-flash",
+        model: "openai/gpt-5.6-luna",
         status: "passed",
         score: 100,
       }),
       expect.objectContaining({
-        model: "openai/gpt-5.6-sol",
+        model: "openai/gpt-5.6-terra",
         status: "passed",
         score: 100,
       }),
@@ -86,7 +86,7 @@ describe("reviewed model portfolio evidence refresh", () => {
     ]));
     expect(result.draft.candidates).toEqual(expect.arrayContaining([
       expect.objectContaining({
-        model: "google/gemini-3.6-flash",
+        model: "openai/gpt-5.6-luna",
         qualityRank: 1,
         costRank: 1,
         latencyRank: 1,
@@ -123,13 +123,13 @@ describe("reviewed model portfolio evidence refresh", () => {
 
     expect(result.reviews).toEqual(expect.arrayContaining([
       expect.objectContaining({
-        model: "google/gemini-3.6-flash",
+        model: "openai/gpt-5.6-luna",
         status: "failed",
         blockers: expect.arrayContaining(["required_evidence_missing"]),
       }),
     ]));
     expect(result.draft.candidates.find(
-      (candidate) => candidate.model === "google/gemini-3.6-flash",
+      (candidate) => candidate.model === "openai/gpt-5.6-luna",
     )?.enabled).toBe(false);
   });
 
@@ -142,7 +142,7 @@ describe("reviewed model portfolio evidence refresh", () => {
 
     const result = buildReviewedModelPortfolioRefresh(refresh({ outcomes }));
     const workhorse = result.draft.candidates.find(
-      (candidate) => candidate.model === "google/gemini-3.6-flash",
+      (candidate) => candidate.model === "openai/gpt-5.6-luna",
     )!;
 
     expect(workhorse.enabled).toBe(false);
@@ -166,9 +166,9 @@ describe("reviewed model portfolio evidence refresh", () => {
     ]));
     expect(modelPortfolioActivationBlockers(
       result.draft.candidates,
-      new Date("2026-08-02T10:00:00.000Z"),
+      new Date("2026-08-04T10:00:00.000Z"),
     )).toEqual(expect.arrayContaining([
-      expect.stringContaining("reviewed_benchmark_not_passed:openrouter/google/gemini-3.6-flash"),
+      expect.stringContaining("reviewed_benchmark_not_passed:openrouter/openai/gpt-5.6-luna"),
     ]));
   });
 

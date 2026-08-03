@@ -56,6 +56,9 @@ function compareCandidate(
   if (!model.supported_parameters.includes("structured_outputs")) {
     blockers.push("structured_outputs_missing");
   }
+  if (!model.supported_parameters.includes("reasoning")) {
+    blockers.push("reasoning_control_missing");
+  }
   if (!samePrice(usdPerMillion(model.pricing.prompt), catalog.pricing.inputUsd)) {
     blockers.push("input_price_changed");
   }
