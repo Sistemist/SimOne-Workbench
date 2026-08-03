@@ -212,7 +212,22 @@ curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/a
 if [ "$public_host" = "sim.sysdom.org" ]; then
   curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/" | rg -q '<title>SimOne \| The conscious agent company'
 else
-  curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/" | rg -q '<title>Sysdom AI'
+  root_status="$(
+    curl -sS -o /dev/null -w '%{http_code}' \
+      --resolve "$public_host:443:${remote_host#*@}" \
+      "https://$public_host/"
+  )"
+  root_location="$(
+    curl -sSI \
+      --resolve "$public_host:443:${remote_host#*@}" \
+      "https://$public_host/" \
+      | tr -d '\r' \
+      | sed -n 's/^[Ll]ocation: //p'
+  )"
+  if [ "$root_status" != "302" ] || [ "$root_location" != "/app" ]; then
+    echo "Product-only root smoke failed: status=$root_status location=$root_location" >&2
+    exit 1
+  fi
 fi
 
 signup_status="$(
