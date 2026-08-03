@@ -3,8 +3,8 @@ services:
     restart: unless-stopped
     environment:
       PAPERCLIP_DEPLOYMENT_EXPOSURE: "${PAPERCLIP_DEPLOYMENT_EXPOSURE:-private}"
-      PAPERCLIP_ALLOWED_HOSTNAMES: "${PAPERCLIP_ALLOWED_HOSTNAMES:-sim.sysdom.org,localhost,127.0.0.1}"
-      BETTER_AUTH_TRUSTED_ORIGINS: "${BETTER_AUTH_TRUSTED_ORIGINS:-https://sim.sysdom.org,http://sim.sysdom.org,http://127.0.0.1:3100,http://localhost:3100}"
+      PAPERCLIP_ALLOWED_HOSTNAMES: "${PAPERCLIP_ALLOWED_HOSTNAMES:-sim.sysdom.org,app.sysdom.ai,localhost,127.0.0.1}"
+      BETTER_AUTH_TRUSTED_ORIGINS: "${BETTER_AUTH_TRUSTED_ORIGINS:-https://sim.sysdom.org,http://sim.sysdom.org,https://app.sysdom.ai,http://app.sysdom.ai,http://127.0.0.1:3100,http://localhost:3100}"
       RESEND_API_KEY: "${RESEND_API_KEY:-}"
       SIMONE_PASSWORD_RESET_FROM: "${SIMONE_PASSWORD_RESET_FROM:-}"
       SIMONE_BRIDGE_TOKEN: "${SIMONE_BRIDGE_TOKEN:-}"

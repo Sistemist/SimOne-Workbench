@@ -207,8 +207,13 @@ remote_deployed=true
 
 curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/app" | rg -q '<title>Sysdom AI'
 curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/scanner" | rg -q '<title>Sysdom AI'
+curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/request-access" | rg -q '<title>Sysdom AI'
 curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/auth/forgot-password" | rg -q '<title>Sysdom AI'
-curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/" | rg -q '<title>SimOne \| The conscious agent company'
+if [ "$public_host" = "sim.sysdom.org" ]; then
+  curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/" | rg -q '<title>SimOne \| The conscious agent company'
+else
+  curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/" | rg -q '<title>Sysdom AI'
+fi
 
 signup_status="$(
   curl -sS -o /tmp/simone-signup-smoke.json -w '%{http_code}' \
