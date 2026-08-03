@@ -28,6 +28,7 @@ const mockIssuesApi = vi.hoisted(() => ({
   list: vi.fn(),
   update: vi.fn(),
 }));
+const mockAssignLatestClaimedScanToCompany = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/router", () => ({
   useLocation: () => mockLocation,
@@ -68,6 +69,10 @@ vi.mock("../api/teamCatalog", () => ({
 
 vi.mock("../api/issues", () => ({
   issuesApi: mockIssuesApi,
+}));
+
+vi.mock("../lib/scanner-claim", () => ({
+  assignLatestClaimedScanToCompany: mockAssignLatestClaimedScanToCompany,
 }));
 
 vi.mock("./AsciiArtAnimation", () => ({
@@ -151,6 +156,7 @@ describe("OnboardingWizard SIM Starter path", () => {
       identifier: "SYS-1",
       title: "Draft the first SIM map",
     });
+    mockAssignLatestClaimedScanToCompany.mockResolvedValue(true);
   });
 
   afterEach(() => {
@@ -206,6 +212,7 @@ describe("OnboardingWizard SIM Starter path", () => {
     await flushReact();
 
     expect(mockCompaniesApi.create).toHaveBeenCalledWith({ name: "Sysdom" });
+    expect(mockAssignLatestClaimedScanToCompany).toHaveBeenCalledWith("company-1");
     expect(mockGoalsApi.create).toHaveBeenCalledWith("company-1", {
       title: "Teach nontechnical founders how to run an AI-first company.",
       level: "company",

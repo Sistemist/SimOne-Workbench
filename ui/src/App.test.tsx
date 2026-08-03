@@ -168,9 +168,9 @@ describe("CloudAccessGate", () => {
     mockAuthApi.getSession.mockResolvedValue(null);
 
     const root = renderGate(container);
-    await waitForText(container, "Finish setting up SimOne");
+    await waitForText(container, "Finish setting up Sysdom AI");
 
-    expect(container.textContent).toContain("Finish setting up SimOne");
+    expect(container.textContent).toContain("Finish setting up Sysdom AI");
     expect(container.textContent).toContain("Sign in / Create account");
     expect(container.textContent).not.toContain("pnpm paperclipai auth bootstrap-ceo");
     expect(mockAccessApi.getCurrentBoardAccess).not.toHaveBeenCalled();
@@ -229,9 +229,9 @@ describe("CloudAccessGate", () => {
     });
 
     const root = renderGate(container);
-    await waitForText(container, "This SimOne workspace is waiting on its first admin");
+    await waitForText(container, "This Sysdom AI workspace is waiting on its first admin");
 
-    expect(container.textContent).toContain("This SimOne workspace is waiting on its first admin");
+    expect(container.textContent).toContain("This Sysdom AI workspace is waiting on its first admin");
     expect(container.textContent).toContain("invite-only");
     expect(container.textContent).not.toContain("Claim this workspace");
     expect(container.textContent).not.toContain("Sign in / Create account");

@@ -11,12 +11,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Company } from "@paperclipai/shared";
 import { authApi } from "../api/auth";
 import { companiesApi } from "../api/companies";
-import { earlyAccessApi } from "../api/early-access";
 import { companiesListQueryOptions, type CompanyListResult } from "../api/companies-query";
 import { healthApi } from "../api/health";
 import { queryKeys } from "../lib/queryKeys";
 import type { CompanySelectionSource } from "../lib/company-selection";
-import { readLatestScannerSnapshot } from "../lib/scanner-storage";
+import { assignLatestClaimedScanToCompany } from "../lib/scanner-claim";
 type CompanySelectionOptions = { source?: CompanySelectionSource };
 
 interface CompanyContextValue {
@@ -146,13 +145,8 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     onSuccess: async (company) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
       setSelectedCompanyId(company.id);
-      const latestScan = readLatestScannerSnapshot();
-      if (!latestScan) return;
       try {
-        const earlyAccess = await earlyAccessApi.getMine();
-        const claimedScan = earlyAccess.scans.find((scan) => scan.id === latestScan.id);
-        if (earlyAccess.grant && claimedScan && !claimedScan.companyId) {
-          await earlyAccessApi.assignScan(claimedScan.id, company.id);
+        if (await assignLatestClaimedScanToCompany(company.id)) {
           await queryClient.invalidateQueries({ queryKey: queryKeys.earlyAccess.me });
         }
       } catch {

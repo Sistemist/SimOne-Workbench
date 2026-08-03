@@ -34,6 +34,7 @@ import { getAdapterDisplay } from "../adapters/adapter-display-registry";
 import { defaultCreateValues } from "./agent-config-defaults";
 import { parseOnboardingGoalInput } from "../lib/onboarding-goal";
 import { hasRecognizableCredentialMaterial } from "../lib/founder-context-safety";
+import { assignLatestClaimedScanToCompany } from "../lib/scanner-claim";
 import { composeCeoInstructions } from "../lib/ceo-instructions";
 import {
   buildOnboardingIssuePayload,
@@ -647,6 +648,13 @@ export function OnboardingWizard() {
     setCreatedCompanyPrefix(company.issuePrefix);
     setSelectedCompanyId(company.id);
     queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
+    try {
+      if (await assignLatestClaimedScanToCompany(company.id)) {
+        await queryClient.invalidateQueries({ queryKey: queryKeys.earlyAccess.me });
+      }
+    } catch {
+      // Starter creation remains successful when no matching founder scan is available.
+    }
 
     const parsedGoal = parseOnboardingGoalInput(companyGoal);
     const goal = await goalsApi.create(company.id, {
