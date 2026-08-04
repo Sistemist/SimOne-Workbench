@@ -61,18 +61,20 @@ describe("BreadcrumbContext", () => {
 
   it("builds page titles with the selected company name before Sysdom AI", () => {
     expect(buildDocumentTitle([{ label: "Inbox" }], "Anachronist Wiki")).toBe(
-      "Inbox • Anachronist Wiki • Sysdom AI",
+      "Inbox • Anachronist Wiki • Sysdom AI — The Agentic Venture Building App",
     );
     expect(
       buildDocumentTitle(
         [{ label: "Issues", href: "/issues" }, { label: "PAP-3515" }],
         "Anachronist Wiki",
       ),
-    ).toBe("PAP-3515 • Issues • Anachronist Wiki • Sysdom AI");
+    ).toBe("PAP-3515 • Issues • Anachronist Wiki • Sysdom AI — The Agentic Venture Building App");
   });
 
   it("omits blank company names from page titles", () => {
-    expect(buildDocumentTitle([{ label: "Inbox" }], "  ")).toBe("Inbox • Sysdom AI");
-    expect(buildDocumentTitle([], null)).toBe("Sysdom AI");
+    expect(buildDocumentTitle([{ label: "Inbox" }], "  ")).toBe(
+      "Inbox • Sysdom AI — The Agentic Venture Building App",
+    );
+    expect(buildDocumentTitle([], null)).toBe("Sysdom AI — The Agentic Venture Building App");
   });
 });

@@ -26,6 +26,7 @@ interface BreadcrumbProviderProps {
 }
 
 const BreadcrumbContext = createContext<BreadcrumbContextValue | null>(null);
+const SYSDOM_APP_TITLE = "Sysdom AI — The Agentic Venture Building App";
 
 function breadcrumbsEqual(left: Breadcrumb[], right: Breadcrumb[]) {
   if (left === right) return true;
@@ -47,7 +48,7 @@ export function buildDocumentTitle(breadcrumbs: Breadcrumb[], companyName?: stri
     ? []
     : [...breadcrumbs].reverse().map((breadcrumb) => breadcrumb.label);
   const companyPart = companyName?.trim() ? [companyName.trim()] : [];
-  const parts = [...pageParts, ...companyPart, "Sysdom AI"];
+  const parts = [...pageParts, ...companyPart, SYSDOM_APP_TITLE];
   return parts.join(" • ");
 }
 
