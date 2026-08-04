@@ -38,6 +38,14 @@ test("smokes the current Sysdom AI app brand while leaving the landing root inde
   assert.match(script, /"https:\/\/\$public_host\/" \| rg -q '<title>SimOne \\\\?\| The conscious agent company'/);
 });
 
+test("uses host-specific public funnel smokes", () => {
+  assert.match(script, /if \[ "\$public_host" = "sim\.sysdom\.org" \]; then\s+signup_status=/);
+  assert.match(script, /"https:\/\/\$public_host\/api\/signup"/);
+  assert.match(script, /else\s+early_access_status=/);
+  assert.match(script, /"https:\/\/\$public_host\/api\/public\/early-access\/requests"/);
+  assert.match(script, /Early-access request smoke failed/);
+});
+
 test("limits runtime mutation and cache cleanup to the SimOne service", () => {
   assert.doesNotMatch(script, /docker compose[^\n]* down/);
   assert.match(script, /compose build paperclip/);

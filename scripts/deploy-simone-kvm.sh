@@ -230,17 +230,32 @@ else
   fi
 fi
 
-signup_status="$(
-  curl -sS -o /tmp/simone-signup-smoke.json -w '%{http_code}' \
-    --resolve "$public_host:443:${remote_host#*@}" \
-    "https://$public_host/api/signup" \
-    -H 'content-type: application/json' \
-    --data '{"email":"bad"}'
-)"
-if [ "$signup_status" != "400" ] || ! rg -q 'Please enter a valid email address' /tmp/simone-signup-smoke.json; then
-  echo "Landing signup smoke failed with status $signup_status" >&2
-  cat /tmp/simone-signup-smoke.json >&2
-  exit 1
+if [ "$public_host" = "sim.sysdom.org" ]; then
+  signup_status="$(
+    curl -sS -o /tmp/simone-signup-smoke.json -w '%{http_code}' \
+      --resolve "$public_host:443:${remote_host#*@}" \
+      "https://$public_host/api/signup" \
+      -H 'content-type: application/json' \
+      --data '{"email":"bad"}'
+  )"
+  if [ "$signup_status" != "400" ] || ! rg -q 'Please enter a valid email address' /tmp/simone-signup-smoke.json; then
+    echo "Landing signup smoke failed with status $signup_status" >&2
+    cat /tmp/simone-signup-smoke.json >&2
+    exit 1
+  fi
+else
+  early_access_status="$(
+    curl -sS -o /tmp/sysdom-early-access-smoke.json -w '%{http_code}' \
+      --resolve "$public_host:443:${remote_host#*@}" \
+      "https://$public_host/api/public/early-access/requests" \
+      -H 'content-type: application/json' \
+      --data '{}'
+  )"
+  if [ "$early_access_status" != "400" ] || ! rg -q 'Validation error' /tmp/sysdom-early-access-smoke.json; then
+    echo "Early-access request smoke failed with status $early_access_status" >&2
+    cat /tmp/sysdom-early-access-smoke.json >&2
+    exit 1
+  fi
 fi
 
 curl -fsSI https://dify.tissuu.ai/apps >/dev/null
