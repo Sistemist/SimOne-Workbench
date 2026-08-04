@@ -73,10 +73,11 @@ describe("ui branding", () => {
     });
     expect(branded).toContain("data:image/svg+xml,");
     expect(branded).toContain('name="paperclip-worktree-name"');
-    expect(branded).not.toContain('href="/favicon.svg?v=20260804"');
+    expect(branded).not.toContain('href="/favicon-32x32.png?v=20260805"');
 
     const defaultHtml = applyUiBranding(TEMPLATE, {});
-    expect(defaultHtml).toContain('href="/favicon.svg?v=20260804"');
+    expect(defaultHtml).toContain('href="/favicon-32x32.png?v=20260805"');
+    expect(defaultHtml).not.toContain('href="/favicon.svg');
     expect(defaultHtml).not.toContain('name="paperclip-worktree-name"');
   });
 });
