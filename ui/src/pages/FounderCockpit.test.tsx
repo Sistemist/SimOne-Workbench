@@ -302,7 +302,7 @@ describe("FounderCockpit", () => {
 
     const text = container.textContent ?? "";
     expect(text).toContain("Founder control surface");
-    expect(text).toContain("Founder practice path");
+    expect(text).toContain("Your operating practice");
     expect(text).toContain("Start the next guided cycle");
     expect(text).toContain("Constitution v2");
     expect(text).toContain("State v3");
@@ -338,9 +338,9 @@ describe("FounderCockpit", () => {
     const { container, root } = renderPage();
     await waitForText(container, "SIM Starter is ready in the Founder Cockpit.");
 
-    expect(container.textContent).toContain("Your seeded first-MAP task is preserved as working context.");
+    expect(container.textContent).toContain("Your first mapping task is ready.");
     const firstMapLink = Array.from(container.querySelectorAll("a")).find((link) =>
-      link.textContent?.includes("Open seeded first-MAP task"),
+      link.textContent?.includes("Open first mapping task"),
     );
     expect(firstMapLink?.getAttribute("href")).toBe("/issues/SYS-1");
 
@@ -424,10 +424,12 @@ describe("FounderCockpit", () => {
     await waitForText(container, "Draft the Constitution");
 
     const text = container.textContent ?? "";
-    expect(text.indexOf("Govern")).toBeLessThan(text.indexOf("Map"));
-    expect(text.indexOf("Map")).toBeLessThan(text.indexOf("Run one cycle"));
-    expect(text.indexOf("Run one cycle")).toBeLessThan(text.indexOf("Reflect"));
-    expect(text).toContain("You trigger every gate.");
+    expect(text.indexOf("Diagnose")).toBeLessThan(text.indexOf("Design"));
+    expect(text.indexOf("Design")).toBeLessThan(text.indexOf("Operate"));
+    expect(text.indexOf("Operate")).toBeLessThan(text.indexOf("Review"));
+    expect(text).toContain("Your operating practice");
+    expect(text).toContain("Draft the Constitution");
+    expect(text).toContain("You start it, pause it, and approve every consequential move.");
     expect(mockFounderCockpitApi.get).toHaveBeenCalledTimes(2);
 
     await act(async () => root.unmount());
@@ -442,7 +444,7 @@ describe("FounderCockpit", () => {
     const { container, root } = renderPage();
     await waitForText(container, "Review in SIM Coach");
 
-    expect(container.textContent).toContain("MAP → DIAGNOSE → LEVERAGE → COMPOUND complete");
+    expect(container.textContent).toContain("Outcome recorded and learning kept");
     expect(container.textContent).toContain("Open SIM Coach");
     expect(container.textContent).toContain("Make repeatable");
     const coachLinks = Array.from(container.querySelectorAll<HTMLAnchorElement>('a[href="/sim-coach"]'));

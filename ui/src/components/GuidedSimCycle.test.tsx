@@ -129,17 +129,16 @@ describe("GuidedSimCycle", () => {
   it("starts only through an explicit founder action and explains every bounded phase", async () => {
     const { container, root } = renderCycle(null);
 
-    expect(container.textContent).toContain("Founder-triggered and resumable");
-    expect(container.textContent).toContain("MAP");
     expect(container.textContent).toContain("DIAGNOSE");
-    expect(container.textContent).toContain("LEVERAGE");
-    expect(container.textContent).toContain("COMPOUND");
-    expect(container.textContent).toContain("One current four-engine venture map");
-    expect(container.textContent).toContain("one promoted learning");
+    expect(container.textContent).toContain("DESIGN");
+    expect(container.textContent).toContain("OPERATE");
+    expect(container.textContent).toContain("REVIEW");
+    expect(container.textContent).toContain("See the whole venture");
+    expect(container.textContent).toContain("one useful learning");
 
-    await clickButton(container, "Start guided cycle");
+    await clickButton(container, "Start this cycle");
     expect(mockFounderCockpitApi.startCycle).toHaveBeenCalledWith("company-1", {
-      startReason: "Run one deliberate founder-triggered SIM Cycle.",
+      startReason: "Review the venture and move the active constraint.",
     });
 
     await act(async () => root.unmount());
@@ -162,7 +161,7 @@ describe("GuidedSimCycle", () => {
       }
     });
     await flushReact();
-    await clickButton(container, "Complete MAP and continue");
+    await clickButton(container, "Save the venture picture and continue");
 
     expect(mockFounderCockpitApi.submitCycleMap).toHaveBeenCalledWith(
       "company-1",
@@ -239,8 +238,8 @@ describe("GuidedSimCycle", () => {
       pausedReason: "Pause for founder evidence.",
       pausedAt: new Date("2026-07-31T21:00:00.000Z"),
     }));
-    expect(paused.container.textContent).toContain("Cycle paused in DIAGNOSE");
-    await clickButton(paused.container, "Resume DIAGNOSE");
+    expect(paused.container.textContent).toContain("Cycle paused in DESIGN");
+    await clickButton(paused.container, "Resume DESIGN");
     expect(mockFounderCockpitApi.resumeCycle).toHaveBeenCalled();
     await act(async () => paused.root.unmount());
   });
@@ -263,10 +262,10 @@ describe("GuidedSimCycle", () => {
         approvedAt: "2026-07-31T20:00:00.000Z",
       },
     }));
-    expect(leverage.container.textContent).toContain("Bounded intervention");
+    expect(leverage.container.textContent).toContain("One next move");
     expect(leverage.container.textContent).toContain("Success signal");
-    expect(leverage.container.textContent).toContain("Founder commitment note");
-    expect(leverage.container.textContent).toContain("Commit intervention and continue");
+    expect(leverage.container.textContent).toContain("What are you committing to?");
+    expect(leverage.container.textContent).toContain("Commit this move and continue");
     await act(async () => leverage.root.unmount());
 
     const compoundCycle = cycle({
@@ -301,9 +300,9 @@ describe("GuidedSimCycle", () => {
       },
     });
     const compound = renderCycle(compoundCycle);
-    expect(compound.container.textContent).toContain("Create bounded task");
-    expect(compound.container.textContent).toContain("does not start an agent or make a model call");
-    await clickButton(compound.container, "Create bounded task");
+    expect(compound.container.textContent).toContain("Create task");
+    expect(compound.container.textContent).toContain("does not start an agent");
+    await clickButton(compound.container, "Create task");
     expect(mockFounderCockpitApi.delegateCycleIntervention).toHaveBeenCalledWith(
       "company-1",
       compoundCycle.id,
@@ -312,9 +311,9 @@ describe("GuidedSimCycle", () => {
     expect(compound.container.querySelector('a[href="/issues/SYS-101"]')).toBeTruthy();
     expect(compound.container.textContent).toContain("Observed outcome");
     expect(compound.container.textContent).toContain("Outcome evidence");
-    expect(compound.container.textContent).toContain("Learning to promote");
-    expect(compound.container.textContent).toContain("Next bounded move after this cycle");
-    expect(compound.container.textContent).toContain("Promote evidence and complete cycle");
+    expect(compound.container.textContent).toContain("Learning to keep");
+    expect(compound.container.textContent).toContain("What should happen next?");
+    expect(compound.container.textContent).toContain("Keep the evidence and complete review");
     await act(async () => compound.root.unmount());
   });
 });

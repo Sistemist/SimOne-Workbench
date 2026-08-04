@@ -28,27 +28,27 @@ import { queryKeys } from "@/lib/queryKeys";
 const PHASES: Array<{ key: Exclude<SimCyclePhase, "complete">; label: string; entry: string; output: string }> = [
   {
     key: "map",
-    label: "MAP",
-    entry: "Founder starts deliberately under an active Constitution.",
-    output: "One current four-engine venture map with source evidence.",
+    label: "DIAGNOSE",
+    entry: "Your Venture Constitution is active.",
+    output: "See the whole venture across Product, Customer, Cash, and Skills.",
   },
   {
     key: "diagnose",
-    label: "DIAGNOSE",
-    entry: "A current venture map exists.",
-    output: "One accepted or rejected constraint hypothesis with evidence.",
+    label: "DESIGN",
+    entry: "The current venture picture is recorded.",
+    output: "Choose which active constraint to design around.",
   },
   {
     key: "leverage",
-    label: "LEVERAGE",
-    entry: "The founder accepts one constraint.",
-    output: "One bounded intervention, success signal, and commitment.",
+    label: "OPERATE",
+    entry: "You have accepted one active constraint.",
+    output: "Commit one next move, its success signal, and its limits.",
   },
   {
     key: "compound",
-    label: "COMPOUND",
-    entry: "The intervention has a founder commitment.",
-    output: "Outcome evidence and one promoted learning.",
+    label: "REVIEW",
+    entry: "You committed the move and have an outcome to review.",
+    output: "Record the outcome and keep one useful learning.",
   },
 ];
 
@@ -157,7 +157,7 @@ function MapPhase({
   const [customer, setCustomer] = useState(currentState?.content.engines.customer.summary ?? "");
   const [cash, setCash] = useState(currentState?.content.engines.cash.summary ?? "");
   const [skills, setSkills] = useState(currentState?.content.engines.skills.summary ?? "");
-  const [sourceLabel, setSourceLabel] = useState("Founder MAP review");
+  const [sourceLabel, setSourceLabel] = useState("Founder venture review");
   const ready = [ventureSummary, product, customer, cash, skills, sourceLabel].every((value) => value.trim());
 
   async function submit() {
@@ -190,7 +190,7 @@ function MapPhase({
   return (
     <div className="space-y-5">
       <div className="border-l-2 border-primary pl-4">
-        <p className="text-sm font-medium">Entry condition</p>
+        <p className="text-sm font-medium">Before you begin</p>
         <p className="text-sm text-muted-foreground">{PHASES[0].entry}</p>
       </div>
       <div className="space-y-2">
@@ -216,13 +216,13 @@ function MapPhase({
       </div>
       <SourceRefInput
         id="cycle-map-source"
-        label="Reviewed map source"
+        label="What did you review?"
         value={sourceLabel}
         onChange={setSourceLabel}
         required
       />
       <Button disabled={!ready || busy} onClick={submit}>
-        Complete MAP and continue
+        Save the venture picture and continue
       </Button>
     </div>
   );
@@ -263,17 +263,17 @@ function DiagnosePhase({
   return (
     <div className="space-y-5">
       <div className="border-l-2 border-primary pl-4">
-        <p className="text-sm font-medium">Entry condition</p>
+        <p className="text-sm font-medium">Before you begin</p>
         <p className="text-sm text-muted-foreground">{PHASES[1].entry}</p>
       </div>
       {previous?.decision === "rejected" ? (
         <div className="border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm">
-          The previous hypothesis was rejected. Revise it or choose another engine; the cycle remains in DIAGNOSE.
+          You rejected the previous hypothesis. Revise it or choose another engine before continuing.
         </div>
       ) : null}
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="cycle-diagnose-engine">Constraint engine</Label>
+          <Label htmlFor="cycle-diagnose-engine">Engine most affected</Label>
           <EngineSelect id="cycle-diagnose-engine" value={engine} onChange={setEngine} />
         </div>
         <div className="space-y-2">
@@ -291,7 +291,7 @@ function DiagnosePhase({
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="cycle-diagnose-hypothesis">Constraint hypothesis</Label>
+        <Label htmlFor="cycle-diagnose-hypothesis">Active constraint hypothesis</Label>
         <Textarea id="cycle-diagnose-hypothesis" value={hypothesis} onChange={(event) => setHypothesis(event.target.value)} />
       </div>
       <SourceRefInput
@@ -302,7 +302,7 @@ function DiagnosePhase({
         required
       />
       <div className="space-y-2">
-        <Label htmlFor="cycle-diagnose-note">Founder decision note</Label>
+        <Label htmlFor="cycle-diagnose-note">Why do you accept or reject it?</Label>
         <Textarea id="cycle-diagnose-note" value={decisionNote} onChange={(event) => setDecisionNote(event.target.value)} />
       </div>
       <div className="flex flex-wrap gap-2">
@@ -356,21 +356,21 @@ function LeveragePhase({
   return (
     <div className="space-y-5">
       <div className="border-l-2 border-primary pl-4">
-        <p className="text-sm font-medium">Entry condition</p>
+        <p className="text-sm font-medium">Before you begin</p>
         <p className="text-sm text-muted-foreground">{PHASES[2].entry}</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="cycle-leverage-title">Bounded intervention</Label>
+          <Label htmlFor="cycle-leverage-title">One next move</Label>
           <Input id="cycle-leverage-title" value={title} onChange={(event) => setTitle(event.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="cycle-leverage-engine">Intervention engine</Label>
+          <Label htmlFor="cycle-leverage-engine">Engine to change</Label>
           <EngineSelect id="cycle-leverage-engine" value={engine} onChange={setEngine} />
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="cycle-leverage-rationale">Why this lever</Label>
+        <Label htmlFor="cycle-leverage-rationale">Why this move?</Label>
         <Textarea id="cycle-leverage-rationale" value={rationale} onChange={(event) => setRationale(event.target.value)} />
       </div>
       <div className="space-y-2">
@@ -379,7 +379,7 @@ function LeveragePhase({
       </div>
       <SourceRefInput
         id="cycle-leverage-source"
-        label="Intervention source (optional)"
+        label="Evidence behind this move (optional)"
         value={sourceLabel}
         onChange={setSourceLabel}
       />
@@ -391,16 +391,16 @@ function LeveragePhase({
           className="mt-1"
         />
         <span>
-          <span className="font-medium">Consequential approval gate</span>
-          <span className="block text-muted-foreground">Keep the next move visibly founder-approved.</span>
+          <span className="font-medium">Keep this move founder-approved</span>
+          <span className="block text-muted-foreground">Agents cannot act on it until you approve it.</span>
         </span>
       </label>
       <div className="space-y-2">
-        <Label htmlFor="cycle-leverage-note">Founder commitment note</Label>
+        <Label htmlFor="cycle-leverage-note">What are you committing to?</Label>
         <Textarea id="cycle-leverage-note" value={commitmentNote} onChange={(event) => setCommitmentNote(event.target.value)} />
       </div>
       <Button disabled={!ready || busy} onClick={submit}>
-        Commit intervention and continue
+        Commit this move and continue
       </Button>
     </div>
   );
@@ -460,15 +460,15 @@ function CompoundPhase({
   return (
     <div className="space-y-5">
       <div className="border-l-2 border-primary pl-4">
-        <p className="text-sm font-medium">Entry condition</p>
+        <p className="text-sm font-medium">Before you begin</p>
         <p className="text-sm text-muted-foreground">{PHASES[3].entry}</p>
       </div>
       {cycle.leverageOutput ? (
         <section aria-label="Delegate committed intervention" className="border border-border bg-muted/20 p-4">
-          <p className="font-medium">Promote the committed intervention into bounded work</p>
+          <p className="font-medium">Turn the committed move into a task</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            This creates one unassigned backlog task pinned to the cycle&apos;s exact Context Projection.
-            It does not start an agent or make a model call.
+            This creates one unassigned task with the reason and evidence attached.
+            It does not start an agent.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <Button
@@ -477,7 +477,7 @@ function CompoundPhase({
               disabled={busy || delegating}
               onClick={delegateIntervention}
             >
-              {delegating ? "Creating bounded task…" : delegated ? "Refresh task link" : "Create bounded task"}
+              {delegating ? "Creating task…" : delegated ? "Refresh task link" : "Create task"}
             </Button>
             {delegated ? (
               <Link
@@ -507,11 +507,11 @@ function CompoundPhase({
         required
       />
       <div className="space-y-2">
-        <Label htmlFor="cycle-compound-learning">Learning to promote</Label>
+        <Label htmlFor="cycle-compound-learning">Learning to keep</Label>
         <Textarea id="cycle-compound-learning" value={learning} onChange={(event) => setLearning(event.target.value)} />
       </div>
       <div className="border-t border-border pt-5">
-        <p className="mb-4 text-sm font-medium">Next bounded move after this cycle</p>
+        <p className="mb-4 text-sm font-medium">What should happen next?</p>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="cycle-compound-next-title">Next move</Label>
@@ -540,7 +540,7 @@ function CompoundPhase({
         </label>
       </div>
       <Button disabled={!ready || busy} onClick={submit}>
-        Promote evidence and complete cycle
+        Keep the evidence and complete review
       </Button>
     </div>
   );
@@ -558,8 +558,8 @@ export function GuidedSimCycle({
   constitutionActive: boolean;
 }) {
   const queryClient = useQueryClient();
-  const [startReason, setStartReason] = useState("Run one deliberate founder-triggered SIM Cycle.");
-  const [pauseReason, setPauseReason] = useState("Pause and preserve the current phase for later.");
+  const [startReason, setStartReason] = useState("Review the venture and move the active constraint.");
+  const [pauseReason, setPauseReason] = useState("Pause here and continue later.");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const eventsQuery = useQuery({
@@ -603,13 +603,13 @@ export function GuidedSimCycle({
           <div>
             <CardTitle>Guided SIM Cycle</CardTitle>
             <p className="mt-2 text-sm text-muted-foreground">
-              Founder-triggered and resumable. No autonomous schedule and no model call.
+              Diagnose → design → operate → review. You start it, pause it, and approve every consequential move.
             </p>
           </div>
           {cycle ? (
             <div className="flex items-center gap-2">
               <Badge variant={cycle.status === "paused" ? "outline" : "default"}>{cycle.status}</Badge>
-              <Badge variant="secondary">{cycle.phase.toUpperCase()}</Badge>
+              <Badge variant="secondary">{PHASES[phaseIndex(cycle.phase)]?.label ?? "REVIEW"}</Badge>
             </div>
           ) : null}
         </div>
@@ -631,7 +631,7 @@ export function GuidedSimCycle({
               onClick={() => run(() => founderCockpitApi.startCycle(companyId, { startReason: startReason.trim() }))}
             >
               <Play className="h-4 w-4" />
-              Start guided cycle
+              Start this cycle
             </Button>
             {!constitutionActive ? (
               <p className="text-sm text-amber-700">Activate a Venture Constitution first.</p>
@@ -646,7 +646,7 @@ export function GuidedSimCycle({
                   onClick={() => run(() => founderCockpitApi.resumeCycle(companyId, cycle.id))}
                 >
                   <RotateCcw className="h-4 w-4" />
-                  Resume {cycle.phase.toUpperCase()}
+                  Resume {PHASES[phaseIndex(cycle.phase)]?.label ?? "REVIEW"}
                 </Button>
               ) : (
                 <>
@@ -676,7 +676,7 @@ export function GuidedSimCycle({
 
             {cycle.status === "paused" ? (
               <div className="border border-amber-500/30 bg-amber-500/5 px-4 py-3">
-                <p className="font-medium">Cycle paused in {cycle.phase.toUpperCase()}</p>
+                <p className="font-medium">Cycle paused in {PHASES[phaseIndex(cycle.phase)]?.label ?? "REVIEW"}</p>
                 <p className="mt-1 text-sm text-muted-foreground">{cycle.pausedReason}</p>
               </div>
             ) : cycle.phase === "map" ? (
@@ -696,7 +696,7 @@ export function GuidedSimCycle({
         {cycle && (eventsQuery.data?.length ?? 0) > 0 ? (
           <details>
             <summary className="cursor-pointer text-sm font-medium">
-              Cycle evidence trail ({eventsQuery.data?.length})
+              What changed in this cycle ({eventsQuery.data?.length})
             </summary>
             <div className="mt-3 space-y-2 border-l border-border pl-4">
               {eventsQuery.data?.map((event) => (

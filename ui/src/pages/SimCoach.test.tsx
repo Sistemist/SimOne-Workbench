@@ -135,9 +135,9 @@ describe("SimCoach", () => {
     const root = renderSimCoach(container);
 
     const text = container.textContent ?? "";
-    expect(text).toContain("Shape Smoke Sysdom before assigning agents.");
-    expect(text).toContain("Enable SIM Wiki");
-    expect(text).toContain("When enabled, the maintainer compiles durable memory");
+    expect(text).toContain("See the whole venture before you delegate work.");
+    expect(text).toContain("Enable venture record");
+    expect(text).toContain("Important decisions and evidence stay attached");
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
     expect(
@@ -171,10 +171,10 @@ describe("SimCoach", () => {
     const root = renderSimCoach(container);
     await flushReact();
 
-    expect(container.textContent).toContain("Canonical venture memory could not load.");
-    expect(container.textContent).toContain("Current canonical memory is temporarily unavailable.");
-    expect(container.textContent).not.toContain("Canonical venture memory is not ready yet.");
-    expect(container.textContent).not.toContain("No current canonical memory.");
+    expect(container.textContent).toContain("The current venture picture could not load.");
+    expect(container.textContent).toContain("The current venture record is temporarily unavailable.");
+    expect(container.textContent).not.toContain("Your venture picture is not ready yet.");
+    expect(container.textContent).not.toContain("Nothing has been saved to the venture record yet.");
 
     const retry = Array.from(container.querySelectorAll("button")).find(
       (button) => button.textContent?.includes("Retry"),
@@ -185,8 +185,8 @@ describe("SimCoach", () => {
     });
     await flushReact();
 
-    expect(container.textContent).toContain("Canonical venture memory is not ready yet.");
-    expect(container.textContent).toContain("No current canonical memory.");
+    expect(container.textContent).toContain("Your venture picture is not ready yet.");
+    expect(container.textContent).toContain("Nothing has been saved to the venture record yet.");
     expect(mockFounderCockpitApi.getCoach).toHaveBeenCalledTimes(2);
 
     await act(async () => root.unmount());
@@ -312,17 +312,17 @@ describe("SimCoach", () => {
     await flushReact();
 
     const text = container.textContent ?? "";
-    expect(text).toContain("Canonical coaching brief");
+    expect(text).toContain("Current venture brief");
     expect(text).toContain("Founder activation is the current constraint.");
-    expect(text).toContain("One bounded next action");
+    expect(text).toContain("One next move");
     expect(text).toContain("Run one founder onboarding session");
     expect(text).toContain("Founder approval required");
-    expect(text).toContain("Latest promoted learning");
-    expect(text).toContain("Grounded in 2 canonical sources");
-    expect(text).toContain("Temporal venture memory");
-    expect(text).toContain("Venture state v2");
-    expect(text).toContain("Context projection v2");
-    expect(text).toContain("Venture state v1 · Superseded");
+    expect(text).toContain("Latest useful learning");
+    expect(text).toContain("Based on 2 reviewed sources");
+    expect(text).toContain("Venture record");
+    expect(text).toContain("Venture map v2");
+    expect(text).toContain("Source view v2");
+    expect(text).toContain("Venture map v1 · Earlier");
     expect(text).not.toMatch(/choose a provider|paste an api key|adapter setup/i);
     expect(mockFounderCockpitApi.getCoach).toHaveBeenCalledWith("company-1");
     expect(
@@ -330,7 +330,7 @@ describe("SimCoach", () => {
         (link) => link.getAttribute("href") === "/cockpit" && link.textContent?.includes("Open Founder Cockpit"),
       ),
     ).toBe(true);
-    expect(text).toContain("Promote a Coach insight");
+    expect(text).toContain("Keep a Coach insight");
     expect(text).toContain("This does not start an agent or make a model call.");
 
     const insight = container.querySelector<HTMLTextAreaElement>("#canonical-coach-insight");
@@ -348,7 +348,7 @@ describe("SimCoach", () => {
       insight.dispatchEvent(new Event("input", { bubbles: true }));
     });
     const promoteButton = Array.from(container.querySelectorAll<HTMLButtonElement>("button")).find(
-      (button) => button.textContent?.includes("Promote to venture memory"),
+      (button) => button.textContent?.includes("Save to venture record"),
     );
     expect(promoteButton).toBeTruthy();
     await act(async () => {
@@ -367,12 +367,12 @@ describe("SimCoach", () => {
     expect(mockFounderCockpitApi.getCoach.mock.calls.length).toBeGreaterThan(1);
     expect(mockPluginsApi.bridgePerformAction).not.toHaveBeenCalled();
     expect(container.textContent).toContain(
-      "Promoted as venture state v3 and Context Projection v3.",
+      "Saved as venture map v3 and source view v3.",
     );
     expect(container.textContent).toContain(promotedInsight);
-    expect(container.textContent).toContain("Venture state v3");
-    expect(container.textContent).toContain("Context projection v3");
-    expect(container.textContent).toContain("Venture state v2 · Superseded");
+    expect(container.textContent).toContain("Venture map v3");
+    expect(container.textContent).toContain("Source view v3");
+    expect(container.textContent).toContain("Venture map v2 · Earlier");
 
     flushSync(() => {
       root.unmount();
@@ -385,14 +385,13 @@ describe("SimCoach", () => {
     const root = renderSimCoach(container);
 
     const text = container.textContent ?? "";
-    expect(text).toContain("SIM Wiki Seed Map");
-    expect(text).toContain("Method pages");
-    expect(text).toContain("Engines, drivers, system laws, archetypes, and coaching guidance.");
-    expect(text).toContain("Venture memory");
-    expect(text).toContain("Founder notes, first maps, decisions, proof points, and Sprint Zero context.");
-    expect(text).toContain("Promotion rule");
-    expect(text).toContain("Live bridge counts stay live. Only useful decisions and proof become durable wiki pages.");
-    expect(text).toContain("This keeps SIM understandable without hiding where the knowledge came from.");
+    expect(text).toContain("What the venture record keeps");
+    expect(text).toContain("How Sysdom works");
+    expect(text).toContain("The four engines, the forces that shape them, and practical coaching guidance.");
+    expect(text).toContain("Your venture record");
+    expect(text).toContain("Founder notes, venture maps, decisions, proof points, and the reason behind the work.");
+    expect(text).toContain("What becomes permanent");
+    expect(text).toContain("Live counts stay live. Only useful decisions, evidence, and learning enter the lasting record.");
 
     flushSync(() => {
       root.unmount();
@@ -419,7 +418,7 @@ describe("SimCoach", () => {
     await flushReact();
 
     const askLink = Array.from(container.querySelectorAll<HTMLAnchorElement>("a")).find(
-      (link) => link.textContent?.includes("Ask SIM Wiki")
+      (link) => link.textContent?.includes("Ask the venture record")
     );
     expect(askLink?.getAttribute("href")).toBe("/wiki/query");
 
@@ -435,10 +434,9 @@ describe("SimCoach", () => {
 
     const text = container.textContent ?? "";
     expect(text).toContain("Who does what");
-    expect(text).toContain("SIM Coach explains the moment and protects judgment.");
-    expect(text).toContain("SIM Wiki preserves durable memory with provenance.");
-    expect(text).toContain("The control plane tracks work, agents, runs, costs, and recovery.");
-    expect(text).toContain("Use this page when you need to understand before delegating.");
+    expect(text).toContain("Coach explains the moment");
+    expect(text).toContain("the venture record remembers why");
+    expect(text).toContain("work tracking keeps every delegated move visible");
     expect(text).not.toContain("root execution engine");
 
     flushSync(() => {
@@ -452,12 +450,12 @@ describe("SimCoach", () => {
     const root = renderSimCoach(container);
 
     const text = container.textContent ?? "";
-    expect(text).toContain("Operating role stack");
-    expect(text).toContain("Human owner keeps final judgment.");
-    expect(text).toContain("Boardroom brain advises; it does not own the company.");
-    expect(text).toContain("Engine stewards turn Product, Customer, Cash, and Skills signals into bounded work.");
-    expect(text).toContain("Specialist adapters return candidate output for review.");
-    expect(text).toContain("Task agents leave task, run, cost, and approval receipts.");
+    expect(text).toContain("Who does what");
+    expect(text).toContain("Keeps final judgment and approval.");
+    expect(text).toContain("Advises and explains; it does not own the venture.");
+    expect(text).toContain("Turn Product, Customer, Cash, and Skills signals into clear work.");
+    expect(text).toContain("Research or draft an answer for review.");
+    expect(text).toContain("Complete assigned work while leaving the result, cost, and approvals visible.");
     expect(text).not.toMatch(/choose a provider|paste an api key|adapter setup/i);
 
     flushSync(() => {
@@ -471,8 +469,8 @@ describe("SimCoach", () => {
     const root = renderSimCoach(container);
 
     const text = container.textContent ?? "";
-    expect(text).toContain("Workbench terms");
-    expect(text).toContain("When inherited Paperclip words appear, read them this way.");
+    expect(text).toContain("Words you will see");
+    expect(text).toContain("A plain-language guide to common work terms.");
     expect(text).toContain("Company");
     expect(text).toContain("The protected venture workspace.");
     expect(text).toContain("Project");
@@ -512,8 +510,8 @@ describe("SimCoach", () => {
     await flushReact();
 
     const text = container.textContent ?? "";
-    expect(text).toContain("SIM Wiki ready");
-    expect(text).toContain("Open SIM Wiki");
+    expect(text).toContain("Venture record ready");
+    expect(text).toContain("Open venture record");
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
     expect(links.some((link) => link.getAttribute("href") === "/wiki")).toBe(true);
@@ -605,8 +603,8 @@ describe("SimCoach", () => {
     await flushReact();
 
     const text = container.textContent ?? "";
-    expect(text).toContain("Retrieve from SIM Wiki");
-    expect(text).toContain("Before stronger advice, ask the wiki to check saved method pages, venture memory, and prior promoted syntheses.");
+    expect(text).toContain("Check the venture record");
+    expect(text).toContain("Before stronger advice, check the saved methods, venture decisions, and earlier learning.");
     expect(text).toContain("Ask: What should SIM Coach check before assigning work on Customer loop is leaking?");
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
@@ -651,7 +649,7 @@ describe("SimCoach", () => {
     await flushReact();
 
     const askButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("Ask SIM Wiki now")
+      button.textContent?.includes("Check venture record")
     ) as HTMLButtonElement;
     expect(askButton).toBeTruthy();
     mockPluginsApi.bridgePerformAction.mockResolvedValueOnce({
@@ -687,7 +685,7 @@ describe("SimCoach", () => {
       }),
       "company-1"
     );
-    expect(container.textContent).toContain("SIM Wiki check queued");
+    expect(container.textContent).toContain("Venture record check queued");
     expect(container.textContent).toContain("Maintainer task: SYS-777");
 
     const issueLink = Array.from(container.querySelectorAll<HTMLAnchorElement>("a")).find((link) =>
@@ -747,7 +745,7 @@ describe("SimCoach", () => {
     await flushReact();
 
     const askButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("Ask SIM Wiki now")
+      button.textContent?.includes("Check venture record")
     ) as HTMLButtonElement;
     expect(askButton).toBeTruthy();
 
@@ -778,7 +776,7 @@ describe("SimCoach", () => {
     });
 
     const text = container.textContent ?? "";
-    expect(text).toContain("SIM Wiki answer");
+    expect(text).toContain("Venture record answer");
     expect(text).toContain("Check saved method pages. Customer review loop is the durable method here.");
     expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
 
@@ -841,7 +839,7 @@ describe("SimCoach", () => {
     await flushReact();
 
     const askButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("Ask SIM Wiki now")
+      button.textContent?.includes("Check venture record")
     ) as HTMLButtonElement;
     expect(askButton).toBeTruthy();
 
@@ -873,7 +871,7 @@ describe("SimCoach", () => {
     vi.setSystemTime(new Date("2026-07-08T12:34:56.000Z"));
 
     const saveAnswerButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("Save answer to SIM Wiki")
+      button.textContent?.includes("Save answer to venture record")
     ) as HTMLButtonElement;
     expect(saveAnswerButton).toBeTruthy();
 
@@ -927,7 +925,7 @@ describe("SimCoach", () => {
       },
       { kind: "simone-bottleneck-scan", artifact: "Venture Architecture Map" },
     ]);
-    expect(container.textContent).toContain("Saved answer to SIM Wiki");
+    expect(container.textContent).toContain("Saved answer to venture record");
     const savedAnswerLink = Array.from(container.querySelectorAll<HTMLAnchorElement>("a")).find((link) =>
       link.textContent?.includes("Open saved answer")
     );
@@ -980,7 +978,7 @@ describe("SimCoach", () => {
     vi.setSystemTime(new Date("2026-07-08T12:34:56.000Z"));
 
     const saveButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("Save to SIM Wiki")
+      button.textContent?.includes("Save to venture record")
     ) as HTMLButtonElement;
     expect(saveButton).toBeTruthy();
 
@@ -1008,7 +1006,7 @@ describe("SimCoach", () => {
     expect(params.contents).toContain("engine: Customer Engine");
     expect(params.contents).toContain("SIM idea: signal becomes useful only when it moves through judgment and into memory.");
     expect(params.contents).toContain("Live bridge counts stay live. Only useful decisions and proof become durable SIM Wiki pages.");
-    expect(container.textContent).toContain("Saved to SIM Wiki");
+    expect(container.textContent).toContain("Saved to venture record");
     const savedPageLink = Array.from(container.querySelectorAll<HTMLAnchorElement>("a")).find((link) =>
       link.textContent?.includes("Open saved page")
     );

@@ -164,31 +164,43 @@ function FounderPracticePath({
   latestCycle: SimCycle | null;
 }) {
   const completedCycle = latestCycle?.status === "completed";
-  const currentStep = !activeRevision ? 0 : !state ? 1 : !completedCycle ? 2 : 3;
+  const phaseStep = activeCycle
+    ? activeCycle.phase === "map"
+      ? 0
+      : activeCycle.phase === "diagnose"
+        ? 1
+        : activeCycle.phase === "leverage"
+          ? 2
+          : 3
+    : state
+      ? 1
+      : 0;
+  const currentStep = completedCycle ? 4 : phaseStep;
+  const activePhaseLabel = activeCycle
+    ? activeCycle.phase === "map"
+      ? "DIAGNOSE"
+      : activeCycle.phase === "diagnose"
+        ? "DESIGN"
+        : activeCycle.phase === "leverage"
+          ? "OPERATE"
+          : "REVIEW"
+    : null;
   const steps = [
     {
-      label: "Govern",
-      detail: activeRevision
-        ? `Constitution v${activeRevision.version} active`
-        : currentDraft
-          ? `Draft v${currentDraft.version} needs approval`
-          : "Draft and activate the Constitution",
+      label: "Diagnose",
+      detail: state ? `Venture picture v${state.version}` : "See the whole and find the active constraint",
     },
     {
-      label: "Map",
-      detail: state ? `Canonical State v${state.version}` : "Record the current venture truth",
+      label: "Design",
+      detail: "Choose one intervention and its success signal",
     },
     {
-      label: "Run one cycle",
-      detail: completedCycle
-        ? "MAP → DIAGNOSE → LEVERAGE → COMPOUND complete"
-        : activeCycle
-          ? `${activeCycle.status === "paused" ? "Paused" : "Active"} in ${activeCycle.phase.toUpperCase()}`
-          : "Founder-triggered, never scheduled",
+      label: "Operate",
+      detail: activeCycle?.status === "paused" ? "Paused until you resume" : "Commit one bounded next move",
     },
     {
-      label: "Reflect",
-      detail: completedCycle ? "SIM Coach is ready" : "Promote one useful learning",
+      label: "Review",
+      detail: completedCycle ? "Outcome recorded and learning kept" : "Turn the outcome into evidence",
     },
   ];
   const action = !activeRevision
@@ -199,7 +211,7 @@ function FounderPracticePath({
       }
     : activeCycle
       ? {
-          label: `${activeCycle.status === "paused" ? "Resume" : "Continue"} ${activeCycle.phase.toUpperCase()}`,
+          label: `${activeCycle.status === "paused" ? "Resume" : "Continue"} ${activePhaseLabel}`,
           href: "#guided-sim-cycle",
           route: false,
         }
@@ -216,9 +228,9 @@ function FounderPracticePath({
       <CardHeader className="gap-3">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <CardTitle className="text-base">Founder practice path</CardTitle>
+            <CardTitle className="text-base">Your operating practice</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Govern → map → run one deliberate SIM Cycle → reflect. You trigger every gate.
+              Diagnose → design → operate → review. You decide when each step moves.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -503,7 +515,7 @@ function VentureStateHistory({
             <p className="mt-1 text-sm text-muted-foreground">
               {previous
                 ? `Compared with State v${previous.version}.`
-                : "This is the first canonical venture-state baseline."}
+                : "This is the first saved venture picture."}
             </p>
           </div>
           <Badge variant="secondary">{currentState.status}</Badge>
@@ -809,15 +821,15 @@ export function FounderCockpit() {
             </div>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight">{snapshot.company.name}</h1>
             <p className="mt-2 max-w-3xl text-muted-foreground">
-              Current venture truth, the active constraint, consequential gates, and the next bounded move.
+              See the whole venture, find the active constraint, and decide the next move.
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant={activeRevision ? "default" : "outline"}>
-              {activeRevision ? `Constitution v${activeRevision.version}` : "Constitution required"}
+              {activeRevision ? `Direction v${activeRevision.version}` : "Direction not set"}
             </Badge>
             <Badge variant={state ? "secondary" : "outline"}>
-              {state ? `State v${state.version}` : "State not mapped"}
+              {state ? `Venture map v${state.version}` : "Venture not mapped"}
             </Badge>
           </div>
         </div>
@@ -830,14 +842,14 @@ export function FounderCockpit() {
               <p className="font-medium">SIM Starter is ready in the Founder Cockpit.</p>
               <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
                 {starterIssueRef
-                  ? "Your seeded first-MAP task is preserved as working context. Use it while you activate the Venture Constitution and record canonical venture state."
-                  : "The starter was installed, but its first-MAP task could not be resolved. Continue here, then inspect Sprint Zero before recording canonical venture state."}
+                  ? "Your first mapping task is ready. Use it while you set the venture’s direction, limits, and current four-engine picture."
+                  : "The starter is installed, but its first mapping task could not be found. Continue here, then review the starter tasks before mapping the venture."}
               </p>
             </div>
             {starterIssueRef ? (
               <Button asChild size="sm" variant="outline">
                 <Link to={`/issues/${encodeURIComponent(starterIssueRef)}`}>
-                  Open seeded first-MAP task
+                  Open first mapping task
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
@@ -864,9 +876,9 @@ export function FounderCockpit() {
         <div className="flex items-start gap-3 border border-amber-500/40 bg-amber-500/5 px-4 py-3 text-sm">
           <ShieldCheck className="mt-0.5 h-5 w-5 text-amber-600" />
           <div>
-            <p className="font-medium">Activate a Venture Constitution before starting the operating loop.</p>
+            <p className="font-medium">Set and approve your Venture Constitution before starting.</p>
             <p className="mt-1 text-muted-foreground">
-              Drafting does not activate it. The founder approves the effective version separately.
+              This is the venture’s standing direction, limits, and approval rules. Saving a draft does not make it active.
             </p>
           </div>
         </div>
@@ -905,14 +917,14 @@ export function FounderCockpit() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Fingerprint className="h-4 w-4" />
-              Context provenance
+              Why this view can be trusted
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {projection ? (
               <>
                 <div className="flex items-center justify-between gap-3">
-                  <Badge variant="outline">Projection v{projection.version}</Badge>
+                  <Badge variant="outline">Source view v{projection.version}</Badge>
                   <span className="text-xs text-muted-foreground">{formatTimestamp(projection.createdAt)}</span>
                 </div>
                 <p className="text-sm text-muted-foreground">{projection.creationReason}</p>
@@ -920,7 +932,7 @@ export function FounderCockpit() {
                   {projection.sourceRefs.slice(0, 6).map((source, index) => (
                     <div className="border-l border-border pl-3 text-sm" key={`${source.kind}-${source.id ?? index}`}>
                       <p className="font-medium">{source.label}</p>
-                      <p className="text-xs text-muted-foreground">{source.kind}</p>
+                      <p className="text-xs text-muted-foreground">Reviewed source</p>
                     </div>
                   ))}
                 </div>
@@ -929,7 +941,8 @@ export function FounderCockpit() {
               <div className="flex items-start gap-3 text-sm text-muted-foreground">
                 <PauseCircle className="mt-0.5 h-5 w-5" />
                 <p>
-                  A bounded context projection will appear after the venture map is recorded. No RAG or model call is required.
+                  After you map the venture, Sysdom will show which notes and decisions support this view.
+                  This first version works without an AI call.
                 </p>
               </div>
             )}
@@ -941,14 +954,14 @@ export function FounderCockpit() {
                 onClick={() => projectionMutation.mutate()}
               >
                 <RefreshCw className="h-4 w-4" />
-                Refresh projection
+                Refresh sources
               </Button>
             ) : null}
             {projectionMutation.error ? (
               <p className="text-sm text-destructive">
                 {projectionMutation.error instanceof Error
                   ? projectionMutation.error.message
-                  : "Could not refresh the context projection."}
+                  : "Could not refresh the supporting sources."}
               </p>
             ) : null}
           </CardContent>
@@ -1001,11 +1014,11 @@ export function FounderCockpit() {
             <div>
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Promoted learning</p>
               <p className="mt-2 text-sm leading-relaxed">
-                {snapshot.latestCycle.compoundOutput?.learning ?? "Learning retained in canonical venture state."}
+                {snapshot.latestCycle.compoundOutput?.learning ?? "Learning kept in the venture record."}
               </p>
             </div>
             <p className="text-xs text-muted-foreground md:col-span-2">
-              Completed {formatTimestamp(snapshot.latestCycle.completedAt)} · consumed projection{" "}
+              Completed {formatTimestamp(snapshot.latestCycle.completedAt)} · source view{" "}
               {snapshot.latestCycle.contextProjectionId?.slice(0, 8) ?? "not recorded"} · promoted state{" "}
               {snapshot.latestCycle.compoundOutput?.promotedStateRevisionId.slice(0, 8) ?? "not recorded"}
             </p>

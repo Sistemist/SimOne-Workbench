@@ -687,17 +687,17 @@ export function SystemsBottleneckScanner() {
               <span>Sysdom AI</span>
             </a>
             <h1 className="mt-3 text-2xl font-semibold tracking-normal sm:text-3xl">
-              Systems Bottleneck Scanner
+              Find your bottleneck
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Paste a startup URL, a messy founder note, or both. Sysdom AI will return one likely bottleneck
-              hypothesis and one next move for your review.
+              Share a startup URL, a messy founder note, or both. Sysdom AI will return one likely
+              constraint and one next move for you to review.
             </p>
             <p className="mt-2 max-w-2xl text-sm font-medium text-foreground">
-              Free first readout, protected full map after sign-in.
+              Free first readout. No sign-in.
             </p>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Use it when you can describe what feels stuck, but you are not ready to set up the whole company yet.
+              Request early access only if you want to save the result and continue into the full venture map.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -767,8 +767,8 @@ export function SystemsBottleneckScanner() {
               </Button>
               <span className="text-xs text-muted-foreground">
                 {modelAnalysisAvailable
-                  ? "Model-assisted read is on. Your note—not the URL—is sent to the governed provider for this analysis and is not retained unless you request access."
-                  : "Bounded first pass. No crawl, posting, or account setup."}
+                  ? "AI-assisted read is on. Only your note—not the URL—is sent for this read, and it is not saved unless you request access."
+                  : "First pass only. We use what you enter; nothing is posted and no account is created."}
               </span>
             </div>
           </form>
@@ -905,7 +905,7 @@ export function SystemsBottleneckScanner() {
                     ))}
                   </ul>
                   <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                    This is a bounded first read, not a private-data audit.
+                    This is a first readout based only on what you entered, not a full venture audit.
                   </p>
                 </div>
                 <div className="rounded-md border border-border bg-background/60 p-3">
@@ -1093,8 +1093,8 @@ export function SystemsBottleneckScanner() {
                     </div>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
                       {scanStorageStatus === "blocked"
-                        ? "Request access to keep this readout with your full Sysdom AI map."
-                        : "Request access to keep this readout with your full Sysdom AI map."}
+                        ? "Request early access to save this readout and continue into your venture map."
+                        : "Request early access to save this readout and continue into your venture map."}
                     </p>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -1107,7 +1107,7 @@ export function SystemsBottleneckScanner() {
                     Ask SIM Coach why
                   </a>
                   <p className="text-xs text-muted-foreground">
-                    If invited, your retained scan will carry into SIM Starter after activation.
+                    If invited, this readout will be waiting when you enter Sysdom.
                   </p>
                   <a
                     href={currentScanId
@@ -1118,7 +1118,7 @@ export function SystemsBottleneckScanner() {
                     })}
                     className="inline-flex h-9 w-fit items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                   >
-                    Request access to save this map
+                    Request access to save and continue
                     <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                   </a>
                   <Button type="button" variant="outline" size="sm" onClick={handleRunAnotherScan}>
@@ -1135,8 +1135,8 @@ export function SystemsBottleneckScanner() {
                   </div>
                   <h2 className="mt-3 text-xl font-semibold">One bottleneck, one next move.</h2>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    The full Sysdom AI map comes after sign-in, when the work can be protected and turned into a
-                    starter operating system.
+                    The free readout stands on its own. If you are invited in, Sysdom can save it,
+                    map the whole venture, and keep the next move attached to the reason behind it.
                   </p>
                 </div>
                 <div className="grid gap-3 text-sm text-muted-foreground">
@@ -1147,9 +1147,10 @@ export function SystemsBottleneckScanner() {
                     </p>
                   </div>
                   <div className="rounded-md border border-border bg-background/60 p-3">
-                    <h3 className="font-medium text-foreground">Protected full map</h3>
+                    <h3 className="font-medium text-foreground">Save it and continue</h3>
                     <p className="mt-1">
-                      Request invite-only access when you want Sysdom AI to save the scan, draft the starter map, and carry its review boundaries forward.
+                      Request invite-only access when you want Sysdom AI to save the readout,
+                      draft the full venture map, and keep your approval rules attached.
                     </p>
                   </div>
                 </div>
@@ -1169,7 +1170,7 @@ export function SystemsBottleneckScanner() {
         </section>
 
         <footer className="text-xs text-muted-foreground">
-          Built with Sysdom AI. The scanner gives an early pattern match, not a diagnosis of your whole company.
+          Built with Sysdom AI. The scanner gives a first hypothesis, not a verdict about your whole venture.
         </footer>
       </div>
     </main>
