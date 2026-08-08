@@ -49,8 +49,7 @@ node packages/sysdom-canon-mcp/dist/stdio.js
 ```
 
 The current entry point uses stdio for local verification. A remote deployment
-uses the same server factory with the MCP SDK's stateless Streamable HTTP
-transport:
+uses the same server factory with stateless Streamable HTTP:
 
 ```sh
 pnpm --filter @sysdomai/canon-mcp build
@@ -62,6 +61,17 @@ The HTTP service exposes:
 
 - `GET /healthz` — public, minimal retrieval-only health state.
 - `/mcp` — bearer-authenticated Streamable HTTP MCP endpoint.
+
+The endpoint supports both MCP protocol eras from one tool definition:
+
+- 2026-07-28 clients use `server/discover`, per-request metadata, and no
+  protocol session identifier.
+- 2025-era clients retain the stateless `initialize` compatibility path.
+
+Every HTTP exchange receives a fresh MCP server instance. No Redis store,
+sticky session, or shared protocol-session state is required; the only shared
+dependency is the read-only canon retriever. This does not make downstream
+Dify retrieval stateless or remove the existing bearer-authentication boundary.
 
 Keep both the Dify credential and MCP bearer token server-side. The service
 logs event metadata only and never logs authorization headers, request bodies,

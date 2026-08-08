@@ -1,5 +1,7 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import {
+  Client,
+  StreamableHTTPClientTransport,
+} from "@modelcontextprotocol/client";
 import { afterEach, describe, expect, it } from "vitest";
 import type { SysdomCanonConfig } from "./config.js";
 import type { SysdomCanonHttpConfig } from "./http-config.js";
@@ -94,7 +96,10 @@ describe("Sysdom canon Streamable HTTP service", () => {
     expect(response.headers.get("www-authenticate")).toContain("Bearer");
   });
 
-  it("executes the read-only tool over authenticated Streamable HTTP", async () => {
+  it.each([
+    ["legacy", { mode: "legacy" } as const],
+    ["modern", { mode: { pin: "2026-07-28" } } as const],
+  ])("executes the read-only tool over authenticated %s Streamable HTTP", async (era, versionNegotiation) => {
     service = createSysdomCanonHttpService(
       canonConfig,
       httpConfig,
@@ -102,18 +107,32 @@ describe("Sysdom canon Streamable HTTP service", () => {
       quietLogger,
     );
     const { port } = await service.listen();
-    const client = new Client({ name: "sysdom-http-test", version: "0.1.0" });
+    const requestHeaders: Headers[] = [];
+    const responseHeaders: Headers[] = [];
+    const client = new Client(
+      { name: `sysdom-http-${era}-test`, version: "0.1.0" },
+      { versionNegotiation },
+    );
     const transport = new StreamableHTTPClientTransport(
       new URL(`http://127.0.0.1:${port}/mcp`),
       {
         requestInit: {
           headers: { Authorization: `Bearer ${token}` },
         },
+        fetch: async (input, init) => {
+          const request = new Request(input, init);
+          requestHeaders.push(new Headers(request.headers));
+          const response = await fetch(request);
+          responseHeaders.push(new Headers(response.headers));
+          return response;
+        },
       },
     );
 
     await client.connect(transport);
     try {
+      expect(client.getProtocolEra()).toBe(era);
+      expect(transport.sessionId).toBeUndefined();
       const listed = await client.listTools();
       expect(listed.tools.map((tool) => tool.name).sort()).toEqual([
         "get_sysdom_destinations",
@@ -131,6 +150,17 @@ describe("Sysdom canon Streamable HTTP service", () => {
           text: expect.stringContaining("chunk-1"),
         }),
       ]);
+      expect(responseHeaders).not.toHaveLength(0);
+      expect(responseHeaders.every((headers) => !headers.has("mcp-session-id"))).toBe(true);
+      if (era === "modern") {
+        expect(requestHeaders.some(
+          (headers) => headers.get("mcp-protocol-version") === "2026-07-28",
+        )).toBe(true);
+      } else {
+        expect(requestHeaders.every(
+          (headers) => headers.get("mcp-protocol-version") !== "2026-07-28",
+        )).toBe(true);
+      }
     } finally {
       await client.close();
     }

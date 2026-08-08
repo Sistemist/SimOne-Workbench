@@ -5,7 +5,8 @@ import {
   type Server as NodeHttpServer,
   type ServerResponse,
 } from "node:http";
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { toNodeHandler } from "@modelcontextprotocol/node";
+import { createMcpHandler } from "@modelcontextprotocol/server";
 import type { SysdomCanonConfig } from "./config.js";
 import type { SysdomCanonHttpConfig } from "./http-config.js";
 import { createSysdomCanonMcpServer } from "./index.js";
@@ -86,7 +87,27 @@ export function createSysdomCanonHttpService(
   retriever?: CanonRetriever,
   logger: HttpServiceLogger = defaultLogger,
 ): SysdomCanonHttpService {
-  const activeServers = new Set<ReturnType<typeof createSysdomCanonMcpServer>["server"]>();
+  const mcpHandler = createMcpHandler(
+    () => createSysdomCanonMcpServer(canonConfig, retriever).server,
+    {
+      legacy: "stateless",
+      responseMode: "auto",
+      onerror: (error) => {
+        logger.error({
+          event: "sysdom_canon_mcp_protocol_failed",
+          error: error.name,
+        });
+      },
+    },
+  );
+  const nodeMcpHandler = toNodeHandler(mcpHandler, {
+    onerror: (error) => {
+      logger.error({
+        event: "sysdom_canon_mcp_adapter_failed",
+        error: error.name,
+      });
+    },
+  });
 
   const httpServer = createServer(async (request, response) => {
     const path = pathname(request);
@@ -126,20 +147,11 @@ export function createSysdomCanonHttpService(
       return;
     }
 
-    let requestMcpServer: ReturnType<typeof createSysdomCanonMcpServer>["server"] | null = null;
     try {
-      // The MCP SDK requires a fresh stateless transport for every request.
-      // A fresh MCP server keeps each request independent while the retriever
-      // remains shared and read-only.
-      const { server: mcpServer } = createSysdomCanonMcpServer(canonConfig, retriever);
-      requestMcpServer = mcpServer;
-      const transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: undefined,
-        enableJsonResponse: true,
-      });
-      activeServers.add(mcpServer);
-      await mcpServer.connect(transport);
-      await transport.handleRequest(request, response);
+      // One factory serves both the 2026-07-28 protocol and the stateless
+      // 2025 compatibility path. Each exchange receives a fresh MCP server;
+      // only the read-only retriever is shared.
+      await nodeMcpHandler(request, response);
     } catch (error) {
       logger.error({
         event: "sysdom_canon_mcp_request_failed",
@@ -151,11 +163,6 @@ export function createSysdomCanonHttpService(
         writeJson(response, 500, { error: "internal_error" });
       } else {
         response.end();
-      }
-    } finally {
-      if (requestMcpServer) {
-        activeServers.delete(requestMcpServer);
-        await requestMcpServer.close().catch(() => undefined);
       }
     }
   });
@@ -200,8 +207,7 @@ export function createSysdomCanonHttpService(
           httpServer.close((error) => (error ? reject(error) : resolve()));
         });
       }
-      await Promise.all([...activeServers].map((server) => server.close()));
-      activeServers.clear();
+      await mcpHandler.close();
     },
   };
 }
