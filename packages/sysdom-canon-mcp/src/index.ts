@@ -1,5 +1,5 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { McpServer } from "@modelcontextprotocol/server";
+import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import { readConfigFromEnv, type SysdomCanonConfig } from "./config.js";
 import { createGetSysdomDestinationsTool } from "./destinations.js";
 import { DifyKnowledgeRetriever } from "./dify.js";
@@ -52,9 +52,9 @@ export function createSysdomCanonMcpServer(
 }
 
 export async function runServer(config: SysdomCanonConfig = readConfigFromEnv()) {
-  const { server } = createSysdomCanonMcpServer(config);
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
+  return serveStdio(() => createSysdomCanonMcpServer(config).server, {
+    legacy: "serve",
+  });
 }
 
 export type { CanonPassage, CanonQuery, CanonQueryResult, CanonRetriever } from "./retriever.js";
