@@ -71,7 +71,7 @@ export async function loadPublicReviewLaunch(env: NodeJS.ProcessEnv = process.en
     availability: async () => validApproval() ? budget.availability() : "paused",
     transport: () => {
       const controls = budget.controls();
-      return createProviderVentureReviewTransport({ mode: "fresh", method, ...route, apiKey: key, fetcher,
+      const transport = createProviderVentureReviewTransport({ mode: "fresh", method, ...route, apiKey: key, fetcher,
         timeoutMs: 120000, maxRunCostCents: c.runCents, providerBudgetCents: c.monthlyCents, publicServiceAuthorizationId: c.authorizationId, claim: controls.claim,
         receipt: async receipt => { await controls.receipt(receipt); void audit(); },
         contract: { version: "sysdom_model_route_execution_v1", policyVersion: "public-review-service-2026-10-08", evaluatedAt: new Date(now).toISOString(),
@@ -108,6 +108,7 @@ export async function loadPublicReviewLaunch(env: NodeJS.ProcessEnv = process.en
               providerHardCapVerifiedAt: verifiedAt, providerHardCapExpiresAt: expiresAt } };
         },
       });
+      return { ...transport, recordOutcome: controls.recordOutcome };
     },
   });
   const balanceSchema = z.object({ source: z.literal("openrouter_account"), balanceUsd: z.number().finite(), observedAt: z.string().datetime() }).strict();

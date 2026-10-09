@@ -1,3 +1,4 @@
+import { DatabaseSync } from "node:sqlite";
 import { mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
@@ -63,4 +64,15 @@ it("settles validated usage even when answer validation fails, and pauses on a r
   const second = b.controls(); await second.claim(limits.authorizationId, "a".repeat(64));
   await second.receipt({ ...receipt, status: "stopped", knownCostUsd: 0.4, httpStatus: 429 });
   expect(b.summary()).toMatchObject({ spent: 2e7, reserved: 3e8, state: "paused", attempts: { provider429: 1, providerErrors: 1 } });
+});
+
+it.each([true, false])("retains content-free outer timeout diagnostics when receipt is late: %s", async (late) => {
+  const { b, directory } = await make(); const controls = b.controls(); await controls.claim(limits.authorizationId, "a".repeat(64));
+  if (!late) await controls.receipt(receipt);
+  controls.recordOutcome({ phase: "failed", failureStage: "timeout" });
+  if (late) await controls.receipt(receipt);
+  const db = new DatabaseSync(path.join(directory, "service-budget.sqlite"), { readOnly: true });
+  const row = db.prepare("SELECT receipt FROM attempts").get() as { receipt: string }; db.close();
+  expect(JSON.parse(row.receipt)).toMatchObject({ ...receipt, publicOutcome: { phase: "failed", failureStage: "timeout" } });
+  expect(b.summary()).toMatchObject({ spent: 10000000, reserved: 0, active: 0 });
 });

@@ -79,7 +79,7 @@ describe("VentureReviewCoordinator", () => {
     ];
     for (const mutate of mutations) {
       const coordinator = new VentureReviewCoordinator({ review: async (value) => { const result = await fixture.review(value); mutate(result); return result; } });
-      await expect(coordinator.review(input)).rejects.toThrow(/unapproved/);
+      await expect(coordinator.review(input)).rejects.toMatchObject({ stage: "result_citations" });
     }
   });
 
@@ -137,7 +137,7 @@ describe("VentureReviewCoordinator", () => {
       ...(await original(value, signal)),
       tenantId: randomUUID(),
     });
-    await expect(new VentureReviewCoordinator(transport).review(input)).rejects.toThrow(/tenant/);
+    await expect(new VentureReviewCoordinator(transport).review(input)).rejects.toMatchObject({ stage: "result_identity" });
   });
 
   it("honors cancellation before transport work", async () => {

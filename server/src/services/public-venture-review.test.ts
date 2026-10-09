@@ -51,19 +51,23 @@ it("rejects private destinations, query credentials and repository traversal bef
 });
 it("enforces the configured one-slot capacity, cancels immediately, and never retries an unresponsive transport", async () => {
   const review = vi.fn(() => new Promise<never>(() => {}));
-  const { s } = service({ transport: () => ({ review }) });
+  const recordOutcome = vi.fn();
+  const { s } = service({ transport: () => ({ review, recordOutcome }) });
   const a = await s.create(), b = await s.create();
   const run = s.run(a.reviewId, a.accessToken, await input(s));
   await vi.waitFor(() => expect(review).toHaveBeenCalledOnce());
   await expect(s.run(b.reviewId, b.accessToken, await input(s))).rejects.toThrow();
   s.cancel(a.reviewId, a.accessToken);
   expect((await run).phase).toBe("cancelled"); expect(review).toHaveBeenCalledOnce();
+  expect(recordOutcome).toHaveBeenCalledWith({ phase: "cancelled", failureStage: "cancelled" });
   await expect(s.run(a.reviewId, a.accessToken, await input(s))).rejects.toThrow();
 });
 it("times out without a fallback and rejects expired capabilities", async () => {
   let now = Date.now(); const review = vi.fn(() => new Promise<never>(() => {}));
-  const { s } = service({ timeoutMs: 10, now: () => now, transport: () => ({ review }) });
+  const recordOutcome = vi.fn();
+  const { s } = service({ timeoutMs: 10, now: () => now, transport: () => ({ review, recordOutcome }) });
   const a = await s.create(); expect((await s.run(a.reviewId, a.accessToken, await input(s))).phase).toBe("failed"); expect(review).toHaveBeenCalledOnce();
+  expect(recordOutcome).toHaveBeenCalledWith({ phase: "failed", failureStage: "timeout" });
   now += 900001; expect(() => s.get(a.reviewId, a.accessToken)).toThrow();
 });
 it("rejects fresh route drift before dispatch and never labels fresh output recorded", async () => {

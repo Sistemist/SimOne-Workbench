@@ -16,7 +16,8 @@ import { createEarlyAccessRequestSchema, createPublicFunnelEventSchema, ventureR
 import { publicWebsiteNetwork } from "../src/services/safe-website-evidence.js";
 import { createMethodBoundReviewTransport, loadPrivateReviewMethod } from "../src/services/venture-review-method.js";
 import { ventureReviewRoutes } from "../src/routes/venture-review.js";
-import { createPS02ProviderMock } from "../src/services/venture-review-provider-mock.js";
+import { createProviderVentureReviewTransport } from "../src/services/venture-review-provider.js";
+import { providerMockOptions, createPS02ProviderMock } from "../src/services/venture-review-provider-mock.js";
 
 const methodDir = process.argv[2];
 if (!methodDir || process.argv[3] !== "--fictional-only" || process.argv.slice(4).some((arg) => !["--public-web", "--provider-mock", "--ps02-recorded", "--public-entry"].includes(arg))) throw new Error("Supply an explicit private M1 directory and --fictional-only; use --ps02-recorded or --provider-mock for the current local journey");
@@ -25,7 +26,7 @@ const providerMock = process.argv.includes("--provider-mock");
 const ps02Recorded = process.argv.includes("--ps02-recorded");
 if (providerMock && ps02Recorded) throw new Error("Choose recorded replay or provider mock");
 const publicEntry = process.argv.includes("--public-entry");
-if (publicEntry && (providerMock || publicWeb)) throw new Error("Public entry rehearsal is recorded and offline only");
+if (publicEntry && publicWeb) throw new Error("Public entry rehearsal is recorded or mocked and offline only");
 const currentMethod = providerMock || ps02Recorded || publicEntry;
 if (currentMethod && publicWeb) throw new Error("PS02 rehearsal forbids public website requests");
 const example = JSON.parse(await readFile(new URL(currentMethod ? "../../evals/fixtures/venture-review-ps02-oct08-demo.json" : "../../evals/fixtures/venture-review-cu01-demo.json", import.meta.url), "utf8"));
@@ -63,10 +64,20 @@ publicResult.strengths = [];
 const publicService = new PublicVentureReview({ mode: "recorded", methodVersion: method.version, maxConcurrent: 10,
   recipients: ["Local recorded example only; no external AI service"], retention: "Local process memory for up to 15 minutes. No account, paid request or database write.",
   availability: async () => "available", timeoutMs: 5000,
-  transport: () => createMethodBoundReviewTransport(method, async ({ evidence }) => {
-    if (evidence.question !== example.question || evidence.sources.length !== 1 || evidence.sources[0]?.excerpt !== publicNote) throw new Error("Only the exact fictional example can be replayed");
-    return { ...structuredClone(publicResult), reviewId: evidence.reviewId, tenantId: evidence.tenantId };
-  }),
+  transport: () => {
+    if (providerMock) return createProviderVentureReviewTransport({ ...providerMockOptions(method, example), fetcher: async (url, init) => {
+      if (url !== "mock://venture-review/openrouter" || new Headers(init?.headers).has("Authorization")) throw new Error("In-process mock only");
+      const evidence = JSON.parse(JSON.parse(String(init?.body)).messages[1].content).evidence;
+      if (evidence.question !== example.question || evidence.sources.length !== 1 || evidence.sources[0]?.excerpt !== publicNote) throw new Error("Only the exact fictional example can be replayed");
+      return Response.json({ id: "gen-public-rehearsal", model: "openai/gpt-6.1-sol", provider: "Azure",
+        choices: [{ finish_reason: "stop", message: { content: JSON.stringify({ ...structuredClone(publicResult), reviewId: evidence.reviewId, tenantId: evidence.tenantId }) } }],
+        usage: { prompt_tokens: 6000, completion_tokens: 1200, completion_tokens_details: { reasoning_tokens: 0 }, cost: 0.0015 } });
+    } });
+    return createMethodBoundReviewTransport(method, async ({ evidence }) => {
+      if (evidence.question !== example.question || evidence.sources.length !== 1 || evidence.sources[0]?.excerpt !== publicNote) throw new Error("Only the exact fictional example can be replayed");
+      return { ...structuredClone(publicResult), reviewId: evidence.reviewId, tenantId: evidence.tenantId };
+    });
+  },
   websiteNetwork: { lookup: async () => [{ address: "93.184.216.34" }], request: async () => ({ status: 200, headers: { "content-type": "text/plain" }, body: new TextEncoder().encode("SIMULATED public source. Exclude this source before replaying the recorded example. It is not part of its historical evidence.") }) },
 });
 const app = express();

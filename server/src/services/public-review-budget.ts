@@ -2,6 +2,7 @@ import { mkdir, readdir, chmod } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
+import type { ReviewOutcome } from "./venture-review.js";
 import type { ReviewProviderReceipt } from "./venture-review-provider.js";
 
 type Limits = { authorizationId: string; monthlyCents: number; runCents: number; maxConcurrent: number; timeoutMs: number };
@@ -74,7 +75,15 @@ export async function publicReviewBudget(directory: string, limits: Limits, now 
     }),
     controls() {
       let id: string | undefined;
+      let publicOutcome: ReviewOutcome | undefined;
       return {
+        recordOutcome: (outcome: ReviewOutcome) => {
+          publicOutcome = { phase: outcome.phase, ...(outcome.failureStage ? { failureStage: outcome.failureStage } : {}) };
+          if (id) transact(() => {
+            db.prepare("UPDATE attempts SET receipt=json_set(COALESCE(receipt,'{}'),'$.publicOutcome',json(?)) WHERE id=?")
+              .run(JSON.stringify(publicOutcome), id!);
+          });
+        },
         claim: async (authorizationId: string, bodySha256: string) => {
           if (id || authorizationId !== limits.authorizationId || !/^[a-f0-9]{64}$/.test(bodySha256)) throw new Error("Invalid reservation");
           transact(() => {
@@ -94,7 +103,7 @@ export async function publicReviewBudget(directory: string, limits: Limits, now 
             const cost = known ? nanos(receipt.knownCostUsd!) : null;
             const next = !receipt.dispatched ? "not_dispatched" : known ? "settled" : "unknown";
             db.prepare("UPDATE attempts SET state=?,cost_nanos=?,charge_month=?,receipt=? WHERE id=?")
-              .run(next, cost, next === "settled" ? month(now()) : null, JSON.stringify(receipt), id!);
+              .run(next, cost, next === "settled" ? month(now()) : null, JSON.stringify({ ...receipt, ...(publicOutcome ? { publicOutcome } : {}) }), id!);
             if (receipt.dispatched && Number.isFinite(receipt.knownCostUsd) && receipt.knownCostUsd! * 100 > limits.runCents) db.prepare("UPDATE config SET fault=? WHERE id=1").run("Reported cost exceeded the verified per-request bound");
           });
         },

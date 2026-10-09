@@ -1,4 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
+import express from "express";
+import request from "supertest";
+import { publicVentureReviewRoutes } from "../routes/public-venture-review.js";
 import { DatabaseSync } from "node:sqlite";
 import { createHash, randomUUID } from "node:crypto";
 import { mkdtemp, mkdir, writeFile, rm, readFile } from "node:fs/promises";
@@ -8,7 +11,7 @@ import { loadPublicReviewLaunch } from "./public-review-launch.js";
 import { createFixtureVentureReviewTransport } from "./venture-review.js";
 const dirs: string[] = [], services: { dispose(): void }[] = [];
 afterEach(async () => { services.splice(0).forEach(s => s.dispose()); await Promise.all(dirs.splice(0).map(p => rm(p, { recursive: true, force: true }))); });
-async function harness({ delayed = false, cost = 0.01, completionGate, monthlyCents = 300, balanceSnapshot, accountAutomaticReload = "disabled" }: { delayed?: boolean; cost?: number; completionGate?: Promise<void>; monthlyCents?: number; balanceSnapshot?: unknown; accountAutomaticReload?: "disabled" | "pre_existing_enabled" } = {}) {
+async function harness({ delayed = false, cost = 0.01, completionGate, monthlyCents = 300, balanceSnapshot, accountAutomaticReload = "disabled", mutate }: { mutate?: (result: any) => void; delayed?: boolean; cost?: number; completionGate?: Promise<void>; monthlyCents?: number; balanceSnapshot?: unknown; accountAutomaticReload?: "disabled" | "pre_existing_enabled" } = {}) {
   const dir = await mkdtemp(path.join(os.tmpdir(), "public-launch-test-")); dirs.push(dir);
   const methodDirectory = path.join(dir, "method"); await mkdir(path.join(methodDirectory, "runtime-2026-10-08"), { recursive: true });
   const version = "sim-aulet-local-2026-10-08", core = "FULL TEST CORE", procedure = "FULL TEST PROCEDURE";
@@ -37,8 +40,10 @@ async function harness({ delayed = false, cost = 0.01, completionGate, monthlyCe
     const packet = JSON.parse(body.messages[1].content).evidence;
     const result = await createFixtureVentureReviewTransport().review(packet);
     const summary = { statement: "The founder describes a service business.", evidenceSourceIds: ["founder-note"], confidence: "low", basis: "source_claim" };
+    Object.assign(result, { rubricVersion: version, businessUnderstanding: summary, strengths: [] });
+    mutate?.(result);
     usage += cost;
-    return Response.json({ id: "gen-test-only", model: "openai/gpt-6.1-sol", provider: "Azure", choices: [{ finish_reason: "stop", message: { content: JSON.stringify({ ...result, rubricVersion: version, businessUnderstanding: summary, strengths: [] }) } }], usage: { prompt_tokens: 3000, completion_tokens: 1000, completion_tokens_details: { reasoning_tokens: 200 }, cost } });
+    return Response.json({ id: "gen-test-only", model: "openai/gpt-6.1-sol", provider: "Azure", choices: [{ finish_reason: "stop", message: { content: JSON.stringify(result) } }], usage: { prompt_tokens: 3000, completion_tokens: 1000, completion_tokens_details: { reasoning_tokens: 200 }, cost } });
   }) as typeof fetch;
   const launch = await loadPublicReviewLaunch(env, fetcher); services.push(launch!.service);
   async function run() { const s = launch!.service, a = await s.create(); return s.run(a.reviewId, a.accessToken, { question: "Should our service expand?", notes: "We serve weekly customers, but delivery capacity is not established.", consent: true, consentVersion: (await s.capability()).consentVersion, requestId: randomUUID() }); }
@@ -126,4 +131,40 @@ it("records pre-existing account reload without changing billing or weakening th
   expect(vi.mocked(h.fetcher).mock.calls.every(([url, init]) => init?.method !== "POST" || String(url).endsWith("/chat/completions"))).toBe(true);
   await writeFile(h.file, JSON.stringify({ ...h.config, accountAutomaticReload: "enable_on_launch" }));
   await expect(loadPublicReviewLaunch(h.env, h.fetcher)).rejects.toThrow();
+});
+
+// Use the real anonymous route, launch wiring, provider parser and durable ledger.
+it.each([
+  ["method_version", (r: any) => { r.rubricVersion = "wrong-version"; }],
+  ["result_identity", (r: any) => { r.reviewId = randomUUID(); }],
+  ["result_identity", (r: any) => { r.tenantId = randomUUID(); }],
+  ["result_citations", (r: any) => { r.businessUnderstanding.evidenceSourceIds = ["unapproved"]; }],
+  ["public_fields", (r: any) => { delete r.businessUnderstanding; }],
+  ["public_fields", (r: any) => { delete r.strengths; }],
+  [undefined, (_r: any) => {}],
+] as const)("records the full public outcome after provider settlement: %s", async (stage, mutate) => {
+  const h = await harness({ mutate }), app = express(); app.use(express.json());
+  app.use("/api", publicVentureReviewRoutes({ service: h.launch.service, publicOrigin: h.config.publicOrigin }));
+  const base = "/api/public/venture-review";
+  const created = await request(app).post(base + "/sessions").set("Origin", h.config.publicOrigin).send({});
+  expect(created.status).toBe(201);
+  const { reviewId, accessToken } = created.body;
+  const input = { question: "Should our service expand?", notes: "FICTIONAL-PRIVATE-SENTINEL weekly customers need dependable delivery.", consent: true,
+    consentVersion: (await h.launch.service.capability()).consentVersion, requestId: randomUUID() };
+  const run = () => request(app).post(`${base}/sessions/${reviewId}/run`).set("Origin", h.config.publicOrigin).auth(accessToken, { type: "bearer" }).send(input);
+  const response = await run(); expect(response.status).toBe(200);
+  expect(response.body.phase).toBe(stage ? "failed" : "complete");
+  if (stage) expect(response.body.result).toBeNull();
+  else expect(response.body.result.businessUnderstanding.evidenceSourceIds).toEqual(["founder-note"]);
+  expect((await run()).body.phase).toBe(response.body.phase); expect(h.posts).toHaveLength(1);
+  const db = new DatabaseSync(path.join(h.config.budgetDirectory, "service-budget.sqlite"), { readOnly: true });
+  const row = db.prepare("SELECT receipt,cost_nanos FROM attempts").get() as { receipt: string; cost_nanos: number }; db.close();
+  const receipt = JSON.parse(row.receipt);
+  expect(receipt).toMatchObject({ status: "response_received", usageValidated: true, knownCostUsd: 0.01,
+    publicOutcome: stage ? { phase: "failed", failureStage: stage } : { phase: "complete" } });
+  expect(row.cost_nanos).toBe(10000000);
+  expect(row.receipt).not.toMatch(/FICTIONAL-PRIVATE-SENTINEL|weekly customers|unapproved|wrong-version/);
+  expect(row.receipt).not.toContain(accessToken); expect(row.receipt).not.toContain(h.env.SYSDOM_PUBLIC_REVIEW_API_KEY);
+  const cancelled = await request(app).post(`${base}/sessions/${reviewId}/cancel`).set("Origin", h.config.publicOrigin).auth(accessToken, { type: "bearer" }).send({});
+  expect(cancelled.body).toMatchObject({ phase: "cancelled", result: null });
 });

@@ -11,8 +11,16 @@ import {
 
 export const SIM_REVIEW_RUBRIC_VERSION = "m1-draft-2026-09-21";
 
+export type ReviewFailureStage = "route" | "transport" | "method_version" | "result_shape" | "result_identity" | "result_citations" | "durable_write" | "public_fields" | "expired" | "timeout" | "cancelled";
+export type ReviewOutcome = { phase: "complete" | "failed" | "cancelled"; failureStage?: ReviewFailureStage };
+/** Fixed codes only: never persist validator messages or provider content. */
+export class ReviewValidationError extends Error {
+  constructor(readonly stage: ReviewFailureStage) { super(`Venture Review rejected: ${stage}`); }
+}
+
 export interface VentureReviewTransport {
   readonly execution?: VentureReviewSnapshot["execution"];
+  recordOutcome?(outcome: ReviewOutcome): void;
   review(packet: VentureReviewEvidencePacket, signal?: AbortSignal): Promise<VentureReviewResult>;
 }
 
@@ -66,12 +74,14 @@ export class VentureReviewCoordinator {
   }
 
   private validateResult(packet: VentureReviewEvidencePacket, raw: unknown) {
-    const result = ventureReviewResultSchema.parse(raw);
+    const parsed = ventureReviewResultSchema.safeParse(raw);
+    if (!parsed.success) throw new ReviewValidationError("result_shape");
+    const result = parsed.data;
     if (result.tenantId !== packet.tenantId || result.reviewId !== packet.reviewId) {
-      throw new Error("Venture Review transport crossed the requested tenant or review boundary");
+      throw new ReviewValidationError("result_identity");
     }
     if (result.durableWritePerformed) {
-      throw new Error("Venture Review v1 does not permit transport-owned durable writes");
+      throw new ReviewValidationError("durable_write");
     }
     const approved = new Set(packet.sources.map((source) => source.id));
     const cited = [
@@ -82,7 +92,7 @@ export class VentureReviewCoordinator {
       ...result.contradictions.flatMap((finding) => finding.evidenceSourceIds),
       ...result.alternatives.flatMap((finding) => [...finding.evidenceFor, ...finding.evidenceAgainst]),
     ];
-    if (cited.some((id) => !approved.has(id))) throw new Error("Review cited an unapproved evidence source");
+    if (cited.some((id) => !approved.has(id))) throw new ReviewValidationError("result_citations");
     return result;
   }
 }

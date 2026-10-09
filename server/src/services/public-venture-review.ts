@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypt
 import { PUBLIC_REVIEW_CONSENT_VERSION, publicReviewInputSchema, publicReviewSourcesInputSchema, type PublicReviewSource, type PublicReviewCapability, type PublicReviewSnapshot, type VentureReviewResult } from "@paperclipai/shared";
 import { inspectPermittedWebsite, validatePublicWebsiteUrl, type WebsiteNetwork } from "./safe-website-evidence.js";
 import { HttpError } from "../errors.js";
-import { VentureReviewCoordinator, type VentureReviewTransport } from "./venture-review.js";
+import { VentureReviewCoordinator, ReviewValidationError, type ReviewFailureStage, type VentureReviewTransport } from "./venture-review.js";
 
 const hash = (text: string) => createHash("sha256").update(text).digest();
 const secretLike = /-----BEGIN [A-Z ]*PRIVATE KEY-----|\b(?:sk-[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{20,})|\b(?:api[_-]?key|password|authorization)\s*[:=]\s*\S+/i;
@@ -71,10 +71,13 @@ export class PublicVentureReview {
     // No await between the global slot check and claim.
     if (this.running >= this.options.maxConcurrent) throw new HttpError(429, "All review slots are occupied. Try again shortly.");
     this.running++; this.counts.started++; const startedAt = this.now(); s.phase = "running"; s.requestHash = fingerprint;
+    let transport: VentureReviewTransport | undefined;
+    let failureStage: ReviewFailureStage = "route";
     try {
-      const transport = this.options.transport();
+      transport = this.options.transport();
       if (this.options.mode === "recorded" && transport.execution?.mode === "fresh") throw new Error("Fresh transport cannot be labeled recorded");
       if (this.options.mode === "fresh" && (transport.execution?.mode !== "fresh" || transport.execution.model !== "openai/gpt-6.1-sol" || transport.execution.provider !== "openrouter/azure" || transport.execution.reasoningEffort !== "high")) throw new Error("Route changed");
+      failureStage = "transport";
       const result = await new VentureReviewCoordinator(transport, { maxAttempts: 1, timeoutMs: this.options.timeoutMs ?? 120000 }).review({
         version: "sysdom_venture_review_evidence_v1", tenantId: s.tenantId, reviewId: id, idempotencyKey: input.requestId,
         founderApprovedAt: new Date(this.now()).toISOString(), durableWriteApproved: false, question: input.question,
@@ -83,12 +86,19 @@ export class PublicVentureReview {
           excerpt: input.notes, basis: "source_claim", omitted: [], consent: { approved: true, purpose: "Private Venture Review", recipients: capability.recipients } }, ...selected.map(x => ({ id: x.id, kind: "website_page", title: x.title, capturedAt: x.capturedAt, sourceDate: null, excerpt: x.text, basis: "website_text", omitted: x.omissions.slice(0, 20).map(t => t.slice(0, 300)), provenance: { sourceUri: x.url, excerptLocation: "Bounded static public text; no code execution or repository clone", contentSha256: createHash("sha256").update(x.text).digest("hex") }, consent: { approved: true, purpose: "Private Venture Review", recipients: capability.recipients } }))],
       }, s.controller.signal);
       s.controller.signal.throwIfAborted();
-      if (this.now() >= s.expiresAt || result.rubricVersion !== this.options.methodVersion) throw new Error("Expired or changed method");
-      if (this.options.mode === "fresh" && (!result.businessUnderstanding || !result.strengths)) throw new Error("Incomplete public result");
+      if (this.now() >= s.expiresAt) throw new ReviewValidationError("expired");
+      if (result.rubricVersion !== this.options.methodVersion) throw new ReviewValidationError("method_version");
+      if (this.options.mode === "fresh" && (!result.businessUnderstanding || !result.strengths)) throw new ReviewValidationError("public_fields");
       // One public request only; the next observation is advice, not an automatic paid follow-up.
       s.result = { ...result, evidenceRequest: null }; s.phase = "complete";
-    } catch { s.phase = s.controller.signal.aborted ? "cancelled" : "failed"; s.result = null; }
+    } catch (error) {
+      s.phase = s.controller.signal.aborted ? "cancelled" : "failed"; s.result = null;
+      failureStage = s.controller.signal.aborted ? "cancelled" : error instanceof ReviewValidationError ? error.stage :
+        error instanceof DOMException && error.name === "TimeoutError" ? "timeout" : failureStage;
+    }
     finally {
+      try { transport?.recordOutcome?.({ phase: s.phase as "complete" | "failed" | "cancelled", ...(s.phase === "complete" ? {} : { failureStage }) }); }
+      catch { s.phase = "failed"; s.result = null; }
       this.running--;
       this.counts[s.phase === "complete" ? "completed" : s.phase === "cancelled" ? "cancelled" : "failed"]++;
       this.durations.push(Math.max(0, this.now() - startedAt)); if (this.durations.length > 200) this.durations.shift();

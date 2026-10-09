@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import type { VentureReviewEvidencePacket, VentureReviewResult } from "@paperclipai/shared";
-import type { VentureReviewTransport } from "./venture-review.js";
+import { ReviewValidationError, type VentureReviewTransport } from "./venture-review.js";
 
 export interface PrivateReviewMethod {
   version: string;
@@ -49,7 +49,7 @@ export function createMethodBoundReviewTransport(
   return {
     async review(packet, signal) {
       const result = await execute({ method: structuredClone(snapshot), evidence: structuredClone(packet), evidenceIsUntrusted: true, evidenceReviewRules }, signal);
-      if (result.rubricVersion !== snapshot.version) throw new Error("Review method version mismatch");
+      if (result.rubricVersion !== snapshot.version) throw new ReviewValidationError("method_version");
       return result;
     },
   };
