@@ -1,0 +1,16 @@
+{
+  "name": "sysdom-local",
+  "owner": {
+    "name": "Sysdom.ai"
+  },
+  "plugins": [
+    {
+      "name": "sysdom-venture-review",
+      "source": "./codex-plugins/sysdom-venture-review",
+      "description": "Founder-controlled private Venture Review in your current assistant."
+    }
+  ],
+  "metadata": {
+    "description": "Local Sysdom Venture Review package for founder-controlled reviews."
+  }
+}

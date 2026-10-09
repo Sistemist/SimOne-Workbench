@@ -16,7 +16,7 @@ test("Codex and Claude share one portable skill/helper without private method or
     }).sort();
   assert.deepEqual(files, [
     ".claude-plugin/plugin.json", ".codex-plugin/plugin.json", "README.md",
-    "scripts/review.mjs", "skills/venture-review/SKILL.md",
+    "scripts/public-review.mjs", "scripts/review.mjs", "skills/venture-review/SKILL.md",
   ]);
   const codex = JSON.parse(await readFile(path.join(plugin, ".codex-plugin/plugin.json"), "utf8"));
   const claude = JSON.parse(await readFile(path.join(plugin, ".claude-plugin/plugin.json"), "utf8"));

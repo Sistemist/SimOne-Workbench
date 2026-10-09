@@ -4103,6 +4103,8 @@ var ventureReviewResultSchema = external_exports.object({
   tenantId: external_exports.string().uuid(),
   rubricVersion: external_exports.string().trim().min(1).max(120),
   status: external_exports.enum(["complete", "needs_evidence", "cancelled"]),
+  businessUnderstanding: citedFindingSchema.optional(),
+  strengths: external_exports.array(citedFindingSchema).max(5).optional(),
   engineFindings: external_exports.object({
     product_service: external_exports.array(citedFindingSchema).max(8),
     customer: external_exports.array(citedFindingSchema).max(8),
