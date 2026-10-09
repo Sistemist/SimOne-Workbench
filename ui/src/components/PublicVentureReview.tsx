@@ -123,7 +123,7 @@ export function PublicVentureReview({ example }: { example?: { question: string;
     const link = document.createElement("a"); link.href = url; link.download = "sysdom-venture-review.txt"; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   const r = session?.result;
-  return <main className="min-h-screen bg-background text-foreground"><div className="mx-auto max-w-3xl px-5 py-10 sm:py-16 space-y-8">
+  return <main className="h-dvh overflow-y-auto bg-background text-foreground"><div className="mx-auto max-w-3xl px-5 py-10 sm:py-16 space-y-8">
     <header className="space-y-4"><a href="https://sysdom.ai" className="text-sm font-semibold underline-offset-4 hover:underline">Sysdom.ai</a><h1 className="text-3xl sm:text-4xl font-semibold text-balance">Review your venture</h1><p className="text-lg leading-relaxed text-muted-foreground">Bring one decision and the evidence you have. Explore what it supports, what is still uncertain, and one practical next step.</p></header>
     {capability?.mode === "recorded" ? <p role="status" className="border border-border p-4">Example review—not an analysis of your business. This local replay includes authored refinements; no model is called.</p> : null}
     {error ? <p role="alert" className="border border-border p-4">{error}</p> : null}
