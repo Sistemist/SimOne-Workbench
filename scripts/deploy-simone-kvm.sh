@@ -39,7 +39,7 @@ fi
 echo "Deploying clean commit $deploy_short_sha from $deploy_branch at $deploy_timestamp"
 
 rsync -az \
-  --exclude '.git/' \
+  --exclude '.git' \
   --exclude '.obsidian/' \
   --exclude '.env*' \
   --exclude 'node_modules/' \
