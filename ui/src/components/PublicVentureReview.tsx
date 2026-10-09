@@ -126,10 +126,10 @@ export function PublicVentureReview({ example }: { example?: { question: string;
   return <main className="h-dvh overflow-y-auto bg-background text-foreground"><div className="mx-auto max-w-3xl px-5 py-10 sm:py-16 space-y-8">
     <header className="space-y-4"><a href="https://sysdom.ai" className="text-sm font-semibold underline-offset-4 hover:underline">Sysdom.ai</a><h1 className="text-3xl sm:text-4xl font-semibold text-balance">Review your venture</h1><p className="text-lg leading-relaxed text-muted-foreground">Bring one decision and the evidence you have. Explore what it supports, what is still uncertain, and one practical next step.</p></header>
     <section aria-labelledby="review-privacy-heading" className="border-y border-border bg-muted/40 px-5 py-5 space-y-3">
-      <h2 id="review-privacy-heading" className="text-lg font-semibold">Your idea stays out of public view.</h2>
-      <p className="leading-relaxed">You choose what to share and review exactly what will be sent before approving AI processing. We do not publish your idea or review.</p>
-      {capability?.mode === "fresh" && capability.recipients.includes("Azure") ? <p className="text-sm leading-relaxed">AI processing uses a Microsoft Azure route with zero-data-retention controls and no use of your review content for model training.</p> : null}
-      <p className="text-sm leading-relaxed">Your selected information is processed to prepare your review and held in Sysdom’s review session for up to 15 minutes; limited usage, billing and security records may remain.</p>
+      <h2 id="review-privacy-heading" className="text-lg font-semibold">You control what you share.</h2>
+      <p className="leading-relaxed">Review exactly what will be sent before approving AI processing. We do not publish your idea or review.</p>
+      {capability?.mode === "fresh" && capability.recipients.includes("Azure") ? <p className="text-sm leading-relaxed">AI processing uses a Microsoft Azure route with zero-data-retention controls. Your review content is not used to train AI models.</p> : null}
+      <p className="text-sm font-medium">This review is free.</p>
       <p className="text-sm leading-relaxed">Leave out passwords, personal identifiers and sensitive details you are not ready to share.</p>
       <details className="text-sm leading-relaxed">
         <summary className="cursor-pointer underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring">How sharing and storage work</summary>
