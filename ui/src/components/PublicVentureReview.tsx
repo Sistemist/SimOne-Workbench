@@ -125,6 +125,20 @@ export function PublicVentureReview({ example }: { example?: { question: string;
   const r = session?.result;
   return <main className="h-dvh overflow-y-auto bg-background text-foreground"><div className="mx-auto max-w-3xl px-5 py-10 sm:py-16 space-y-8">
     <header className="space-y-4"><a href="https://sysdom.ai" className="text-sm font-semibold underline-offset-4 hover:underline">Sysdom.ai</a><h1 className="text-3xl sm:text-4xl font-semibold text-balance">Review your venture</h1><p className="text-lg leading-relaxed text-muted-foreground">Bring one decision and the evidence you have. Explore what it supports, what is still uncertain, and one practical next step.</p></header>
+    <section aria-labelledby="review-privacy-heading" className="border-y border-border bg-muted/40 px-5 py-5 space-y-3">
+      <h2 id="review-privacy-heading" className="text-lg font-semibold">Your idea stays out of public view.</h2>
+      <p className="leading-relaxed">You choose what to share and review exactly what will be sent before approving AI processing. We do not publish your idea or review.</p>
+      <p className="text-sm leading-relaxed">Leave out passwords, personal identifiers and sensitive details you are not ready to share.</p>
+      <details className="text-sm leading-relaxed">
+        <summary className="cursor-pointer underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring">How sharing and storage work</summary>
+        <div className="mt-3 space-y-3">
+          <p>Your note stays in this page until you approve the review. If you ask us to read public sources, their URLs go to Sysdom and those sites are contacted before the AI review. You can exclude their excerpts in the sharing preview.</p>
+          <p>The sharing preview names the services that process your approved information and explains their current retention terms.</p>
+          {capability?.retention ? <p>{capability.retention}</p> : null}
+          <p>Downloading creates a copy you control. An optional access request separately saves the contact details and message you choose to send; it does not save this full review.</p>
+        </div>
+      </details>
+    </section>
     {capability?.mode === "recorded" ? <p role="status" className="border border-border p-4">Example review—not an analysis of your business. This local replay includes authored refinements; no model is called.</p> : null}
     {error ? <p role="alert" className="border border-border p-4">{error}</p> : null}
     {!capability ? <section><p role="status">{error ? "Review availability is unknown." : "Checking review availability…"}</p>{error ? <Button variant="outline" onClick={() => void checkAvailability()}>Check availability</Button> : null}</section> : capability.state !== "available" && !session ? <section className="space-y-3" aria-label="Review availability"><p role="status">{unavailable[capability.state]}</p><Button variant="outline" onClick={() => void checkAvailability()}>Check availability</Button><a href="/request-access" className="ml-4 underline">Request early access</a></section> : null}
@@ -151,7 +165,7 @@ export function PublicVentureReview({ example }: { example?: { question: string;
       <section><h3 className="font-semibold">What we still need to know</h3><ul className="list-disc pl-5 space-y-2 mt-2">{r.unknowns.map((x,i) => <li key={i}>{x}</li>)}</ul></section>
       <section><h3 className="font-semibold">Other explanations</h3><ul className="list-disc pl-5 space-y-2 mt-2">{r.alternatives.map((x,i) => <li key={i}>{x.explanation}{x.evidenceFor.length || x.evidenceAgainst.length ? citations([...new Set([...x.evidenceFor, ...x.evidenceAgainst])]) : null}</li>)}</ul></section>
       <section className="border-y border-border py-6 space-y-3"><h3 className="text-xl font-semibold">A practical next step</h3><p className="font-medium">{r.nextTest.question}</p><p>{r.nextTest.action}</p><p>{r.nextTest.successSignal}</p></section>
-      <details className="space-y-3"><summary className="cursor-pointer font-medium">Evidence, limitations and review details</summary><div id="source-founder-note"><h4 className="font-medium">Your approved note</h4><p className="whitespace-pre-wrap break-words">{preview?.notes}</p></div>{sources.filter(s => preview?.selectedSourceIds.includes(s.id)).map(s => <div key={s.id} id={`source-${s.id}`}>{sourceText(s)}</div>)}{r.omissions.map((x,i) => <p key={i} className="text-sm">{x}</p>)}<p className="text-sm">Method: {r.rubricVersion}. Reviewer: Sol 6.1 High via OpenRouter/Azure. {session.mode === "recorded" ? "Historical source only; this replay did not call it." : "One bounded request; no fallback model."}</p></details>
+      <details className="space-y-3"><summary className="cursor-pointer font-medium">Evidence, limitations and review details</summary><div id="source-founder-note"><h4 className="font-medium">Your approved note</h4><p className="whitespace-pre-wrap break-words">{preview?.notes}</p></div>{sources.filter(s => preview?.selectedSourceIds.includes(s.id)).map(s => <div key={s.id} id={`source-${s.id}`}>{sourceText(s)}</div>)}{r.omissions.map((x,i) => <p key={i} className="text-sm">{x}</p>)}<p className="text-sm">Method: {r.rubricVersion}. Processing services: {capability?.recipients.join(", ")}. {session.mode === "recorded" ? "Historical source only; this replay did not call it." : "One bounded request; no fallback model."}</p></details>
       <div className="flex flex-wrap gap-3"><Button onClick={exportReview}>Download my review</Button><Button variant="outline" onClick={() => void cancel()}>Clear this review</Button></div>
       <section aria-label="Continue after your review" className="border-t border-border pt-6 space-y-3">
         <h3 className="text-xl font-semibold">Continue with Sysdom.ai</h3>

@@ -11,7 +11,7 @@ const example = JSON.parse(await readFile(new URL("../../../evals/fixtures/ventu
 example.draft = ventureReviewShareDraftSchema.parse(example.draft);
 example.result = ventureReviewResultSchema.parse(example.result);
 const method = { version: "sim-aulet-local-2026-10-08", status: "provisional_local" as const,
-  core: "COMPLETE PRIVATE CORE fixture, all concept groups", procedure: "COMPLETE PRIVATE PROCEDURE fixture, no truncation",
+  core: "COMPLETE PRIVATE CORE fixture, all concept groups; provenance version m1-draft-2026-09-21", procedure: "COMPLETE PRIVATE PROCEDURE fixture, no truncation",
   coreSha256: "a".repeat(64), procedureSha256: "b".repeat(64) };
 const packet = () => ({ version: "sysdom_venture_review_evidence_v1", tenantId: example.result.tenantId,
   reviewId: example.result.reviewId, idempotencyKey: "11111111-1111-4111-8111-111111111111",
@@ -59,6 +59,9 @@ describe("fresh provider boundary with mocked wire IO", () => {
       expect(wire).not.toHaveProperty("max_tokens");
       expect(result.result!.rubricVersion).toBe("sim-aulet-local-2026-10-08");
       expect(result.result!.omissions[0]).toContain("authored edits");
+      expect(JSON.parse(wire.messages[1].content).requiredResultBinding).toEqual({ reviewId: state.reviewId, tenantId: actor.tenantId, rubricVersion: method.version });
+      expect(wire.messages[0].content).toContain("copied exactly from requiredResultBinding");
+      expect(wire.messages[0].content).toContain("m1-draft-2026-09-21"); // Full original core is still preserved.
       expect(wire.messages[0].content).not.toContain(example.result.nextTest.action);
       expect(wire.messages[1].content).not.toContain("evaluatorOnly");
       expect(wire.provider).toMatchObject({ only: ["azure"], order: ["azure"], ignore: ["azure/us", "azure/eu"], allow_fallbacks: false, zdr: true, data_collection: "deny" });

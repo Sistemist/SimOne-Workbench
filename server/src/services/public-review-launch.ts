@@ -66,7 +66,7 @@ export async function loadPublicReviewLaunch(env: NodeJS.ProcessEnv = process.en
     catch { budget.audit(null, observedMonth); }
   })().finally(() => { auditInFlight = undefined; });
   const service = new PublicVentureReview({ mode: "fresh", methodVersion: method.version, maxConcurrent: c.maxConcurrent, websiteNetwork: publicWebsiteNetwork,
-    recipients: ["Sysdom.ai", "OpenRouter", "Azure (OpenAI Sol 6.1 High)"],
+    recipients: ["Sysdom.ai", "OpenRouter", route.providerName],
     retention: "Sysdom keeps your question and review in process memory for at most 15 minutes; cancelling clears the review. No venture record or account is created. Export only if you want a local copy. The configured provider route disallows training/content retention; provider and hosting security/billing metadata may remain. Closing this page does not recall a submitted request.",
     availability: async () => validApproval() ? budget.availability() : "paused",
     transport: () => {
