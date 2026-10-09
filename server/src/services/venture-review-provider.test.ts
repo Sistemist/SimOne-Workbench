@@ -90,7 +90,7 @@ describe("fresh provider boundary with mocked wire IO", () => {
     expect(h.config.receipts[0]).toMatchObject({ dispatched: false, knownCostUsd: null, furtherRequestsAllowed: false });
   });
 
-  it.each(["zero-cost", "missing-cost", "wrong-provider", "wrong-model", "tokens", "invalid-json", "invented-citation", "confident-hypothesis", "wrong-method"])("rejects untrusted response without repair/retry: %s", async (kind) => {
+  it.each(["zero-cost", "missing-cost", "wrong-provider", "wrong-model", "tokens", "invalid-json", "invalid-shape", "invented-citation", "confident-hypothesis", "wrong-method"])("rejects untrusted response without repair/retry: %s", async (kind) => {
     const h = harness();
     const fetcher = vi.fn(async (url, init) => {
       const raw = await (await h.config.fetcher(url, init)).json();
@@ -100,8 +100,9 @@ describe("fresh provider boundary with mocked wire IO", () => {
       if (kind === "wrong-model") raw.model = "unexpected/model";
       if (kind === "tokens") raw.usage.completion_tokens = 999999;
       if (kind === "invalid-json") raw.choices[0].message.content = "PRIVATE-SENTINEL invalid JSON";
-      if (["invented-citation", "confident-hypothesis", "wrong-method"].includes(kind)) {
+      if (["invalid-shape", "invented-citation", "confident-hypothesis", "wrong-method"].includes(kind)) {
         const result = JSON.parse(raw.choices[0].message.content);
+        if (kind === "invalid-shape") result.evidenceRequest = { purpose: "PRIVATE-SENTINEL", requestedSourceKinds: ["founder_note"], limits: { private: "PRIVATE-SENTINEL" } };
         if (kind === "invented-citation") result.engineFindings.customer[0].evidenceSourceIds = ["not-approved"];
         if (kind === "confident-hypothesis") Object.assign(result.engineFindings.customer[0], { basis: "hypothesis", confidence: "high" });
         if (kind === "wrong-method") result.rubricVersion = "unapproved-method";
@@ -113,6 +114,8 @@ describe("fresh provider boundary with mocked wire IO", () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
     expect(JSON.stringify(h.config.receipts)).not.toContain("PRIVATE-SENTINEL");
     expect(h.config.receipts[0]!.furtherRequestsAllowed).toBe(false);
+    const stages: Record<string, string> = { "invalid-json": "result_json", "invalid-shape": "result_shape", "confident-hypothesis": "result_confidence" };
+    if (stages[kind]) expect(h.config.receipts[0]).toMatchObject({ failureStage: stages[kind], usageValidated: true });
     if (["zero-cost", "missing-cost"].includes(kind)) expect(h.config.receipts[0]).toMatchObject({ generationId: "gen-ps02-mock", knownCostUsd: null });
   });
 

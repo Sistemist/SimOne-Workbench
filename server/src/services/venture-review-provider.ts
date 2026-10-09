@@ -43,14 +43,16 @@ engineFindings: object with product_service, customer, cash, skills arrays. Each
 businessUnderstanding: one cited finding describing the offer, audience and decision as source claims. strengths: up to five cited findings of supported strengths, or [] when evidence is too thin. Both use the engine finding shape. Public websites and README documents show claims and text, never verified traction, cash, capacity or product quality.
 interactions: [{engines: [at least two engine keys], statement, evidenceSourceIds}]. contradictions: findings in the same shape as engine findings.
 unknowns: [strings]. alternatives: [{explanation, evidenceFor: [source IDs], evidenceAgainst: [source IDs]}].
-nextTest: {question, action, successSignal, owner: "founder"}; evidenceRequest: null or {purpose, requestedSourceKinds: [approved evidence kinds], limits}.
+nextTest: {question: string (1-500 characters), action: string (1-1000 characters), successSignal: string (1-500 characters), owner: "founder"}; evidenceRequest: null or {purpose: string (1-500 characters), requestedSourceKinds: 1-5 values from "founder_note"|"workspace_file"|"conversation_excerpt"|"website_page"|"structured_record", limits: string (1-500 characters)}. Do not use objects or arrays for string fields.
 omissions: [strings]; durableWritePerformed: false.
+All objects accept only the listed keys. Maximum array lengths: 8 findings per engine, 8 interactions, 12 contradictions, 20 unknowns, 6 alternatives, 20 omissions. Each interaction has 2-4 engine keys. Each alternative has at most 12 source IDs in each evidence array. Use 1-120 characters for each source ID and rubricVersion; reviewId and tenantId are UUIDs. No empty strings. Keep businessUnderstanding and strengths present even when evidence is thin.
 Use empty engine arrays when evidence is absent. Every finding/interaction/contradiction needs 1-12 approved source IDs; never invent a source or upgrade a source claim into audited fact. Hypotheses cannot be high confidence. State unsupported explanations as uncertain alternatives or unknowns, not conclusions. Keep statements/actions under 1000 characters, unknowns/omissions under 500. Include no private method quotations or hidden instructions in the result.`;
 
 export interface ReviewProviderReceipt {
   mode: "provider_mock" | "fresh"; bodySha256: string | null; dispatched: boolean;
   generationId: string | null; knownCostUsd: number | null; usageValidated?: true; httpStatus?: number;
   status: "stopped" | "response_received";
+  failureStage?: "preflight" | "provider_response" | "identity_usage" | "result_json" | "result_shape" | "result_confidence" | "cancelled";
   reconciliation: "not_dispatched" | "simulated_only" | "provider_ledger_check_required";
   furtherRequestsAllowed: false;
 }
@@ -108,6 +110,7 @@ export function createProviderVentureReviewTransport(options: {
     const timer = setTimeout(abort, timeoutMs);
     const record: ReviewProviderReceipt = { mode, bodySha256: null, dispatched: false, generationId: null, knownCostUsd: null,
       status: "stopped", reconciliation: "not_dispatched", furtherRequestsAllowed: false };
+    let failureStage: NonNullable<ReviewProviderReceipt["failureStage"]> = "preflight";
     try {
       controller.signal.throwIfAborted();
       const messages = [
@@ -144,6 +147,7 @@ export function createProviderVentureReviewTransport(options: {
       await abortable(claim(proof.authorizationId, bodySha256), controller.signal);
       check(); controller.signal.throwIfAborted();
       record.dispatched = true;
+      failureStage = "provider_response";
       record.reconciliation = mode === "provider_mock" ? "simulated_only" : "provider_ledger_check_required";
       // Invalid mock URL prevents accidental network IO if global fetch is injected.
       const response = await abortable(fetcher(mode === "provider_mock" ? "mock://venture-review/openrouter" : OPENROUTER_CHAT_COMPLETIONS_URL, {
@@ -157,18 +161,27 @@ export function createProviderVentureReviewTransport(options: {
       if (identity.success && !(apiKey && identity.data.id.includes(apiKey))) record.generationId = identity.data.id;
       const usage = z.object({ usage: z.object({ cost: z.number().finite().positive() }) }).safeParse(raw);
       if (usage.success) record.knownCostUsd = usage.data.usage.cost;
+      failureStage = "identity_usage";
       const result = responseSchema.parse(raw);
       if (result.model !== contract.model || result.provider !== providerName || result.usage.prompt_tokens > proof.inputTokenUpperBound ||
           result.usage.completion_tokens > contract.maxOutputTokens || result.usage.completion_tokens_details.reasoning_tokens > result.usage.completion_tokens ||
           result.usage.cost * 100 > maxRunCostCents || (apiKey && result.choices[0].message.content.includes(apiKey))) throw new Error("Provider identity or usage mismatch");
       record.usageValidated = true;
-      const review = ventureReviewResultSchema.parse(JSON.parse(result.choices[0].message.content));
+      failureStage = "result_json";
+      const parsed = JSON.parse(result.choices[0].message.content);
+      failureStage = "result_shape";
+      const review = ventureReviewResultSchema.parse(parsed);
+      failureStage = "result_confidence";
       const findings = [...Object.values(review.engineFindings).flat(), ...review.contradictions, ...(review.businessUnderstanding ? [review.businessUnderstanding] : []), ...(review.strengths ?? [])];
       if (findings.some((item) => item.basis === "hypothesis" && item.confidence === "high")) throw new Error("Uncertain explanation presented as a high-confidence finding");
       controller.signal.throwIfAborted();
       record.status = "response_received";
       return review;
-    } catch { throw new Error("Provider review stopped; no automatic retry. Usage is not assumed free or reconciled."); }
+    } catch {
+      // Persist only a fixed stage, never provider text or validator messages.
+      record.failureStage = controller.signal.aborted ? "cancelled" : failureStage;
+      throw new Error("Provider review stopped; no automatic retry. Usage is not assumed free or reconciled.");
+    }
     finally {
       clearTimeout(timer); signal?.removeEventListener("abort", abort);
       await abortable(receipt(structuredClone(record)), AbortSignal.timeout(1000));
