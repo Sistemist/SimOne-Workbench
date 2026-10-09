@@ -23,7 +23,7 @@ services:
       - "${PUBLIC_REVIEW_LAUNCH_FILE:?approved launch JSON required}:/run/sysdom-review/launch.json:ro"
       - "${PUBLIC_REVIEW_METHOD_DIRECTORY:?approved private method directory required}:/run/sysdom-review/method:ro"
       - "${PUBLIC_REVIEW_BUDGET_DIRECTORY:?persistent private budget directory required}:/var/lib/sysdom-review-budget"
-      - "/root/sysdom-retention:/var/lib/sysdom-retention"
+      - "/root/sysdom-retention/state:/var/lib/sysdom-retention"
 secrets:
   public_review_key:
     file: "${PUBLIC_REVIEW_KEY_FILE:?separately approved dedicated public-service key required}"
