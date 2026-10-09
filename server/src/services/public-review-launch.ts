@@ -16,7 +16,9 @@ const launchSchema = z.object({
   monthlyCents: z.number().int().positive(), runCents: z.number().int().positive(), maxConcurrent: z.number().int().min(1).max(100),
   trustedProxyAddresses: z.array(z.string().refine(ip => isIP(ip) !== 0)).max(8),
   keySha256: z.string().regex(/^[a-f0-9]{64}$/), accountPrivacyVerifiedAt: z.string().datetime(),
-  noPromptLoggingOrTrainingOrBroadcast: z.literal(true), automaticReloadDisabled: z.literal(true),
+  noPromptLoggingOrTrainingOrBroadcast: z.literal(true),
+  // Account credit refills do not enlarge the independently verified monthly key cap.
+  accountAutomaticReload: z.enum(["disabled", "pre_existing_enabled"]),
   singleReplicaDedicatedKey: z.literal(true),
 }).strict();
 

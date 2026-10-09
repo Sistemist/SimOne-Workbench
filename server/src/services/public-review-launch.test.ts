@@ -8,7 +8,7 @@ import { loadPublicReviewLaunch } from "./public-review-launch.js";
 import { createFixtureVentureReviewTransport } from "./venture-review.js";
 const dirs: string[] = [], services: { dispose(): void }[] = [];
 afterEach(async () => { services.splice(0).forEach(s => s.dispose()); await Promise.all(dirs.splice(0).map(p => rm(p, { recursive: true, force: true }))); });
-async function harness({ delayed = false, cost = 0.01, completionGate, monthlyCents = 300, balanceSnapshot }: { delayed?: boolean; cost?: number; completionGate?: Promise<void>; monthlyCents?: number; balanceSnapshot?: unknown } = {}) {
+async function harness({ delayed = false, cost = 0.01, completionGate, monthlyCents = 300, balanceSnapshot, accountAutomaticReload = "disabled" }: { delayed?: boolean; cost?: number; completionGate?: Promise<void>; monthlyCents?: number; balanceSnapshot?: unknown; accountAutomaticReload?: "disabled" | "pre_existing_enabled" } = {}) {
   const dir = await mkdtemp(path.join(os.tmpdir(), "public-launch-test-")); dirs.push(dir);
   const methodDirectory = path.join(dir, "method"); await mkdir(path.join(methodDirectory, "runtime-2026-10-08"), { recursive: true });
   const version = "sim-aulet-local-2026-10-08", core = "FULL TEST CORE", procedure = "FULL TEST PROCEDURE";
@@ -18,7 +18,7 @@ async function harness({ delayed = false, cost = 0.01, completionGate, monthlyCe
   }
   await writeFile(path.join(methodDirectory, "runtime-2026-10-08/manifest.json"), JSON.stringify({ version, artifacts }));
   const fakeKey = "local-mock-value-" + randomUUID(), now = Date.now(), file = path.join(dir, "launch.json");
-  const config = { authorizationId: "deterministic-test-only", approvedAt: new Date(now - 1000).toISOString(), publicOrigin: "https://app.sysdom.ai", methodDirectory, budgetDirectory: path.join(dir, "budget"), monthlyCents, runCents: 30, maxConcurrent: 10, trustedProxyAddresses: [], keySha256: createHash("sha256").update(fakeKey).digest("hex"), accountPrivacyVerifiedAt: new Date(now - 1000).toISOString(), noPromptLoggingOrTrainingOrBroadcast: true, automaticReloadDisabled: true, singleReplicaDedicatedKey: true };
+  const config = { authorizationId: "deterministic-test-only", approvedAt: new Date(now - 1000).toISOString(), publicOrigin: "https://app.sysdom.ai", methodDirectory, budgetDirectory: path.join(dir, "budget"), monthlyCents, runCents: 30, maxConcurrent: 10, trustedProxyAddresses: [], keySha256: createHash("sha256").update(fakeKey).digest("hex"), accountPrivacyVerifiedAt: new Date(now - 1000).toISOString(), noPromptLoggingOrTrainingOrBroadcast: true, accountAutomaticReload, singleReplicaDedicatedKey: true };
   await writeFile(file, JSON.stringify(config));
   const balanceFile = path.join(dir, "account-balance.json");
   if (balanceSnapshot) await writeFile(balanceFile, JSON.stringify(balanceSnapshot));
@@ -111,4 +111,19 @@ it("does not mistake an absent credit balance for the monthly allowance", async 
   expect((await h.launch.getOperations()).accountBalance).toEqual({ state: "unavailable", balanceUsd: null, observedAt: null });
   expect(vi.mocked(h.fetcher).mock.calls.every(([url, init]) => String(url).endsWith("/key") && init?.method === "GET")).toBe(true);
   expect(h.posts).toHaveLength(0);
+});
+
+
+it("records pre-existing account reload without changing billing or weakening the dedicated key cap", async () => {
+  const h = await harness({ monthlyCents: 10000, accountAutomaticReload: "pre_existing_enabled" });
+  expect((await h.run()).phase).toBe("complete");
+  const original = vi.mocked(h.fetcher).getMockImplementation()!;
+  vi.mocked(h.fetcher).mockImplementation(async (url, init) => String(url).endsWith("/key")
+    ? Response.json({ data: { limit: 101, limit_remaining: 101, usage_monthly: 0, limit_reset: "monthly", byok_usage: 0, is_management_key: false, expires_at: null } })
+    : original(url, init));
+  expect((await h.run()).phase).toBe("failed");
+  expect(h.posts).toHaveLength(1);
+  expect(vi.mocked(h.fetcher).mock.calls.every(([url, init]) => init?.method !== "POST" || String(url).endsWith("/chat/completions"))).toBe(true);
+  await writeFile(h.file, JSON.stringify({ ...h.config, accountAutomaticReload: "enable_on_launch" }));
+  await expect(loadPublicReviewLaunch(h.env, h.fetcher)).rejects.toThrow();
 });
