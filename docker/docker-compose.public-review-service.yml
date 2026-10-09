@@ -7,7 +7,7 @@ services:
     logging:
       driver: syslog
       options:
-        syslog-address: "unixgram:///run/sysdom-review-log.sock"
+        syslog-address: "unixgram:///run/sysdom-review/log.sock"
         syslog-facility: local5
         tag: sysdom-review-app
         mode: non-blocking
