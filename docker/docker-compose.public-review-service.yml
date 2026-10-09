@@ -4,16 +4,26 @@
 # Opt-in only after the separate ongoing-service approval. Never used by default deploy scripts.
 services:
   paperclip:
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "unixgram:///run/sysdom-review-log.sock"
+        syslog-facility: local5
+        tag: sysdom-review-app
+        mode: non-blocking
     environment:
       SYSDOM_PUBLIC_REVIEW_LAUNCH_FILE: /run/sysdom-review/launch.json
       SYSDOM_PUBLIC_REVIEW_API_KEY_FILE: /run/secrets/public_review_key
       SYSDOM_PUBLIC_REVIEW_BALANCE_SNAPSHOT_FILE: "${SYSDOM_PUBLIC_REVIEW_BALANCE_SNAPSHOT_FILE:-}"
+      SYSDOM_PUBLIC_RETENTION_STATE: /var/lib/sysdom-retention/state.json
+      SYSDOM_PUBLIC_RETENTION_LEDGER: /var/lib/sysdom-review-budget/service-budget.sqlite
     secrets:
       - public_review_key
     volumes:
       - "${PUBLIC_REVIEW_LAUNCH_FILE:?approved launch JSON required}:/run/sysdom-review/launch.json:ro"
       - "${PUBLIC_REVIEW_METHOD_DIRECTORY:?approved private method directory required}:/run/sysdom-review/method:ro"
       - "${PUBLIC_REVIEW_BUDGET_DIRECTORY:?persistent private budget directory required}:/var/lib/sysdom-review-budget"
+      - "/root/sysdom-retention:/var/lib/sysdom-retention"
 secrets:
   public_review_key:
     file: "${PUBLIC_REVIEW_KEY_FILE:?separately approved dedicated public-service key required}"

@@ -9,6 +9,8 @@ describe("shouldSilenceHttpSuccessLog", () => {
     expect(isSensitiveReviewRequest("/API/COMPANIES/id/VENTURE-REVIEWS/review/submit")).toBe(true);
     expect(isSensitiveReviewRequest("/api/public/venture-review/sessions/id/run?private=value")).toBe(true);
     expect(isSensitiveReviewRequest("/api/public/early-access/requests")).toBe(true);
+    expect(isSensitiveReviewRequest("/api/early-access/activate/private-token")).toBe(true);
+    expect(isSensitiveReviewRequest("/public/early-access/activate/private-token")).toBe(true);
     expect(isSensitiveReviewRequest("/api/public/funnel-events")).toBe(true);
     expect(isSensitiveReviewRequest("/api/companies/id/issues")).toBe(false);
   });

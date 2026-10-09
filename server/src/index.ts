@@ -1,4 +1,6 @@
 import { loadPublicReviewLaunch } from "./services/public-review-launch.js";
+import { retainPublicData } from "./services/public-data-retention.js";
+import { retainPublicReviewLedger } from "./services/public-review-budget.js";
 /// <reference path="./types/express.d.ts" />
 // Kicks off the OTel bootstrap as early as possible (no-op unless
 // OTEL_EXPORTER_OTLP_ENDPOINT is set). startServer() awaits
@@ -582,6 +584,23 @@ export async function startServer(): Promise<StartedServer> {
     shareClient: createFeedbackTraceShareClientFromConfig(config),
   });
   const backupSettingsSvc = instanceSettingsService(db);
+  const retentionState = process.env.SYSDOM_PUBLIC_RETENTION_STATE;
+  if (retentionState) {
+    let running = false;
+    const retain = async () => {
+      if (running) return;
+      running = true;
+      try {
+        const counts = await retainPublicData(db, retentionState, true);
+        const ledger = process.env.SYSDOM_PUBLIC_RETENTION_LEDGER;
+        const usage = ledger && existsSync(ledger) ? retainPublicReviewLedger(ledger, true) : {};
+        logger.info({ ...counts, ...usage }, "Public data retention completed");
+      } finally { running = false; }
+    };
+    // Fail closed on restore: no HTTP listener until the independent deletion journal is reapplied.
+    await retain();
+    setInterval(() => { void retain().catch(() => logger.error("Public data retention failed; operator action required")); }, 3600000).unref();
+  }
   let databaseBackupInFlight = false;
   const runServerDatabaseBackup = async (
     trigger: InstanceDatabaseBackupTrigger,

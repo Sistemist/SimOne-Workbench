@@ -71,6 +71,8 @@ export async function publicReviewBudget(directory: string, limits: Limits, now 
         if (status === "fault") db.prepare("UPDATE config SET fault=? WHERE id=1").run("Provider usage exceeds all accounted charges and reservations");
       }
       db.prepare("UPDATE config SET audit=? WHERE id=1").run(JSON.stringify({ status, at: new Date(now()).toISOString(), month: observedMonth, usageUsd }));
+      if (status === "matched") db.prepare("UPDATE attempts SET receipt=json_set(receipt,'$.reconciledAt',?) WHERE state='settled' AND charge_month=?")
+        .run(new Date(now()).toISOString(), observedMonth);
       return status;
     }),
     controls() {
@@ -111,4 +113,23 @@ export async function publicReviewBudget(directory: string, limits: Limits, now 
     },
     close: () => db.close(),
   };
+}
+
+/** Only independently reconciled historical charges may leave the itemized ledger. */
+export function retainPublicReviewLedger(file: string, apply = false, time = Date.now()) {
+  const db = new DatabaseSync(file, { readOnly: !apply });
+  try {
+    db.exec("PRAGMA busy_timeout=2000");
+    if (apply) db.exec("BEGIN IMMEDIATE");
+    const predicate = `started<=? AND (state='not_dispatched' OR
+      (state='settled' AND charge_month<>? AND json_extract(receipt,'$.reconciledAt') IS NOT NULL))`;
+    const args = [time - 90 * 86400000, month(time)];
+    const candidates = db.prepare(`SELECT COUNT(*) AS count FROM attempts WHERE ${predicate}`).get(...args) as { count: number };
+    if (apply) {
+      db.exec("PRAGMA secure_delete=ON");
+      db.prepare(`DELETE FROM attempts WHERE ${predicate}`).run(...args);
+      db.exec("COMMIT; PRAGMA wal_checkpoint(TRUNCATE)");
+    }
+    return { ledger: candidates.count, apply };
+  } finally { db.close(); }
 }

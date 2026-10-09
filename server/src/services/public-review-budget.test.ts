@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import { afterEach, expect, it } from "vitest";
-import { publicReviewBudget } from "./public-review-budget.js";
+import { publicReviewBudget, retainPublicReviewLedger } from "./public-review-budget.js";
 const dirs: string[] = [], budgets: Awaited<ReturnType<typeof publicReviewBudget>>[] = [];
 const limits = { authorizationId: "mock-only", monthlyCents: 300, runCents: 30, maxConcurrent: 10, timeoutMs: 120000 };
 const receipt = { mode: "fresh", bodySha256: "a".repeat(64), dispatched: true, generationId: "gen-fictional", knownCostUsd: 0.01, status: "response_received", reconciliation: "provider_ledger_check_required", furtherRequestsAllowed: false } as const;
@@ -75,4 +75,21 @@ it.each([true, false])("retains content-free outer timeout diagnostics when rece
   const row = db.prepare("SELECT receipt FROM attempts").get() as { receipt: string }; db.close();
   expect(JSON.parse(row.receipt)).toMatchObject({ ...receipt, publicOutcome: { phase: "failed", failureStage: "timeout" } });
   expect(b.summary()).toMatchObject({ spent: 10000000, reserved: 0, active: 0 });
+});
+
+it("purges only reconciled old detail and preserves current charges and unresolved reservations", async () => {
+  let time = Date.parse("2026-01-01T00:00:00Z");
+  const { b, directory } = await make(limits, () => time);
+  const old = b.controls(); await old.claim(limits.authorizationId, "a".repeat(64)); await old.receipt(receipt);
+  expect(b.audit(0.01)).toBe("matched");
+  const unknown = b.controls(); await unknown.claim(limits.authorizationId, "b".repeat(64));
+  time = Date.parse("2026-10-09T00:00:00Z");
+  const recent = b.controls(); await recent.claim(limits.authorizationId, "c".repeat(64)); await recent.receipt(receipt);
+  const file = path.join(directory, "service-budget.sqlite");
+  const before = b.summary();
+  expect(retainPublicReviewLedger(file, false, time).ledger).toBe(1);
+  expect(b.summary()).toEqual(before);
+  expect(retainPublicReviewLedger(file, true, time).ledger).toBe(1);
+  expect(b.summary()).toEqual(before);
+  expect(retainPublicReviewLedger(file, true, time).ledger).toBe(0);
 });
