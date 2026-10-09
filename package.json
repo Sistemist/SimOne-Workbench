@@ -12,6 +12,8 @@
     "dev:stop": "pnpm --filter @paperclipai/server exec tsx ../scripts/dev-service.ts stop",
     "dev:server": "pnpm --filter @paperclipai/server dev",
     "dev:ui": "pnpm --filter @paperclipai/ui dev",
+    "dev:venture-review": "pnpm --filter @paperclipai/server exec tsx scripts/venture-review-rehearsal.ts",
+    "build:venture-review-plugin": "node scripts/build-venture-review-plugin.mjs",
     "storybook": "pnpm --filter @paperclipai/ui storybook",
     "build-storybook": "pnpm --filter @paperclipai/ui build-storybook",
     "build": "pnpm run preflight:workspace-links && pnpm -r build",

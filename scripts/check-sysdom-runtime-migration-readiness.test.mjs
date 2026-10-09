@@ -18,7 +18,7 @@ previous.env
 ROLLBACK_TAG=
 PREVIOUS_IMAGE_REF=
 curl "https://$public_host/app" | rg -q '<title>Sysdom AI'
-curl "https://$public_host/scanner" | rg -q '<title>Sysdom AI'
+curl "https://$public_host/venture-review" | rg -q '<title>Review your venture'
 curl "https://$public_host/auth/forgot-password" | rg -q '<title>Sysdom AI'
 curl "https://$public_host/" | rg -q '<title>SimOne \\| The conscious agent company'
 curl "https://$public_host/api/signup"

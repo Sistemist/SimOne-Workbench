@@ -1,0 +1,18 @@
+# Approved model allowance: $100/month (monthlyCents: 10000); Han supplies a NEW dedicated non-management key.
+# Account credit is separate: optionally mount a trusted numeric balance snapshot read-only and set
+# SYSDOM_PUBLIC_REVIEW_BALANCE_SNAPSHOT_FILE; never mount a provider management key here.
+# Opt-in only after the separate ongoing-service approval. Never used by default deploy scripts.
+services:
+  paperclip:
+    environment:
+      SYSDOM_PUBLIC_REVIEW_LAUNCH_FILE: /run/sysdom-review/launch.json
+      SYSDOM_PUBLIC_REVIEW_API_KEY_FILE: /run/secrets/public_review_key
+    secrets:
+      - public_review_key
+    volumes:
+      - "${PUBLIC_REVIEW_LAUNCH_FILE:?approved launch JSON required}:/run/sysdom-review/launch.json:ro"
+      - "${PUBLIC_REVIEW_METHOD_DIRECTORY:?approved private method directory required}:/run/sysdom-review/method:ro"
+      - "${PUBLIC_REVIEW_BUDGET_DIRECTORY:?persistent private budget directory required}:/var/lib/sysdom-review-budget"
+secrets:
+  public_review_key:
+    file: "${PUBLIC_REVIEW_KEY_FILE:?separately approved dedicated public-service key required}"

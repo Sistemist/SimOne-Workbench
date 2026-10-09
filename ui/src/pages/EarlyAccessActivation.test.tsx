@@ -104,9 +104,11 @@ describe("EarlyAccessActivationPage", () => {
     await flushReact();
 
     const activateButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Activate founder access"),
+      (button) => button.textContent?.includes("Activate my access"),
     );
     expect(activateButton).toBeDefined();
+    expect(container.textContent).toContain("with its own workspace");
+    expect(container.textContent).not.toContain("operating state");
 
     await act(async () => {
       activateButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));

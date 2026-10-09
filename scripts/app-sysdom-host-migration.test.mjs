@@ -34,7 +34,7 @@ test("TLS activation waits for exact DNS and routes the product-only host", () =
   assert.match(tlsNginx, /proxy_pass http:\/\/127\.0\.0\.1:3100/);
   assert.match(tlsNginx, /location = \/ \{\s+return 302 \/app;/);
   assert.doesNotMatch(tlsNginx, /127\.0\.0\.1:3200/);
-  assert.match(activateScript, /https:\/\/app\.sysdom\.ai\/scanner/);
+  assert.match(activateScript, /https:\/\/app\.sysdom\.ai\/venture-review/);
   assert.match(activateScript, /https:\/\/app\.sysdom\.ai\/request-access/);
   assert.match(activateScript, /App root must redirect to https:\/\/app\.sysdom\.ai\/app/);
   assert.match(activateScript, /for _ in \$\(seq 1 15\)/);

@@ -66,8 +66,9 @@ describe("EarlyAccessRequestPage", () => {
     });
 
     expect(container.textContent).toContain("Invite-only early access");
-    expect(container.textContent).toContain("Keep this scan with my request");
-    expect(container.textContent).toContain("up to 30 days");
+    expect(container.textContent).toContain("Include my note and result with this request");
+    expect(container.textContent?.replace(/\s+/g, " ")).toContain("up to 30 days");
+    expect(container.textContent).toContain("not account creation or a Venture Review");
 
     const inputs = container.querySelectorAll<HTMLInputElement>("input");
     const nameInput = inputs[0]!;
@@ -95,6 +96,7 @@ describe("EarlyAccessRequestPage", () => {
       scan,
     }));
     expect(container.textContent).toContain("Request received");
+    expect(container.textContent).toContain("invitation to create an account or sign in");
 
     await act(async () => {
       root.unmount();

@@ -106,7 +106,7 @@ if [ "$healthy" != true ]; then
   exit 1
 fi
 
-curl -fsS -H 'Host: app.sysdom.ai' http://127.0.0.1:3100/scanner | grep -q '<title>Sysdom AI'
+curl -fsS -H 'Host: app.sysdom.ai' http://127.0.0.1:3100/venture-review | grep -q '<title>Review your venture'
 status="$(curl -sS -o /dev/null -w '%{http_code}' -H 'Host: app.sysdom.ai' http://127.0.0.1/)"
 if [ "$status" != "503" ]; then
   echo "Pre-DNS hostname must fail closed with HTTP 503; received $status." >&2

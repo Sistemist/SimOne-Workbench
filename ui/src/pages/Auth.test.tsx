@@ -188,6 +188,7 @@ describe("AuthPage", () => {
     );
 
     expect(container.textContent).toContain("Create your Sysdom AI account");
+    expect(container.textContent).toContain("password with at least 8 characters");
     expect(container.querySelector('input[name="name"]')).not.toBeNull();
     expect((container.querySelector('input[name="email"]') as HTMLInputElement).value)
       .toBe("founder@example.com");
@@ -205,6 +206,7 @@ describe("AuthPage", () => {
 
     expect(container.textContent).toContain("Sign in to Sysdom AI");
     expect(container.textContent).toContain("Request early access");
+    expect(container.textContent).toContain("Don't have an invitation yet?");
     expect(container.querySelector('input[name="name"]')).toBeNull();
 
     await act(async () => {

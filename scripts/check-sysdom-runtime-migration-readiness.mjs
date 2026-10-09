@@ -109,7 +109,7 @@ export function evaluateSysdomRuntimeMigrationReadiness(input) {
       "smoke.public_paths",
       [
         'https://$public_host/app',
-        'https://$public_host/scanner',
+        'https://$public_host/venture-review',
         'https://$public_host/auth/forgot-password',
         'https://$public_host/',
         'https://$public_host/api/signup',

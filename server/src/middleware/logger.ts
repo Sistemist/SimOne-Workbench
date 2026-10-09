@@ -4,7 +4,7 @@ import pino from "pino";
 import { pinoHttp } from "pino-http";
 import { readConfigFile } from "../config-file.js";
 import { resolveDefaultLogsDir, resolveHomeAwarePath } from "../home-paths.js";
-import { shouldSilenceHttpSuccessLog } from "./http-log-policy.js";
+import { isSensitiveReviewRequest, shouldSilenceHttpSuccessLog } from "./http-log-policy.js";
 import { redactSensitive } from "./redact-sensitive.js";
 
 function resolveServerLogDir(): string {
@@ -48,6 +48,13 @@ export const logger = pino({
 
 export const httpLogger = pinoHttp({
   logger,
+  serializers: {
+    req(req) {
+      return isSensitiveReviewRequest(req.url)
+        ? { method: req.method, url: "/api/companies/[scoped]/venture-reviews/[redacted]", contentOmitted: true }
+        : req;
+    },
+  },
   customLogLevel(_req, res, err) {
     if (shouldSilenceHttpSuccessLog(_req.method, _req.url, res.statusCode)) {
       return "silent";
@@ -57,14 +64,17 @@ export const httpLogger = pinoHttp({
     return "info";
   },
   customSuccessMessage(req, res) {
+    if (isSensitiveReviewRequest(req.url)) return `Venture Review request ${res.statusCode}`;
     return `${req.method} ${req.url} ${res.statusCode}`;
   },
   customErrorMessage(req, res, err) {
+    if (isSensitiveReviewRequest(req.url)) return `Venture Review request failed ${res.statusCode}; content omitted`;
     const ctx = (res as any).__errorContext;
     const errMsg = ctx?.error?.message || err?.message || (res as any).err?.message || "unknown error";
     return `${req.method} ${req.url} ${res.statusCode} — ${errMsg}`;
   },
   customProps(req, res) {
+    if (isSensitiveReviewRequest(req.url)) return { reviewContentOmitted: true };
     if (res.statusCode >= 400) {
       const ctx = (res as any).__errorContext;
       if (ctx) {

@@ -1,0 +1,10 @@
+{
+  "version": "sysdom_sim_review_cases_pointer_2026_09_21",
+  "evidenceClass": "private_authored_draft_pending_Han_acceptance",
+  "productionAuthority": false,
+  "scientificallyValidated": false,
+  "privateArtifact": "doc/product/venture-review/m1-2026-09-21/fictional-cases.json",
+  "milestone": "https://app.clickup.com/t/z8mx156v7d",
+  "supersedes": "Twelve one-line scenario outlines",
+  "note": "Pointer only; no private method in public plugin, no runtime or model evaluation claim."
+}

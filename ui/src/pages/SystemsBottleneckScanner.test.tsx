@@ -1,908 +1,107 @@
 // @vitest-environment jsdom
-
 import { act } from "react";
-import { createRoot } from "react-dom/client";
-import { flushSync } from "react-dom";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { createRoot, type Root } from "react-dom/client";
+import { afterEach, expect, it, vi } from "vitest";
+import example from "../../../evals/fixtures/venture-review-ps02-oct08-demo.json";
 import { SystemsBottleneckScanner } from "./SystemsBottleneckScanner";
-
-function renderScanner(container: HTMLElement) {
-  const root = createRoot(container);
-  flushSync(() => {
-    root.render(<SystemsBottleneckScanner />);
-  });
-  return root;
+const capability = { state: "available", mode: "fresh", consentVersion: "test-consent", methodVersion: "sim-aulet-local-2026-10-08", model: "openai/gpt-6.1-sol", reasoningEffort: "high", recipients: ["Sysdom.ai", "OpenRouter", "Azure"], retention: "Memory for at most 15 minutes.", maxNoteChars: 8000, sessionMinutes: 15 };
+const snapshot = { reviewId: "11111111-1111-4111-8111-111111111111", phase: "ready", expiresAt: "2026-10-08T12:00:00Z", mode: "fresh", result: null };
+const roots: Root[] = [];
+let container: HTMLDivElement;
+async function mount() { container = document.createElement("div"); document.body.append(container); const root = createRoot(container); roots.push(root); await act(async () => root.render(<SystemsBottleneckScanner />)); }
+async function field(element: HTMLInputElement | HTMLTextAreaElement, value: string) { await act(async () => { Object.getOwnPropertyDescriptor(Object.getPrototypeOf(element), "value")!.set!.call(element, value); element.dispatchEvent(new Event("input", { bubbles: true })); }); }
+function button(text: string) { const b = [...container.querySelectorAll("button")].find(x => x.textContent === text); expect(b, text).toBeTruthy(); return b!; }
+async function click(text: string) { await act(async () => button(text).click()); }
+async function fill() { const a = container.querySelectorAll("textarea"); await field(a[0]!, "We deliver a weekly service. Should we expand?"); await field(a[1]!, "Orders are increasing, but we do not know whether delivery capacity can keep up."); }
+function mock() {
+  const calls: { url: string; body: any }[] = [];
+  vi.stubGlobal("fetch", vi.fn(async (url, init) => {
+    const u = String(url), body = init?.body ? JSON.parse(init.body) : undefined; calls.push({ url: u, body });
+    if (u.endsWith("/capability")) return new Response(JSON.stringify(capability));
+    if (u.endsWith("/sessions")) return new Response(JSON.stringify({ ...snapshot, accessToken: "a".repeat(64) }));
+    if (u.endsWith("/sources")) return new Response(JSON.stringify([{ id: "public-0", sha256: "b".repeat(64), url: "https://example.com/", title: "Example source", text: "Private-to-preview source text", capturedAt: "2026-10-08T10:00:00Z", status: "partial", omissions: ["Truncated at the source limit."], simulated: false }]));
+    if (u.endsWith("/run")) return new Response(JSON.stringify({ ...snapshot, phase: "failed" }));
+    if (u.endsWith("/cancel")) return new Response(JSON.stringify({ ...snapshot, phase: "cancelled" }));
+    return new Response(JSON.stringify(snapshot));
+  }));
+  return calls;
 }
+afterEach(async () => { await act(async () => roots.splice(0).forEach(r => r.unmount())); vi.unstubAllGlobals(); vi.restoreAllMocks(); document.body.innerHTML = ""; });
+it("shows truthful disabled availability and never falls back to a keyword diagnosis", async () => {
+  const fetcher = vi.fn(async (_url: RequestInfo | URL) => new Response(JSON.stringify({ ...capability, state: "disabled", mode: "disabled" }))); vi.stubGlobal("fetch", fetcher);
+  await mount(); await fill();
+  expect(container.textContent).toContain("Venture Review is not open yet");
+  expect(button("Check what will be shared").disabled).toBe(true);
+  expect(container.textContent).not.toContain("Run quick pattern check"); expect(fetcher.mock.calls.filter(c => String(c[0]).endsWith("/capability"))).toHaveLength(1);
+});
+it("keeps notes local until informed approval, submits once, and recovers to the draft after failure", async () => {
+  const calls = mock(); await mount(); await fill(); await click("Check what will be shared");
+  expect(calls.filter(c => !c.url.endsWith("/funnel-events"))).toHaveLength(1); expect(container.textContent).toContain("OpenRouter, Azure"); expect(button("Approve and start review").disabled).toBe(true);
+  await act(async () => container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click()); await click("Approve and start review");
+  expect(calls.filter(x => x.url.endsWith("/run"))).toHaveLength(1);
+  expect(calls.find(x => x.url.endsWith("/run"))!.body).toMatchObject({ consent: true, selectedSourceIds: [], consentVersion: "test-consent" });
+  expect(container.textContent).toContain("The review could not complete"); await click("Return to my draft");
+  expect(container.querySelectorAll("textarea")[1]?.value).toContain("Orders are increasing");
+});
+it("reads only requested sources and previews/removes excerpts before the review", async () => {
+  const calls = mock(); await mount(); await fill(); await field(container.querySelectorAll<HTMLInputElement>('input[type="url"]')[0]!, "https://example.com/");
+  await click("Read selected public sources");
+  expect(calls.filter(x => x.url.endsWith("/run"))).toHaveLength(0);
+  expect(container.textContent).toContain("Partly read"); expect(container.textContent).toContain("Truncated at the source limit.");
+  await act(async () => container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click());
+  await click("Check what will be shared"); expect(container.textContent).not.toContain("Private-to-preview source text");
+  expect(container.textContent).toContain("0 public sources selected");
+  await act(async () => container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click()); await click("Approve and start review");
+  expect(calls.find(x => x.url.endsWith("/run"))!.body.selectedSourceIds).toEqual([]);
+});
+it("does not retry an uncertain request and allows manual status and cancellation", async () => {
+  const calls = mock(); const fetcher = vi.mocked(fetch); const original = fetcher.getMockImplementation()!;
+  fetcher.mockImplementation(async (...args) => { if (String(args[0]).endsWith("/run")) throw new Error("connection lost"); return original(...args); });
+  await mount(); await fill(); await click("Check what will be shared");
+  await act(async () => container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click()); await click("Approve and start review");
+  expect(container.textContent).toContain("outcome isn't confirmed");
+  await click("Check review status"); expect(container.textContent).toContain("Review not started");
+  await click("Cancel review"); expect(container.textContent).toContain("Review cancelled");
+  expect(calls.filter(x => x.url.endsWith("/sessions"))).toHaveLength(1);
+});
 
-async function updateField(element: HTMLInputElement | HTMLTextAreaElement, value: string) {
-  const inputValueSetter = Object.getOwnPropertyDescriptor(
-    Object.getPrototypeOf(element),
-    "value",
-  )?.set;
-  await act(async () => {
-    inputValueSetter?.call(element, value);
-    element.dispatchEvent(new Event("input", { bubbles: true }));
+it("exports citations and keeps uncertainty under the correct plain-language headings", async () => {
+  mock(); const fetcher = vi.mocked(fetch), original = fetcher.getMockImplementation()!;
+  fetcher.mockImplementation(async (...args) => String(args[0]).endsWith("/run") ? Response.json({ ...snapshot, phase: "complete", result: example.result }) : original(...args));
+  vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: vi.fn(() => "blob:review"), revokeObjectURL: vi.fn() }));
+  vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+  await mount(); await fill(); await click("Check what will be shared");
+  await act(async () => container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click()); await click("Approve and start review"); await click("Download my review");
+  const text = container.querySelector("textarea")!.value;
+  expect(text).toContain("What looks promising\n\nThe supplied evidence is too thin to identify a supported strength.\n\nWhat may need attention");
+  expect(text).toContain("[Sources:"); expect(text).toContain("What we still need to know"); expect(text).toContain("A practical next step"); expect(text).toContain("founder-note: Your approved evidence");
+});
+
+it("offers an optional editable access-request handoff after the anonymous result", async () => {
+  const calls = mock(); const fetcher = vi.mocked(fetch), original = fetcher.getMockImplementation()!;
+  fetcher.mockImplementation(async (...args) => {
+    if (String(args[0]).endsWith("/run")) return Response.json({ ...snapshot, phase: "complete", result: example.result });
+    if (String(args[0]).endsWith("/early-access/requests")) { calls.push({ url: String(args[0]), body: JSON.parse(String(args[1]?.body)) }); return Response.json({ accepted: true, id: "request-1", status: "pending", scanRetained: false }); }
+    return original(...args);
   });
-}
-
-describe("SystemsBottleneckScanner", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
-    document.body.innerHTML = "";
-  });
-
-  it("offers lived example notes that can seed a scan", async () => {
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = renderScanner(container);
-
-    const text = container.textContent ?? "";
-    expect(text).toContain("Free first readout. No sign-in.");
-    expect(text).toContain("Request early access only if you want to save the result and continue into the full venture map.");
-    expect(text).toContain("Public first read");
-    expect(text).toContain("No account needed. Get one bottleneck and one next move from the note you provide.");
-    expect(text).toContain("Save it and continue");
-    expect(text).toContain("draft the full venture map");
-    expect(text).toContain("Customer follow-up");
-    expect(text).toContain("Cash runway");
-    expect(text).toContain("Skills capacity");
-    expect(text).toContain("Product proof");
-    expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
-
-    const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
-    expect(links.some((link) => link.textContent?.includes("Sysdom AI") && link.getAttribute("href") === "/")).toBe(true);
-    expect(
-      links.some((link) => link.textContent?.includes("Sign in") && link.getAttribute("href") === "/auth?next=%2Fapp"),
-    ).toBe(true);
-    expect(
-      links.some(
-        (link) =>
-          link.textContent?.includes("Request early access") &&
-          link.getAttribute("href") === "/request-access",
-      ),
-    ).toBe(true);
-
-    const cashExample = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Cash runway"),
-    );
-    expect(cashExample).toBeTruthy();
-    await act(async () => {
-      cashExample?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
-    expect(noteInput?.value).toContain("runway");
-    expect(noteInput?.value).toContain("pricing");
-
-    const scanButton = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Scan"),
-    );
-    await act(async () => {
-      scanButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    expect(container.textContent).toContain("Cash pressure is steering the system");
-    expect(container.textContent).toContain("Cash Engine");
-
-    flushSync(() => {
-      root.unmount();
-    });
-  });
-
-  it("shows signal strength and a secondary engine for mixed notes", async () => {
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = renderScanner(container);
-
-    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
-    expect(noteInput).not.toBeNull();
-    await updateField(
-      noteInput!,
-      "Waitlist replies and customer follow-up are stuck in my inbox, and runway plus pricing decisions are also getting tense.",
-    );
-
-    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Scan"),
-    );
-    expect(button).toBeTruthy();
-    await act(async () => {
-      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    const text = container.textContent ?? "";
-    expect(text).toContain("Customer loop is leaking");
-    expect(text).toContain("Signal strength");
-    expect(text).toContain("4 signs pointed to Customer Engine.");
-    expect(text).toContain("Also watch Cash Engine");
-    expect(text).toContain("2 signs pointed there.");
-    expect(text).toContain("Calibration status");
-    expect(text).toContain("Early pattern match");
-    expect(text).toContain("Real submission review still needed.");
-    expect(text).toContain("Public summary excludes raw notes and URLs.");
-    expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
-
-    const storedScan = window.localStorage.getItem("simone:bottleneck-scan");
-    expect(storedScan).not.toBeNull();
-    expect(JSON.parse(storedScan!)).toMatchObject({
-      result: {
-        engine: "Customer Engine",
-        signalStrength: {
-          primaryMatches: 4,
-          secondaryEngine: "Cash Engine",
-          secondaryMatches: 2,
-        },
-        calibration: {
-          status: "early_pattern_match",
-          reviewNeeded: true,
-          publicSummaryExcludes: ["founderNote", "startupUrl"],
-        },
-      },
-    });
-
-    flushSync(() => {
-      root.unmount();
-    });
-  });
-
-  it("flags the live mixed Product and Customer calibration case before the founder acts", async () => {
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = renderScanner(container);
-
-    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
-    await updateField(
-      noteInput!,
-      "We have plenty of product demos and people say the idea is interesting, but almost nobody finishes signup or returns for a second session. I keep changing the homepage instead of learning why.",
-    );
-
-    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Scan"),
-    );
-    await act(async () => {
-      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    const text = container.textContent ?? "";
-    expect(text).toContain("Customer loop is leaking");
-    expect(text).toContain("1 sign pointed to Customer Engine.");
-    expect(text).toContain("Also watch Product Engine");
-    expect(text).toContain("Clarify before acting");
-    expect(text).toContain("The customer loop and product loop are close.");
-    expect(text).toContain("Which needs a decision first: the customer loop or the product loop?");
-
-    const storedScan = JSON.parse(window.localStorage.getItem("simone:bottleneck-scan")!);
-    expect(storedScan.result).toMatchObject({
-      engine: "Customer Engine",
-      signalStrength: {
-        primaryMatches: 1,
-        secondaryEngine: "Product Engine",
-        secondaryMatches: 1,
-      },
-      clarification: {
-        status: "close_call",
-      },
-    });
-
-    flushSync(() => {
-      root.unmount();
-    });
-  });
-
-  it("keeps the clear customer-loop rehearsal case focused without a false ambiguity warning", async () => {
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = renderScanner(container);
-
-    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
-    await updateField(
-      noteInput!,
-      "Three founders completed the scanner. I promised to follow up, but their notes are in different places and I do not know who needs a reply or what they said. Nobody returned for a second session.",
-    );
-
-    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Scan"),
-    );
-    await act(async () => {
-      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    const text = container.textContent ?? "";
-    expect(text).toContain("Customer loop is leaking");
-    expect(text).toContain("2 signs pointed to Customer Engine.");
-    expect(text).not.toContain("Clarify before acting");
-
-    flushSync(() => {
-      root.unmount();
-    });
-  });
-
-  it("upgrades the local result only after a governed model capability is enabled", async () => {
-    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const path = String(input);
-      if (path.endsWith("/model-capability")) {
-        return new Response(JSON.stringify({
-          version: "sysdom_scanner_model_capability_v1",
-          enabled: true,
-          mode: "model_assisted",
-          rawNotesTransmitted: true,
-          maxFounderNoteChars: 8_000,
-        }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-      if (path === "/api/public/funnel-events") {
-        return new Response(JSON.stringify({ accepted: true }), {
-          status: 202,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-      expect(path).toBe("/api/public/scanner/model-analysis");
-      const requestBody = JSON.parse(String(init?.body));
-      expect(requestBody).toEqual({
-        founderNote:
-          "We keep changing the homepage, but almost nobody completes signup or returns for a second session.",
-        deterministicAssessment: {
-          primaryEngine: "Customer Engine",
-          secondaryEngine: null,
-          primaryMatches: 1,
-          secondaryMatches: 0,
-        },
-      });
-      expect(requestBody).not.toHaveProperty("startupUrl");
-      return new Response(JSON.stringify({
-        version: "sysdom_scanner_model_analysis_v1",
-        analysisId: "11111111-1111-4111-8111-111111111111",
-        assessment: {
-          version: "sysdom_scanner_model_assessment_v1",
-          primaryEngine: "Customer Engine",
-          secondaryEngine: "Product Engine",
-          confidence: "medium",
-          summary: "Signup and return behavior make the customer loop the primary hypothesis.",
-          clarificationQuestion: "Where do people abandon signup?",
-          evidenceCues: ["almost nobody completes signup", "nobody returns"],
-        },
-        provenance: {
-          policyVersion: "sysdom-auto-alpha-1",
-          portfolio: {
-            revisionId: "33333333-3333-4333-8333-333333333333",
-            version: 2,
-          },
-          provider: "openrouter",
-          model: "openai/gpt-5.6-luna",
-          reasoningEffort: "low",
-          inputTokens: 120,
-          outputTokens: 80,
-          costUsd: 0.00006,
-          completedAt: "2026-08-03T20:00:00.000Z",
-        },
-      }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
-    });
-    vi.stubGlobal("fetch", fetchMock);
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = renderScanner(container);
-    await act(async () => {
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-    expect(container.textContent).toContain(
-      "AI-assisted read is on. Only your note—not the URL—is sent for this read",
-    );
-
-    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
-    await updateField(
-      noteInput!,
-      "We keep changing the homepage, but almost nobody completes signup or returns for a second session.",
-    );
-    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Scan"),
-    );
-    await act(async () => {
-      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-    for (let attempt = 0; attempt < 10; attempt += 1) {
-      if ((container.textContent ?? "").includes("Model-assisted hypothesis")) break;
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      });
-    }
-
-    expect(fetchMock.mock.calls.filter(([input]) =>
-      String(input).includes("/api/public/scanner/model-")
-    )).toHaveLength(2);
-    expect(container.textContent).toContain("Customer loop is leaking");
-    expect(container.textContent).toContain("Model-assisted hypothesis");
-    expect(container.textContent).toContain("Founder review still needed.");
-    expect(container.textContent).toContain("Where do people abandon signup?");
-    const storedScan = JSON.parse(window.localStorage.getItem("simone:bottleneck-scan")!);
-    expect(storedScan).toMatchObject({
-      algorithmVersion: "scanner-patterns-v1+sysdom_scanner_model_analysis_v1",
-      result: {
-        engine: "Customer Engine",
-        analysisProvenance: {
-          analysisId: "11111111-1111-4111-8111-111111111111",
-          provider: "openrouter",
-          model: "openai/gpt-5.6-luna",
-          reasoningEffort: "low",
-        },
-      },
-    });
-
-    flushSync(() => {
-      root.unmount();
-    });
-  });
-
-  it("turns a messy founder note into a bottleneck, next action, and starter map preview", async () => {
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = renderScanner(container);
-
-    expect(container.textContent).toContain("Find your bottleneck");
-    expect(container.textContent).not.toMatch(/model|provider|LLM/i);
-
-    const urlInput = container.querySelector<HTMLInputElement>('input[name="startupUrl"]');
-    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
-    expect(urlInput).not.toBeNull();
-    expect(noteInput).not.toBeNull();
-
-    await updateField(urlInput!, "https://example.com");
-    await updateField(
-      noteInput!,
-      "We have interested leads and waitlist replies, but follow-up is scattered and approvals sit in my inbox.",
-    );
-
-    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Scan"),
-    );
-    expect(button).toBeTruthy();
-    await act(async () => {
-      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    const text = container.textContent ?? "";
-    expect(text).toContain("Customer loop is leaking");
-    expect(text).toContain("Customer Engine");
-    expect(text).toContain("Make one review queue for replies, prospects, and proof points.");
-    expect(text).toContain("Try this in 10 minutes");
-    expect(text).toContain("Open one place where replies or prospects currently land.");
-    expect(text).toContain("Move three waiting items into one short review list.");
-    expect(text).toContain("Mark the next reply that needs your yes before anyone sends it.");
-    expect(text).toContain("Why this scan picked Customer Engine");
-    expect(text).toContain("Customer signal was present.");
-    expect(text).toContain("Follow-up or inbox work looked scattered.");
-    expect(text).toContain("Approval was part of the bottleneck.");
-    expect(text).toContain("This is a first readout based only on what you entered, not a full venture audit.");
-    expect(text).toContain("Calibration status");
-    expect(text).toContain("Early pattern match");
-    expect(text).toContain("Real submission review still needed.");
-    expect(text).toContain("Questions Sysdom AI would ask next");
-    expect(text).toContain("Who should approve the next customer reply or offer?");
-    expect(text).toContain("What proof would make this worth doing now?");
-    expect(text).toContain("Starter map preview");
-    expect(text).toContain("Venture Architecture Map");
-    expect(text).toContain("Sprint Zero brief");
-    expect(text).toContain("What is clear");
-    expect(text).toContain("Customer signal exists, but it is not moving through one trusted review loop.");
-    expect(text).toContain("What needs proof");
-    expect(text).toContain("What proof would make this worth doing now?");
-    expect(text).toContain("Human review boundary");
-    expect(text).toContain("Approve the next customer-facing reply or offer before agents act.");
-    expect(text).toContain("First move");
-    expect(text).toContain("Share this result");
-    expect(text).toContain(
-      "Built with Sysdom AI: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points.",
-    );
-    expect(text).toContain("Both share formats leave out raw notes and URLs.");
-    expect(text).toContain("Ask SIM Coach why");
-    expect(text).toContain("Coach explains the method before you assign work.");
-    expect(text).toContain("Saved in this browser");
-    expect(text).toContain("Request early access to save this readout and continue into your venture map.");
-    expect(text).toContain("If invited, this readout will be waiting when you enter Sysdom.");
-    expect(text).toContain("Request access to save and continue");
-    const generatedSummary = text.slice(text.indexOf("Why this scan picked Customer Engine"));
-    expect(generatedSummary).not.toContain("https://example.com");
-    expect(generatedSummary).not.toContain("interested leads and waitlist replies");
-    expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
-
-    const storedScan = window.localStorage.getItem("simone:bottleneck-scan");
-    expect(storedScan).not.toBeNull();
-    expect(JSON.parse(storedScan!)).toMatchObject({
-      input: {
-        startupUrl: "https://example.com",
-        founderNote:
-          "We have interested leads and waitlist replies, but follow-up is scattered and approvals sit in my inbox.",
-      },
-        result: {
-          headline: "Customer loop is leaking",
-          engine: "Customer Engine",
-          quickWin: {
-            title: "Try this in 10 minutes",
-            steps: [
-              "Open one place where replies or prospects currently land.",
-              "Move three waiting items into one short review list.",
-              "Mark the next reply that needs your yes before anyone sends it.",
-            ],
-          },
-          calibration: {
-            status: "early_pattern_match",
-            summary: "Early pattern match. Real submission review still needed.",
-            reviewNeeded: true,
-            publicSummaryExcludes: ["founderNote", "startupUrl"],
-          },
-          diagnosisSignals: [
-            "Customer signal was present.",
-            "Follow-up or inbox work looked scattered.",
-            "Approval was part of the bottleneck.",
-          ],
-          questions: [
-          "Who should approve the next customer reply or offer?",
-          "What proof would make this worth doing now?",
-          "Where should the answer be saved so it is not lost?",
-        ],
-        mapPreview: {
-          artifact: "Venture Architecture Map",
-          primaryEngine: "Customer Engine",
-        },
-        sprintZeroBrief: {
-          clear: [
-            "Likely bottleneck: Customer loop is leaking.",
-            "Primary engine: Customer Engine.",
-            "Customer signal exists, but it is not moving through one trusted review loop.",
-          ],
-          needsProof: [
-            "What proof would make this worth doing now?",
-            "Show the next signal in one review queue before scaling follow-up.",
-          ],
-          humanReview: [
-            "Approve the next customer-facing reply or offer before agents act.",
-            "Keep customers, money, public claims, and company structure behind human review.",
-          ],
-          firstMove: "Make one review queue for replies, prospects, and proof points.",
-        },
-      },
-    });
-
-    const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
-    expect(
-      links.some((link) => link.getAttribute("href")?.startsWith("/request-access?scan=")
-        && link.getAttribute("href")?.includes("&intent=coach")),
-    ).toBe(true);
-    expect(
-      links.some((link) => link.getAttribute("href")?.startsWith("/request-access?scan=")
-        && !link.getAttribute("href")?.includes("intent=coach")),
-    ).toBe(true);
-
-    flushSync(() => {
-      root.unmount();
-    });
-  });
-
-  it("turns the scan result into a plain decision path", async () => {
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = renderScanner(container);
-
-    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
-    expect(noteInput).not.toBeNull();
-    await updateField(
-      noteInput!,
-      "We have interested leads and waitlist replies, but follow-up is scattered and approvals sit in my inbox.",
-    );
-
-    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Scan"),
-    );
-    expect(button).toBeTruthy();
-    await act(async () => {
-      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    const text = container.textContent ?? "";
-    expect(text).toContain("Decision path");
-    expect(text).toContain("Do now");
-    expect(text).toContain("Make one review queue for replies, prospects, and proof points.");
-    expect(text).toContain("Needs your yes");
-    expect(text).toContain("Approve the next customer-facing reply or offer before agents act.");
-    expect(text).toContain("Carry into Sysdom AI");
-    expect(text).toContain("Save this scan as Sprint Zero context after sign-in.");
-    expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
-
-    const storedScan = window.localStorage.getItem("simone:bottleneck-scan");
-    expect(storedScan).not.toBeNull();
-    expect(JSON.parse(storedScan!)).toMatchObject({
-      result: {
-        approvalPath: {
-          doNow: "Make one review queue for replies, prospects, and proof points.",
-          needsHumanYes: "Approve the next customer-facing reply or offer before agents act.",
-          carryForward: "Save this scan as Sprint Zero context after sign-in.",
-        },
-      },
-    });
-
-    flushSync(() => {
-      root.unmount();
-    });
-  });
-
-  it("creates a safe share-ready summary without raw input", async () => {
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(window.navigator, "clipboard", {
-      value: { writeText },
-      configurable: true,
-    });
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = renderScanner(container);
-
-    const urlInput = container.querySelector<HTMLInputElement>('input[name="startupUrl"]');
-    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
-    expect(urlInput).not.toBeNull();
-    expect(noteInput).not.toBeNull();
-
-    await updateField(urlInput!, "https://example.com/private");
-    await updateField(
-      noteInput!,
-      "We have interested leads and waitlist replies, but follow-up is scattered and approvals sit in my inbox.",
-    );
-
-    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Scan"),
-    );
-    expect(button).toBeTruthy();
-    await act(async () => {
-      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    const text = container.textContent ?? "";
-    expect(text).toContain("Share this result");
-    expect(text).toContain(
-      "Built with Sysdom AI: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points.",
-    );
-    expect(text).toContain("Copy share summary");
-    expect(text).toContain("Download result card");
-    expect(text).toContain("Both share formats leave out raw notes and URLs.");
-    expect(text).not.toContain("https://example.com/private");
-
-    const copyButton = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Copy share summary"),
-    );
-    expect(copyButton).toBeTruthy();
-    await act(async () => {
-      copyButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-    expect(writeText).toHaveBeenCalledOnce();
-    const copiedSummary = String(writeText.mock.calls[0]?.[0]);
-    expect(copiedSummary).toContain(
-      "Built with Sysdom AI: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points."
-    );
-    const copiedScannerUrl = new URL(copiedSummary.split("Run your own scan: ")[1]);
-    expect(copiedScannerUrl.pathname).toBe("/scanner");
-    expect(copiedScannerUrl.searchParams.get("utm_source")).toBe("sysdom_scanner_share");
-    expect(copiedScannerUrl.searchParams.get("utm_medium")).toBe("organic");
-    expect(copiedScannerUrl.searchParams.get("utm_campaign")).toBe("bottleneck_summary");
-    expect(container.textContent).toContain(
-      "Copied with an attributable Scanner link. Raw notes and URLs stay out."
-    );
-
-    const storedScan = window.localStorage.getItem("simone:bottleneck-scan");
-    expect(storedScan).not.toBeNull();
-    expect(JSON.parse(storedScan!)).toMatchObject({
-      result: {
-        shareSummary: {
-          title: "Share this result",
-          publicText:
-            "Built with Sysdom AI: Customer loop is leaking. Focus: Customer Engine. Next move: Make one review queue for replies, prospects, and proof points.",
-          excludes: ["founderNote", "startupUrl"],
-        },
-      },
-    });
-
-    flushSync(() => {
-      root.unmount();
-    });
-  });
-
-  it("does not claim the share summary was copied when clipboard is unavailable", async () => {
-    Object.defineProperty(window.navigator, "clipboard", {
-      value: undefined,
-      configurable: true,
-    });
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = renderScanner(container);
-
-    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
-    expect(noteInput).not.toBeNull();
-    await updateField(
-      noteInput!,
-      "We have interested leads and waitlist replies, but follow-up is scattered and approvals sit in my inbox.",
-    );
-
-    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Scan"),
-    );
-    expect(button).toBeTruthy();
-    await act(async () => {
-      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    const copyButton = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Copy share summary"),
-    );
-    expect(copyButton).toBeTruthy();
-    await act(async () => {
-      copyButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    expect(container.textContent).toContain("Summary ready to copy. Select the text above.");
-    expect(container.textContent).not.toContain("Copied with an attributable Scanner link.");
-
-    flushSync(() => {
-      root.unmount();
-    });
-  });
-
-  it("downloads a public-safe result card without raw founder input", async () => {
-    const createObjectURL = vi.fn((_blob: Blob) => "blob:scanner-card");
-    const revokeObjectURL = vi.fn();
-    Object.defineProperty(window.URL, "createObjectURL", {
-      value: createObjectURL,
-      configurable: true,
-    });
-    Object.defineProperty(window.URL, "revokeObjectURL", {
-      value: revokeObjectURL,
-      configurable: true,
-    });
-    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
-
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = renderScanner(container);
-    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
-    await updateField(
-      noteInput!,
-      "Private founder detail: waitlist replies are scattered and approvals sit in my inbox.",
-    );
-
-    const scanButton = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Scan"),
-    );
-    await act(async () => {
-      scanButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    const downloadButton = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Download result card"),
-    );
-    await act(async () => {
-      downloadButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    expect(createObjectURL).toHaveBeenCalledOnce();
-    const blob = createObjectURL.mock.calls[0]?.[0] as Blob;
-    expect(blob.type).toBe("image/svg+xml;charset=utf-8");
-    expect(click).toHaveBeenCalledOnce();
-    expect(revokeObjectURL).toHaveBeenCalledWith("blob:scanner-card");
-    expect(container.textContent).toContain(
-      "Downloaded a public-safe SVG card. Raw notes and URLs stay out."
-    );
-
-    click.mockRestore();
-    flushSync(() => {
-      root.unmount();
-    });
-  });
-
-  it("lets someone run another scan after a result", async () => {
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = renderScanner(container);
-
-    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
-    expect(noteInput).not.toBeNull();
-    await updateField(
-      noteInput!,
-      "We have interested leads and waitlist replies, but follow-up is scattered and approvals sit in my inbox.",
-    );
-
-    const scanButton = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Scan"),
-    );
-    expect(scanButton).toBeTruthy();
-    await act(async () => {
-      scanButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    expect(container.textContent).toContain("Customer loop is leaking");
-    expect(container.textContent).toContain("Run another scan");
-
-    const resetButton = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Run another scan"),
-    );
-    expect(resetButton).toBeTruthy();
-    await act(async () => {
-      resetButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    expect(container.textContent).toContain("One bottleneck, one next move.");
-    expect(container.textContent).not.toContain("Customer loop is leaking");
-    expect(noteInput?.value).toBe("");
-
-    flushSync(() => {
-      root.unmount();
-    });
-  });
-
-  it("does not claim the scan was saved when browser storage is blocked", async () => {
-    const originalLocalStorage = window.localStorage;
-    Object.defineProperty(window, "localStorage", {
-      value: {
-        setItem: vi.fn(() => {
-          throw new Error("storage blocked");
-        }),
-      },
-      configurable: true,
-    });
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = renderScanner(container);
-
-    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
-    expect(noteInput).not.toBeNull();
-    await updateField(
-      noteInput!,
-      "We have interested leads and waitlist replies, but follow-up is scattered and approvals sit in my inbox.",
-    );
-
-    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Scan"),
-    );
-    expect(button).toBeTruthy();
-    await act(async () => {
-      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    const text = container.textContent ?? "";
-    expect(text).toContain("Ready to continue");
-    expect(text).toContain("Request early access to save this readout and continue into your venture map.");
-    expect(text).not.toContain("Saved in this browser");
-
-    flushSync(() => {
-      root.unmount();
-    });
-    Object.defineProperty(window, "localStorage", {
-      value: originalLocalStorage,
-      configurable: true,
-    });
-  });
-
-  it("uses the scan focus in the conversion handoff", async () => {
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = renderScanner(container);
-
-    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
-    expect(noteInput).not.toBeNull();
-    await updateField(
-      noteInput!,
-      "We have interested leads and waitlist replies, but follow-up is scattered and approvals sit in my inbox.",
-    );
-
-    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Scan"),
-    );
-    expect(button).toBeTruthy();
-    await act(async () => {
-      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    const text = container.textContent ?? "";
-    expect(text).toContain("Turn this into a Customer Engine map");
-    expect(text).toContain("Sysdom AI will keep the customer loop, proof question, and approval boundary together after sign-in.");
-    expect(text).toContain("What happens after sign-in");
-    expect(text).toContain("Saved in this browser");
-    expect(text).toContain("Request early access to save this readout and continue into your venture map.");
-    expect(text).toContain("Prefill the starter map with this customer loop readout.");
-    expect(text).toContain("Create the first setup task: Make one review queue for replies, prospects, and proof points.");
-    expect(text).toContain("Keep any customer, money, public-claim, or structure decision behind your approval.");
-    expect(text).toContain("What will not happen");
-    expect(text).toContain("No technical setup before you see the map.");
-    expect(text).toContain("Nothing posts publicly.");
-    expect(text).toContain("Customer, money, public-claim, and company-structure decisions still require your explicit approval.");
-    expect(text).not.toContain("Agents wait for your approval before they act.");
-    expect(text).toContain("Request access to save and continue");
-    expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
-
-    const links = Array.from(container.querySelectorAll<HTMLAnchorElement>("a"));
-    expect(
-      links.some(
-        (link) =>
-          link.textContent?.includes("Request access to save and continue") &&
-          link.getAttribute("href")?.startsWith("/request-access?scan="),
-      ),
-    ).toBe(true);
-
-    const storedScan = window.localStorage.getItem("simone:bottleneck-scan");
-    expect(storedScan).not.toBeNull();
-    expect(JSON.parse(storedScan!)).toMatchObject({
-      result: {
-        conversionPath: {
-          title: "Turn this into a Customer Engine map",
-          primaryCta: "Save the full Customer Engine map",
-          onboardingHref: "/auth?mode=sign_up&next=%2Fonboarding%3Ffrom%3Dscanner%26focus%3Dcustomer-engine",
-        },
-        handoffPreview: {
-          title: "What happens after sign-in",
-          items: [
-            "Prefill the starter map with this customer loop readout.",
-            "Create the first setup task: Make one review queue for replies, prospects, and proof points.",
-            "Keep any customer, money, public-claim, or structure decision behind your approval.",
-          ],
-        },
-        signupAssurance: {
-          title: "What will not happen",
-          items: [
-            "No technical setup before you see the map.",
-            "Nothing posts publicly.",
-            "Customer, money, public-claim, and company-structure decisions still require your explicit approval.",
-          ],
-        },
-      },
-    });
-
-    flushSync(() => {
-      root.unmount();
-    });
-  });
-
-  it("explains what the public scan can and cannot see", async () => {
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = renderScanner(container);
-
-    const noteInput = container.querySelector<HTMLTextAreaElement>('textarea[name="founderNote"]');
-    expect(noteInput).not.toBeNull();
-    await updateField(
-      noteInput!,
-      "The roadmap has too many feature ideas, the prototype keeps expanding, and we need one promise we can prove before launch.",
-    );
-
-    const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
-      candidate.textContent?.includes("Scan"),
-    );
-    expect(button).toBeTruthy();
-    await act(async () => {
-      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    const text = container.textContent ?? "";
-    expect(text).toContain("What this scan can see");
-    expect(text).toContain("It read patterns in the text you provided.");
-    expect(text).toContain("What it cannot see yet");
-    expect(text).toContain("It did not crawl your site, inspect private tools, or verify the facts.");
-    expect(text).toContain("Why it is still useful");
-    expect(text).toContain("It gives you one focused next question instead of a full-company diagnosis.");
-    expect(text).not.toMatch(/model|provider|LLM|api key|runtime/i);
-
-    const storedScan = window.localStorage.getItem("simone:bottleneck-scan");
-    expect(storedScan).not.toBeNull();
-    expect(JSON.parse(storedScan!)).toMatchObject({
-      result: {
-        trustFrame: {
-          canSee: "It read patterns in the text you provided.",
-          cannotSee: "It did not crawl your site, inspect private tools, or verify the facts.",
-          stillUseful: "It gives you one focused next question instead of a full-company diagnosis.",
-        },
-      },
-    });
-
-    flushSync(() => {
-      root.unmount();
-    });
-  });
+  await mount(); await fill();
+  expect(container.textContent).not.toContain("Request access to continue");
+  await click("Check what will be shared"); await act(async () => container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click()); await click("Approve and start review");
+  expect(button("Download my review")).toBeTruthy();
+  expect(container.querySelector('a[href="/auth?next=%2Fapp"]')).toBeTruthy();
+  await click("Request access to continue");
+  expect(calls.some(x => x.url.endsWith("/early-access/requests"))).toBe(false);
+  const form = container.querySelector("form")!, message = form.querySelector("textarea")!;
+  expect(message.value).toBe("");
+  await click("Use a short summary from my review"); expect(message.value).toContain("Suggested next step:");
+  await field(message, "Only this edited message may be shared.");
+  const inputs = form.querySelectorAll("input"); await field(inputs[0]!, "Fictional Founder"); await field(inputs[1]!, "founder@example.test");
+  await act(async () => form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
+  const sent = calls.find(x => x.url.endsWith("/early-access/requests"))!.body;
+  expect(sent).toMatchObject({ founderName: "Fictional Founder", email: "founder@example.test", useCase: "Only this edited message may be shared.", consentToRetainScan: false, source: "venture-review" });
+  expect(sent.scan).toBeUndefined(); expect(JSON.stringify(sent)).not.toContain("Orders are increasing");
+  expect(container.textContent).toContain("Request received"); expect(container.textContent).toContain("does not create an account or save this full review");
+  expect(button("Download my review")).toBeTruthy();
+  const events = calls.filter(x => x.url.endsWith("/funnel-events")).map(x => x.body.eventName);
+  expect(events).toEqual(["venture_review_view", "venture_review_click", "venture_review_start", "venture_review_result", "venture_review_access_click", "venture_review_access_request"]);
 });

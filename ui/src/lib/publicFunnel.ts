@@ -65,6 +65,15 @@ export function trackPublicFunnelEvent(
 ) {
   if (typeof window === "undefined" || typeof fetch !== "function") return;
   try {
+    if (eventName.startsWith("venture_review_")) {
+      // Aggregate events have no visitor/session identifiers, URLs, attribution or browser storage.
+      void fetch("/api/public/funnel-events", {
+        method: "POST", credentials: "omit", referrerPolicy: "no-referrer",
+        headers: { "Content-Type": "application/json" }, keepalive: true,
+        body: JSON.stringify({ eventKey: input.eventKey ?? crypto.randomUUID(), eventName, path: "/venture-review", isTest: Boolean(input.isTest) }),
+      }).catch(() => undefined);
+      return;
+    }
     const body = {
       eventKey: input.eventKey ?? crypto.randomUUID(),
       visitorId: safeUuid(window.localStorage, VISITOR_STORAGE_KEY),

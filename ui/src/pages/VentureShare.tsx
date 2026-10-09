@@ -289,7 +289,7 @@ export function VentureShare() {
 
             <div>
               <Button asChild>
-                <a href="/scanner">
+                <a href="/venture-review">
                   Scan your own system
                   <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                 </a>

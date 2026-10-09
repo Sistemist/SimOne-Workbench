@@ -63,7 +63,7 @@ export function AuthPage() {
       navigate(nextPath, { replace: true });
     },
     onError: (err) => {
-      setError(err instanceof Error ? err.message : "Authentication failed");
+      setError(err instanceof Error ? err.message : "We could not complete your sign-in or account creation. Please try again.");
     },
   });
 
@@ -75,7 +75,7 @@ export function AuthPage() {
   if (isSessionLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <p className="text-sm text-muted-foreground">Checking whether you are signed in…</p>
       </div>
     );
   }
@@ -98,8 +98,8 @@ export function AuthPage() {
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {mode === "sign_in"
-              ? "Use your email and password to access your workspace."
-              : "Create an account for this workspace. Email confirmation is not required yet."}
+              ? "Use the email and password you used to create your account."
+              : "Create your account, then continue with setup. Choose a password with at least 8 characters."}
           </p>
 
           {passwordResetComplete && (
@@ -195,7 +195,9 @@ export function AuthPage() {
               className={`w-full ${!canSubmit && !mutation.isPending ? "opacity-50" : ""}`}
             >
               {mutation.isPending
-                ? "Working…"
+                ? mode === "sign_in"
+                  ? "Signing in…"
+                  : "Creating account…"
                 : mode === "sign_in"
                   ? "Sign In"
                   : "Create Account"}
@@ -204,7 +206,7 @@ export function AuthPage() {
 
           {mode === "sign_in" && !signUpAllowed ? (
             <div className="mt-5 text-sm text-muted-foreground">
-              Need founder access?{" "}
+              Don't have an invitation yet?{" "}
               <a
                 href="/request-access"
                 className="font-medium text-foreground underline underline-offset-2"

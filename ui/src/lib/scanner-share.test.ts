@@ -17,7 +17,7 @@ describe("privacy-safe Scanner share artifacts", () => {
       [
         "Built with Sysdom AI: Customer loop is leaking.",
         "",
-        "Run your own scan: https://alpha.sysdom.ai/scanner?utm_source=sysdom_scanner_share&utm_medium=organic&utm_campaign=bottleneck_summary",
+        "Review your venture: https://alpha.sysdom.ai/venture-review?utm_source=sysdom_scanner_share&utm_medium=organic&utm_campaign=bottleneck_summary",
       ].join("\n"),
     );
   });
@@ -37,7 +37,7 @@ describe("privacy-safe Scanner share artifacts", () => {
     expect(svg).toContain("replies &amp; proof points.");
     expect(svg).toContain("Early pattern match · founder review required");
     expect(svg).toContain(
-      "https://alpha.sysdom.ai/scanner?utm_source=sysdom_scanner_share&amp;utm_medium=organic&amp;utm_campaign=bottleneck_card",
+      "https://alpha.sysdom.ai/venture-review?utm_source=sysdom_scanner_share&amp;utm_medium=organic&amp;utm_campaign=bottleneck_card",
     );
     expect(svg).not.toContain("founderNote");
     expect(svg).not.toContain("startupUrl");

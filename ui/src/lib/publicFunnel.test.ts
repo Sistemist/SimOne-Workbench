@@ -77,3 +77,18 @@ describe("public funnel measurement", () => {
     });
   });
 });
+
+it("sends aggregate review events without identifiers, URL data or browser storage", async () => {
+  localStorage.clear(); sessionStorage.clear();
+  window.history.replaceState({}, "", "/venture-review?utm_source=private-note&secret=founder");
+  const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 202 })); vi.stubGlobal("fetch", fetchMock);
+  for (const eventName of ["venture_review_view", "venture_review_click", "venture_review_start", "venture_review_result", "venture_review_access_click", "venture_review_access_request"] as const) trackPublicFunnelEvent(eventName, { isTest: true });
+  expect(fetchMock).toHaveBeenCalledTimes(6);
+  for (const [, request] of fetchMock.mock.calls as [string, RequestInit][]) {
+    expect(request).toMatchObject({ credentials: "omit", referrerPolicy: "no-referrer" });
+    expect(Object.keys(JSON.parse(String(request.body))).sort()).toEqual(["eventKey", "eventName", "isTest", "path"]);
+    expect(String(request.body)).not.toMatch(/private-note|secret|founder/);
+  }
+  expect(localStorage.length).toBe(0); expect(sessionStorage.length).toBe(0);
+  vi.unstubAllGlobals();
+});

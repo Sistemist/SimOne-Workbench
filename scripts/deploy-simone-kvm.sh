@@ -81,8 +81,9 @@ if [ -z "${ROLLBACK_TAG:-}" ] || [ -z "${PREVIOUS_IMAGE_REF:-}" ]; then
 fi
 
 compose() {
-  docker compose --project-name "$project_name" --env-file .env.simone-public \
-    -f docker-compose.quickstart.yml -f docker-compose.simone-public.yml "$@"
+  local files=(-f docker-compose.quickstart.yml -f docker-compose.simone-public.yml)
+  if [ -f .public-review-enabled ]; then files+=(-f docker-compose.public-review-service.yml); fi
+  docker compose --project-name "$project_name" --env-file .env.simone-public "${files[@]}" "$@"
 }
 
 cd "$remote_root/docker"
@@ -122,8 +123,9 @@ previous_file="$metadata_dir/previous.env"
 pending_file="$metadata_dir/pending.env"
 
 compose() {
-  docker compose --project-name "$project_name" --env-file .env.simone-public \
-    -f docker-compose.quickstart.yml -f docker-compose.simone-public.yml "$@"
+  local files=(-f docker-compose.quickstart.yml -f docker-compose.simone-public.yml)
+  if [ -f .public-review-enabled ]; then files+=(-f docker-compose.public-review-service.yml); fi
+  docker compose --project-name "$project_name" --env-file .env.simone-public "${files[@]}" "$@"
 }
 
 mkdir -p "$metadata_dir"
@@ -206,7 +208,7 @@ REMOTE_DEPLOY
 remote_deployed=true
 
 curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/app" | rg -q '<title>Sysdom AI'
-curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/scanner" | rg -q '<title>Sysdom AI'
+curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/venture-review" | rg -q '<title>Review your venture'
 curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/request-access" | rg -q '<title>Sysdom AI'
 curl -fsS --resolve "$public_host:443:${remote_host#*@}" "https://$public_host/auth/forgot-password" | rg -q '<title>Sysdom AI'
 if [ "$public_host" = "sim.sysdom.org" ]; then
@@ -260,15 +262,6 @@ fi
 
 curl -fsSI https://dify.tissuu.ai/apps >/dev/null
 
-ssh "$remote_host" bash -s -- "$remote_root" <<'REMOTE_PRUNE'
-set -u
-remote_root="$1"
-docker builder prune --force --filter 'until=168h' --keep-storage 10GB \
-  || echo 'Warning: Docker builder cache prune did not complete.' >&2
-docker image prune --force --filter 'until=168h' \
-  || echo 'Warning: dangling image prune did not complete.' >&2
-cat "$remote_root/.deployments/current.env"
-REMOTE_PRUNE
 
 remote_deployed=false
 trap - EXIT

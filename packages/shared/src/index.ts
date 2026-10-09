@@ -1783,7 +1783,20 @@ export type {
 export type { AdapterRegistryEntry } from "./types/adapter-registry.js";
 
 export {
+  ventureReviewEngineSchema,
+  ventureReviewEvidenceSourceSchema,
+  ventureReviewEvidencePacketSchema,
+  ventureReviewResultSchema,
+  type VentureReviewEvidencePacket,
+  type VentureReviewResult,
+  type VentureReviewEngine,
+} from "./validators/venture-review.js";
+export * from "./validators/venture-review-exchange.js";
+export * from "./venture-review-client.js";
+
+export {
   adapterRegistryEntrySchema,
   adapterRegistrySchema,
   type AdapterRegistryEntryParsed,
 } from "./validators/adapter-registry.js";
+export * from "./validators/public-venture-review.js";

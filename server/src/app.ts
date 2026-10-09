@@ -39,7 +39,9 @@ import { customerEngineBridgeRoutes } from "./routes/customer-engine-bridge.js";
 import { ventureShareRoutes } from "./routes/venture-shares.js";
 import { publicFunnelEventRoutes } from "./routes/public-funnel-events.js";
 import { earlyAccessRoutes } from "./routes/early-access.js";
+import { publicVentureReviewRoutes } from "./routes/public-venture-review.js";
 import { scannerModelAnalysisRoutes } from "./routes/scanner-model-analysis.js";
+import { ventureReviewRoutes } from "./routes/venture-review.js";
 import { userProfileRoutes } from "./routes/user-profiles.js";
 import { sidebarBadgeRoutes } from "./routes/sidebar-badges.js";
 import { sidebarPreferenceRoutes } from "./routes/sidebar-preferences.js";
@@ -58,6 +60,7 @@ import { accessRoutes } from "./routes/access.js";
 import { pluginRoutes } from "./routes/plugins.js";
 import { adapterRoutes } from "./routes/adapters.js";
 import { pluginUiStaticRoutes } from "./routes/plugin-ui-static.js";
+import { publicReviewPage, publicReviewHtml } from "./public-review-page.js";
 import { readBrandedStaticIndexHtml } from "./static-index-html.js";
 import { applyUiBranding } from "./ui-branding.js";
 import { logger } from "./middleware/logger.js";
@@ -167,6 +170,9 @@ export async function createApp(
     betterAuthHandler?: express.RequestHandler;
     resolveSession?: (req: ExpressRequest) => Promise<BetterAuthSessionResult | null>;
     scannerModelAnalyzer?: ScannerModelAnalyzer;
+    publicVentureReview?: Parameters<typeof publicVentureReviewRoutes>[0];
+    /** Explicit local-test injection only; no default or env-based activation. */
+    ventureReview?: Parameters<typeof ventureReviewRoutes>[0];
   },
 ) {
   const app = express();
@@ -179,6 +185,7 @@ export async function createApp(
   // when the server may be reachable without a known reverse proxy in front.
   applyTrustProxy(app, parseTrustProxyEnv(process.env.TRUST_PROXY));
 
+  app.use("/api/public/venture-review", express.json({ limit: "64kb" }));
   app.use(COMPANY_IMPORT_API_PATH, express.json({
     limit: PORTABLE_JSON_BODY_LIMIT,
     verify: captureRawBody,
@@ -203,6 +210,8 @@ export async function createApp(
       bindHost: opts.bindHost,
     }),
   );
+  app.use(publicReviewPage);
+  app.use("/api", publicVentureReviewRoutes(opts.publicVentureReview));
   app.use(
     actorMiddleware(db, {
       deploymentMode: opts.deploymentMode,
@@ -261,11 +270,12 @@ export async function createApp(
   api.use(dashboardRoutes(db));
   api.use(customerEngineBridgeRoutes(db));
   api.use(ventureShareRoutes(db));
-  api.use(publicFunnelEventRoutes(db));
+  api.use(publicFunnelEventRoutes(db, opts.publicVentureReview?.getOperations));
   api.use(earlyAccessRoutes(db));
   api.use(scannerModelAnalysisRoutes({
     analyzer: opts.scannerModelAnalyzer,
   }));
+  if (opts.ventureReview) api.use(ventureReviewRoutes(opts.ventureReview));
   api.use(userProfileRoutes(db));
   api.use(sidebarBadgeRoutes(db));
   api.use(sidebarPreferenceRoutes(db));
@@ -417,8 +427,8 @@ export async function createApp(
         res
           .status(200)
           .set("Content-Type", "text/html")
-          .set("Cache-Control", "no-cache")
-          .end(readBrandedStaticIndexHtml(uiDist));
+          .set("Cache-Control", /^\/venture-review\/?$/.test(req.path) ? "no-store" : "no-cache")
+          .end(publicReviewHtml(readBrandedStaticIndexHtml(uiDist), req.originalUrl));
       });
     } else {
       console.warn("[paperclip] UI dist not found; running in API-only mode");
@@ -461,7 +471,7 @@ export async function createApp(
       }
       try {
         const html = await renderViteHtml.render(req.originalUrl);
-        res.status(200).set({ "Content-Type": "text/html" }).end(html);
+        res.status(200).set({ "Content-Type": "text/html" }).end(publicReviewHtml(html, req.originalUrl));
       } catch (err) {
         next(err);
       }

@@ -1,0 +1,144 @@
+{
+  "question": "Is more acquisition the right next move?",
+  "draft": {
+    "sources": [
+      {
+        "id": "PS02-ops",
+        "kind": "structured_record",
+        "title": "Three-week delivery ledger",
+        "sourceDate": "2026-09-17",
+        "capturedAt": "2026-09-21T10:00:00.000Z",
+        "excerpt": "Weeks ending Sep 3, 10, 17: orders 20, 30, 40; late orders 1, 6, 14; support tickets 2, 7, 15. Same service and definition of late. Reviewer receives totals only, not customer records.",
+        "basis": "source_claim",
+        "omitted": [
+          "Names and identifiers not needed for the review are not included."
+        ],
+        "provenance": {
+          "sourceUri": "fixture://PS02/ops",
+          "excerptLocation": "Approved fictional excerpt segments only",
+          "contentSha256": "e6ad8cf63c857c856f481a01cca8b2bba6c60f4b32ac772b8b44ad77ae02dc2e"
+        }
+      },
+      {
+        "id": "PS02-process",
+        "kind": "workspace_file",
+        "title": "Redacted workflow excerpt",
+        "sourceDate": "2026-09-17",
+        "capturedAt": "2026-09-21T10:00:00.000Z",
+        "excerpt": "Each order requires human QA before release. QA has one owner. Demand doubled; QA time allocation stayed at 10 hours per week. Queue-age measurements were not recorded.",
+        "basis": "source_claim",
+        "omitted": [
+          "Names and identifiers not needed for the review are not included."
+        ],
+        "provenance": {
+          "sourceUri": "fixture://PS02/process",
+          "excerptLocation": "Approved fictional excerpt segments only",
+          "contentSha256": "a58dfc0daef5835ecb85afa00ea88714390204cf6cee2932499143857014cc60"
+        }
+      },
+      {
+        "id": "PS02-note",
+        "kind": "founder_note",
+        "title": "Founder counter-explanation",
+        "sourceDate": "2026-09-18",
+        "capturedAt": "2026-09-21T10:00:00.000Z",
+        "excerpt": "The last week included a new integration used on 12 orders. I think new customers are harder to serve. No breakdown of lateness by integration or customer group is available.",
+        "basis": "source_claim",
+        "omitted": [
+          "Names and identifiers not needed for the review are not included."
+        ],
+        "provenance": {
+          "sourceUri": "fixture://PS02/note",
+          "excerptLocation": "Approved fictional excerpt segments only",
+          "contentSha256": "e9fb39a3978d0e2368afdcdb80fb7c467ecace1c33294bcc42a39d35ff0d110f"
+        }
+      }
+    ],
+    "collectionOmissions": []
+  },
+  "result": {
+    "version": "sysdom_venture_review_result_v1",
+    "reviewId": "00000000-0000-4000-8000-000000000002",
+    "tenantId": "00000000-0000-4000-8000-000000000001",
+    "rubricVersion": "m1-draft-2026-09-21",
+    "status": "complete",
+    "engineFindings": {
+      "product_service": [
+        {
+          "statement": "The supplied three-week totals show orders rising from 20 to 40 while late orders rise from 1 to 14. A changed integration and limited QA time are competing explanations, not established causes.",
+          "evidenceSourceIds": [
+            "PS02-ops",
+            "PS02-process",
+            "PS02-note"
+          ],
+          "confidence": "medium",
+          "basis": "source_claim"
+        }
+      ],
+      "customer": [
+        {
+          "statement": "Support-ticket totals rise with order volume; the packet does not establish which customers experienced delays or whether retention changed.",
+          "evidenceSourceIds": [
+            "PS02-ops"
+          ],
+          "confidence": "medium",
+          "basis": "source_claim"
+        }
+      ],
+      "cash": [],
+      "skills": [
+        {
+          "statement": "The workflow excerpt names one QA owner with unchanged weekly allocation. It does not establish skill quality or prove that hiring is necessary.",
+          "evidenceSourceIds": [
+            "PS02-process"
+          ],
+          "confidence": "medium",
+          "basis": "source_claim"
+        }
+      ]
+    },
+    "interactions": [
+      {
+        "engines": [
+          "product_service",
+          "customer",
+          "skills"
+        ],
+        "statement": "MOCK illustration: acquisition growth may increase pressure on delivery and support, but queue ages and integration-specific lateness are missing.",
+        "evidenceSourceIds": [
+          "PS02-ops",
+          "PS02-process",
+          "PS02-note"
+        ]
+      }
+    ],
+    "contradictions": [],
+    "unknowns": [
+      "Cash collection, margin, refunds and retention effects are not supplied.",
+      "Queue age by stage and lateness by integration or complexity are unknown.",
+      "No single bottleneck or recurring system pattern is established by this mock output."
+    ],
+    "alternatives": [
+      {
+        "explanation": "The new integration may explain some late orders; alternatively QA capacity or order complexity may have changed. These are untested hypotheses.",
+        "evidenceFor": [
+          "PS02-note",
+          "PS02-process"
+        ],
+        "evidenceAgainst": []
+      }
+    ],
+    "nextTest": {
+      "question": "Are late orders concentrated in the new-integration group?",
+      "action": "Founder: within one business day, spend at most 30 minutes producing only a redacted aggregate late/total split for the 12 new-integration orders versus the remaining orders. No names, outreach or spend. Stop if the same lateness definition or scope cannot be confirmed.",
+      "successSignal": "A materially higher late proportion in the integration group supports prioritizing that explanation; a similar proportion weakens it and leaves QA/complexity uncertain.",
+      "owner": "founder"
+    },
+    "evidenceRequest": null,
+    "omissions": [
+      "Authored provider-MOCK PS02 illustration for request/response plumbing only; no model called and no method-quality evaluation.",
+      "Only the existing PS02 fictional input was used. Evaluator-only expectations are not sent to the reviewer."
+    ],
+    "durableWritePerformed": false
+  }
+}

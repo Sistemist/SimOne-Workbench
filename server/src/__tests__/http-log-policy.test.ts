@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { shouldSilenceHttpSuccessLog } from "../middleware/http-log-policy.js";
+import { isSensitiveReviewRequest, shouldSilenceHttpSuccessLog } from "../middleware/http-log-policy.js";
 
 describe("shouldSilenceHttpSuccessLog", () => {
+  it("excludes review content from all generic request/error logging paths", () => {
+    expect(isSensitiveReviewRequest("/api/companies/id/venture-reviews")).toBe(true);
+    expect(isSensitiveReviewRequest("/api/companies/id/venture-reviews/review/submit?secret=value")).toBe(true);
+    expect(isSensitiveReviewRequest("/companies/id/venture-reviews/review/submit")).toBe(true);
+    expect(isSensitiveReviewRequest("/API/COMPANIES/id/VENTURE-REVIEWS/review/submit")).toBe(true);
+    expect(isSensitiveReviewRequest("/api/public/venture-review/sessions/id/run?private=value")).toBe(true);
+    expect(isSensitiveReviewRequest("/api/public/early-access/requests")).toBe(true);
+    expect(isSensitiveReviewRequest("/api/public/funnel-events")).toBe(true);
+    expect(isSensitiveReviewRequest("/api/companies/id/issues")).toBe(false);
+  });
   it("silences cached 304 responses", () => {
     expect(shouldSilenceHttpSuccessLog("GET", "/api/issues/PAP-1383", 304)).toBe(true);
   });

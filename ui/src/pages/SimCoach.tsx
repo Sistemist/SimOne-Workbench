@@ -1360,7 +1360,7 @@ export function SimCoach() {
                 </Button>
               ) : null}
               <Button asChild variant="outline" size="sm" className="h-8">
-                <Link to="/scanner">Run scanner again</Link>
+                <Link to="/venture-review">Review your venture</Link>
               </Button>
             </div>
             {promotionState.status === "saved" ? (

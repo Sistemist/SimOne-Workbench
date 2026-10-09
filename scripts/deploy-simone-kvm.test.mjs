@@ -33,7 +33,7 @@ test("requires clean pushed release evidence and records rollback metadata", () 
 
 test("smokes the current Sysdom AI app brand while leaving the landing root independently owned", () => {
   assert.match(script, /"https:\/\/\$public_host\/app" \| rg -q '<title>Sysdom AI'/);
-  assert.match(script, /"https:\/\/\$public_host\/scanner" \| rg -q '<title>Sysdom AI'/);
+  assert.match(script, /"https:\/\/\$public_host\/venture-review" \| rg -q '<title>Review your venture'/);
   assert.match(script, /"https:\/\/\$public_host\/auth\/forgot-password" \| rg -q '<title>Sysdom AI'/);
   assert.match(script, /"https:\/\/\$public_host\/" \| rg -q '<title>SimOne \\\\?\| The conscious agent company'/);
 });
@@ -46,10 +46,14 @@ test("uses host-specific public funnel smokes", () => {
   assert.match(script, /Early-access request smoke failed/);
 });
 
-test("limits runtime mutation and cache cleanup to the SimOne service", () => {
+test("limits runtime mutation to the SimOne service without global cleanup", () => {
   assert.doesNotMatch(script, /docker compose[^\n]* down/);
   assert.match(script, /compose build paperclip/);
   assert.match(script, /compose up -d --no-deps --force-recreate paperclip/);
-  assert.match(script, /docker builder prune --force --filter 'until=168h' --keep-storage 10GB/);
-  assert.match(script, /docker image prune --force --filter 'until=168h'/);
+  assert.doesNotMatch(script, /docker (builder|image|system) prune/);
+});
+
+test("preserves explicitly enabled public review mounts during deploy and rollback", () => {
+  assert.equal((script.match(/if \[ -f \.public-review-enabled \]/g) ?? []).length, 2);
+  assert.equal((script.match(/files\+=\(-f docker-compose\.public-review-service\.yml\)/g) ?? []).length, 2);
 });

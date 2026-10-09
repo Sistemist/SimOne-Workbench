@@ -42,7 +42,7 @@ export function EarlyAccessActivationPage() {
       <div className="mx-auto max-w-xl rounded-xl border border-border bg-card p-6 shadow-sm sm:p-8">
         <div className="flex items-center gap-2 text-sm font-medium">
           <ShieldCheck className="h-4 w-4" />
-          Sysdom AI founder activation
+          Your Sysdom invitation
         </div>
         {grantQuery.isLoading || sessionQuery.isLoading ? (
           <p className="mt-6 text-sm text-muted-foreground">Checking your invitation…</p>
@@ -50,18 +50,18 @@ export function EarlyAccessActivationPage() {
           <p className="mt-6 text-sm text-destructive">
             {grantQuery.error instanceof Error
               ? grantQuery.error.message
-              : "This activation link is unavailable."}
+              : "This invitation is unavailable. Ask the Sysdom team for a new link."}
           </p>
         ) : (
           <>
             <h1 className="mt-6 text-2xl font-semibold">Welcome, {grant.founderName}</h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              This invitation unlocks up to {grant.maxVentures} separate ventures. Each venture
-              keeps its own scans and operating state.
+              Your invitation includes space for up to {grant.maxVentures} ventures. A venture
+              is a business or business idea, with its own workspace.
             </p>
             {grant.status === "expired" || grant.status === "revoked" ? (
               <p className="mt-5 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-                This link is {grant.status}. Ask the Sysdom team for a new activation link.
+                This invitation is {grant.status}. Ask the Sysdom team for a new link.
               </p>
             ) : sessionQuery.data ? (
               <div className="mt-6">
@@ -69,12 +69,12 @@ export function EarlyAccessActivationPage() {
                   onClick={() => mutation.mutate()}
                   disabled={mutation.isPending}
                 >
-                  {mutation.isPending ? "Activating…" : "Activate founder access"}
+                  {mutation.isPending ? "Activating access…" : "Activate my access"}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 {mutation.error ? (
                   <p className="mt-3 text-sm text-destructive">
-                    {mutation.error instanceof Error ? mutation.error.message : "Activation failed."}
+                    {mutation.error instanceof Error ? mutation.error.message : "We could not activate your access. Please try again or ask the Sysdom team for help."}
                   </p>
                 ) : null}
               </div>
@@ -95,8 +95,8 @@ export function EarlyAccessActivationPage() {
               </div>
             )}
             <p className="mt-5 text-xs leading-5 text-muted-foreground">
-              Use {grant.email}. Activation claims any scan you explicitly chose to retain with
-              your request.
+              Create an account or sign in with {grant.email}, then activate your access.
+              Any note and result you chose to keep with your request will be linked to your account.
             </p>
           </>
         )}

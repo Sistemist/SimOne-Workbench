@@ -1,0 +1,27 @@
+{
+  "name": "sysdom-venture-review",
+  "version": "0.1.1",
+  "description": "Prepare selected evidence and use an explicitly approved fictional local Venture Review exchange.",
+  "author": {
+    "name": "Sysdom.ai"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Sysdom Venture Review",
+    "shortDescription": "Prepare a consented evidence packet for review.",
+    "longDescription": "Preview selected fictional evidence and approve one local review exchange. Shared loopback helper supports mock mode and separately authorized fresh mode; no configured provider, credentials, automatic collection or consequential decisions.",
+    "developerName": "Sysdom.ai",
+    "category": "Productivity",
+    "capabilities": [
+      "Evidence preview",
+      "Redaction",
+      "Founder approval"
+    ],
+    "defaultPrompt": [
+      "Prepare a Venture Review evidence preview.",
+      "Show what would be shared before review.",
+      "Help me answer a bounded evidence request."
+    ],
+    "brandColor": "#FF6200"
+  }
+}

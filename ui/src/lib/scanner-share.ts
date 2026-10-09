@@ -52,7 +52,7 @@ export function buildAttributableScannerUrl(
   origin: string,
   format: ScannerShareFormat,
 ): string {
-  const url = new URL("/scanner", origin);
+  const url = new URL("/venture-review", origin);
   url.searchParams.set("utm_source", "sysdom_scanner_share");
   url.searchParams.set("utm_medium", "organic");
   url.searchParams.set(
@@ -66,7 +66,7 @@ export function buildScannerShareCopy(
   publicText: string,
   origin: string,
 ): string {
-  return `${publicText}\n\nRun your own scan: ${buildAttributableScannerUrl(origin, "summary")}`;
+  return `${publicText}\n\nReview your venture: ${buildAttributableScannerUrl(origin, "summary")}`;
 }
 
 export function scannerShareCardFilename(engine: string): string {
@@ -87,7 +87,7 @@ export function buildScannerShareCardSvg(
   const nextAction = wrapText(input.nextAction, 62, 2);
   const scannerUrl = buildAttributableScannerUrl(origin, "card");
   const visibleScannerUrl = new URL(scannerUrl);
-  const visibleCta = `${visibleScannerUrl.host}/scanner`;
+  const visibleCta = `${visibleScannerUrl.host}/venture-review`;
 
   return [
     '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">',
@@ -104,7 +104,7 @@ export function buildScannerShareCardSvg(
     '<text x="72" y="456" fill="#9b9b9b" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" letter-spacing="2">NEXT MOVE</text>',
     `<text fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="25">${svgTextLines(nextAction, 72, 494, 34)}</text>`,
     '<text x="72" y="558" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700">SYSDOM.AI</text>',
-    `<a href="${escapeXml(scannerUrl)}"><text x="1128" y="558" text-anchor="end" fill="#ff5a1f" font-family="Arial, Helvetica, sans-serif" font-size="18">Run your own scan → ${escapeXml(visibleCta)}</text></a>`,
+    `<a href="${escapeXml(scannerUrl)}"><text x="1128" y="558" text-anchor="end" fill="#ff5a1f" font-family="Arial, Helvetica, sans-serif" font-size="18">Review your venture → ${escapeXml(visibleCta)}</text></a>`,
     "</svg>",
   ].join("");
 }

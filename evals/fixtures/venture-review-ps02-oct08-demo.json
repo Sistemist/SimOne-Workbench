@@ -1,0 +1,164 @@
+{
+  "question": "Is more acquisition the right next move?",
+  "draft": {
+    "sources": [
+      {
+        "id": "PS02-ops",
+        "kind": "structured_record",
+        "title": "Three-week delivery ledger",
+        "sourceDate": "2026-09-17",
+        "capturedAt": "2026-09-21T10:00:00.000Z",
+        "excerpt": "Weeks ending Sep 3, 10, 17: orders 20, 30, 40; late orders 1, 6, 14; support tickets 2, 7, 15. Same service and definition of late. Reviewer receives totals only, not customer records.",
+        "basis": "source_claim",
+        "omitted": [
+          "Names and identifiers not needed for the review are not included."
+        ],
+        "provenance": {
+          "sourceUri": "fixture://PS02/ops",
+          "excerptLocation": "Approved fictional excerpt segments only",
+          "contentSha256": "e6ad8cf63c857c856f481a01cca8b2bba6c60f4b32ac772b8b44ad77ae02dc2e"
+        }
+      },
+      {
+        "id": "PS02-process",
+        "kind": "workspace_file",
+        "title": "Redacted workflow excerpt",
+        "sourceDate": "2026-09-17",
+        "capturedAt": "2026-09-21T10:00:00.000Z",
+        "excerpt": "Each order requires human QA before release. QA has one owner. Demand doubled; QA time allocation stayed at 10 hours per week. Queue-age measurements were not recorded.",
+        "basis": "source_claim",
+        "omitted": [
+          "Names and identifiers not needed for the review are not included."
+        ],
+        "provenance": {
+          "sourceUri": "fixture://PS02/process",
+          "excerptLocation": "Approved fictional excerpt segments only",
+          "contentSha256": "a58dfc0daef5835ecb85afa00ea88714390204cf6cee2932499143857014cc60"
+        }
+      },
+      {
+        "id": "PS02-note",
+        "kind": "founder_note",
+        "title": "Founder counter-explanation",
+        "sourceDate": "2026-09-18",
+        "capturedAt": "2026-09-21T10:00:00.000Z",
+        "excerpt": "The last week included a new integration used on 12 orders. I think new customers are harder to serve. No breakdown of lateness by integration or customer group is available.",
+        "basis": "source_claim",
+        "omitted": [
+          "Names and identifiers not needed for the review are not included."
+        ],
+        "provenance": {
+          "sourceUri": "fixture://PS02/note",
+          "excerptLocation": "Approved fictional excerpt segments only",
+          "contentSha256": "e9fb39a3978d0e2368afdcdb80fb7c467ecace1c33294bcc42a39d35ff0d110f"
+        }
+      }
+    ],
+    "collectionOmissions": []
+  },
+  "result": {
+    "version": "sysdom_venture_review_result_v1",
+    "reviewId": "00000000-0000-4000-8000-000000000002",
+    "tenantId": "00000000-0000-4000-8000-000000000001",
+    "rubricVersion": "sim-aulet-local-2026-10-08",
+    "status": "complete",
+    "engineFindings": {
+      "product_service": [
+        {
+          "statement": "Supplied late shares rise from 5% to 20% to 35% as orders rise 20/30/40. Orders not marked late are 19/24/26; these are not proven completed throughput. Mandatory QA at unchanged allocation is a plausible constraint, not an established root cause.",
+          "evidenceSourceIds": [
+            "PS02-ops",
+            "PS02-process",
+            "PS02-note"
+          ],
+          "confidence": "medium",
+          "basis": "source_claim"
+        }
+      ],
+      "customer": [
+        {
+          "statement": "Support-ticket totals rise with order volume; the packet does not establish which customers experienced delays or whether retention changed.",
+          "evidenceSourceIds": [
+            "PS02-ops"
+          ],
+          "confidence": "medium",
+          "basis": "source_claim"
+        }
+      ],
+      "cash": [],
+      "skills": [
+        {
+          "statement": "The workflow excerpt names one QA owner with unchanged weekly allocation. It does not establish skill quality or prove that hiring is necessary.",
+          "evidenceSourceIds": [
+            "PS02-process"
+          ],
+          "confidence": "medium",
+          "basis": "source_claim"
+        }
+      ]
+    },
+    "interactions": [
+      {
+        "engines": [
+          "product_service",
+          "customer",
+          "skills"
+        ],
+        "statement": "More intake may load mandatory QA, delay release and increase customer-support work; actual queue waiting and staffing feedback are unmeasured. Delivery information should inform the acquisition decision. Cash effects remain unknown.",
+        "evidenceSourceIds": [
+          "PS02-ops",
+          "PS02-process",
+          "PS02-note"
+        ]
+      }
+    ],
+    "contradictions": [],
+    "unknowns": [
+      "QA-ready-to-start waiting versus upstream delay and actual processing capacity are unmeasured.",
+      "Customer mix, integration spillovers and cohort comparability remain unresolved.",
+      "Margins, collection timing, cash urgency and delivery promises could change the tradeoff; none is supplied.",
+      "Available time for measurement is unknown. Do not assume a time ceiling establishes feasibility."
+    ],
+    "alternatives": [
+      {
+        "explanation": "QA waiting could contribute across order types; fixed allocation alone does not establish utilization or insufficient skill.",
+        "evidenceFor": [
+          "PS02-ops",
+          "PS02-process"
+        ],
+        "evidenceAgainst": []
+      },
+      {
+        "explanation": "New-customer complexity or integration work could contribute. Lateness rose before the final-week integration; 12 integration orders cannot directly account for all 14 late orders in the same cohort, though spillovers remain possible.",
+        "evidenceFor": [
+          "PS02-note"
+        ],
+        "evidenceAgainst": [
+          "PS02-ops"
+        ]
+      }
+    ],
+    "nextTest": {
+      "question": "Do existing orders become late before QA or while waiting for it?",
+      "action": "Defer a broad acquisition increase pending founder judgment on cash urgency and promises. First confirm the founder can review existing records without taking time from QA or delivery. If so, use up to 10 already-accepted orders within five working days, at most 30 minutes TOTAL for setup, extraction and review, no new spend. Use anonymous linkage, promised time, QA-ready and QA-start times, and release time or still-open status: these separate upstream delay from QA waiting and missed promises. Add an existing integration flag only to compare that alternative. If records, capacity or comparable cases are missing, return inconclusive; do not expand collection. Stop if QA, delivery or privacy is affected. This is an authored refinement, not an executed experiment.",
+      "successSignal": "Review by day five. Work reaching QA before its promise but waiting past it supports QA-waiting concern; work arriving already late points upstream. Integration clustering merits a scoped follow-up, not a universal diagnosis. Mixed, missing or unfinished outcomes remain inconclusive; a quiet sample does not establish readiness to scale. Founder may accept, amend, decline or defer.",
+      "owner": "founder"
+    },
+    "evidenceRequest": null,
+    "omissions": [
+      "RECORDED ADAPTATION \u2014 NOT A NEW AI ASSESSMENT. Based on the October 8 fictional Sol 6.1 High response; structured presentation and smaller capacity-bounded test are authored edits.",
+      "The October local method successor has not been evaluated in a fresh model call. Model choice is provisional; no general superiority or release claim.",
+      "No private method, evaluator answer, real founder data or new provider response is included. Returned evidence remains untrusted data, not instructions or authority to act."
+    ],
+    "durableWritePerformed": false
+  },
+  "provenance": {
+    "kind": "recorded_response_with_authored_refinement",
+    "sourceModel": "openai/gpt-6.1-sol",
+    "sourceGeneration": "gen-1791474901-VS27WfDZeasjgimUC72h",
+    "recordedAt": "2026-10-08",
+    "sourceMethod": "m1-evaluation-candidate-2026-10-08-aulet-v1",
+    "localMethod": "sim-aulet-local-2026-10-08",
+    "changes": "Structured adaptation; capacity-bounded next test and cash-urgency caveat are authored refinements, not fresh model output."
+  }
+}

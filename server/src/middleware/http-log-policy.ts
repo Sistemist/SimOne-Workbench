@@ -1,5 +1,13 @@
 const SILENCED_SUCCESS_METHODS = new Set(["GET", "HEAD"]);
 
+/** Review content must never enter the generic error-body logging fallback. */
+export function isSensitiveReviewRequest(url: string | undefined): boolean {
+  if (url && /^\/(?:api\/)?public\/(?:early-access\/requests|funnel-events)(?:\/|\?|$)/i.test(url)) return true;
+  // Express is case-insensitive by default and may have stripped the /api mount.
+  if (url && /^\/(?:api\/)?public\/venture-review(?:\/|\?|$)/i.test(url)) return true;
+  return Boolean(url && /^\/(?:api\/)?companies\/[^/]+\/venture-reviews(?:\/|\?|$)/i.test(url));
+}
+
 const SILENCED_SUCCESS_API_PATHS = [
   /^\/api\/health(?:\/|$)/,
   /^\/api\/companies\/[^/]+\/activity(?:\/|$)/,

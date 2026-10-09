@@ -18,7 +18,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
 
   // Skip non-GET requests and API calls
-  if (request.method !== "GET" || url.pathname.startsWith("/api")) {
+  if (request.method !== "GET" || url.pathname.startsWith("/api") || /^\/(venture-review|scanner|systems-bottleneck-scanner)\/?$/.test(url.pathname)) {
     return;
   }
 

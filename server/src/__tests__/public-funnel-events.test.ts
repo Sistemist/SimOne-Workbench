@@ -83,3 +83,36 @@ describe("public funnel event summary", () => {
     expect(summary.excludedTestEvents).toBe(1);
   });
 });
+
+it("stores review events as aggregate counts and rejects identifiers or raw content", async () => {
+  const event = { eventKey: "11111111-1111-4111-8111-111111111111", eventName: "venture_review_result", path: "/venture-review" };
+  const app = createApp();
+  expect((await request(app).post("/api/public/funnel-events").send(event)).status).toBe(202);
+  const sentinel = "00000000-0000-0000-0000-000000000000";
+  expect(values).toHaveBeenLastCalledWith({ ...event, isTest: false, visitorId: sentinel, sessionId: sentinel });
+  for (const extra of [{ visitorId: event.eventKey, sessionId: event.eventKey }, { founderNote: "private" }, { source: "founder" }, { path: "/venture-review?private=true" }]) {
+    expect((await request(app).post("/api/public/funnel-events").send({ ...event, ...extra })).status).toBe(400);
+  }
+  const summary = summarizePublicFunnelEvents(["venture_review_start", "venture_review_start", "venture_review_result", "venture_review_access_request"].map(eventName => ({ eventName, visitorId: sentinel, resultCategory: null, isTest: false })));
+  expect(summary.uniqueVisitors).toBe(0);
+  expect(summary.conversions.reviewStartToResult).toBe(0.5);
+  expect(summary.conversions.reviewResultToAccessRequest).toBe(1);
+});
+
+it("protects operational aggregates from anonymous visitors, ordinary founders and agents", async () => {
+  for (const actor of [{ type: "none", source: "none" }, { type: "board", source: "session", isInstanceAdmin: false }, { type: "agent", source: "agent_key" }]) {
+    expect((await request(createApp(actor)).get("/api/venture-review/operations")).status).toBe(403);
+  }
+});
+it("returns only aggregate request/activation and operational fields to an instance admin", async () => {
+  const select = vi.fn(() => ({ from: () => ({ where: async () => [{ count: 2 }], innerJoin: () => ({ where: async () => [{ count: 1 }] }) }) }));
+  const operations = vi.fn(async () => ({ state: "available", budget: { monthlyLimitUsd: 100 }, service: { inFlight: 0, queueDepth: 0 } }));
+  const app = express();
+  app.use((req, _res, next) => { (req as any).actor = { type: "board", source: "session", isInstanceAdmin: true }; next(); });
+  app.use("/api", publicFunnelEventRoutes({ select } as any, operations)); app.use(errorHandler);
+  const response = await request(app).get("/api/venture-review/operations?days=7");
+  expect(response.status).toBe(200); expect(response.headers["cache-control"]).toBe("no-store");
+  expect(response.body).toMatchObject({ days: 7, acquisition: { acceptedRequests: 2, activatedInvitations: 1 }, operations: { budget: { monthlyLimitUsd: 100 } } });
+  expect(select).toHaveBeenCalledTimes(2); expect(operations).toHaveBeenCalledOnce();
+  expect(JSON.stringify(response.body)).not.toMatch(/email|founderName|useCase|token/);
+});

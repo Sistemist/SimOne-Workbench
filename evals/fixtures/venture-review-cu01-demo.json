@@ -1,0 +1,64 @@
+{
+  "question": "Can we say we have 40 paying customers?",
+  "draft": {
+    "sources": [
+      {
+        "id": "CU01-claim",
+        "kind": "founder_note",
+        "title": "Fictional founder traction statement",
+        "capturedAt": "2026-09-21T10:00:00.000Z",
+        "sourceDate": "2026-09-18",
+        "excerpt": "As of September 18 we have 40 paying customers, meaning distinct accounts with a settled payment during September 1–18.",
+        "basis": "source_claim",
+        "omitted": ["Fictional supplied summary; names and identifiers omitted."]
+      },
+      {
+        "id": "CU01-payments",
+        "kind": "structured_record",
+        "title": "Fictional redacted payments summary",
+        "capturedAt": "2026-09-21T10:00:00.000Z",
+        "sourceDate": "2026-09-18",
+        "excerpt": "September 1–18: 40 distinct accounts started checkout. Eight distinct accounts have settled payments. No refunds. These are the same account population referred to by the founder.",
+        "basis": "source_claim",
+        "omitted": ["Fictional supplied summary; not an audited processor export."]
+      },
+      {
+        "id": "CU01-site",
+        "kind": "website_page",
+        "title": "Synthetic homepage excerpt — no network visit",
+        "capturedAt": "2026-09-21T10:00:00.000Z",
+        "sourceDate": "2026-09-18",
+        "excerpt": "As of September 18: trusted by 40 paying customers. No supporting detail provided.",
+        "basis": "website_text",
+        "omitted": ["Synthetic website receipt, not a live retrieval; full page absent."]
+      }
+    ],
+    "collectionOmissions": []
+  },
+  "result": {
+    "version": "sysdom_venture_review_result_v1",
+    "reviewId": "00000000-0000-4000-8000-000000000004",
+    "tenantId": "00000000-0000-4000-8000-000000000001",
+    "rubricVersion": "m1-draft-2026-09-21",
+    "status": "complete",
+    "engineFindings": {
+      "product_service": [],
+      "customer": [{ "statement": "The supplied summaries support 40 checkout starters and 8 settled paying accounts during September 1–18, not 40 paying customers. These are source assertions, not independently audited transactions.", "evidenceSourceIds": ["CU01-claim", "CU01-payments"], "confidence": "high", "basis": "source_claim" }],
+      "cash": [{ "statement": "Settled-account count does not establish revenue amount, profit, or cash balance. Settlements after September 18 would support a later dated claim, not this historical cutoff.", "evidenceSourceIds": ["CU01-payments"], "confidence": "high", "basis": "observed_text" }],
+      "skills": []
+    },
+    "interactions": [{ "engines": ["customer", "cash"], "statement": "Checkout activity and settlement are different stages of the Customer → Cash relationship. The supplied same-population figures imply 8/40 = 20%; the cause of the gap is unknown.", "evidenceSourceIds": ["CU01-payments"] }],
+    "contradictions": [{ "statement": "The synthetic homepage repeats 40 paying customers, while the supplied payments summary reports 8 settled accounts for the defined period.", "evidenceSourceIds": ["CU01-site", "CU01-payments", "CU01-claim"], "confidence": "high", "basis": "observed_text" }],
+    "unknowns": ["Product/Service outcomes and Skills capability are not established.", "Stage, settlement delay, and the cause of the mismatch are unknown; one snapshot supports no recurring archetype.", "Interaction or Governance weaknesses are hypotheses, not demonstrated causes."],
+    "alternatives": [{ "explanation": "Checkout starts may have been mislabeled, or the payments summary may be stale or wrong. Later settlements cannot change the September 18 claim.", "evidenceFor": ["CU01-claim", "CU01-payments"], "evidenceAgainst": [] }],
+    "nextTest": {
+      "question": "How many distinct accounts had a settled payment within the stated September 1–18 window?",
+      "action": "Founder: within one business day, spend at most 30 minutes checking one redacted aggregate processor count with its cutoff and timezone. No spend. Do not request names, transaction rows, other status counts or refunds unless needed to resolve a specific ambiguity. Stop if permission or matching definitions are uncertain.",
+      "successSignal": "A count of 40 supports the defined claim; fewer than 40 disconfirms it. Keep later settlements in a later dated claim. Watch the Customer → Cash handoff without inferring its cause.",
+      "owner": "founder"
+    },
+    "evidenceRequest": null,
+    "omissions": ["Recorded fictional CU01 illustration: structured adaptation of the September 21 answer, with a narrower next ask. Not a verbatim replay or a new model assessment.", "Private SIM method remains an authored draft, not accepted or scientifically validated. Founder retains all publication, sharing and action decisions."],
+    "durableWritePerformed": false
+  }
+}

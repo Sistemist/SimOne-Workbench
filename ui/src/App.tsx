@@ -415,7 +415,7 @@ export function App() {
         <Route path="board-claim/:token" element={<BoardClaimPage />} />
         <Route path="cli-auth/:id" element={<CliAuthPage />} />
         <Route path="invite/:token" element={<InviteLandingPage />} />
-        <Route path="scanner" element={<SystemsBottleneckScanner />} />
+        <Route path="venture-review" element={<SystemsBottleneckScanner />} />
         <Route path="systems-bottleneck-scanner" element={<SystemsBottleneckScanner />} />
         <Route path="request-access" element={<EarlyAccessRequestPage />} />
         <Route path="activate/:token" element={<EarlyAccessActivationPage />} />

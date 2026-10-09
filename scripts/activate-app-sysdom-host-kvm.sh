@@ -61,7 +61,7 @@ if [ "$root_ready" != true ]; then
   exit 1
 fi
 curl -fsS https://app.sysdom.ai/app | grep -q '<title>Sysdom AI'
-curl -fsS https://app.sysdom.ai/scanner | grep -q '<title>Sysdom AI'
+curl -fsS https://app.sysdom.ai/venture-review | grep -q '<title>Review your venture'
 curl -fsS https://app.sysdom.ai/request-access | grep -q '<title>Sysdom AI'
 curl -fsS https://app.sysdom.ai/auth/forgot-password | grep -q '<title>Sysdom AI'
 curl -fsS https://sim.sysdom.org/app | grep -q '<title>Sysdom AI'

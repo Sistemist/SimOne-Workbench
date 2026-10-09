@@ -1,3 +1,4 @@
+import { loadPublicReviewLaunch } from "./services/public-review-launch.js";
 /// <reference path="./types/express.d.ts" />
 // Kicks off the OTel bootstrap as early as possible (no-op unless
 // OTEL_EXPORTER_OTLP_ENDPOINT is set). startServer() awaits
@@ -641,7 +642,9 @@ export async function startServer(): Promise<StartedServer> {
     }
   };
   const pluginWorkerManager = createPluginWorkerManager();
+  const publicVentureReview = await loadPublicReviewLaunch().catch(() => { logger.warn("Public Venture Review configuration rejected; service remains disabled"); return undefined; });
   const app = await createApp(db as any, {
+    publicVentureReview,
     uiMode,
     serverPort: listenPort,
     storageService,
