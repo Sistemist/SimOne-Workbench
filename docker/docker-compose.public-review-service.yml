@@ -14,11 +14,13 @@ services:
     environment:
       SYSDOM_PUBLIC_REVIEW_LAUNCH_FILE: /run/sysdom-review/launch.json
       SYSDOM_PUBLIC_REVIEW_API_KEY_FILE: /run/secrets/public_review_key
+      SYSDOM_HEALTH_MONITOR_TOKEN_FILE: /run/secrets/health_monitor_token
       SYSDOM_PUBLIC_REVIEW_BALANCE_SNAPSHOT_FILE: "${SYSDOM_PUBLIC_REVIEW_BALANCE_SNAPSHOT_FILE:-}"
       SYSDOM_PUBLIC_RETENTION_STATE: /var/lib/sysdom-retention/state.json
       SYSDOM_PUBLIC_RETENTION_LEDGER: /var/lib/sysdom-review-budget/service-budget.sqlite
     secrets:
       - public_review_key
+      - health_monitor_token
     volumes:
       - "${PUBLIC_REVIEW_LAUNCH_FILE:?approved launch JSON required}:/run/sysdom-review/launch.json:ro"
       - "${PUBLIC_REVIEW_METHOD_DIRECTORY:?approved private method directory required}:/run/sysdom-review/method:ro"
@@ -27,3 +29,5 @@ services:
 secrets:
   public_review_key:
     file: "${PUBLIC_REVIEW_KEY_FILE:?separately approved dedicated public-service key required}"
+  health_monitor_token:
+    file: "${SYSDOM_HEALTH_MONITOR_TOKEN_SECRET_FILE:?dedicated read-only health-monitor token required}"

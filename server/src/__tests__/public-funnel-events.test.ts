@@ -1,6 +1,9 @@
 import express from "express";
 import request from "supertest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
   publicFunnelEventRoutes,
   summarizePublicFunnelEvents,
@@ -10,6 +13,7 @@ import { errorHandler } from "../middleware/index.js";
 const onConflictDoNothing = vi.fn();
 const values = vi.fn(() => ({ onConflictDoNothing }));
 const insert = vi.fn(() => ({ values }));
+const originalMonitorTokenFile = process.env.SYSDOM_HEALTH_MONITOR_TOKEN_FILE;
 
 function createApp(actor: Record<string, unknown> = { type: "none", source: "none" }) {
   const app = express();
@@ -27,6 +31,34 @@ describe("public funnel event summary", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     onConflictDoNothing.mockResolvedValue(undefined);
+  });
+
+  it("keeps summary private but permits the dedicated read-only monitor token", async () => {
+    const token = "monitor-test-token-that-is-at-least-thirty-two-bytes";
+    const directory = mkdtempSync(join(tmpdir(), "sysdom-health-monitor-"));
+    const tokenFile = join(directory, "token");
+    writeFileSync(tokenFile, token, { mode: 0o600 });
+    process.env.SYSDOM_HEALTH_MONITOR_TOKEN_FILE = tokenFile;
+
+    const rows = [{ eventName: "venture_review_view", visitorId: "00000000-0000-0000-0000-000000000000", resultCategory: null, isTest: false }];
+    const select = vi.fn(() => ({ from: () => ({ where: () => ({ orderBy: () => ({ limit: async () => rows }) }) }) }));
+    const app = express();
+    app.use((req, _res, next) => { (req as any).actor = { type: "none", source: "none" }; next(); });
+    app.use("/api", publicFunnelEventRoutes({ select } as any));
+    app.use(errorHandler);
+
+    try {
+      expect((await request(app).get("/api/public/funnel-events/summary")).status).toBe(403);
+      expect((await request(app).get("/api/public/funnel-events/summary").set("Authorization", "Bearer wrong-token-that-is-at-least-thirty-two-bytes")).status).toBe(403);
+      const response = await request(app).get("/api/public/funnel-events/summary").set("Authorization", `Bearer ${token}`);
+      expect(response.status).toBe(200);
+      expect(response.headers["cache-control"]).toBe("no-store");
+      expect(response.body.counts.venture_review_view).toBe(1);
+    } finally {
+      if (originalMonitorTokenFile === undefined) delete process.env.SYSDOM_HEALTH_MONITOR_TOKEN_FILE;
+      else process.env.SYSDOM_HEALTH_MONITOR_TOKEN_FILE = originalMonitorTokenFile;
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 
   it("accepts an anonymous privacy-safe event and deduplicates on its event key", async () => {
@@ -115,4 +147,28 @@ it("returns only aggregate request/activation and operational fields to an insta
   expect(response.body).toMatchObject({ days: 7, acquisition: { acceptedRequests: 2, activatedInvitations: 1 }, operations: { budget: { monthlyLimitUsd: 100 } } });
   expect(select).toHaveBeenCalledTimes(2); expect(operations).toHaveBeenCalledOnce();
   expect(JSON.stringify(response.body)).not.toMatch(/email|founderName|useCase|token/);
+});
+
+it("permits the dedicated read-only monitor token to read operational aggregates", async () => {
+  const token = "monitor-test-token-that-is-at-least-thirty-two-bytes";
+  const directory = mkdtempSync(join(tmpdir(), "sysdom-health-monitor-"));
+  const tokenFile = join(directory, "token");
+  writeFileSync(tokenFile, token, { mode: 0o600 });
+  process.env.SYSDOM_HEALTH_MONITOR_TOKEN_FILE = tokenFile;
+  const select = vi.fn(() => ({ from: () => ({ where: async () => [{ count: 0 }], innerJoin: () => ({ where: async () => [{ count: 0 }] }) }) }));
+  const operations = vi.fn(async () => ({ state: "available" }));
+  const app = express();
+  app.use((req, _res, next) => { (req as any).actor = { type: "none", source: "none" }; next(); });
+  app.use("/api", publicFunnelEventRoutes({ select } as any, operations));
+  app.use(errorHandler);
+
+  try {
+    const response = await request(app).get("/api/venture-review/operations").set("Authorization", `Bearer ${token}`);
+    expect(response.status).toBe(200);
+    expect(response.body.operations).toEqual({ state: "available" });
+  } finally {
+    if (originalMonitorTokenFile === undefined) delete process.env.SYSDOM_HEALTH_MONITOR_TOKEN_FILE;
+    else process.env.SYSDOM_HEALTH_MONITOR_TOKEN_FILE = originalMonitorTokenFile;
+    rmSync(directory, { recursive: true, force: true });
+  }
 });

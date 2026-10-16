@@ -7,6 +7,7 @@ import {
   createPublicFunnelEventSchema,
 } from "@paperclipai/shared";
 import { validate } from "../middleware/validate.js";
+import { isAuthorizedHealthMonitor } from "../middleware/health-monitor-auth.js";
 import { assertBoard, assertInstanceAdmin } from "./authz.js";
 
 const AGGREGATE_ONLY_ID = "00000000-0000-0000-0000-000000000000";
@@ -68,7 +69,7 @@ export function publicFunnelEventRoutes(db: Db, getOperations?: () => Promise<un
   });
 
   router.get("/venture-review/operations", async (req, res) => {
-    assertInstanceAdmin(req);
+    if (!isAuthorizedHealthMonitor(req)) assertInstanceAdmin(req);
     res.setHeader("Cache-Control", "no-store");
     const days = z.coerce.number().int().min(1).max(90).catch(30).parse(req.query.days);
     const since = new Date(Date.now() - days * 86400000);
@@ -82,7 +83,8 @@ export function publicFunnelEventRoutes(db: Db, getOperations?: () => Promise<un
   });
 
   router.get("/public/funnel-events/summary", async (req, res) => {
-    assertBoard(req);
+    if (!isAuthorizedHealthMonitor(req)) assertBoard(req);
+    res.setHeader("Cache-Control", "no-store");
     const days = z.coerce.number().int().min(1).max(90).catch(30).parse(req.query.days);
     const includeTest = req.query.includeTest === "true";
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
