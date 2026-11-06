@@ -4,7 +4,7 @@
 
 [Sysdom.ai](https://sysdom.ai) is building an **Agentic Venture OS**: one coherent view of a venture, with shared context for the people and agents working on it.
 
-This repository is the application's development workbench. It is a fork of [Paperclip](https://github.com/paperclipai/paperclip), whose agent orchestration and company control plane provide the foundation for Sysdom's venture operating layer.
+This public fork records earlier Sysdom development on [Paperclip](https://github.com/paperclipai/paperclip). Current Sysdom product development takes place privately. To try the founder experience, [open Venture Review](https://app.sysdom.ai/venture-review). To inspect how an assistant shares founder-approved evidence, see the [public Venture Review connector](https://github.com/Sistemist/sysdom-venture-review-plugin).
 
 ## Why Sysdom
 
@@ -34,18 +34,9 @@ The Systems Intelligence Model (SIM) is the method beneath Sysdom.
 
 The aim is to keep decisions coherent across these engines as the venture evolves.
 
-## What this fork is building
+## What you can explore here
 
-Sysdom's development extends the Paperclip foundation toward:
-
-- Shared venture context, operating rules, and retained decisions.
-- Founder-facing views of the venture and its four engines.
-- Evidence-based Venture Review and constraint diagnosis.
-- Bounded work connected to venture goals and current priorities.
-- Saved deliverables, founder review, and a clear next action.
-- Governed agent execution with visible costs, approvals, and cancellation.
-
-These capabilities are under active development. Their presence in source code does not establish live availability or end-to-end reliability.
+The public source includes the [SIM Starter team](packages/teams-catalog/catalog/bundled/simone/simone-starter/TEAM.md) and its example agent roles. The [October Venture Review branch](https://github.com/Sistemist/SimOne-Workbench/tree/codex/public-review-deploy-2026-10-09) records an earlier implementation of the review service. For the current hosted experience, use the web review linked above.
 
 ## Built on Paperclip
 
@@ -60,7 +51,7 @@ That foundation is the work of the Paperclip maintainers and contributors. Sysdo
 
 The repository name `SimOne-Workbench` and existing Paperclip package names remain technical identifiers. **Sysdom.ai** is the current product and masterbrand.
 
-## Local development
+## Run the public snapshot locally
 
 Requirements: **Node.js 24.18.x** and **pnpm 9.15.4**.
 
@@ -73,7 +64,7 @@ pnpm dev
 
 The development server normally serves the application and API at `http://localhost:3100`.
 
-See [Developing](doc/DEVELOPING.md) for configuration, local instances, database setup, and verification commands. Read [AGENTS.md](AGENTS.md) before contributing or running agents.
+Read [AGENTS.md](AGENTS.md) before contributing or running agents.
 
 Live agent execution requires deliberate provider configuration and authorization; follow the repository's spend-safety guidance.
 
@@ -84,7 +75,6 @@ Live agent execution requires deliberate provider configuration and authorizatio
 | `server/` | API, orchestration, and application services |
 | `ui/` | Founder and operator interface |
 | `packages/` | Shared contracts, database, adapters, and supporting packages |
-| `doc/` | Product, engineering, and operating documentation |
 | `evals/` | Evaluation material and fixtures |
 
 ## License and attribution
